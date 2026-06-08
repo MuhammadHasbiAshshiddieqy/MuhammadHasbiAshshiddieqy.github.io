@@ -2877,26 +2877,54 @@ var PHASE_NUMS = {'i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
 
 var currentIdx = 0;
 
+// Topik terakhir setiap fase → fase intro berikutnya
+// Topik pertama setiap fase → fase intro sebelumnya (atau home)
+var PHASE_LAST  = {7:'fi2', 15:'fi3', 21:'fi4', 26:'fi5'};  // idx terakhir fase → next page
+var PHASE_FIRST = {0:'home', 8:'fi2', 16:'fi3', 22:'fi4', 27:'fi5'}; // idx pertama fase → prev page
+// label halaman untuk info nav
+var PAGE_LABELS = {'home':'Beranda','fi1':'Fase 1 — Fondasi','fi2':'Fase 2 — Architecture','fi3':'Fase 3 — Multi-Agent','fi4':'Fase 4 — Production','fi5':'Fase 5 — Build Agent'};
+
 // Inject nav bar ke setiap .sub
 TOPICS.forEach(function(id, idx) {
   var el = document.getElementById(id);
   if (!el) return;
-  var isLast = idx === TOPICS.length - 1;
-  var prevId = idx > 0 ? TOPICS[idx-1] : null;
-  var nextId = isLast ? null : TOPICS[idx+1];
+  var isVeryLast = idx === TOPICS.length - 1;
+
+  // Determine next destination
+  var nextPageId = PHASE_LAST[idx];   // fase boundary → go to next fase intro
+  var prevPageId = PHASE_FIRST[idx];  // fase boundary → go to prev fase intro / home
+
+  var nextLabel, nextBtn;
+  if (isVeryLast) {
+    nextLabel = 'Selesai 🎉';
+    nextBtn = '<button class="tnbtn primary" onclick="goToPage(\'home\')">Kembali ke Beranda ↺</button>';
+  } else if (nextPageId) {
+    nextLabel = PAGE_LABELS[nextPageId];
+    nextBtn = '<button class="tnbtn primary" onclick="goToPage(\'' + nextPageId + '\')">Selanjutnya →</button>';
+  } else {
+    nextLabel = TOPIC_LABELS[TOPICS[idx+1]];
+    nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="' + idx + '">Selanjutnya →</button>';
+  }
+
+  var prevBtn;
+  if (prevPageId) {
+    prevBtn = '<button class="tnbtn" onclick="goToPage(\'' + prevPageId + '\')">← Sebelumnya</button>';
+  } else if (idx > 0) {
+    prevBtn = '<button class="tnbtn prev-btn" data-idx="' + idx + '">← Sebelumnya</button>';
+  } else {
+    prevBtn = '<button class="tnbtn" disabled>← Sebelumnya</button>';
+  }
 
   var nav = document.createElement('div');
   nav.className = 'topic-nav';
   nav.innerHTML =
     '<div class="topic-nav-info">'
     + '<div class="topic-nav-counter">Topik ' + (idx+1) + ' / ' + TOPICS.length + '</div>'
-    + '<div class="topic-nav-title">' + (nextId ? TOPIC_LABELS[nextId] : 'Selesai 🎉') + '</div>'
+    + '<div class="topic-nav-title">' + nextLabel + '</div>'
     + '</div>'
     + '<div class="topic-nav-btns">'
-    + '<button class="tnbtn prev-btn" data-idx="' + idx + '"' + (prevId?'':' disabled') + '>← Sebelumnya</button>'
-    + (isLast
-        ? '<button class="tnbtn primary" onclick="goTo(0)">Mulai ulang ↺</button>'
-        : '<button class="tnbtn primary next-btn-t" data-idx="' + idx + '">Selanjutnya →</button>')
+    + prevBtn
+    + nextBtn
     + '</div>';
   el.appendChild(nav);
 });
