@@ -476,7 +476,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 <div class="cc"><h3>Tiga konsep kunci yang perlu dipahami agent builder</h3><ul>
 <li><strong>Context window</strong> adalah "working memory" agent — semua yang perlu diketahui model saat itu harus ada di sini. Tidak ada "hidden memory" di luar context.</li>
 <li><strong>Temperature &amp; sampling</strong> mengontrol determinisme. Untuk agent, temperature rendah (0.0–0.3) biasanya lebih baik karena kamu butuh consistency, bukan creativity.</li>
-<li><strong>stop_reason</strong> menentukan kapan model berhenti. Nilai <code>end_turn</code> = model selesai. Nilai <code>tool_use</code> = model minta tool dipanggil. Harness wajib cek ini setiap iterasi.</li>
+<li><strong>stop_reason</strong> menentukan kapan model berhenti. Nilai <code>end_turn</code> = model selesai. Nilai <code>tool_use</code> = model minta tool dipanggil. Harness wajib cek ini setiap iterasi. <em>Catatan vendor:</em> ini adalah konvensi Anthropic API — OpenAI menggunakan <code>finish_reason == "tool_calls"</code> dengan struktur payload berbeda. Harness yang ingin multi-model harus mengabstraksi layer ini.</li>
 </ul></div>
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Agent Execution Loop — Core Pattern</div></div>
@@ -1083,6 +1083,7 @@ logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent"</spa
         <span class="kw">if</span> asyncio.<span class="fn">iscoroutinefunction</span>(fn): <span class="kw">return await</span> <span class="fn">fn</span>(**block.input)
         <span class="kw">return await</span> asyncio.<span class="fn">get_event_loop</span>().<span class="fn">run_in_executor</span>(<span class="kw">None</span>, <span class="kw">lambda</span>: <span class="fn">fn</span>(**block.input))</pre></div></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Pattern ini adalah inti semua framework</strong>LangGraph, CrewAI, AutoGen — semuanya pada dasarnya variasi dari loop ini dengan tambahan state management dan abstraksi. Kalau kamu paham kode di atas, kamu paham fundamentalnya.</div></div>
+<div class="callout info"><span class="cico">🔌</span><div class="ctxt"><strong>Harness ini Anthropic-specific — abstraksi jika ingin multi-model</strong>Kode di atas menggunakan konvensi Anthropic: <code>stop_reason == "tool_use"</code>, struktur <code>content[]</code> dengan blok bertipe, dan format <code>tool_result</code>. Provider lain punya konvensi berbeda — OpenAI menggunakan <code>finish_reason == "tool_calls"</code> dengan array <code>tool_calls[]</code> terpisah dari content. Jika harness-mu perlu mendukung beberapa provider, abstraksi layer "normalize response" sebelum loop utama — bukan mencampur logika provider di dalam loop.</div></div>
 </div><!-- /s2a -->
 
 <div class="divider"></div>
@@ -1439,6 +1440,7 @@ client = <span class="fn">Anthropic</span>()
 <li><strong>Re-ranking</strong> — setelah top-k retrieval, gunakan cross-encoder model untuk re-rank berdasarkan relevansi yang lebih akurat. Biasanya ambil top-20 lalu re-rank jadi top-5.</li>
 <li><strong>Query expansion</strong> — minta LLM untuk generate variasi query sebelum retrieval, lalu gabungkan hasil. Efektif untuk query yang ambigu atau terlalu singkat.</li>
 <li><strong>Hierarchical chunking</strong> — simpan dokumen dalam dua level: summary per dokumen (untuk initial retrieval) dan chunks detail (untuk konteks penuh). Retrieve summary dulu, lalu drill down ke chunks yang relevan.</li>
+<li><strong>Index strategy untuk skala besar</strong> — saat jumlah chunk mencapai jutaan, full scan cosine similarity menjadi terlalu lambat. Gunakan approximate nearest neighbor index: <strong>HNSW</strong> (Hierarchical Navigable Small World) untuk latensi sangat rendah (&lt;10ms) tapi memory besar, atau <strong>IVFFlat</strong> untuk trade-off memory lebih hemat. PostgreSQL pgvector, Qdrant, dan Chroma semuanya mendukung keduanya — aktifkan sejak awal agar tidak perlu migrasi saat data tumbuh.</li>
 </ul></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Ukuran chunk yang tepat</strong>Chunk terlalu kecil kehilangan konteks. Chunk terlalu besar membuang token untuk konten yang tidak relevan. Mulai dengan 512–800 token, overlap 10–15%. Ukur dengan precision@k pada eval dataset kamu — ini berbeda per domain.</div></div>
 <div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Bottleneck RAG bukan di vector DB-nya</strong>Banyak engineer over-focus memilih vector database, padahal bottleneck terbesar RAG ada di: <strong>chunking strategy</strong> (apakah chunk mempertahankan konteks yang cukup?), <strong>document preprocessing</strong> (apakah PDF/HTML sudah di-parse dengan benar?), <strong>metadata filtering</strong> (apakah retrieval bisa disaring berdasarkan atribut relevan?), dan <strong>reranking</strong> (apakah top-k yang diambil benar-benar yang paling relevan?). Pilih vector DB yang cukup baik, lalu investasikan waktu di empat area ini.</div></div>
@@ -1607,6 +1609,7 @@ client = anthropic.<span class="fn">Anthropic</span>()
                     <span class="cm"># append ke messages dan lanjut loop</span>
     <span class="kw">return</span> tool_calls, text_buffer</pre></div></div></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Pattern penting</strong>Jangan eksekusi tool call sampai stream selesai (<code>message_stop</code>). Model kadang mengubah argumen tool call di tengah stream. Buffer dulu, eksekusi setelah complete.</div></div>
+<div class="callout info"><span class="cico">⚡</span><div class="ctxt"><strong>Advanced: streaming JSON parser untuk partial execution</strong>Pendekatan buffer-then-parse di atas adalah yang paling aman dan cocok untuk sebagian besar use case. Namun di production tingkat lanjut — misalnya saat agent men-generate argumen JSON yang sangat panjang dan kamu ingin mulai merender UI atau memvalidasi sebagian argumen sebelum <code>message_stop</code> — engineers menggunakan <strong>streaming JSON parser</strong> seperti <code>jiter</code> (dipakai internal oleh Anthropic SDK) atau pendekatan state machine. Ini memungkinkan partial execution tapi jauh lebih kompleks. Mulai dengan buffer approach; tambah streaming parser hanya jika kamu benar-benar butuh sub-<code>message_stop</code> latency.</div></div>
 </div><!-- /s2i -->
 
 <div class="divider"></div>
@@ -3213,6 +3216,7 @@ Step {step+1}/{max_steps}"</span>}
 
         <span class="kw">return</span> <span class="st">"Max steps reached"</span></pre></div></div>
 <div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Selalu gunakan VM atau container terisolasi</strong>Computer use agent bisa mengklik tombol yang salah, menghapus file, atau berinteraksi dengan hal yang tidak seharusnya. Jangan pernah jalankan di production machine atau machine yang berisi data sensitif tanpa VM isolation.</div></div>
+<div class="callout info"><span class="cico">🐳</span><div class="ctxt"><strong>Production: Docker + X11 forwarding atau headless browser</strong><code>pyautogui</code> cocok untuk pembelajaran dan prototyping di mesin lokal. Di production, computer use modern dieksekusi di dalam <strong>Docker container dengan X11 forwarding</strong> (virtual display via Xvfb) untuk isolasi mutlak dan latensi lebih rendah tanpa overhead VM penuh. Alternatif yang makin populer: gunakan <strong>headless browser</strong> (Playwright/Puppeteer) yang diinjeksi dengan visi — agent menerima screenshot dari browser, lalu mengeksekusi klik/ketik via Playwright API, bukan pyautogui. Pendekatan ini lebih deterministik, lebih mudah di-scale, dan tidak perlu display server.</div></div>
 </div><!-- /s5b -->
 
 <div class="divider"></div>
@@ -3593,7 +3597,7 @@ var TOPIC_LABELS = {
   's3b':'3.2 Parallelism & Fan-Out/Fan-In',
   's3c':'3.3 MCP — Model Context Protocol',
   's3d':'3.4 Agent Design Patterns',
-  's3e':'3.5 Communication & State Sharing',
+  's3e':'3.5 Komunikasi & State Sharing',
   's3f':'3.6 Agent Handoff & Trust Boundary',
   's3g':'3.7 Agent-to-Agent Protocol & Negotiation',
   's4a':'4.1 Error Handling & Retry Strategies',
