@@ -225,17 +225,21 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 @keyframes barIn{from{width:0}to{width:var(--tw)}}
 .cbar-fill.animate{animation:barIn 1.2s cubic-bezier(.4,0,.2,1) forwards;}
 
-/* Next phase button */
-.next-phase{display:flex;align-items:center;justify-content:space-between;padding:24px 60px;border-top:1px solid var(--border);background:var(--bg2);gap:16px;}
-.next-phase-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
-.next-phase-title{font-size:15px;font-weight:500;color:var(--text);margin-top:4px;}
-.next-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent2);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:10px 20px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
-.next-btn:hover{background:var(--accent);box-shadow:0 0 20px rgba(124,109,250,.3);}
-@media(max-width:600px){.next-phase{padding:20px 24px;flex-direction:column;align-items:flex-start;}}
-/* Next topic button (within fase) */
-.next-topic{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:32px;padding-top:20px;border-top:1px solid var(--border);}
-.next-topic-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);}
-@media(max-width:600px){.next-topic{flex-direction:column;align-items:flex-start;}}
+/* Focus mode — hide all .sub by default, show only .sub--active */
+.sub{display:none;}
+.sub--active{display:block;}
+/* Nav bar antar topik */
+.topic-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 60px;border-top:1px solid var(--border);background:var(--bg2);gap:12px;flex-wrap:wrap;}
+.topic-nav-info{display:flex;flex-direction:column;gap:2px;}
+.topic-nav-counter{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);}
+.topic-nav-title{font-size:13px;color:var(--text2);max-width:340px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topic-nav-btns{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.tnbtn{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:8px 16px;border-radius:7px;text-decoration:none;cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);}
+.tnbtn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-glow);}
+.tnbtn.primary{background:var(--accent2);color:#fff;border-color:transparent;}
+.tnbtn.primary:hover{background:var(--accent);box-shadow:0 0 18px rgba(124,109,250,.35);}
+.tnbtn:disabled,.tnbtn[disabled]{opacity:0.3;cursor:default;pointer-events:none;}
+@media(max-width:600px){.topic-nav{padding:14px 20px;}.topic-nav-title{display:none;}}
 
 </style>
 </head>
@@ -844,13 +848,6 @@ Ask the user. Do not guess.</pre></div></div>
 
 </section><!-- /fase1 -->
 
-<div class="next-phase">
-  <div>
-    <div class="next-phase-meta">Fase berikutnya</div>
-    <div class="next-phase-title">Fase 2 — Agent Architecture &amp; Harness</div>
-  </div>
-  <a class="next-btn" href="#fase2">Lanjut ke Fase 2 →</a>
-</div>
 
 <!-- ═══════════════ FASE 2 ═══════════════ -->
 <section class="cs p2" id="fase2">
@@ -1403,13 +1400,6 @@ client = <span class="fn">Anthropic</span>()
 
 </section><!-- /fase2 -->
 
-<div class="next-phase">
-  <div>
-    <div class="next-phase-meta">Fase berikutnya</div>
-    <div class="next-phase-title">Fase 3 — Multi-Agent Systems</div>
-  </div>
-  <a class="next-btn" href="#fase3">Lanjut ke Fase 3 →</a>
-</div>
 
 <!-- ═══════════════ FASE 3 ═══════════════ -->
 <section class="cs p3" id="fase3">
@@ -1852,13 +1842,6 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 
 </section><!-- /fase3 -->
 
-<div class="next-phase">
-  <div>
-    <div class="next-phase-meta">Fase berikutnya</div>
-    <div class="next-phase-title">Fase 4 — Production Engineering</div>
-  </div>
-  <a class="next-btn" href="#fase4">Lanjut ke Fase 4 →</a>
-</div>
 
 <!-- ═══════════════ FASE 4 ═══════════════ -->
 <section class="cs p4" id="fase4">
@@ -2333,13 +2316,6 @@ Result: {result}
 
 </section><!-- /fase4 -->
 
-<div class="next-phase">
-  <div>
-    <div class="next-phase-meta">Fase terakhir</div>
-    <div class="next-phase-title">Fase 5 — Build Production-Grade Agent</div>
-  </div>
-  <a class="next-btn" href="#fase5">Lanjut ke Fase 5 →</a>
-</div>
 
 <!-- ═══════════════ FASE 5 ═══════════════ -->
 <section class="cs p5" id="fase5">
@@ -2749,6 +2725,7 @@ not full rewrites.</span></pre></div></div>
 </div>
 
 <script>
+// ── Sidebar toggle (mobile) ──────────────────────────────────────────────────
 function toggleSB(){
   var s=document.getElementById('sidebar'),o=document.getElementById('overlay');
   s.classList.toggle('open');o.classList.toggle('open');
@@ -2760,130 +2737,173 @@ function sp(el,itemsId){
   if(!wasOpen){items.classList.add('open');el.classList.add('active');}
 }
 
-// Active sidebar item tracking on scroll
-var allSitems=document.querySelectorAll('.sit');
-var phaseMap={
+// ── Topic focus mode ─────────────────────────────────────────────────────────
+var TOPICS = [
+  's1a','s1b','s1c','s1d','s1e','s1f','s1g','s1h',
+  's2a','s2b','s2c','s2d','s2e','s2f','s2g','s2h',
+  's3a','s3b','s3c','s3d','s3e','s3f',
+  's4a','s4b','s4c','s4d','s4e',
+  's5a','s5b','s5c','s5d','s5e'
+];
+
+var TOPIC_LABELS = {
+  's1a':'1.1 LLM sebagai Reasoning Engine',
+  's1b':'1.2 Agent vs Chatbot vs Pipeline',
+  's1c':'1.3 ReAct, CoT, & ToT Patterns',
+  's1d':'1.4 Tool Calling Fundamentals',
+  's1e':'1.5 Autonomy Spectrum',
+  's1f':'1.6 KV Cache & Prompt Caching',
+  's1g':'1.7 Token Counting & Context Budget',
+  's1h':'1.8 System Prompt Engineering',
+  's2a':'2.1 Agent Harness & Orchestration Loop',
+  's2b':'2.2 Memory Systems',
+  's2c':'2.3 Tool Registry & Schema Design',
+  's2d':'2.4 Context Management',
+  's2e':'2.5 Planning & Task Decomposition',
+  's2f':'2.6 Structured Output & Robust Parsing',
+  's2g':'2.7 RAG & Semantic Retrieval',
+  's2h':'2.8 Agent Checkpointing & Resume',
+  's3a':'3.1 Orchestrator-Subagent Pattern',
+  's3b':'3.2 Parallelism & Fan-Out/Fan-In',
+  's3c':'3.3 MCP — Model Context Protocol',
+  's3d':'3.4 Agent Design Patterns',
+  's3e':'3.5 Komunikasi & State Sharing',
+  's3f':'3.6 Agent Handoff & Trust Boundary',
+  's4a':'4.1 Error Handling & Retry Strategies',
+  's4b':'4.2 Observability & Distributed Tracing',
+  's4c':'4.3 Latency & Cost Optimization',
+  's4d':'4.4 Safety & Guardrails',
+  's4e':'4.5 Testing & Evals Framework',
+  's5a':'5.1 Bedah Arsitektur OpenClaw',
+  's5b':'5.2 Computer Use Agent',
+  's5c':'5.3 Coding Agent Architecture',
+  's5d':'5.4 Framework Landscape 2025',
+  's5e':'5.5 Checklist Keahlian Agent Engineer'
+};
+
+var PHASE_MAP = {
   's1a':'i1','s1b':'i1','s1c':'i1','s1d':'i1','s1e':'i1','s1f':'i1','s1g':'i1','s1h':'i1',
   's2a':'i2','s2b':'i2','s2c':'i2','s2d':'i2','s2e':'i2','s2f':'i2','s2g':'i2','s2h':'i2',
   's3a':'i3','s3b':'i3','s3c':'i3','s3d':'i3','s3e':'i3','s3f':'i3',
   's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4',
   's5a':'i5','s5b':'i5','s5c':'i5','s5d':'i5','s5e':'i5'
 };
-var phaseNums={'i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
+var PHASE_NUMS = {'i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
 
-var scrollObserver=new IntersectionObserver(function(entries){
-  entries.forEach(function(entry){
-    if(!entry.isIntersecting) return;
-    var id=entry.target.id;
-    var href='#'+id;
-    // Update sidebar items
-    allSitems.forEach(function(a){
-      a.classList.toggle('active',a.getAttribute('href')===href);
-    });
-    // Open correct phase group
-    var grpId=phaseMap[id];
-    if(grpId){
-      var grp=document.getElementById(grpId);
-      if(grp && !grp.classList.contains('open')){
-        document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
-        document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
-        grp.classList.add('open');
-        grp.previousElementSibling.classList.add('active');
-      }
-      // Update progress pill
-      var pv=document.getElementById('pv');
-      if(pv) pv.textContent=phaseNums[grpId]||'1';
-    }
-  });
-},{threshold:0.15,rootMargin:'-80px 0px -55% 0px'});
+var currentIdx = 0;
 
-document.querySelectorAll('[id^="s"]').forEach(function(el){
-  if(el.id.match(/^s[1-5][a-z]$/)) scrollObserver.observe(el);
-});
-
-// Fade-in animation on scroll
-var fadeObs=new IntersectionObserver(function(entries){
-  entries.forEach(function(entry){
-    if(entry.isIntersecting){
-      entry.target.style.opacity='1';
-      entry.target.style.transform='translateY(0)';
-      fadeObs.unobserve(entry.target);
-    }
-  });
-},{threshold:0.05});
-
-var delay=0;
-document.querySelectorAll('.cc,.cb,.callout,.grid2,.fsteps,.cmp,.rt,.dblock').forEach(function(el){
-  el.style.cssText='opacity:0;transform:translateY(12px);transition:opacity 0.4s ease '+delay+'ms,transform 0.4s ease '+delay+'ms';
-  delay=(delay+30)%180;
-  fadeObs.observe(el);
-});
-
-// ── Next-topic buttons ──────────────────────────────────────────────────────
-var topicMeta = {
-  's1a': {next:'s1b', label:'1.2 Agent vs Chatbot vs Pipeline'},
-  's1b': {next:'s1c', label:'1.3 ReAct, CoT, &amp; ToT Patterns'},
-  's1c': {next:'s1d', label:'1.4 Tool Calling Fundamentals'},
-  's1d': {next:'s1e', label:'1.5 Autonomy Spectrum'},
-  's1e': {next:'s1f', label:'1.6 KV Cache &amp; Prompt Caching'},
-  's1f': {next:'s1g', label:'1.7 Token Counting &amp; Context Budget'},
-  's1g': {next:'s1h', label:'1.8 System Prompt Engineering'},
-  's1h': {next:'fase2', label:'Fase 2 — Agent Architecture'},
-  's2a': {next:'s2b', label:'2.2 Memory Systems'},
-  's2b': {next:'s2c', label:'2.3 Tool Registry &amp; Schema Design'},
-  's2c': {next:'s2d', label:'2.4 Context Management'},
-  's2d': {next:'s2e', label:'2.5 Planning &amp; Task Decomposition'},
-  's2e': {next:'s2f', label:'2.6 Structured Output &amp; Robust Parsing'},
-  's2f': {next:'s2g', label:'2.7 RAG &amp; Semantic Retrieval'},
-  's2g': {next:'s2h', label:'2.8 Agent Checkpointing &amp; Resume'},
-  's2h': {next:'fase3', label:'Fase 3 — Multi-Agent Systems'},
-  's3a': {next:'s3b', label:'3.2 Parallelism &amp; Fan-Out/Fan-In'},
-  's3b': {next:'s3c', label:'3.3 MCP — Model Context Protocol'},
-  's3c': {next:'s3d', label:'3.4 Agent Design Patterns'},
-  's3d': {next:'s3e', label:'3.5 Komunikasi &amp; State Sharing'},
-  's3e': {next:'s3f', label:'3.6 Agent Handoff &amp; Trust Boundary'},
-  's3f': {next:'fase4', label:'Fase 4 — Production Engineering'},
-  's4a': {next:'s4b', label:'4.2 Observability &amp; Distributed Tracing'},
-  's4b': {next:'s4c', label:'4.3 Latency &amp; Cost Optimization'},
-  's4c': {next:'s4d', label:'4.4 Safety &amp; Guardrails'},
-  's4d': {next:'s4e', label:'4.5 Testing &amp; Evals Framework'},
-  's4e': {next:'fase5', label:'Fase 5 — Build Production-Grade Agent'},
-  's5a': {next:'s5b', label:'5.2 Computer Use Agent'},
-  's5b': {next:'s5c', label:'5.3 Coding Agent Architecture'},
-  's5c': {next:'s5d', label:'5.4 Framework Landscape 2025'},
-  's5d': {next:'s5e', label:'5.5 Checklist Keahlian Agent Engineer'},
-  's5e': null
-};
-
-Object.keys(topicMeta).forEach(function(id) {
-  var meta = topicMeta[id];
-  if (!meta) return;
+// Inject nav bar ke setiap .sub
+TOPICS.forEach(function(id, idx) {
   var el = document.getElementById(id);
   if (!el) return;
-  var btn = document.createElement('div');
-  btn.className = 'next-topic';
-  btn.innerHTML = '<span class="next-topic-label">Topik berikutnya</span>'
-    + '<a class="next-btn" href="#' + meta.next + '">' + meta.label + ' →</a>';
-  el.appendChild(btn);
-});
-// ────────────────────────────────────────────────────────────────────────────
+  var isLast = idx === TOPICS.length - 1;
+  var prevId = idx > 0 ? TOPICS[idx-1] : null;
+  var nextId = isLast ? null : TOPICS[idx+1];
 
-// Animate cbar-fill when in view
-var barObs = new IntersectionObserver(function(entries){
-  entries.forEach(function(entry){
-    if(!entry.isIntersecting) return;
-    entry.target.querySelectorAll('.cbar-fill').forEach(function(bar){
-      var tw = bar.style.getPropertyValue('--tw') || bar.style.width;
-      bar.style.width = '0';
-      setTimeout(function(){
-        bar.style.transition = 'width 1.2s cubic-bezier(.4,0,.2,1)';
-        bar.style.width = tw;
-      }, 80);
-    });
-    barObs.unobserve(entry.target);
+  var nav = document.createElement('div');
+  nav.className = 'topic-nav';
+  nav.innerHTML =
+    '<div class="topic-nav-info">'
+    + '<div class="topic-nav-counter">Topik ' + (idx+1) + ' / ' + TOPICS.length + '</div>'
+    + '<div class="topic-nav-title">' + (nextId ? TOPIC_LABELS[nextId] : 'Selesai 🎉') + '</div>'
+    + '</div>'
+    + '<div class="topic-nav-btns">'
+    + '<button class="tnbtn prev-btn" data-idx="' + idx + '"' + (prevId?'':' disabled') + '>← Sebelumnya</button>'
+    + (isLast
+        ? '<button class="tnbtn primary" onclick="goTo(0)">Mulai ulang ↺</button>'
+        : '<button class="tnbtn primary next-btn-t" data-idx="' + idx + '">Selanjutnya →</button>')
+    + '</div>';
+  el.appendChild(nav);
+});
+
+function goTo(idx) {
+  if (idx < 0 || idx >= TOPICS.length) return;
+  var prevId = TOPICS[currentIdx];
+  var nextId = TOPICS[idx];
+
+  // hide all, show target
+  TOPICS.forEach(function(id){ document.getElementById(id).classList.remove('sub--active'); });
+  document.getElementById(nextId).classList.add('sub--active');
+  currentIdx = idx;
+
+  // scroll to top of main
+  document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // update URL hash
+  history.replaceState(null,'','#'+nextId);
+
+  // sync sidebar active state
+  document.querySelectorAll('.sit').forEach(function(a){
+    a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
   });
-}, {threshold: 0.2});
-document.querySelectorAll('.viz-wrap').forEach(function(el){ barObs.observe(el); });
+
+  // open correct phase accordion
+  var grpId = PHASE_MAP[nextId];
+  if (grpId) {
+    document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
+    document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
+    var grp = document.getElementById(grpId);
+    if (grp) { grp.classList.add('open'); grp.previousElementSibling.classList.add('active'); }
+    var pv = document.getElementById('pv');
+    if (pv) pv.textContent = PHASE_NUMS[grpId]||'1';
+  }
+
+  // also show the parent .cs section (hide others)
+  document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
+  var parentSection = document.getElementById(nextId).closest('.cs');
+  if (parentSection) parentSection.style.display='block';
+
+  // animate bars in active topic
+  document.getElementById(nextId).querySelectorAll('.cbar-fill').forEach(function(bar){
+    var tw = bar.style.getPropertyValue('--tw') || bar.getAttribute('data-tw');
+    if (!bar.getAttribute('data-tw')) bar.setAttribute('data-tw', bar.style.width||tw);
+    bar.style.width='0';
+    setTimeout(function(){ bar.style.transition='width 1.2s cubic-bezier(.4,0,.2,1)'; bar.style.width=bar.getAttribute('data-tw')||tw; },80);
+  });
+}
+
+// Button click delegation
+document.addEventListener('click', function(e){
+  var pb = e.target.closest('.prev-btn');
+  var nb = e.target.closest('.next-btn-t');
+  if (pb) goTo(parseInt(pb.dataset.idx)-1);
+  if (nb) goTo(parseInt(nb.dataset.idx)+1);
+});
+
+// Sidebar link clicks
+document.querySelectorAll('.sit').forEach(function(a){
+  a.addEventListener('click', function(e){
+    e.preventDefault();
+    var id = a.getAttribute('href').replace('#','');
+    var idx = TOPICS.indexOf(id);
+    if (idx >= 0) goTo(idx);
+    // mobile: close sidebar
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  });
+});
+
+// Init: read hash or start at s1a
+(function(){
+  var hash = location.hash.replace('#','');
+  var startIdx = TOPICS.indexOf(hash);
+  if (startIdx < 0) startIdx = 0;
+
+  // Hide all .cs sections first, then show only the target
+  document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
+
+  goTo(startIdx);
+
+  // Fade-in animation for elements in active topic
+  var activeEl = document.getElementById(TOPICS[startIdx]);
+  if (activeEl) {
+    activeEl.querySelectorAll('.cc,.cb,.callout,.grid2,.fsteps,.cmp,.rt,.dblock').forEach(function(el,i){
+      el.style.cssText='opacity:0;transform:translateY(12px);transition:opacity 0.4s ease '+(i*30)+'ms,transform 0.4s ease '+(i*30)+'ms';
+      setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; },50+i*30);
+    });
+  }
+})();
 
 </script>
 </body>
