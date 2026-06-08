@@ -80,6 +80,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 .cf{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text3);margin-left:auto;}
 .cbb{padding:20px;overflow-x:auto;}
 .cbb pre{font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#c9d1d9;white-space:pre;}
+.dbody pre{font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.7;color:#c9d1d9;white-space:pre;overflow-x:auto;}
+.dbody pre code{font-family:inherit;font-size:inherit;color:inherit;background:none;padding:0;}
 .kw{color:#ff79c6;}.fn{color:#8be9fd;}.st{color:#f1fa8c;}.cm{color:#6272a4;font-style:italic;}.tp{color:#ffb86c;}.nm{color:#50fa7b;}
 .callout{display:flex;gap:14px;padding:16px 20px;border-radius:10px;margin:18px 0;border:1px solid;}
 .callout.info{background:var(--accent-glow);border-color:rgba(124,109,250,.2);}
@@ -1555,48 +1557,48 @@ client = <span class="fn">Anthropic</span>()
 
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Streaming harness dengan Anthropic SDK</div></div>
-<div class="dbody"><pre><code>import anthropic
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> anthropic
 
-client = anthropic.Anthropic()
+client = anthropic.<span class="fn">Anthropic</span>()
 
-def run_agent_streaming(messages):
-    tool_calls = {}   # buffer tool calls yang sedang datang
-    text_buffer = ""
+<span class="kw">def</span> <span class="fn">run_agent_streaming</span>(messages):
+    tool_calls = {}   <span class="cm"># buffer tool calls yang sedang datang</span>
+    text_buffer = <span class="st">""</span>
 
-    with client.messages.stream(
-        model="claude-opus-4-8",
-        max_tokens=4096,
+    <span class="kw">with</span> client.messages.<span class="fn">stream</span>(
+        model=<span class="st">"claude-opus-4-8"</span>,
+        max_tokens=<span class="nm">4096</span>,
         system=SYSTEM_PROMPT,
         tools=TOOLS,
         messages=messages
-    ) as stream:
-        for event in stream:
-            if event.type == "content_block_start":
-                if event.content_block.type == "tool_use":
-                    # inisialisasi buffer untuk tool call ini
+    ) <span class="kw">as</span> stream:
+        <span class="kw">for</span> event <span class="kw">in</span> stream:
+            <span class="kw">if</span> event.type == <span class="st">"content_block_start"</span>:
+                <span class="kw">if</span> event.content_block.type == <span class="st">"tool_use"</span>:
+                    <span class="cm"># inisialisasi buffer untuk tool call ini</span>
                     tool_calls[event.index] = {
-                        "id": event.content_block.id,
-                        "name": event.content_block.name,
-                        "input_json": ""
+                        <span class="st">"id"</span>: event.content_block.id,
+                        <span class="st">"name"</span>: event.content_block.name,
+                        <span class="st">"input_json"</span>: <span class="st">""</span>
                     }
 
-            elif event.type == "content_block_delta":
-                if event.delta.type == "text_delta":
+            <span class="kw">elif</span> event.type == <span class="st">"content_block_delta"</span>:
+                <span class="kw">if</span> event.delta.type == <span class="st">"text_delta"</span>:
                     text_buffer += event.delta.text
-                    print(event.delta.text, end="", flush=True)  # stream ke user
+                    <span class="fn">print</span>(event.delta.text, end=<span class="st">""</span>, flush=<span class="kw">True</span>)  <span class="cm"># stream ke user</span>
 
-                elif event.delta.type == "input_json_delta":
-                    # accumulate partial JSON
-                    tool_calls[event.index]["input_json"] += event.delta.partial_json
+                <span class="kw">elif</span> event.delta.type == <span class="st">"input_json_delta"</span>:
+                    <span class="cm"># accumulate partial JSON</span>
+                    tool_calls[event.index][<span class="st">"input_json"</span>] += event.delta.partial_json
 
-            elif event.type == "message_stop":
-                # semua tool calls sudah complete, parse dan eksekusi
-                for idx, tc in tool_calls.items():
-                    import json
-                    tc["input"] = json.loads(tc["input_json"])
-                    result = execute_tool(tc["name"], tc["input"])
-                    # append ke messages dan lanjut loop
-    return tool_calls, text_buffer</code></pre></div></div>
+            <span class="kw">elif</span> event.type == <span class="st">"message_stop"</span>:
+                <span class="cm"># semua tool calls sudah complete, parse dan eksekusi</span>
+                <span class="kw">for</span> idx, tc <span class="kw">in</span> tool_calls.<span class="fn">items</span>():
+                    <span class="kw">import</span> json
+                    tc[<span class="st">"input"</span>] = json.<span class="fn">loads</span>(tc[<span class="st">"input_json"</span>])
+                    result = <span class="fn">execute_tool</span>(tc[<span class="st">"name"</span>], tc[<span class="st">"input"</span>])
+                    <span class="cm"># append ke messages dan lanjut loop</span>
+    <span class="kw">return</span> tool_calls, text_buffer</pre></div></div></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Pattern penting</strong>Jangan eksekusi tool call sampai stream selesai (<code>message_stop</code>). Model kadang mengubah argumen tool call di tengah stream. Buffer dulu, eksekusi setelah complete.</div></div>
 </div><!-- /s2i -->
 
@@ -1634,37 +1636,37 @@ def run_agent_streaming(messages):
 
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Session manager sederhana</div></div>
-<div class="dbody"><pre><code>import redis, json, uuid
-from datetime import timedelta
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> redis, json, uuid
+<span class="kw">from</span> datetime <span class="kw">import</span> timedelta
 
-r = redis.Redis()
-SESSION_TTL = timedelta(hours=24)
-MAX_MESSAGES = 40   # sliding window
+r = redis.<span class="fn">Redis</span>()
+SESSION_TTL = <span class="fn">timedelta</span>(hours=<span class="nm">24</span>)
+MAX_MESSAGES = <span class="nm">40</span>   <span class="cm"># sliding window</span>
 
-class SessionManager:
-    def get_or_create(self, session_id: str, user_id: str) -> dict:
-        key = f"session:{session_id}"
-        raw = r.get(key)
-        if not raw:
-            session = {"id": session_id, "user_id": user_id, "messages": []}
-        else:
-            session = json.loads(raw)
-            # security: pastikan session milik user ini
-            if session["user_id"] != user_id:
-                raise PermissionError("Session tidak dimiliki user ini")
-        return session
+<span class="kw">class</span> <span class="fn">SessionManager</span>:
+    <span class="kw">def</span> <span class="fn">get_or_create</span>(<span class="kw">self</span>, session_id: <span class="tp">str</span>, user_id: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+        key = <span class="st">f"session:{session_id}"</span>
+        raw = r.<span class="fn">get</span>(key)
+        <span class="kw">if not</span> raw:
+            session = {<span class="st">"id"</span>: session_id, <span class="st">"user_id"</span>: user_id, <span class="st">"messages"</span>: []}
+        <span class="kw">else</span>:
+            session = json.<span class="fn">loads</span>(raw)
+            <span class="cm"># security: pastikan session milik user ini</span>
+            <span class="kw">if</span> session[<span class="st">"user_id"</span>] != user_id:
+                <span class="kw">raise</span> <span class="fn">PermissionError</span>(<span class="st">"Session tidak dimiliki user ini"</span>)
+        <span class="kw">return</span> session
 
-    def append_and_save(self, session: dict, role: str, content: str):
-        session["messages"].append({"role": role, "content": content})
-        # sliding window: buang pesan lama kalau terlalu panjang
-        if len(session["messages"]) > MAX_MESSAGES:
-            # pertahankan system context di index 0 jika ada
-            session["messages"] = session["messages"][-MAX_MESSAGES:]
-        key = f"session:{session['id']}"
-        r.setex(key, SESSION_TTL, json.dumps(session))
+    <span class="kw">def</span> <span class="fn">append_and_save</span>(<span class="kw">self</span>, session: <span class="tp">dict</span>, role: <span class="tp">str</span>, content: <span class="tp">str</span>):
+        session[<span class="st">"messages"</span>].<span class="fn">append</span>({<span class="st">"role"</span>: role, <span class="st">"content"</span>: content})
+        <span class="cm"># sliding window: buang pesan lama kalau terlalu panjang</span>
+        <span class="kw">if</span> <span class="fn">len</span>(session[<span class="st">"messages"</span>]) > MAX_MESSAGES:
+            <span class="cm"># pertahankan system context di index 0 jika ada</span>
+            session[<span class="st">"messages"</span>] = session[<span class="st">"messages"</span>][-MAX_MESSAGES:]
+        key = <span class="st">f"session:{session['id']}"</span>
+        r.<span class="fn">setex</span>(key, SESSION_TTL, json.<span class="fn">dumps</span>(session))
 
-    def get_messages_for_llm(self, session: dict) -> list:
-        return session["messages"]  # sudah di-trim saat append</code></pre></div></div>
+    <span class="kw">def</span> <span class="fn">get_messages_for_llm</span>(<span class="kw">self</span>, session: <span class="tp">dict</span>) -> <span class="tp">list</span>:
+        <span class="kw">return</span> session[<span class="st">"messages"</span>]  <span class="cm"># sudah di-trim saat append</span></pre></div></div></div>
 <div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>TTL adalah fitur, bukan bug</strong>Session yang kadaluarsa (TTL habis) adalah desain yang baik — user memulai percakapan baru dengan konteks bersih. Jangan buat session yang hidup selamanya tanpa alasan yang jelas.</div></div>
 </div><!-- /s2j -->
 
@@ -2188,36 +2190,36 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Capability advertisement — agent manifest</div></div>
-<div class="dbody"><pre><code>AGENT_MANIFEST = {
-    "agent_id": "research-agent-v2",
-    "capabilities": [
+<div class="dbody"><div class="cbb"><pre>AGENT_MANIFEST = {
+    <span class="st">"agent_id"</span>: <span class="st">"research-agent-v2"</span>,
+    <span class="st">"capabilities"</span>: [
         {
-            "name": "web_research",
-            "description": "Search and synthesize information from the web",
-            "input_schema": {
-                "query": "string",
-                "max_sources": "integer (default: 5)",
-                "trusted_domains": "list[string] (optional)"
+            <span class="st">"name"</span>: <span class="st">"web_research"</span>,
+            <span class="st">"description"</span>: <span class="st">"Search and synthesize information from the web"</span>,
+            <span class="st">"input_schema"</span>: {
+                <span class="st">"query"</span>: <span class="st">"string"</span>,
+                <span class="st">"max_sources"</span>: <span class="st">"integer (default: 5)"</span>,
+                <span class="st">"trusted_domains"</span>: <span class="st">"list[string] (optional)"</span>
             },
-            "output_schema": {
-                "summary": "string",
-                "sources": "list[url]",
-                "confidence": "float 0-1"
+            <span class="st">"output_schema"</span>: {
+                <span class="st">"summary"</span>: <span class="st">"string"</span>,
+                <span class="st">"sources"</span>: <span class="st">"list[url]"</span>,
+                <span class="st">"confidence"</span>: <span class="st">"float 0-1"</span>
             },
-            "constraints": {
-                "max_tokens_input": 4000,
-                "avg_latency_ms": 15000,
-                "rate_limit": "10 req/min"
+            <span class="st">"constraints"</span>: {
+                <span class="st">"max_tokens_input"</span>: <span class="nm">4000</span>,
+                <span class="st">"avg_latency_ms"</span>: <span class="nm">15000</span>,
+                <span class="st">"rate_limit"</span>: <span class="st">"10 req/min"</span>
             }
         }
     ],
-    "trust_level": "standard",  # orchestrator bisa set permission berdasarkan ini
-    "version": "2.1.0"
+    <span class="st">"trust_level"</span>: <span class="st">"standard"</span>,  <span class="cm"># orchestrator bisa set permission berdasarkan ini</span>
+    <span class="st">"version"</span>: <span class="st">"2.1.0"</span>
 }
 
-# Orchestrator query capability sebelum assign task
-def can_handle(agent_manifest: dict, task_type: str) -> bool:
-    return any(c["name"] == task_type for c in agent_manifest["capabilities"])</code></pre></div></div>
+<span class="cm"># Orchestrator query capability sebelum assign task</span>
+<span class="kw">def</span> <span class="fn">can_handle</span>(agent_manifest: <span class="tp">dict</span>, task_type: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+    <span class="kw">return</span> <span class="fn">any</span>(c[<span class="st">"name"</span>] == task_type <span class="kw">for</span> c <span class="kw">in</span> agent_manifest[<span class="st">"capabilities"</span>])</pre></div></div></div>
 <div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Protocol over improvisation</strong>Agent yang berkomunikasi lewat plain text rentan terhadap misinterpretasi dan prompt injection antar agent. Schema yang ketat memaksa struktur dan memudahkan validasi — orchestrator bisa assert bahwa response valid sebelum menggunakannya untuk langkah berikutnya.</div></div>
 </div><!-- /s3g -->
 
@@ -2761,58 +2763,58 @@ Result: {result}
 
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Rate limiter + budget tracker untuk agent harness</div></div>
-<div class="dbody"><pre><code>import time, threading
-from collections import deque
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> time, threading
+<span class="kw">from</span> collections <span class="kw">import</span> deque
 
-class RateLimiter:
-    """Token bucket — izinkan burst tapi cap rata-rata."""
-    def __init__(self, rpm: int, tpm: int):
-        self.rpm = rpm
-        self.tpm = tpm
-        self.requests = deque()
-        self.tokens_used = deque()
-        self._lock = threading.Lock()
+<span class="kw">class</span> <span class="fn">RateLimiter</span>:
+    <span class="st">"""Token bucket — izinkan burst tapi cap rata-rata."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, rpm: <span class="tp">int</span>, tpm: <span class="tp">int</span>):
+        <span class="kw">self</span>.rpm = rpm
+        <span class="kw">self</span>.tpm = tpm
+        <span class="kw">self</span>.requests = <span class="fn">deque</span>()
+        <span class="kw">self</span>.tokens_used = <span class="fn">deque</span>()
+        <span class="kw">self</span>._lock = threading.<span class="fn">Lock</span>()
 
-    def wait_if_needed(self, estimated_tokens: int):
-        with self._lock:
-            now = time.time()
-            # bersihkan window lama (>60 detik)
-            while self.requests and self.requests[0] < now - 60:
-                self.requests.popleft()
-            while self.tokens_used and self.tokens_used[0][0] < now - 60:
-                self.tokens_used.popleft()
+    <span class="kw">def</span> <span class="fn">wait_if_needed</span>(<span class="kw">self</span>, estimated_tokens: <span class="tp">int</span>):
+        <span class="kw">with self</span>._lock:
+            now = time.<span class="fn">time</span>()
+            <span class="cm"># bersihkan window lama (&gt;60 detik)</span>
+            <span class="kw">while self</span>.requests <span class="kw">and self</span>.requests[<span class="nm">0</span>] &lt; now - <span class="nm">60</span>:
+                <span class="kw">self</span>.requests.<span class="fn">popleft</span>()
+            <span class="kw">while self</span>.tokens_used <span class="kw">and self</span>.tokens_used[<span class="nm">0</span>][<span class="nm">0</span>] &lt; now - <span class="nm">60</span>:
+                <span class="kw">self</span>.tokens_used.<span class="fn">popleft</span>()
 
-            req_count = len(self.requests)
-            tok_count = sum(t for _, t in self.tokens_used)
+            req_count = <span class="fn">len</span>(<span class="kw">self</span>.requests)
+            tok_count = <span class="fn">sum</span>(t <span class="kw">for</span> _, t <span class="kw">in self</span>.tokens_used)
 
-            wait = 0.0
-            if req_count >= self.rpm:
-                wait = max(wait, 60 - (now - self.requests[0]))
-            if tok_count + estimated_tokens > self.tpm:
-                wait = max(wait, 60 - (now - self.tokens_used[0][0]))
+            wait = <span class="nm">0.0</span>
+            <span class="kw">if</span> req_count >= <span class="kw">self</span>.rpm:
+                wait = <span class="fn">max</span>(wait, <span class="nm">60</span> - (now - <span class="kw">self</span>.requests[<span class="nm">0</span>]))
+            <span class="kw">if</span> tok_count + estimated_tokens > <span class="kw">self</span>.tpm:
+                wait = <span class="fn">max</span>(wait, <span class="nm">60</span> - (now - <span class="kw">self</span>.tokens_used[<span class="nm">0</span>][<span class="nm">0</span>]))
 
-            if wait > 0:
-                time.sleep(wait + 0.1)
+            <span class="kw">if</span> wait > <span class="nm">0</span>:
+                time.<span class="fn">sleep</span>(wait + <span class="nm">0.1</span>)
 
-            self.requests.append(time.time())
-            self.tokens_used.append((time.time(), estimated_tokens))
+            <span class="kw">self</span>.requests.<span class="fn">append</span>(time.<span class="fn">time</span>())
+            <span class="kw">self</span>.tokens_used.<span class="fn">append</span>((time.<span class="fn">time</span>(), estimated_tokens))
 
-class AgentBudget:
-    """Per-run token + cost budget dengan graceful stop."""
-    def __init__(self, max_tokens: int, max_cost_usd: float):
-        self.max_tokens = max_tokens
-        self.max_cost = max_cost_usd
-        self.tokens_used = 0
-        self.cost_used = 0.0
+<span class="kw">class</span> <span class="fn">AgentBudget</span>:
+    <span class="st">"""Per-run token + cost budget dengan graceful stop."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, max_tokens: <span class="tp">int</span>, max_cost_usd: <span class="tp">float</span>):
+        <span class="kw">self</span>.max_tokens = max_tokens
+        <span class="kw">self</span>.max_cost = max_cost_usd
+        <span class="kw">self</span>.tokens_used = <span class="nm">0</span>
+        <span class="kw">self</span>.cost_used = <span class="nm">0.0</span>
 
-    def check(self, tokens_this_call: int) -> str:
-        self.tokens_used += tokens_this_call
-        pct = self.tokens_used / self.max_tokens
-        if pct >= 1.0:
-            return "exceeded"
-        if pct >= 0.8:
-            return "warning"   # inject ke system: "wrap up now"
-        return "ok"</code></pre></div></div>
+    <span class="kw">def</span> <span class="fn">check</span>(<span class="kw">self</span>, tokens_this_call: <span class="tp">int</span>) -> <span class="tp">str</span>:
+        <span class="kw">self</span>.tokens_used += tokens_this_call
+        pct = <span class="kw">self</span>.tokens_used / <span class="kw">self</span>.max_tokens
+        <span class="kw">if</span> pct >= <span class="nm">1.0</span>:
+            <span class="kw">return</span> <span class="st">"exceeded"</span>
+        <span class="kw">if</span> pct >= <span class="nm">0.8</span>:
+            <span class="kw">return</span> <span class="st">"warning"</span>   <span class="cm"># inject ke system: "wrap up now"</span>
+        <span class="kw">return</span> <span class="st">"ok"</span></pre></div></div></div>
 <div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Exponential backoff untuk 429</strong>Saat kena rate limit provider, jangan retry langsung. Gunakan: <code>wait = min(base * 2**attempt + jitter, max_wait)</code>. Jitter penting untuk mencegah thundering herd saat banyak agent retry bersamaan.</div></div>
 </div><!-- /s4f -->
 
@@ -2869,47 +2871,47 @@ class AgentBudget:
 
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Async worker pattern dengan graceful shutdown</div></div>
-<div class="dbody"><pre><code>import asyncio, signal
-from redis import asyncio as aioredis
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> asyncio, signal
+<span class="kw">from</span> redis <span class="kw">import</span> asyncio <span class="kw">as</span> aioredis
 
-class AgentWorker:
-    def __init__(self):
-        self.running = True
-        self.current_task = None
+<span class="kw">class</span> <span class="fn">AgentWorker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>):
+        <span class="kw">self</span>.running = <span class="kw">True</span>
+        <span class="kw">self</span>.current_task = <span class="kw">None</span>
 
-    def setup_signals(self):
-        signal.signal(signal.SIGTERM, self._handle_sigterm)
+    <span class="kw">def</span> <span class="fn">setup_signals</span>(<span class="kw">self</span>):
+        signal.<span class="fn">signal</span>(signal.SIGTERM, <span class="kw">self</span>._handle_sigterm)
 
-    def _handle_sigterm(self, *args):
-        print("SIGTERM diterima — graceful shutdown dimulai")
-        self.running = False
-        # beri waktu current task untuk checkpoint
-        if self.current_task:
-            self.current_task.checkpoint()
+    <span class="kw">def</span> <span class="fn">_handle_sigterm</span>(<span class="kw">self</span>, *args):
+        <span class="fn">print</span>(<span class="st">"SIGTERM diterima — graceful shutdown dimulai"</span>)
+        <span class="kw">self</span>.running = <span class="kw">False</span>
+        <span class="cm"># beri waktu current task untuk checkpoint</span>
+        <span class="kw">if self</span>.current_task:
+            <span class="kw">self</span>.current_task.<span class="fn">checkpoint</span>()
 
-    async def run(self, queue_url: str):
-        self.setup_signals()
-        redis = await aioredis.from_url(queue_url)
+    <span class="kw">async def</span> <span class="fn">run</span>(<span class="kw">self</span>, queue_url: <span class="tp">str</span>):
+        <span class="kw">self</span>.<span class="fn">setup_signals</span>()
+        redis = <span class="kw">await</span> aioredis.<span class="fn">from_url</span>(queue_url)
 
-        while self.running:
-            # blocking pop dengan timeout — release lock saat shutdown
-            item = await redis.blpop("agent:tasks", timeout=5)
-            if not item:
-                continue   # timeout, cek self.running lagi
+        <span class="kw">while self</span>.running:
+            <span class="cm"># blocking pop dengan timeout — release lock saat shutdown</span>
+            item = <span class="kw">await</span> redis.<span class="fn">blpop</span>(<span class="st">"agent:tasks"</span>, timeout=<span class="nm">5</span>)
+            <span class="kw">if not</span> item:
+                <span class="kw">continue</span>   <span class="cm"># timeout, cek self.running lagi</span>
 
             _, task_json = item
-            task = Task.from_json(task_json)
-            self.current_task = task
+            task = Task.<span class="fn">from_json</span>(task_json)
+            <span class="kw">self</span>.current_task = task
 
-            try:
-                result = await run_agent(task)
-                await redis.lpush(f"results:{task.id}", result.to_json())
-            except Exception as e:
-                await redis.lpush(f"errors:{task.id}", str(e))
-            finally:
-                self.current_task = None
+            <span class="kw">try</span>:
+                result = <span class="kw">await</span> <span class="fn">run_agent</span>(task)
+                <span class="kw">await</span> redis.<span class="fn">lpush</span>(<span class="st">f"results:{task.id}"</span>, result.<span class="fn">to_json</span>())
+            <span class="kw">except</span> <span class="tp">Exception</span> <span class="kw">as</span> e:
+                <span class="kw">await</span> redis.<span class="fn">lpush</span>(<span class="st">f"errors:{task.id}"</span>, <span class="fn">str</span>(e))
+            <span class="kw">finally</span>:
+                <span class="kw">self</span>.current_task = <span class="kw">None</span>
 
-        print("Worker berhenti dengan bersih")</code></pre></div></div>
+        <span class="fn">print</span>(<span class="st">"Worker berhenti dengan bersih"</span>)</pre></div></div></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Rekomendasi stack untuk mulai</strong>FastAPI (HTTP layer) + Redis Streams (queue) + Docker Compose (local) → Kubernetes (production). Jangan mulai dengan Kubernetes dari hari pertama — tambahkan kompleksitas hanya saat kamu benar-benar butuhnya.</div></div>
 </div><!-- /s4g -->
 
@@ -3321,46 +3323,46 @@ not full rewrites.</span></pre></div></div>
 
 <div class="dblock">
 <div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Voice agent dengan cascaded pipeline (Python)</div></div>
-<div class="dbody"><pre><code>import anthropic
-from openai import OpenAI
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> anthropic
+<span class="kw">from</span> openai <span class="kw">import</span> OpenAI
 
-openai_client = OpenAI()
-anthropic_client = anthropic.Anthropic()
+openai_client = <span class="fn">OpenAI</span>()
+anthropic_client = anthropic.<span class="fn">Anthropic</span>()
 
-def run_voice_agent(audio_bytes: bytes) -> bytes:
-    # Step 1: Speech-to-text
-    transcript = openai_client.audio.transcriptions.create(
-        model="whisper-1",
-        file=("audio.webm", audio_bytes, "audio/webm")
+<span class="kw">def</span> <span class="fn">run_voice_agent</span>(audio_bytes: <span class="tp">bytes</span>) -> <span class="tp">bytes</span>:
+    <span class="cm"># Step 1: Speech-to-text</span>
+    transcript = openai_client.audio.transcriptions.<span class="fn">create</span>(
+        model=<span class="st">"whisper-1"</span>,
+        file=(<span class="st">"audio.webm"</span>, audio_bytes, <span class="st">"audio/webm"</span>)
     ).text
 
-    print(f"User berkata: {transcript}")
+    <span class="fn">print</span>(<span class="st">f"User berkata: {transcript}"</span>)
 
-    # Step 2: LLM dengan tools (agent bisa call tools!)
-    response = anthropic_client.messages.create(
-        model="claude-opus-4-8",
-        max_tokens=512,
-        system="""Kamu adalah voice assistant yang helpful.
+    <span class="cm"># Step 2: LLM dengan tools (agent bisa call tools!)</span>
+    response = anthropic_client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-opus-4-8"</span>,
+        max_tokens=<span class="nm">512</span>,
+        system=<span class="st">"""Kamu adalah voice assistant yang helpful.
 Jawab singkat dan natural — ini akan diucapkan, bukan dibaca.
-Hindari bullet points, markdown, atau list yang panjang.""",
-        tools=VOICE_TOOLS,  # search, calendar, dll
-        messages=[{"role": "user", "content": transcript}]
+Hindari bullet points, markdown, atau list yang panjang."""</span>,
+        tools=VOICE_TOOLS,  <span class="cm"># search, calendar, dll</span>
+        messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: transcript}]
     )
 
-    text_response = next(
-        b.text for b in response.content if b.type == "text"
+    text_response = <span class="fn">next</span>(
+        b.text <span class="kw">for</span> b <span class="kw">in</span> response.content <span class="kw">if</span> b.type == <span class="st">"text"</span>
     )
-    print(f"Agent menjawab: {text_response}")
+    <span class="fn">print</span>(<span class="st">f"Agent menjawab: {text_response}"</span>)
 
-    # Step 3: Text-to-speech
-    audio_response = openai_client.audio.speech.create(
-        model="tts-1",
-        voice="nova",
+    <span class="cm"># Step 3: Text-to-speech</span>
+    audio_response = openai_client.audio.speech.<span class="fn">create</span>(
+        model=<span class="st">"tts-1"</span>,
+        voice=<span class="st">"nova"</span>,
         input=text_response,
-        response_format="mp3"
+        response_format=<span class="st">"mp3"</span>
     )
 
-    return audio_response.content</code></pre></div></div>
+    <span class="kw">return</span> audio_response.content</pre></div></div></div>
 
 <div class="cc"><h3>Tantangan unik voice agent</h3><ul>
 <li><strong>Interruption handling</strong> — user mungkin memotong agent di tengah berbicara. Sistem harus bisa stop playback dan mulai dengar lagi (VAD — Voice Activity Detection)</li>
