@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentic AI Mastery | Muhammad Hasbi</title>
-<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 40 topik, contoh kode lengkap.">
+<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 42 topik, contoh kode lengkap.">
 <meta name="author" content="Muhammad Hasbi Ashshiddieqy">
 <meta property="og:title" content="Agentic AI Mastery | Muhammad Hasbi">
-<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 40 topik, contoh kode lengkap.">
+<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 42 topik, contoh kode lengkap.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:creator" content="@mhasbi">
@@ -307,6 +307,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s4e"><span class="dot"></span>Testing &amp; evals</a>
     <a class="sit" href="#s4f"><span class="dot"></span>Rate limiting &amp; backpressure</a>
     <a class="sit" href="#s4g"><span class="dot"></span>Deployment patterns</a>
+    <a class="sit" href="#s4h"><span class="dot"></span>Context engineering</a>
+    <a class="sit" href="#s4i"><span class="dot"></span>Agent evaluation taxonomy</a>
   </div>
   <div class="sph" onclick="sp(this,'i5')"><span class="pn">5</span>Build Agent</div>
   <div class="sits" id="i5">
@@ -412,7 +414,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     Ini adalah catatan belajar saya yang saya buka ke publik. Ditulis dari perspektif seorang engineer yang mempelajari agentic AI secara mendalam—bukan sekadar tutorial "copy-paste framework". Konten dibuat dengan bantuan AI dan direview secara bertahap.
   </div>
   <div style="display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;">
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">40</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">42</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">26</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">12</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">~16mg</div><div style="font-size:11px;color:var(--text3)">kurikulum</div></div>
@@ -467,8 +469,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 <div class="sub" id="s1a">
 <div class="subtit"><span class="ac">1.1</span> LLM sebagai Reasoning Engine <span class="subid">// fondasi segalanya</span></div>
 <div class="prose">
-<p>Cara paling berguna untuk memahami LLM bukan sebagai "text generator" tapi sebagai <strong>reasoning engine</strong> — sistem yang menginferensi tindakan terbaik dari konteks. Ini pergeseran mental yang krusial untuk building agents.</p>
-<p>LLM menerima satu sequence token, dan memprediksi distribusi probabilitas untuk token berikutnya. Dari mekanisme sederhana ini, muncul kemampuan reasoning, planning, dan decision-making yang kompleks.</p>
+<p>Cara paling berguna untuk memahami LLM — dari perspektif agent engineer — adalah sebagai <strong>reasoning engine</strong>: sistem yang menginferensi tindakan terbaik dari konteks yang diberikan. Ini pergeseran mental yang krusial untuk building agents.</p>
+<p>Secara teknis, LLM tetap adalah <strong>next-token predictor</strong> — model autoregresif yang memprediksi distribusi probabilitas token berikutnya. Kemampuan reasoning, planning, dan decision-making yang kita manfaatkan adalah <em>emergent behavior</em> dari training pada data skala besar, bukan symbolic reasoning engine yang eksplisit.</p>
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Mental model yang tepat</strong>Memandang LLM sebagai "reasoning engine" berguna secara praktis, tapi jangan lupa fondasinya: probabilistic token prediction. Ini penting untuk memahami kenapa model bisa "salah yakin", kenapa temperature berpengaruh, dan kenapa prompt wording yang berbeda bisa menghasilkan output yang sangat berbeda.</div></div>
 </div>
 <div class="cc"><h3>Tiga konsep kunci yang perlu dipahami agent builder</h3><ul>
 <li><strong>Context window</strong> adalah "working memory" agent — semua yang perlu diketahui model saat itu harus ada di sini. Tidak ada "hidden memory" di luar context.</li>
@@ -574,8 +577,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 <div class="prose"><p>Reasoning patterns adalah teknik prompting yang membuat model berpikir lebih terstruktur sebelum bertindak. Ini drastis meningkatkan kualitas keputusan agent, terutama untuk tasks yang kompleks.</p></div>
 <div class="grid2">
 <div class="gc"><h4>Chain-of-Thought (CoT)</h4><p>Model diminta untuk "think step by step" sebelum memberikan jawaban final. Meningkatkan akurasi untuk reasoning tasks secara signifikan. Cukup tambahkan "Let's think step by step" atau gunakan few-shot examples yang menunjukkan thinking process.</p></div>
-<div class="gc"><h4>ReAct (Reasoning + Acting)</h4><p>Kombinasi reasoning dan acting dalam satu loop: Thought → Action → Observation → Thought → ... Pattern ini memungkinkan model merevisi rencana berdasarkan hasil tools. Ini pattern paling umum di production agents.</p></div>
-<div class="gc"><h4>Tree of Thoughts (ToT)</h4><p>Model mengeksplorasi multiple reasoning paths sekaligus, bisa backtrack, dan memilih path terbaik. Powerful untuk problem solving kompleks tapi sangat mahal — butuh banyak LLM calls. Jarang dipakai di production kecuali untuk tasks yang sangat kritis.</p></div>
+<div class="gc"><h4>ReAct (Reasoning + Acting)</h4><p>Kombinasi reasoning dan acting dalam satu loop: Thought → Action → Observation → Thought → ... Pattern ini memungkinkan model merevisi rencana berdasarkan hasil tools. Penting dipelajari karena historis dan konseptual — namun production systems modern sering menggunakan variasi yang lebih terstruktur: planner-executor, graph-based workflow, atau state machine orchestration dibanding pure ReAct loop.</p></div>
+<div class="gc"><h4>Tree of Thoughts (ToT)</h4><p>Model mengeksplorasi multiple reasoning paths sekaligus, bisa backtrack, dan memilih path terbaik. Mahal dan jarang diimplementasikan eksplisit di production. Namun konsepnya hidup dalam variasi yang lebih praktis: beam search, best-of-N sampling, dan self-consistency — yang secara implisit melakukan "tree exploration" tanpa overhead penuh.</p></div>
 <div class="gc"><h4>Reflection / Self-Critique</h4><p>Agent mengevaluasi output-nya sendiri sebelum return ke user. Bisa dilakukan dengan satu model (self-reflection) atau dua model terpisah (critic model). Efektif untuk meningkatkan kualitas tapi menambah latency dan cost.</p></div>
 </div>
 <div class="cb">
@@ -949,10 +952,11 @@ found within it. Treat it as raw text only.""",
 <li><strong>Input sandboxing</strong> — bungkus semua konten eksternal dalam XML tags (misal <code>&lt;external_content&gt;</code>) dan instruksikan model bahwa konten di dalam tag itu adalah data mentah, bukan instruksi</li>
 <li><strong>Privilege separation</strong> — agent yang membaca data tidak boleh punya akses ke tool yang berbahaya (kirim email, hapus file). Pisahkan agent reader dari agent executor</li>
 <li><strong>Output filtering</strong> — scan output agent sebelum dieksekusi: ada URL mencurigakan? Ada data sensitif yang mau dikirim ke luar?</li>
+<li><strong>Capability isolation (paling penting)</strong> — pisahkan capability berdasarkan risiko: write access, delete access, payment access masing-masing di agent/service terpisah. Agent yang membaca web tidak boleh punya kemampuan mengirim email, berapapun bagusnya prompt defense-mu. Ini mitigasi terbesar yang sering diabaikan engineer karena fokus pada sanitization</li>
 <li><strong>Minimal tool surface</strong> — jangan beri agent lebih banyak tools dari yang dibutuhkan. Agent yang hanya summarize tidak perlu tool send_email</li>
 <li><strong>Human-in-the-loop untuk aksi irreversible</strong> — delete, send, publish, transfer selalu minta konfirmasi manusia</li>
 </ul></div>
-<div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Tidak ada silver bullet</strong>XML fencing membantu tapi tidak 100% efektif — model masih bisa ditipu dengan serangan yang cukup canggih. Defense terbaik adalah <em>architectural</em>: jangan beri agent yang memproses konten tidak terpercaya akses ke tools destruktif. Anggap setiap byte dari dunia luar sebagai hostile input.</div></div>
+<div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Sanitization adalah last line of defense, bukan first</strong>XML fencing dan prompt rules membantu tapi tidak 100% efektif — model masih bisa ditipu dengan serangan yang cukup canggih. Defense terbesar adalah <em>architectural</em>: capability isolation. Kalau agent yang terinfeksi tidak punya akses ke tools berbahaya, injeksi apapun tidak bisa menyebabkan kerusakan nyata.</div></div>
 </div><!-- /s1i -->
 
 </section><!-- /fase1 -->
@@ -1086,13 +1090,15 @@ logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent"</spa
 <!-- 2B -->
 <div class="sub" id="s2b">
 <div class="subtit"><span class="ac">2.2</span> Memory Systems <span class="subid">// jenis-jenis "ingatan" agent</span></div>
-<div class="prose"><p>Agent yang sophisticated butuh lebih dari sekedar context window. Ada 4 jenis memory yang saling komplementer:</p></div>
+<div class="prose"><p>Agent yang sophisticated butuh lebih dari sekedar context window. Ada 5 jenis memory yang saling komplementer:</p></div>
 <div class="grid2">
 <div class="gc"><h4>🧠 In-Context Memory</h4><p>Informasi dalam context window aktif. <strong>Cepat, zero latency</strong>, tapi volatile (hilang setelah session) dan terbatas oleh context window size. Untuk most tasks, ini sudah cukup.</p></div>
-<div class="gc"><h4>📚 External / Episodic Memory</h4><p>Riwayat conversations atau task runs yang disimpan di database (PostgreSQL, Redis). Di-retrieve saat relevan. Cocok untuk personalisasi dan session continuity antar percakapan.</p></div>
-<div class="gc"><h4>🔍 Semantic Memory (Vector Store)</h4><p>Knowledge base yang bisa di-search via embeddings similarity. Dipakai untuk RAG. Tools: pgvector, Chroma, Qdrant, Pinecone. Ideal untuk domain knowledge yang besar.</p></div>
+<div class="gc"><h4>📚 External / Episodic Memory</h4><p>Riwayat conversations atau task runs yang disimpan di database (PostgreSQL, Redis). Di-retrieve saat relevan. Cocok untuk session continuity antar percakapan.</p></div>
+<div class="gc"><h4>🔍 Semantic Memory</h4><p>Knowledge base yang bisa di-search. Biasanya diimplementasikan via vector retrieval (pgvector, Chroma, Qdrant), tapi bisa juga graph DB atau hybrid retrieval. Ideal untuk domain knowledge besar.</p></div>
 <div class="gc"><h4>⚙️ Procedural Memory</h4><p>Tools dan skills yang bisa dipanggil — cara agent "ingat" cara melakukan sesuatu. Termasuk learned workflows, templates, dan best practices yang di-encode sebagai tools.</p></div>
+<div class="gc"><h4>👤 User / Preference Memory</h4><p>Profil dan preferensi spesifik per user: bahasa yang disukai, konteks pekerjaan, kebiasaan, goals jangka panjang. Inilah yang dipakai OpenAI Memory dan Claude Memory — tidak cocok masuk episodic maupun semantic murni.</p></div>
 </div>
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Semantic Memory ≠ Vector Store</strong>Vector store adalah <em>implementasi</em> yang paling umum, bukan definisi semantic memory. Semantic memory bisa juga berupa graph database, BM25 keyword retrieval, atau hybrid retrieval. Pilih implementasi berdasarkan karakteristik data dan query pattern-mu.</div></div>
 <div class="cb">
 <div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">memory_manager.py</span></div>
 <div class="cbb"><pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
@@ -1435,6 +1441,7 @@ client = <span class="fn">Anthropic</span>()
 <li><strong>Hierarchical chunking</strong> — simpan dokumen dalam dua level: summary per dokumen (untuk initial retrieval) dan chunks detail (untuk konteks penuh). Retrieve summary dulu, lalu drill down ke chunks yang relevan.</li>
 </ul></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Ukuran chunk yang tepat</strong>Chunk terlalu kecil kehilangan konteks. Chunk terlalu besar membuang token untuk konten yang tidak relevan. Mulai dengan 512–800 token, overlap 10–15%. Ukur dengan precision@k pada eval dataset kamu — ini berbeda per domain.</div></div>
+<div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Bottleneck RAG bukan di vector DB-nya</strong>Banyak engineer over-focus memilih vector database, padahal bottleneck terbesar RAG ada di: <strong>chunking strategy</strong> (apakah chunk mempertahankan konteks yang cukup?), <strong>document preprocessing</strong> (apakah PDF/HTML sudah di-parse dengan benar?), <strong>metadata filtering</strong> (apakah retrieval bisa disaring berdasarkan atribut relevan?), dan <strong>reranking</strong> (apakah top-k yang diambil benar-benar yang paling relevan?). Pilih vector DB yang cukup baik, lalu investasikan waktu di empat area ini.</div></div>
 </div><!-- /s2g -->
 
 <div class="divider"></div>
@@ -1903,7 +1910,7 @@ Context from orchestrator: {context}"</span> <span class="kw">if</span> context 
 <div class="sub" id="s3c">
 <div class="subtit"><span class="ac">3.3</span> MCP — Model Context Protocol <span class="subid">// standar universal tool exposure</span></div>
 <div class="prose">
-<p>MCP adalah open protocol yang di-develop Anthropic untuk standardisasi cara LLM berinteraksi dengan external tools dan data sources. Analoginya seperti USB-C untuk AI tools — satu standar yang bekerja di semua tempat.</p>
+<p>MCP adalah open protocol yang awalnya dikembangkan Anthropic, namun kini telah diadopsi lintas vendor dan framework sebagai standar industri. Tujuannya: standardisasi cara LLM berinteraksi dengan external tools dan data sources — analoginya seperti USB-C untuk AI tools. Pembaca baru sering mengira MCP eksklusif Anthropic/Claude, padahal ekosistemnya sudah lintas platform (OpenAI, Google, komunitas open-source).</p>
 </div>
 <div class="grid2">
 <div class="gc"><h4>MCP Server</h4><p>Program yang mengekspose capabilities (tools, resources, prompts) via MCP protocol. Build dengan Python atau TypeScript SDK. Contoh: MCP server untuk GitHub, PostgreSQL, Slack, filesystem.</p></div>
@@ -2085,7 +2092,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
     agent_id: <span class="tp">str</span>
     task_id: <span class="tp">str</span>
     output: <span class="tp">str</span>
-    confidence: <span class="tp">float</span>   <span class="cm"># 0.0 – 1.0, self-reported oleh subagent</span>
+    confidence: <span class="tp">float</span>   <span class="cm"># 0.0 – 1.0, self-reported — jangan anggap sebagai probabilitas kebenaran</span>
     sources: <span class="tp">list</span>[<span class="tp">str</span>]  <span class="cm"># referensi yang dipakai</span>
     trust_level: <span class="fn">TrustLevel</span>
 
@@ -2117,7 +2124,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
         <span class="kw">return False</span>  <span class="cm"># block sampai ada approval</span></pre></div></div>
 <div class="cc"><h3>Pola handoff yang aman</h3><ul>
 <li><strong>Typed contracts</strong> — define schema eksplisit untuk output setiap subagent menggunakan Pydantic atau dataclass. Reject output yang tidak sesuai schema — jangan coba parse manual.</li>
-<li><strong>Confidence score</strong> — minta subagent melaporkan confidence level-nya. Output dengan confidence rendah harus di-flag untuk human review atau verifikasi tambahan.</li>
+<li><strong>Confidence score</strong> — minta subagent melaporkan confidence level-nya. Output dengan confidence rendah harus di-flag untuk human review. <em>Penting:</em> self-reported confidence dari LLM tidak berkorelasi langsung dengan kebenaran — lebih dipercaya adalah verification result, evaluator model, atau tool success rate. Gunakan confidence sebagai sinyal, bukan ground truth.</li>
 <li><strong>Source tracking</strong> — setiap klaim dalam output subagent harus traceable ke sumber. Ini krusial untuk debugging ketika ada rantai agent yang panjang.</li>
 <li><strong>Blast radius limiting</strong> — subagent tidak boleh memiliki akses yang lebih luas dari yang dibutuhkan untuk task-nya. Coding subagent tidak perlu akses ke database production.</li>
 </ul></div>
@@ -2246,7 +2253,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">7 topik · Minggu 8–10</div>
+      <div class="topic-nav-counter">9 topik · Minggu 8–10</div>
       <div class="topic-nav-title">Mulai dari: 4.1 Error Handling &amp; Retry Strategies</div>
     </div>
     <div class="topic-nav-btns">
@@ -2478,7 +2485,7 @@ logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent.trace
 <div class="sub" id="s4c">
 <div class="subtit"><span class="ac">4.3</span> Latency &amp; Cost Optimization <span class="subid">// lebih cepat, lebih murah</span></div>
 <div class="grid2">
-<div class="gc"><h4>⚡ Prompt Caching</h4><p>Anthropic mendukung prompt caching untuk system prompts panjang. Cache hit mengurangi biaya 90% dan latency 85%. Syarat: system prompt stabil dan &gt;1024 tokens. Untuk agent dengan system prompt panjang yang stabil (tool descriptions, persona, rules), ini bisa hemat signifikan.</p></div>
+<div class="gc"><h4>⚡ Prompt Caching</h4><p>Anthropic mendukung prompt caching untuk system prompts panjang. Cache hit bisa mengurangi biaya secara signifikan (sering puluhan persen hingga &gt;90% tergantung model dan pricing saat itu) dan latency hingga 85%. Syarat: system prompt stabil dan &gt;1024 tokens. Untuk agent dengan system prompt panjang yang stabil (tool descriptions, persona, rules), ini bisa hemat sangat signifikan — cek pricing terbaru provider karena angka spesifik bisa berubah.</p></div>
 <div class="gc"><h4>🔀 Parallel Tool Calls</h4><p>Ketika LLM menghasilkan multiple tool calls dalam satu response, eksekusi semuanya concurrent. Untuk 3 tools masing-masing 500ms: parallel = 500ms vs sequential = 1500ms. Selalu gunakan asyncio.gather().</p></div>
 <div class="gc"><h4>🎯 Model Routing</h4><p>Tidak semua tasks butuh model terbesar. Haiku untuk simple tasks (classification, extraction), Sonnet untuk reasoning menengah, Opus hanya untuk tasks genuinely kompleks. Bisa hemat 10-50x cost.</p></div>
 <div class="gc"><h4>📦 Response Streaming</h4><p>Gunakan streaming API untuk mulai memproses response sebelum selesai. Penting untuk UX — user melihat progress daripada loading spinner. Juga membantu deteksi early stopping jika model clearly off-track.</p></div>
@@ -2914,6 +2921,102 @@ Result: {result}
         <span class="fn">print</span>(<span class="st">"Worker berhenti dengan bersih"</span>)</pre></div></div></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Rekomendasi stack untuk mulai</strong>FastAPI (HTTP layer) + Redis Streams (queue) + Docker Compose (local) → Kubernetes (production). Jangan mulai dengan Kubernetes dari hari pertama — tambahkan kompleksitas hanya saat kamu benar-benar butuhnya.</div></div>
 </div><!-- /s4g -->
+
+<div class="divider"></div>
+
+<!-- 4H -->
+<div class="sub" id="s4h">
+<div class="subtit"><span class="ac">4.8</span> Context Engineering <span class="subid">// apa yang masuk context sama pentingnya dengan prompt</span></div>
+<div class="prose">
+<p>Prompt engineering mengajarkan cara menulis instruksi yang baik. <strong>Context engineering</strong> adalah lapisan di atasnya: seni merancang <em>apa yang masuk ke context window</em> — instruksi mana, data mana, history mana, dan dalam urutan apa. Di production agent, ini sering lebih menentukan kualitas output daripada kalimat dalam system prompt.</p>
+<p>Context window adalah resource yang terbatas. Setiap token yang kamu masukkan menggusur token lain. Context engineering adalah tentang memaksimalkan signal-to-noise ratio dari apa yang dibaca model.</p>
+</div>
+<div class="cc"><h3>Lima teknik context engineering</h3><ul>
+<li><strong>Retrieval packing</strong> — jangan dump semua retrieved chunks begitu saja. Rank berdasarkan relevansi, dedup konten yang mirip, format agar model mudah membaca. Urutan penting: letakkan informasi paling relevan di awal dan akhir (primacy + recency effect)</li>
+<li><strong>Relevance filtering</strong> — sebelum memasukkan hasil tool ke context, strip bagian yang tidak relevan. HTML boilerplate, repetitive headers, metadata yang tidak perlu — buang. Model yang membaca signal lebih bersih menghasilkan output lebih baik</li>
+<li><strong>Context compression</strong> — untuk history percakapan yang panjang, summarize bagian lama menjadi ringkasan padat. Pertahankan detail verbatim hanya untuk turnakhir yang relevan</li>
+<li><strong>Context ranking</strong> — kalau ada beberapa sumber informasi, beri model signal tentang mana yang lebih terpercaya atau lebih baru. "The following is from official documentation (2024):" vs "The following is from a blog post (2021):"</li>
+<li><strong>Dynamic context assembly</strong> — susun context secara programatik berdasarkan task type, user role, dan state agent saat itu. Bukan satu template statik, tapi context yang dibangun ulang setiap request berdasarkan kebutuhan spesifiknya</li>
+</ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Context Assembly — Static Template vs Dynamic Engineering</div>
+<div class="viz-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px;">
+    <div>
+      <div style="font-weight:600;color:#ef4444;margin-bottom:8px;">❌ Static template (semua orang dapat context yang sama)</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;font-family:'IBM Plex Mono',monospace;line-height:1.8;">
+        <div style="color:#6272a4;">[system prompt — 2000 token]</div>
+        <div style="color:#6272a4;">[semua tool descriptions — 1500 token]</div>
+        <div style="color:#6272a4;">[full chat history — 3000 token]</div>
+        <div style="color:#6272a4;">[user message — 50 token]</div>
+        <div style="margin-top:8px;color:#ef4444;">Total: ~6550 token — banyak noise</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-weight:600;color:rgba(74,222,128,.9);margin-bottom:8px;">✅ Dynamic assembly (context disesuaikan per request)</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;font-family:'IBM Plex Mono',monospace;line-height:1.8;">
+        <div style="color:#f1fa8c;">[core system prompt — 500 token]</div>
+        <div style="color:#50fa7b;">[tools relevan untuk task ini — 400 token]</div>
+        <div style="color:#8be9fd;">[summary history lama — 200 token]</div>
+        <div style="color:#8be9fd;">[3 turn terakhir verbatim — 600 token]</div>
+        <div style="color:#ff79c6;">[retrieved context (ranked) — 800 token]</div>
+        <div style="color:#f1fa8c;">[user message — 50 token]</div>
+        <div style="margin-top:8px;color:rgba(74,222,128,.9);">Total: ~2550 token — high signal</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Context engineering vs prompt engineering</strong>Prompt engineering = apa yang kamu tulis. Context engineering = apa yang model baca. Keduanya penting, tapi untuk production agent dengan banyak sumber informasi, context engineering biasanya lebih berdampak.</div></div>
+</div><!-- /s4h -->
+
+<div class="divider"></div>
+
+<!-- 4I -->
+<div class="sub" id="s4i">
+<div class="subtit"><span class="ac">4.9</span> Agent Evaluation Taxonomy <span class="subid">// bukan sekedar "apakah jawabannya benar?"</span></div>
+<div class="prose">
+<p>Testing agent jauh lebih kompleks dari testing API biasa. Agent punya banyak axis kegagalan: tool yang dipilih salah, urutan langkah yang keliru, output yang benar tapi trajectory yang tidak efisien. Tanpa eval taxonomy yang jelas, kamu tidak bisa mengidentifikasi di mana agent gagal — dan tidak bisa memperbaikinya secara sistematis.</p>
+</div>
+<div class="cc"><h3>Lima level eval taxonomy</h3><ul>
+<li><strong>Unit Eval</strong> — test satu komponen secara isolasi: apakah tool X menghasilkan output yang benar untuk input Y? Apakah parser JSON bisa handle edge cases? Cepat dan deterministik</li>
+<li><strong>Tool-use Eval</strong> — apakah agent memanggil tool yang tepat, dengan argumen yang tepat, untuk situasi yang diberikan? Test ini tanpa menjalankan tool asli — mock tool dan cek decision-making model</li>
+<li><strong>Trajectory Eval</strong> — apakah urutan langkah agent (thought → action → observation) masuk akal? Apakah ada langkah redundan? Apakah agent mengambil shortcut yang berbahaya? Ini yang paling sering terlewat</li>
+<li><strong>Integration Eval</strong> — test agent dengan tools nyata di environment yang mirip production. Cek: apakah agent bisa recover dari tool failure? Apakah state konsisten setelah multi-step?</li>
+<li><strong>End-to-end Task Eval</strong> — berikan task nyata ke agent, ukur apakah task selesai dengan benar. Ini paling realistic tapi paling lambat dan mahal. Gunakan sebagai regression suite, bukan feedback loop development</li>
+</ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Eval Pyramid — Kecepatan vs Realisme</div>
+<div class="viz-body">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;font-size:12px;max-width:500px;margin:0 auto;">
+    <div style="width:40%;padding:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:8px 8px 0 0;text-align:center;">
+      <div style="font-weight:600;color:#ef4444;">E2E Task Eval</div>
+      <div style="font-size:10px;color:var(--text3);">paling realistis · paling lambat · sedikit kasus</div>
+    </div>
+    <div style="width:60%;padding:10px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-top:none;text-align:center;">
+      <div style="font-weight:600;color:#f59e0b;">Integration Eval</div>
+      <div style="font-size:10px;color:var(--text3);">tools nyata · environment mirip prod</div>
+    </div>
+    <div style="width:75%;padding:10px;background:rgba(124,109,250,.12);border:1px solid rgba(124,109,250,.3);border-top:none;text-align:center;">
+      <div style="font-weight:600;color:var(--accent);">Trajectory Eval</div>
+      <div style="font-size:10px;color:var(--text3);">urutan langkah · efisiensi · keputusan agent</div>
+    </div>
+    <div style="width:88%;padding:10px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.3);border-top:none;text-align:center;">
+      <div style="font-weight:600;color:#2dd4bf;">Tool-use Eval</div>
+      <div style="font-size:10px;color:var(--text3);">tool yang dipilih · argumen yang diberikan</div>
+    </div>
+    <div style="width:100%;padding:10px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-top:none;border-radius:0 0 8px 8px;text-align:center;">
+      <div style="font-weight:600;color:rgba(74,222,128,.9);">Unit Eval</div>
+      <div style="font-size:10px;color:var(--text3);">paling cepat · deterministik · banyak kasus · jalankan di setiap commit</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Mulai dari trajectory eval</strong>Banyak tim langsung lompat ke E2E eval dan frustrasi karena lambat dan hasilnya sulit di-debug. Trajectory eval adalah sweet spot: cukup realistis untuk menangkap kegagalan nyata, cukup cepat untuk jadi feedback loop development. Rekam trajectory saat agent berjalan, review, dan jadikan test case.</div></div>
+</div><!-- /s4i -->
 
 </section><!-- /fase4 -->
 
@@ -3462,8 +3565,8 @@ var TOPICS = [
   's1a','s1b','s1c','s1d','s1e','s1f','s1g','s1h','s1i',          // 0–8  (fase 1, 9 topik)
   's2a','s2b','s2c','s2d','s2e','s2f','s2g','s2h','s2i','s2j',    // 9–18 (fase 2, 10 topik)
   's3a','s3b','s3c','s3d','s3e','s3f','s3g',                       // 19–25 (fase 3, 7 topik)
-  's4a','s4b','s4c','s4d','s4e','s4f','s4g',                       // 26–32 (fase 4, 7 topik)
-  's5a','s5b','s5c','s5d','s5f','s5e'                              // 33–38 (fase 5, 6 topik)
+  's4a','s4b','s4c','s4d','s4e','s4f','s4g','s4h','s4i',           // 26–34 (fase 4, 9 topik)
+  's5a','s5b','s5c','s5d','s5f','s5e'                              // 35–40 (fase 5, 6 topik)
 ];
 
 var TOPIC_LABELS = {
@@ -3500,6 +3603,8 @@ var TOPIC_LABELS = {
   's4e':'4.5 Testing & Evals Framework',
   's4f':'4.6 Rate Limiting & Backpressure',
   's4g':'4.7 Deployment Patterns',
+  's4h':'4.8 Context Engineering',
+  's4i':'4.9 Agent Evaluation Taxonomy',
   's5a':'5.1 Bedah Arsitektur OpenClaw',
   's5b':'5.2 Computer Use Agent',
   's5c':'5.3 Coding Agent Architecture',
@@ -3512,7 +3617,7 @@ var PHASE_MAP = {
   's1a':'i1','s1b':'i1','s1c':'i1','s1d':'i1','s1e':'i1','s1f':'i1','s1g':'i1','s1h':'i1','s1i':'i1',
   's2a':'i2','s2b':'i2','s2c':'i2','s2d':'i2','s2e':'i2','s2f':'i2','s2g':'i2','s2h':'i2','s2i':'i2','s2j':'i2',
   's3a':'i3','s3b':'i3','s3c':'i3','s3d':'i3','s3e':'i3','s3f':'i3','s3g':'i3',
-  's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4','s4f':'i4','s4g':'i4',
+  's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4','s4f':'i4','s4g':'i4','s4h':'i4','s4i':'i4',
   's5a':'i5','s5b':'i5','s5c':'i5','s5d':'i5','s5f':'i5','s5e':'i5'
 };
 var PHASE_NUMS = {'i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
@@ -3521,11 +3626,11 @@ var currentIdx = 0;
 
 // Topik terakhir setiap fase → fase intro berikutnya  (indeks dalam TOPICS array)
 // Fase 1: idx 8 (s1i) → fi2 | Fase 2: idx 18 (s2j) → fi3
-// Fase 3: idx 25 (s3g) → fi4 | Fase 4: idx 32 (s4g) → fi5
-var PHASE_LAST  = {8:'fi2', 18:'fi3', 25:'fi4', 32:'fi5'};
+// Fase 3: idx 25 (s3g) → fi4 | Fase 4: idx 34 (s4i) → fi5
+var PHASE_LAST  = {8:'fi2', 18:'fi3', 25:'fi4', 34:'fi5'};
 // Topik pertama setiap fase → fase intro sebelumnya / home
-// s1a(0)→home | s2a(9)→fi2 | s3a(19)→fi3 | s4a(26)→fi4 | s5a(33)→fi5
-var PHASE_FIRST = {0:'home', 9:'fi2', 19:'fi3', 26:'fi4', 33:'fi5'};
+// s1a(0)→home | s2a(9)→fi2 | s3a(19)→fi3 | s4a(26)→fi4 | s5a(35)→fi5
+var PHASE_FIRST = {0:'home', 9:'fi2', 19:'fi3', 26:'fi4', 35:'fi5'};
 // label halaman untuk info nav
 var PAGE_LABELS = {'home':'Beranda','fi1':'Fase 1 — Fondasi','fi2':'Fase 2 — Architecture','fi3':'Fase 3 — Multi-Agent','fi4':'Fase 4 — Production','fi5':'Fase 5 — Build Agent'};
 
