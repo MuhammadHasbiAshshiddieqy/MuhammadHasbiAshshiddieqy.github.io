@@ -7,7 +7,7 @@
 <meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 31 topik, 26 contoh kode.">
 <meta name="author" content="Muhammad Hasbi Ashshiddieqy">
 <meta property="og:title" content="Agentic AI Mastery | Muhammad Hasbi">
-<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 31 topik, kode siap pakai.">
+<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 31 topik, contoh kode lengkap.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:creator" content="@mhasbi">
@@ -225,6 +225,14 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 @keyframes barIn{from{width:0}to{width:var(--tw)}}
 .cbar-fill.animate{animation:barIn 1.2s cubic-bezier(.4,0,.2,1) forwards;}
 
+/* Next phase button */
+.next-phase{display:flex;align-items:center;justify-content:space-between;padding:24px 60px;border-top:1px solid var(--border);background:var(--bg2);gap:16px;}
+.next-phase-meta{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.next-phase-title{font-size:15px;font-weight:500;color:var(--text);margin-top:4px;}
+.next-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent2);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;padding:10px 20px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.next-btn:hover{background:var(--accent);box-shadow:0 0 20px rgba(124,109,250,.3);}
+@media(max-width:600px){.next-phase{padding:20px 24px;flex-direction:column;align-items:flex-start;}}
+
 </style>
 </head>
 <body>
@@ -290,8 +298,12 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   </div>
 
   <div style="padding:16px;margin:8px 0;border-top:1px solid var(--border);">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Tentang Penulis</div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px;">Muhammad Hasbi Ashshiddieqy — software engineer yang antusias membangun produk sendiri. Tertarik dengan AI dari teori dasar hingga implementasi nyata, dan sedang membangun beberapa produk. Senang berbagi dan membantu orang belajar teknologi, terutama backend engineering &amp; AI.</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" style="width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;">Principal Tech Wizard</div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px;">Muhammad Hasbi Ashshiddieqy — software engineer yang antusias membangun produk sendiri. Tertarik dengan AI dari teori dasar hingga implementasi nyata, dan sedang membangun beberapa produk. Senang berbagi dan membantu orang belajar teknologi, terutama backend engineering &amp; AI.</div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.55;margin-bottom:12px;padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);">🤖 Konten dibuat dengan bantuan AI, direview manusia secara bertahap.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:3px 8px;border-radius:4px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">GitHub</a>
       <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:3px 8px;border-radius:4px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">LinkedIn</a>
@@ -319,7 +331,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <div><div class="hsn">5</div><div class="hsl">Fase pembelajaran</div></div>
     <div><div class="hsn">30+</div><div class="hsl">Topik deep dive</div></div>
     <div><div class="hsn">~16</div><div class="hsl">Minggu kurikulum</div></div>
-    <div><div class="hsn">15+</div><div class="hsl">Contoh kode siap pakai</div></div>
+    <div><div class="hsn">15+</div><div class="hsl">Contoh kode</div></div>
   </div>
 </section>
 
@@ -374,7 +386,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 
 <div style="padding:20px 60px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:32px;flex-wrap:wrap;align-items:center;">
   <div style="font-size:13px;color:var(--text2);max-width:520px;line-height:1.6;">
-    Ini adalah catatan belajar saya yang saya buka ke publik. Ditulis dari perspektif seorang engineer yang mempelajari agentic AI secara mendalam—bukan sekadar tutorial "copy-paste framework". Semua kode sudah diuji dan siap pakai.
+    Ini adalah catatan belajar saya yang saya buka ke publik. Ditulis dari perspektif seorang engineer yang mempelajari agentic AI secara mendalam—bukan sekadar tutorial "copy-paste framework". Konten dibuat dengan bantuan AI dan direview secara bertahap.
   </div>
   <div style="display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;">
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">31</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
@@ -827,6 +839,14 @@ Ask the user. Do not guess.</pre></div></div>
 </div><!-- /s1h -->
 
 </section><!-- /fase1 -->
+
+<div class="next-phase">
+  <div>
+    <div class="next-phase-meta">Fase berikutnya</div>
+    <div class="next-phase-title">Fase 2 — Agent Architecture &amp; Harness</div>
+  </div>
+  <a class="next-btn" href="#fase2">Lanjut ke Fase 2 →</a>
+</div>
 
 <!-- ═══════════════ FASE 2 ═══════════════ -->
 <section class="cs p2" id="fase2">
@@ -1379,6 +1399,14 @@ client = <span class="fn">Anthropic</span>()
 
 </section><!-- /fase2 -->
 
+<div class="next-phase">
+  <div>
+    <div class="next-phase-meta">Fase berikutnya</div>
+    <div class="next-phase-title">Fase 3 — Multi-Agent Systems</div>
+  </div>
+  <a class="next-btn" href="#fase3">Lanjut ke Fase 3 →</a>
+</div>
+
 <!-- ═══════════════ FASE 3 ═══════════════ -->
 <section class="cs p3" id="fase3">
 <div class="sh">
@@ -1819,6 +1847,14 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 </div><!-- /s3f -->
 
 </section><!-- /fase3 -->
+
+<div class="next-phase">
+  <div>
+    <div class="next-phase-meta">Fase berikutnya</div>
+    <div class="next-phase-title">Fase 4 — Production Engineering</div>
+  </div>
+  <a class="next-btn" href="#fase4">Lanjut ke Fase 4 →</a>
+</div>
 
 <!-- ═══════════════ FASE 4 ═══════════════ -->
 <section class="cs p4" id="fase4">
@@ -2293,6 +2329,14 @@ Result: {result}
 
 </section><!-- /fase4 -->
 
+<div class="next-phase">
+  <div>
+    <div class="next-phase-meta">Fase terakhir</div>
+    <div class="next-phase-title">Fase 5 — Build Production-Grade Agent</div>
+  </div>
+  <a class="next-btn" href="#fase5">Lanjut ke Fase 5 →</a>
+</div>
+
 <!-- ═══════════════ FASE 5 ═══════════════ -->
 <section class="cs p5" id="fase5">
 <div class="sh">
@@ -2687,24 +2731,13 @@ not full rewrites.</span></pre></div></div>
 
 <footer class="footer">
   <div class="footer-top">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
-      <div>
-        <div class="ftxt" style="margin-bottom:2px;">Muhammad Hasbi Ashshiddieqy</div>
-        <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">Principal Tech Wizard · Software Engineer · AI Builder</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-      <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">★ GitHub</a>
-      <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">LinkedIn</a>
-      <a href="https://hsbdeveloper97.medium.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Medium</a>
-      <a href="https://twitter.com/mhasbi_dev" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Twitter / X</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span style="font-size:14px;">🤖</span>
-    <div class="footer-bottom-ai">
-      <strong style="color:var(--text2);font-weight:500;">AI-Assisted Content</strong> — Konten pada halaman ini dibuat dengan bantuan AI (Claude) dan direview secara bertahap oleh manusia. Setiap konsep, contoh kode, dan penjelasan telah diverifikasi untuk akurasi teknis sebelum dipublikasikan. AI digunakan sebagai alat bantu penulisan, bukan sebagai pengganti pemahaman engineering yang sesungguhnya.
+    <div class="ftxt">© 2025 Muhammad Hasbi Ashshiddieqy · Principal Tech Wizard</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">GitHub</a>
+      <span style="color:var(--border2)">·</span>
+      <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">LinkedIn</a>
+      <span style="color:var(--border2)">·</span>
+      <a href="https://hsbdeveloper97.medium.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">Medium</a>
     </div>
   </div>
 </footer>
