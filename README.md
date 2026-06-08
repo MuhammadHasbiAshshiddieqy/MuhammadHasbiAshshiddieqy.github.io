@@ -10,13 +10,14 @@ Personal knowledge hub: **Agentic AI Mastery** — panduan komprehensif dari fon
 
 | Fase | Topik | Fokus |
 |------|-------|-------|
+| 0 — Mulai Cepat | 1 topik | Agent pertama dalam 5 menit, setup, prerequisites |
 | 1 — Fondasi | 9 topik | LLM internals, agent loop, ReAct, tool calling, autonomy spectrum, KV cache, token budget, system prompt, prompt injection |
 | 2 — Architecture | 10 topik | Harness & loop, memory systems, tool registry, context mgmt, planning, structured output, RAG, checkpointing, streaming, session mgmt |
 | 3 — Multi-Agent | 7 topik | Orchestrator-subagent, parallelism, MCP protocol, design patterns, state sharing, handoff & trust, agent-to-agent protocol |
-| 4 — Production | 9 topik | Error handling, observability, cost optimization, safety, testing & evals, rate limiting, deployment, context engineering, eval taxonomy |
+| 4 — Production | 11 topik | Error handling, observability, cost optimization, safety, testing & evals, rate limiting, deployment, context engineering, eval taxonomy, production checklist, CI/CD & prompt versioning |
 | 5 — Build Agent | 6 topik | Bedah OpenClaw, computer use, coding agent, framework landscape, voice & multimodal, expert checklist |
 
-**41 topik · 26+ code block · 12+ visualisasi · ~16 minggu kurikulum**
+**44 topik · 30+ code block · 13+ visualisasi · ~16 minggu kurikulum**
 
 ---
 

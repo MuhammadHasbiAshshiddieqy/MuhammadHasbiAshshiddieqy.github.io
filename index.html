@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentic AI Mastery | Muhammad Hasbi</title>
-<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 41 topik, 26+ contoh kode lengkap.">
+<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 44 topik, 30+ contoh kode lengkap.">
 <meta name="author" content="Muhammad Hasbi Ashshiddieqy">
 <meta property="og:title" content="Agentic AI Mastery | Muhammad Hasbi">
-<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 41 topik, 26+ contoh kode lengkap.">
+<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 44 topik, 30+ contoh kode lengkap.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:creator" content="@mhasbi">
@@ -52,6 +52,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 .cs{padding:56px 60px;border-bottom:1px solid var(--border);}@media(max-width:600px){.cs{padding:32px 24px;}}
 .sh{display:flex;align-items:flex-start;gap:20px;margin-bottom:36px;}
 .sbadge{flex-shrink:0;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;margin-top:4px;}
+.p0 .sbadge{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.2);}
 .p1 .sbadge{background:rgba(124,109,250,.12);color:var(--accent);border:1px solid rgba(124,109,250,.2);}
 .p2 .sbadge{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,.2);}
 .p3 .sbadge{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
@@ -263,6 +264,10 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 <nav class="sidebar" id="sidebar">
   <div style="padding:8px 0">
   <div class="sph" style="border-bottom:1px solid var(--border);margin-bottom:4px;" onclick="goToPage('home');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');"><span class="pn" style="font-size:14px;background:transparent;border:none;">⌂</span>Beranda</div>
+  <div class="sph" onclick="sp(this,'i0')"><span class="pn">0</span>Mulai Cepat</div>
+  <div class="sits" id="i0">
+    <a class="sit" href="#s0a"><span class="dot"></span>Agent pertama dalam 5 menit</a>
+  </div>
   <div class="sph active" onclick="sp(this,'i1')"><span class="pn">1</span>Fondasi</div>
   <div class="sits open" id="i1">
     <a class="sit" href="#s1a"><span class="dot"></span>LLM sebagai reasoning engine</a>
@@ -294,7 +299,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s3b"><span class="dot"></span>Parallelism &amp; fan-out</a>
     <a class="sit" href="#s3c"><span class="dot"></span>MCP Protocol</a>
     <a class="sit" href="#s3d"><span class="dot"></span>Agent design patterns</a>
-    <a class="sit" href="#s3e"><span class="dot"></span>Komunikasi &amp; state</a>
+    <a class="sit" href="#s3e"><span class="dot"></span>Communication &amp; State</a>
     <a class="sit" href="#s3f"><span class="dot"></span>Handoff &amp; trust boundary</a>
     <a class="sit" href="#s3g"><span class="dot"></span>Agent-to-agent protocol</a>
   </div>
@@ -309,6 +314,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s4g"><span class="dot"></span>Deployment patterns</a>
     <a class="sit" href="#s4h"><span class="dot"></span>Context engineering</a>
     <a class="sit" href="#s4i"><span class="dot"></span>Agent evaluation taxonomy</a>
+    <a class="sit" href="#s4j"><span class="dot"></span>Production checklist</a>
+    <a class="sit" href="#s4k"><span class="dot"></span>CI/CD &amp; prompt versioning</a>
   </div>
   <div class="sph" onclick="sp(this,'i5')"><span class="pn">5</span>Build Agent</div>
   <div class="sits" id="i5">
@@ -317,7 +324,10 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s5c"><span class="dot"></span>Coding agent</a>
     <a class="sit" href="#s5d"><span class="dot"></span>Framework landscape 2025</a>
     <a class="sit" href="#s5f"><span class="dot"></span>Voice &amp; multimodal agent</a>
-    <a class="sit" href="#s5e"><span class="dot"></span>Checklist keahlian</a>
+    <a class="sit" href="#s5e"><span class="dot"></span>Skills Checklist</a>
+  </div>
+  <div style="border-top:1px solid var(--border);margin:4px 0;padding:4px 0;">
+    <div class="sph" onclick="goToPage('glossary')" style="text-transform:none;font-size:12px;"><span class="pn" style="font-size:12px;background:transparent;border:none;">📖</span>Glosarium</div>
   </div>
   </div>
 
@@ -354,9 +364,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   <p class="hdesc">Panduan komprehensif yang saya tulis sebagai software engineer yang mempelajari agentic AI dari bawah: konsep, arsitektur, kode, hingga cara build production-grade agent seperti Claude Code. Bukan sekadar tutorial framework — ini tentang benar-benar paham.</p>
   <div class="hstats">
     <div><div class="hsn">5</div><div class="hsl">Fase pembelajaran</div></div>
-    <div><div class="hsn">41</div><div class="hsl">Topik deep dive</div></div>
+    <div><div class="hsn">44</div><div class="hsl">Topik deep dive</div></div>
     <div><div class="hsn">~16</div><div class="hsl">Minggu kurikulum</div></div>
-    <div><div class="hsn">26+</div><div class="hsl">Contoh kode</div></div>
+    <div><div class="hsn">30+</div><div class="hsl">Contoh kode</div></div>
   </div>
 </section>
 
@@ -414,9 +424,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     Ini adalah catatan belajar saya yang saya buka ke publik. Ditulis dari perspektif seorang engineer yang mempelajari agentic AI secara mendalam—bukan sekadar tutorial "copy-paste framework". Konten dibuat dengan bantuan AI dan direview secara bertahap.
   </div>
   <div style="display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;">
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">41</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">26</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">12</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">44</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">30</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">13</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">~16mg</div><div style="font-size:11px;color:var(--text3)">kurikulum</div></div>
   </div>
 </div>
@@ -424,13 +434,409 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   <div class="topic-nav" style="border-top:1px solid var(--border);margin-top:0;">
     <div class="topic-nav-info">
       <div class="topic-nav-counter">Siap mulai?</div>
-      <div class="topic-nav-title">Fase 1 — Fondasi &amp; Mental Model</div>
+      <div class="topic-nav-title">Fase 0 — Agent Pertama dalam 5 Menit</div>
     </div>
     <div class="topic-nav-btns">
-      <button class="tnbtn primary" onclick="goToPage('fi1')">Mulai Belajar →</button>
+      <button class="tnbtn primary" onclick="goToPage('fi0')">Mulai Belajar →</button>
     </div>
   </div>
 </div><!-- /home -->
+
+<!-- ═══════════════ GLOSARIUM ═══════════════ -->
+<div id="glossary" class="page-home">
+<div class="hero">
+  <div class="hbadge">📖 Referensi</div>
+  <h1>Glosarium <em>Agentic AI</em></h1>
+  <p style="color:var(--text2);max-width:600px;margin-top:12px;font-size:15px;line-height:1.7;">Istilah-istilah teknis yang digunakan di seluruh panduan ini, dengan penjelasan singkat dan konteks penggunaannya dalam agent engineering.</p>
+</div>
+<div style="max-width:900px;margin:0 auto;padding:32px 40px 60px;">
+
+<div style="display:grid;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+
+<div style="background:var(--bg3);padding:10px 16px;display:grid;grid-template-columns:200px 1fr;gap:12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);">
+  <div>Istilah</div><div>Penjelasan</div>
+</div>
+
+<!-- A -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">A</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Agent</div>
+  <div style="color:var(--text2);line-height:1.6;">Sistem yang menggabungkan LLM dengan tools dan execution loop — dapat mengambil tindakan berulang sampai task selesai. Berbeda dari chatbot yang hanya menjawab satu pertanyaan.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Agentic Loop</div>
+  <div style="color:var(--text2);line-height:1.6;">Pola eksekusi berulang: LLM reason → tool call → observe result → repeat. Loop ini yang membedakan agent dari one-shot LLM call.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Attention Mechanism</div>
+  <div style="color:var(--text2);line-height:1.6;">Mekanisme di Transformer yang memungkinkan setiap token "memperhatikan" token lain dalam context window. Dasar dari kemampuan reasoning LLM.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Asyncio</div>
+  <div style="color:var(--text2);line-height:1.6;">Framework Python untuk concurrent programming tanpa multi-threading. Penting untuk agent yang memanggil banyak tools secara paralel. Gunakan <code>async/await</code> dan <code>asyncio.gather()</code>.</div>
+</div>
+
+<!-- B -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">B</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">BPE (Byte-Pair Encoding)</div>
+  <div style="color:var(--text2);line-height:1.6;">Algoritma tokenisasi yang memecah teks menjadi subword units. "tokenization" → ["token", "ization"]. Kata bahasa Indonesia sering terpecah lebih banyak daripada bahasa Inggris — ini mempengaruhi jumlah token dan biaya.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Backpressure</div>
+  <div style="color:var(--text2);line-height:1.6;">Mekanisme sinyal "sistem penuh, kurangi input" dari downstream ke upstream. Penting agar agent tidak membanjiri tool atau database dengan request melebihi kapasitas.</div>
+</div>
+
+<!-- C -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">C</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Context Window</div>
+  <div style="color:var(--text2);line-height:1.6;">"Working memory" LLM — semua teks (system prompt, history, tool results) yang bisa dilihat model saat satu inference. Claude memiliki context window hingga ratusan ribu token.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">CoT (Chain-of-Thought)</div>
+  <div style="color:var(--text2);line-height:1.6;">Teknik prompting yang mendorong model untuk "berpikir langkah demi langkah" sebelum menjawab. Meningkatkan akurasi untuk masalah multi-step. Bisa explicit ("think step by step") atau implicit.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Checkpointing</div>
+  <div style="color:var(--text2);line-height:1.6;">Menyimpan state agent (conversation history, tool results, progress) ke storage persisten. Memungkinkan agent resume jika proses crash atau di-restart, tanpa harus mulai dari awal.</div>
+</div>
+
+<!-- E -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">E</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Embedding</div>
+  <div style="color:var(--text2);line-height:1.6;">Representasi teks sebagai vektor angka berdimensi tinggi. Teks yang semantically similar menghasilkan vektor yang berdekatan. Dasar dari semantic search dan RAG.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Emergent Behavior</div>
+  <div style="color:var(--text2);line-height:1.6;">Kemampuan yang muncul dari LLM berskala besar tanpa diprogram secara eksplisit — seperti reasoning, analogy, dan code generation. Bukan hasil symbolic programming, tapi pola statistik dari training data.</div>
+</div>
+
+<!-- F -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">F</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Fan-Out / Fan-In</div>
+  <div style="color:var(--text2);line-height:1.6;">Pola distribusi kerja: Fan-out = satu task dibagi ke banyak subagent paralel. Fan-in = hasil dikumpulkan dan digabungkan. Efektif untuk tasks yang bisa diparalelisasi (research, batch processing).</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Finish Reason</div>
+  <div style="color:var(--text2);line-height:1.6;">Alasan model berhenti generate. <code>end_turn</code> = selesai natural. <code>tool_use</code> = perlu tool (Anthropic). <code>tool_calls</code> = perlu tool (OpenAI). <code>max_tokens</code> = terpotong. Harness wajib cek ini setiap iterasi.</div>
+</div>
+
+<!-- G -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">G</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Guardrails</div>
+  <div style="color:var(--text2);line-height:1.6;">Lapisan keamanan yang membatasi tindakan agent — input validation, output filtering, tool allowlist, human-in-the-loop untuk irreversible actions. Tidak boleh ditambahkan belakangan — harus dirancang dari awal.</div>
+</div>
+
+<!-- H -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">H</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Hallucination</div>
+  <div style="color:var(--text2);line-height:1.6;">LLM menghasilkan informasi yang terdengar meyakinkan tapi salah atau tidak ada. Konsekuensi dari sifat probabilistik next-token prediction. Atasi dengan tools (grounding ke data nyata) dan verifikasi.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Harness</div>
+  <div style="color:var(--text2);line-height:1.6;">Kode non-LLM yang mengorkestrasi agent: routing tool calls, injecting results, managing history, detecting stopping condition, handling errors. "Pengemudi" yang menggunakan LLM sebagai "mesin".</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">HNSW</div>
+  <div style="color:var(--text2);line-height:1.6;">Hierarchical Navigable Small World — algoritma approximate nearest neighbor search yang digunakan di vector database (Chroma, Qdrant). Cepat tapi approximate (hasilnya bukan pasti yang paling mirip). Alternatif: IVFFlat (lebih eksak, lebih lambat).</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Human-in-the-Loop</div>
+  <div style="color:var(--text2);line-height:1.6;">Pattern di mana agent berhenti dan meminta konfirmasi manusia sebelum mengambil tindakan yang irreversible atau berisiko tinggi. Wajib untuk actions seperti delete, send email, atau financial transactions.</div>
+</div>
+
+<!-- I-K -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">I – K</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">IVFFlat</div>
+  <div style="color:var(--text2);line-height:1.6;">Inverted File Index — algoritma vector search yang lebih eksak dari HNSW. Dibagi ke cluster dulu, lalu search dalam cluster. Lebih lambat tapi lebih akurat. Digunakan di pgvector (PostgreSQL).</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">KV Cache</div>
+  <div style="color:var(--text2);line-height:1.6;">Key-Value Cache — menyimpan computed attention key-value pairs dari tokens yang sudah diproses. Accelerates inference untuk pesan yang berulang. Prompt caching Anthropic memanfaatkan ini — token yang sama tidak perlu diproses ulang.</div>
+</div>
+
+<!-- L-M -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">L – M</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Langfuse</div>
+  <div style="color:var(--text2);line-height:1.6;">Platform open-source observability untuk LLM/agent. Fitur: trace visualization, token cost tracking, eval scoring. Bisa self-host atau gunakan cloud. Alternatif: LangSmith (LangChain), Helicone.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">MCP (Model Context Protocol)</div>
+  <div style="color:var(--text2);line-height:1.6;">Protokol standar terbuka (Anthropic) untuk menghubungkan LLM dengan tools dan data sources. Memisahkan tool server dari model server — tools bisa di-reuse lintas model dan platform.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Multi-Agent</div>
+  <div style="color:var(--text2);line-height:1.6;">Arsitektur dengan beberapa agent yang bekerja bersama. Orchestrator mendelegasikan ke subagent yang spesialis. Cocok untuk tasks kompleks yang bisa dibagi berdasarkan domain atau paralelisasi.</div>
+</div>
+
+<!-- O-P -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">O – P</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Orchestrator</div>
+  <div style="color:var(--text2);line-height:1.6;">Agent tingkat tinggi yang merencanakan dan mendelegasikan ke subagent. Bertanggung jawab atas decomposition task, routing ke specialist, dan agregasi hasil akhir.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Prompt Injection</div>
+  <div style="color:var(--text2);line-height:1.6;">Serangan di mana konten eksternal (dari web scrape, file, atau user input) menyisipkan instruksi yang mengubah perilaku agent. Misalnya dokumen yang berisi "ignore previous instructions". Wajib di-mitigasi di production.</div>
+</div>
+
+<!-- R -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">R</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">RAG (Retrieval-Augmented Generation)</div>
+  <div style="color:var(--text2);line-height:1.6;">Teknik menggabungkan vector search dengan LLM: query → semantic search → retrieve relevant chunks → inject ke context → generate. Memungkinkan LLM menjawab berdasarkan knowledge base custom tanpa fine-tuning.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">ReAct Pattern</div>
+  <div style="color:var(--text2);line-height:1.6;">Reasoning + Acting — pola di mana agent bergantian: "think" (reasoning step) dan "act" (tool call). Membuat decision-making agent lebih transparan dan lebih mudah di-debug dibanding langsung action.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">RPM / TPM</div>
+  <div style="color:var(--text2);line-height:1.6;">Requests Per Minute / Tokens Per Minute — batas API dari provider. Anthropic memberlakukan keduanya per API key. Harness production harus track usage dan implement backoff saat mendekati limit.</div>
+</div>
+
+<!-- S-T -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">S – T</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">SentencePiece</div>
+  <div style="color:var(--text2);line-height:1.6;">Library tokenisasi Google yang digunakan oleh beberapa model (Gemini, LLaMA). Mirip BPE tapi bekerja pada karakter/byte level, lebih robust untuk bahasa non-Latin.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Stop Reason</div>
+  <div style="color:var(--text2);line-height:1.6;">Lihat: Finish Reason.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Temperature</div>
+  <div style="color:var(--text2);line-height:1.6;">Parameter yang mengontrol "keacakan" output (0.0 = deterministik, 2.0 = sangat random). Untuk agent production: gunakan 0.0–0.3 untuk konsistensi. Untuk creative tasks: 0.7–1.0.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Token</div>
+  <div style="color:var(--text2);line-height:1.6;">Unit terkecil yang diproses LLM — bisa satu kata, satu suku kata, atau satu karakter. "tokenization" ≈ 3-4 tokens. "gajah" ≈ 2-3 tokens. Semua biaya dan limit dihitung dalam token.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">ToT (Tree of Thought)</div>
+  <div style="color:var(--text2);line-height:1.6;">Ekstensi CoT yang mengeksplorasi beberapa reasoning paths sekaligus (tree), bukan satu linear chain. Lebih efektif untuk problems yang butuh backtracking, tapi jauh lebih mahal secara token.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Tool Call / Tool Use</div>
+  <div style="color:var(--text2);line-height:1.6;">Mekanisme di mana LLM tidak langsung menjawab tapi menghasilkan structured request untuk menjalankan fungsi eksternal. Model tidak menjalankan tool sendiri — harness yang mengeksekusi dan mengembalikan hasilnya.</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Trajectory</div>
+  <div style="color:var(--text2);line-height:1.6;">Urutan langkah yang diambil agent untuk menyelesaikan task: thought → action → observation → thought → ... Trajectory eval menganalisis apakah urutan ini efisien dan logis, bukan hanya apakah hasilnya benar.</div>
+</div>
+
+<!-- V-X -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">V – X</div>
+
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Vector Database</div>
+  <div style="color:var(--text2);line-height:1.6;">Database yang dioptimalkan untuk menyimpan dan mencari embedding vectors. Mendukung similarity search (nearest neighbor). Contoh: Chroma (lokal/mudah), Qdrant (production), pgvector (PostgreSQL extension).</div>
+</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
+  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Xvfb</div>
+  <div style="color:var(--text2);line-height:1.6;">X Virtual Framebuffer — virtual display server di Linux yang memungkinkan aplikasi GUI berjalan tanpa monitor fisik. Dibutuhkan untuk computer use agent di server headless.</div>
+</div>
+
+</div><!-- /table -->
+
+<div style="margin-top:20px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text3);">
+  📖 Glosarium ini akan terus diperbarui. Istilah dalam dokumen yang belum ada di sini → buka issue atau submit PR di GitHub.
+</div>
+
+</div><!-- /content wrapper -->
+</div><!-- /glossary -->
+
+<!-- ═══════════════ FASE 0 ═══════════════ -->
+<section class="cs p0" id="fase0">
+<div class="fase-intro" id="fi0">
+<div class="sh">
+  <div class="sbadge">00</div>
+  <div>
+    <div class="stitle">Mulai Cepat — Agent Pertama dalam 5 Menit</div>
+    <div class="sdesc">Sebelum masuk ke teori, langsung rasakan bagaimana agent bekerja. Satu file Python, satu API key, lima menit. Kamu akan punya agent yang fungsional sebelum memahami semua detailnya.</div>
+    <div class="smeta"><span class="mc">5 Menit</span><span class="mc">Hands-on</span><span class="mc">Python dasar</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#s0a">First Agent</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">1 topik · 5 menit</div>
+      <div class="topic-nav-title">Mulai dari: 0.1 Agent Pertama dalam 5 Menit</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('home')">← Beranda</button>
+      <button class="tnbtn primary" onclick="goTo(0)">Mulai →</button>
+    </div>
+  </div>
+</div><!-- /fi0 -->
+
+<!-- 0A -->
+<div class="sub" id="s0a">
+<div class="subtit"><span class="ac">0.1</span> Agent Pertama dalam 5 Menit <span class="subid">// langsung jalankan, pahami belakangan</span></div>
+<div class="prose">
+<p>Cara terbaik memahami agent adalah dengan menjalankannya dulu. Di sini kamu akan build agent minimal yang bisa memanggil tool — lengkap, bisa dijalankan, dan hanya butuh beberapa menit setup.</p>
+<p>Kamu butuh: Python 3.10+, Anthropic API key (dari <code>console.anthropic.com</code>), dan koneksi internet.</p>
+</div>
+
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Prerequisites — apa yang perlu kamu siapkan</strong><ul style="margin:8px 0 0;padding-left:16px;"><li><strong>Python 3.10+</strong> — cek dengan <code>python --version</code></li><li><strong>Anthropic API key</strong> — daftar di console.anthropic.com, buat API key baru</li><li><strong>Estimasi biaya</strong> — contoh di halaman ini menghabiskan sekitar $0.001–0.005 per run (sangat murah). Haiku adalah model termurah untuk percobaan</li><li><strong>Pengetahuan Python</strong> — familiar dengan fungsi, dict, dan loop sudah cukup</li></ul></div></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">bash</span><span class="cf">setup</span></div>
+<div class="cbb"><pre><span class="cm"># 1. Install dependency (satu-satunya yang dibutuhkan)</span>
+pip install anthropic
+
+<span class="cm"># 2. Set API key sebagai environment variable</span>
+<span class="cm"># Linux/Mac:</span>
+<span class="kw">export</span> ANTHROPIC_API_KEY=<span class="st">"sk-ant-..."</span>
+
+<span class="cm"># Windows (Command Prompt):</span>
+<span class="cm"># set ANTHROPIC_API_KEY=sk-ant-...</span>
+
+<span class="cm"># Windows (PowerShell):</span>
+<span class="cm"># $env:ANTHROPIC_API_KEY = "sk-ant-..."</span></pre></div></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">first_agent.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic
+<span class="kw">import</span> json
+<span class="kw">import</span> datetime
+
+<span class="cm"># ── Tools yang tersedia untuk agent ─────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">get_current_time</span>() -> <span class="tp">str</span>:
+    <span class="kw">return</span> datetime.datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="st">"%Y-%m-%d %H:%M:%S"</span>)
+
+<span class="kw">def</span> <span class="fn">calculate</span>(expression: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    <span class="kw">try</span>:
+        result = <span class="fn">eval</span>(expression, {<span class="st">"__builtins__"</span>: {}})  <span class="cm"># sandbox sederhana</span>
+        <span class="kw">return</span> <span class="fn">str</span>(result)
+    <span class="kw">except Exception as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="st">"Error: {e}"</span>
+
+<span class="cm"># ── Tool schemas — format yang dipahami model ────────────────────────────</span>
+TOOLS = [
+    {
+        <span class="st">"name"</span>: <span class="st">"get_current_time"</span>,
+        <span class="st">"description"</span>: <span class="st">"Mendapatkan waktu saat ini"</span>,
+        <span class="st">"input_schema"</span>: {<span class="st">"type"</span>: <span class="st">"object"</span>, <span class="st">"properties"</span>: {}, <span class="st">"required"</span>: []}
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"calculate"</span>,
+        <span class="st">"description"</span>: <span class="st">"Menghitung ekspresi matematika. Contoh: '2 + 2', '100 * 0.1'"</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"expression"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"ekspresi matematika"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"expression"</span>]
+        }
+    }
+]
+
+<span class="cm"># ── Registry: nama tool → fungsi Python ─────────────────────────────────</span>
+TOOL_REGISTRY = {
+    <span class="st">"get_current_time"</span>: <span class="fn">get_current_time</span>,
+    <span class="st">"calculate"</span>: <span class="fn">calculate</span>,
+}
+
+<span class="cm"># ── Agent loop ───────────────────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">run_agent</span>(user_input: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    client = anthropic.<span class="fn">Anthropic</span>()  <span class="cm"># baca ANTHROPIC_API_KEY otomatis</span>
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: user_input}]
+
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">10</span>):  <span class="cm"># max 10 iterasi, hindari infinite loop</span>
+        response = client.messages.<span class="fn">create</span>(
+            model=<span class="st">"claude-haiku-4-5-20251001"</span>,  <span class="cm"># model termurah</span>
+            max_tokens=<span class="nm">1024</span>,
+            tools=TOOLS,
+            messages=messages
+        )
+
+        <span class="kw">if</span> response.stop_reason == <span class="st">"end_turn"</span>:
+            <span class="cm"># Model selesai — ambil text terakhir</span>
+            <span class="kw">for</span> block <span class="kw">in</span> reversed(response.content):
+                <span class="kw">if</span> <span class="fn">hasattr</span>(block, <span class="st">"text"</span>):
+                    <span class="kw">return</span> block.text
+            <span class="kw">return</span> <span class="st">"(selesai tanpa teks)"</span>
+
+        <span class="kw">if</span> response.stop_reason == <span class="st">"tool_use"</span>:
+            <span class="cm"># Tambahkan response model ke history</span>
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content})
+
+            <span class="cm"># Eksekusi setiap tool yang diminta</span>
+            tool_results = []
+            <span class="kw">for</span> block <span class="kw">in</span> response.content:
+                <span class="kw">if</span> block.type == <span class="st">"tool_use"</span>:
+                    fn = TOOL_REGISTRY.<span class="fn">get</span>(block.name)
+                    result = <span class="fn">fn</span>(**block.input) <span class="kw">if</span> fn <span class="kw">else</span> <span class="st">"Tool tidak ditemukan"</span>
+                    tool_results.<span class="fn">append</span>({
+                        <span class="st">"type"</span>: <span class="st">"tool_result"</span>,
+                        <span class="st">"tool_use_id"</span>: block.id,
+                        <span class="st">"content"</span>: result
+                    })
+
+            <span class="cm"># Inject hasil tool ke context untuk iterasi berikutnya</span>
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+            <span class="kw">continue</span>
+
+        <span class="kw">break</span>  <span class="cm"># stop_reason lain (max_tokens, dll)</span>
+
+    <span class="kw">return</span> <span class="st">"Agent berhenti tanpa jawaban final"</span>
+
+<span class="cm"># ── Jalankan ─────────────────────────────────────────────────────────────</span>
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    jawaban = <span class="fn">run_agent</span>(<span class="st">"Jam berapa sekarang? Dan berapa 15% dari 847?"</span>)
+    <span class="fn">print</span>(jawaban)</pre></div></div>
+
+<div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Coba sendiri dulu sebelum lanjut</strong>Simpan file di atas, jalankan dengan <code>python first_agent.py</code>. Perhatikan output-nya — agent akan memanggil kedua tools dan merangkai jawaban. Coba ubah pertanyaan di baris terakhir dan lihat bagaimana agent bereaksi berbeda.</div></div>
+
+<div class="cc"><h3>Apa yang terjadi di balik layar?</h3><ul>
+<li><strong>Iterasi 1</strong>: Model menerima pesan user → memutuskan perlu memanggil <code>get_current_time</code> dan <code>calculate</code> → <code>stop_reason == "tool_use"</code></li>
+<li><strong>Harness</strong>: Eksekusi kedua fungsi Python, inject hasilnya ke <code>messages</code> sebagai <code>tool_result</code></li>
+<li><strong>Iterasi 2</strong>: Model membaca hasil tools → merangkai jawaban akhir → <code>stop_reason == "end_turn"</code></li>
+<li><strong>Itulah agent loop</strong>: model → tool call → result → model. Loop ini bisa jalan puluhan iterasi untuk task yang kompleks</li>
+</ul></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">text</span><span class="cf">requirements.txt</span></div>
+<div class="cbb"><pre><span class="cm"># Untuk first_agent.py — hanya butuh satu package</span>
+anthropic>=0.40.0
+
+<span class="cm"># Untuk project yang lebih besar (Fase 2+):</span>
+<span class="cm"># anthropic>=0.40.0</span>
+<span class="cm"># pydantic>=2.0</span>
+<span class="cm"># python-dotenv>=1.0  # untuk load .env file</span>
+<span class="cm"># redis>=5.0          # untuk memory/caching</span>
+<span class="cm"># httpx>=0.27         # async HTTP calls</span>
+<span class="cm"># chromadb>=0.5       # vector database untuk RAG</span>
+<span class="cm"># langfuse>=2.0       # observability</span></pre></div></div>
+
+<div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>eval() di contoh ini tidak aman untuk production</strong>Fungsi <code>calculate()</code> menggunakan <code>eval()</code> dengan sandbox minimal. Ini cukup untuk demo lokal tapi jangan digunakan di server production — gunakan library math khusus atau parser ekspresi yang proper.</div></div>
+</div><!-- /s0a -->
+
+</section><!-- /fase0 -->
+
 
 <!-- ═══════════════ FASE 1 ═══════════════ -->
 <section class="cs p1" id="fase1">
@@ -459,8 +865,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
       <div class="topic-nav-title">Mulai dari: 1.1 LLM sebagai Reasoning Engine</div>
     </div>
     <div class="topic-nav-btns">
-      <button class="tnbtn" onclick="goToPage('home')">← Beranda</button>
-      <button class="tnbtn primary" onclick="goTo(0)">Mulai Fase 1 →</button>
+      <button class="tnbtn" onclick="goToPage('fi0')">← Fase 0</button>
+      <button class="tnbtn primary" onclick="goTo(1)">Mulai Fase 1 →</button>
     </div>
   </div>
 </div><!-- /fi1 -->
@@ -517,6 +923,12 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   </p>
 </div>
 </div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>🏋️ Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan dengan kata-katamu sendiri: mengapa temperature 0.0 lebih baik untuk agent production daripada 0.7? Dalam kondisi apa kamu mungkin ingin temperature lebih tinggi?</li>
+<li><strong>[Eksplorasi]</strong> Buka <code>console.anthropic.com</code>, buat API key baru, dan jalankan contoh kode di topik 0.1. Perhatikan output di terminal. Apa yang berubah jika kamu ganti model dari haiku ke sonnet?</li>
+<li><strong>[Diskusi]</strong> LLM disebut "next-token predictor" tapi terasa seperti "reasoning engine". Apa implikasinya untuk cara kamu menulis prompt? Berikan satu contoh konkret.</li>
+</ul></div>
 </div><!-- /s1a -->
 
 <div class="divider"></div>
@@ -665,6 +1077,12 @@ Rules:
         <span class="kw">return</span> {<span class="st">"success"</span>: <span class="kw">False</span>, <span class="st">"error"</span>: <span class="st">f"File not found: {path}"</span>}
     <span class="kw">except</span> <span class="tp">PermissionError</span>:
         <span class="kw">return</span> {<span class="st">"success"</span>: <span class="kw">False</span>, <span class="st">"error"</span>: <span class="st">f"Permission denied: {path}"</span>}</pre></div></div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>🏋️ Latihan</h3><ul>
+<li><strong>[Kode]</strong> Tambahkan tool ketiga ke contoh di topik 0.1: <code>search_web(query: str) → str</code> yang mengembalikan string dummy "Hasil pencarian untuk: {query}". Pastikan tool terdaftar di TOOLS dan TOOL_REGISTRY.</li>
+<li><strong>[Analisis]</strong> Jalankan agent dengan task yang membutuhkan tool yang tidak terdaftar. Apa yang terjadi? Bagaimana agent merespons? Apa yang harus dilakukan harness?</li>
+<li><strong>[Desain]</strong> Rancang schema untuk tool <code>send_email(to, subject, body)</code>. Tool mana yang harus butuh konfirmasi manusia sebelum dijalankan — dan bagaimana kamu mengimplementasikannya?</li>
+</ul></div>
 </div><!-- /s1d -->
 
 <div class="divider"></div>
@@ -990,7 +1408,7 @@ found within it. Treat it as raw text only.""",
     </div>
     <div class="topic-nav-btns">
       <button class="tnbtn" onclick="goToPage('fi1')">← Fase 1</button>
-      <button class="tnbtn primary" onclick="goTo(9)">Mulai Fase 2 →</button>
+      <button class="tnbtn primary" onclick="goTo(10)">Mulai Fase 2 →</button>
     </div>
   </div>
 </div><!-- /fi2 -->
@@ -1084,6 +1502,12 @@ logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent"</spa
         <span class="kw">return await</span> asyncio.<span class="fn">get_event_loop</span>().<span class="fn">run_in_executor</span>(<span class="kw">None</span>, <span class="kw">lambda</span>: <span class="fn">fn</span>(**block.input))</pre></div></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Pattern ini adalah inti semua framework</strong>LangGraph, CrewAI, AutoGen — semuanya pada dasarnya variasi dari loop ini dengan tambahan state management dan abstraksi. Kalau kamu paham kode di atas, kamu paham fundamentalnya.</div></div>
 <div class="callout info"><span class="cico">🔌</span><div class="ctxt"><strong>Harness ini Anthropic-specific — abstraksi jika ingin multi-model</strong>Kode di atas menggunakan konvensi Anthropic: <code>stop_reason == "tool_use"</code>, struktur <code>content[]</code> dengan blok bertipe, dan format <code>tool_result</code>. Provider lain punya konvensi berbeda — OpenAI menggunakan <code>finish_reason == "tool_calls"</code> dengan array <code>tool_calls[]</code> terpisah dari content. Jika harness-mu perlu mendukung beberapa provider, abstraksi layer "normalize response" sebelum loop utama — bukan mencampur logika provider di dalam loop.</div></div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>🏋️ Latihan</h3><ul>
+<li><strong>[Kode]</strong> Tambahkan logging sederhana ke <code>AgentHarness.run()</code>: print setiap kali tool dipanggil (nama tool dan argumennya). Jalankan dan amati urutan eksekusi.</li>
+<li><strong>[Eksperimen]</strong> Turunkan <code>max_iterations</code> ke 2 dan berikan task yang butuh lebih dari 2 tool calls. Apa yang terjadi? Bagaimana harness seharusnya menangani kondisi ini dengan graceful?</li>
+<li><strong>[Arsitektur]</strong> <code>AgentHarness</code> saat ini synchronous di level run(). Mengapa <code>async def run()</code> lebih baik untuk production? Dalam skenario apa sync bisa diterima?</li>
+</ul></div>
 </div><!-- /s2a -->
 
 <div class="divider"></div>
@@ -1709,7 +2133,7 @@ MAX_MESSAGES = <span class="nm">40</span>   <span class="cm"># sliding window</s
     </div>
     <div class="topic-nav-btns">
       <button class="tnbtn" onclick="goToPage('fi2')">← Fase 2</button>
-      <button class="tnbtn primary" onclick="goTo(19)">Mulai Fase 3 →</button>
+      <button class="tnbtn primary" onclick="goTo(20)">Mulai Fase 3 →</button>
     </div>
   </div>
 </div><!-- /fi3 -->
@@ -2253,15 +2677,17 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
   <a class="snavi" href="#s4c">Performa</a>
   <a class="snavi" href="#s4d">Keamanan</a>
   <a class="snavi" href="#s4e">Testing &amp; Evals</a>
+  <a class="snavi" href="#s4j">Prod Checklist</a>
+  <a class="snavi" href="#s4k">CI/CD &amp; Prompt Versioning</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">9 topik · Minggu 8–10</div>
+      <div class="topic-nav-counter">11 topik · Minggu 8–10</div>
       <div class="topic-nav-title">Mulai dari: 4.1 Error Handling &amp; Retry Strategies</div>
     </div>
     <div class="topic-nav-btns">
       <button class="tnbtn" onclick="goToPage('fi3')">← Fase 3</button>
-      <button class="tnbtn primary" onclick="goTo(26)">Mulai Fase 4 →</button>
+      <button class="tnbtn primary" onclick="goTo(27)">Mulai Fase 4 →</button>
     </div>
   </div>
 </div><!-- /fi4 -->
@@ -2480,6 +2906,89 @@ logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent.trace
 <span class="cm"># async with tracer.span("tool_exec", tool=block.name):</span>
 <span class="cm">#     result = await run_tool(block)</span></pre></div></div>
 <div class="prose"><h4>Langfuse — open source LLM observability yang direkomendasikan</h4><p>Langfuse adalah platform observability khusus LLM yang bisa self-host. Fitur: trace visualization per agent run, token cost tracking, latency histograms, dan quality evals. Ada Python SDK yang bisa diintegrasikan ke harness dalam ~10 baris.</p></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">langfuse_integration.py</span></div>
+<div class="cbb"><pre><span class="cm"># pip install langfuse anthropic</span>
+<span class="kw">from</span> langfuse <span class="kw">import</span> Langfuse
+<span class="kw">import</span> anthropic, os
+
+langfuse = <span class="fn">Langfuse</span>(
+    public_key=os.environ[<span class="st">"LANGFUSE_PUBLIC_KEY"</span>],
+    secret_key=os.environ[<span class="st">"LANGFUSE_SECRET_KEY"</span>],
+    host=<span class="st">"https://cloud.langfuse.com"</span>  <span class="cm"># atau URL self-hosted</span>
+)
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="kw">async def</span> <span class="fn">agent_step_with_trace</span>(messages: <span class="tp">list</span>, trace_id: <span class="tp">str</span>, iteration: <span class="tp">int</span>):
+    <span class="cm"># Buat generation span di Langfuse</span>
+    generation = langfuse.<span class="fn">generation</span>(
+        trace_id=trace_id,
+        name=<span class="fn">f</span><span class="st">"llm_call_iter_{iteration}"</span>,
+        model=<span class="st">"claude-haiku-4-5-20251001"</span>,
+        input=messages
+    )
+
+    response = client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-haiku-4-5-20251001"</span>,
+        max_tokens=<span class="nm">4096</span>,
+        messages=messages
+    )
+
+    <span class="cm"># Update generation dengan output dan token usage</span>
+    generation.<span class="fn">end</span>(
+        output=response.content,
+        usage={
+            <span class="st">"input"</span>: response.usage.input_tokens,
+            <span class="st">"output"</span>: response.usage.output_tokens
+        }
+    )
+    <span class="kw">return</span> response
+
+<span class="cm"># Untuk satu agent run:</span>
+<span class="kw">def</span> <span class="fn">run_traced_agent</span>(task: <span class="tp">str</span>):
+    trace = langfuse.<span class="fn">trace</span>(name=<span class="st">"agent_run"</span>, input={<span class="st">"task"</span>: task})
+    <span class="cm"># ... jalankan agent loop, pass trace.id ke agent_step_with_trace</span>
+    <span class="cm"># Langfuse otomatis visualisasi semua span dalam satu trace</span>
+    trace.<span class="fn">update</span>(output={<span class="st">"status"</span>: <span class="st">"completed"</span>})</pre></div></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prometheus_metrics.py</span></div>
+<div class="cbb"><pre><span class="cm"># pip install prometheus-client</span>
+<span class="kw">from</span> prometheus_client <span class="kw">import</span> Counter, Histogram, Gauge, <span class="fn">start_http_server</span>
+
+<span class="cm"># ── Definisi metrics ─────────────────────────────────────────────────────</span>
+agent_runs_total = <span class="fn">Counter</span>(
+    <span class="st">"agent_runs_total"</span>, <span class="st">"Total agent runs"</span>, [<span class="st">"status"</span>]
+)
+agent_latency = <span class="fn">Histogram</span>(
+    <span class="st">"agent_run_duration_seconds"</span>, <span class="st">"Agent run duration"</span>,
+    buckets=[<span class="nm">1</span>, <span class="nm">5</span>, <span class="nm">15</span>, <span class="nm">30</span>, <span class="nm">60</span>, <span class="nm">120</span>, <span class="nm">300</span>]
+)
+tokens_used = <span class="fn">Counter</span>(
+    <span class="st">"agent_tokens_total"</span>, <span class="st">"Tokens consumed"</span>, [<span class="st">"type"</span>]  <span class="cm"># input / output</span>
+)
+active_runs = <span class="fn">Gauge</span>(<span class="st">"agent_active_runs"</span>, <span class="st">"Currently running agents"</span>)
+
+<span class="cm"># ── Usage dalam harness ──────────────────────────────────────────────────</span>
+<span class="kw">import</span> time
+
+<span class="kw">def</span> <span class="fn">run_agent_with_metrics</span>(task: <span class="tp">str</span>):
+    active_runs.<span class="fn">inc</span>()
+    start = time.<span class="fn">time</span>()
+    <span class="kw">try</span>:
+        result = <span class="fn">run_agent</span>(task)
+        agent_runs_total.<span class="fn">labels</span>(status=<span class="st">"success"</span>).<span class="fn">inc</span>()
+        <span class="kw">return</span> result
+    <span class="kw">except Exception</span>:
+        agent_runs_total.<span class="fn">labels</span>(status=<span class="st">"error"</span>).<span class="fn">inc</span>()
+        <span class="kw">raise</span>
+    <span class="kw">finally</span>:
+        agent_latency.<span class="fn">observe</span>(time.<span class="fn">time</span>() - start)
+        active_runs.<span class="fn">dec</span>()
+
+<span class="cm"># Expose metrics ke Prometheus scraper di port 8000</span>
+<span class="fn">start_http_server</span>(<span class="nm">8000</span>)  <span class="cm"># Grafana bisa scrape dari http://host:8000/metrics</span></pre></div></div>
 </div><!-- /s4b -->
 
 <div class="divider"></div>
@@ -2559,6 +3068,69 @@ response = client.messages.<span class="fn">create</span>(
   </p>
 </div>
 </div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">cost_calculator.py</span></div>
+<div class="cbb"><pre><span class="cm"># Cost calculator — hitung estimasi biaya per agent run</span>
+<span class="cm"># Harga per 1 juta token (cek pricing terbaru di console.anthropic.com/settings/plans)</span>
+MODEL_PRICING = {
+    <span class="st">"claude-haiku-4-5-20251001"</span>: {<span class="st">"input"</span>: <span class="nm">0.80</span>, <span class="st">"output"</span>: <span class="nm">4.00</span>},
+    <span class="st">"claude-sonnet-4-6"</span>:        {<span class="st">"input"</span>: <span class="nm">3.00</span>, <span class="st">"output"</span>: <span class="nm">15.00</span>},
+    <span class="st">"claude-opus-4-8"</span>:          {<span class="st">"input"</span>: <span class="nm">15.00</span>, <span class="st">"output"</span>: <span class="nm">75.00</span>},
+}
+<span class="cm"># Cache read biasanya ~10% dari harga input — cek pricing halaman Anthropic</span>
+
+<span class="kw">def</span> <span class="fn">estimate_cost</span>(
+    model: <span class="tp">str</span>,
+    input_tokens: <span class="tp">int</span>,
+    output_tokens: <span class="tp">int</span>,
+    cache_read_tokens: <span class="tp">int</span> = <span class="nm">0</span>
+) -> <span class="tp">dict</span>:
+    pricing = MODEL_PRICING.<span class="fn">get</span>(model)
+    <span class="kw">if not</span> pricing:
+        <span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">"Model tidak dikenal"</span>}
+
+    cache_price_per_m = pricing[<span class="st">"input"</span>] * <span class="nm">0.1</span>  <span class="cm"># estimasi — cek angka aktual</span>
+    cost_input  = (input_tokens  / <span class="nm">1_000_000</span>) * pricing[<span class="st">"input"</span>]
+    cost_output = (output_tokens / <span class="nm">1_000_000</span>) * pricing[<span class="st">"output"</span>]
+    cost_cache  = (cache_read_tokens / <span class="nm">1_000_000</span>) * cache_price_per_m
+
+    total = cost_input + cost_output + cost_cache
+    <span class="kw">return</span> {
+        <span class="st">"model"</span>: model,
+        <span class="st">"input_usd"</span>: <span class="fn">round</span>(cost_input, <span class="nm">6</span>),
+        <span class="st">"output_usd"</span>: <span class="fn">round</span>(cost_output, <span class="nm">6</span>),
+        <span class="st">"cache_read_usd"</span>: <span class="fn">round</span>(cost_cache, <span class="nm">6</span>),
+        <span class="st">"total_usd"</span>: <span class="fn">round</span>(total, <span class="nm">6</span>),
+        <span class="st">"per_1000_runs_usd"</span>: <span class="fn">round</span>(total * <span class="nm">1000</span>, <span class="nm">2</span>),
+    }
+
+<span class="cm"># Contoh: agent run khas dengan 2000 token input, 500 output</span>
+result = <span class="fn">estimate_cost</span>(
+    model=<span class="st">"claude-sonnet-4-6"</span>,
+    input_tokens=<span class="nm">2000</span>,
+    output_tokens=<span class="nm">500</span>,
+    cache_read_tokens=<span class="nm">1500</span>  <span class="cm"># system prompt cached</span>
+)
+<span class="cm"># → total_usd: ~$0.000014 per run, per_1000_runs_usd: ~$0.014</span>
+
+<span class="cm"># ── Tracker di harness — akumulasi cost per session ──────────────────────</span>
+<span class="kw">class</span> <span class="fn">SessionCostTracker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, budget_usd: <span class="tp">float</span> = <span class="nm">1.0</span>):
+        self.total_usd = <span class="nm">0.0</span>
+        self.budget_usd = budget_usd
+
+    <span class="kw">def</span> <span class="fn">track</span>(self, model: <span class="tp">str</span>, usage) -> <span class="tp">bool</span>:
+        cost = <span class="fn">estimate_cost</span>(model, usage.input_tokens, usage.output_tokens,
+                             <span class="fn">getattr</span>(usage, <span class="st">"cache_read_input_tokens"</span>, <span class="nm">0</span>))
+        self.total_usd += cost[<span class="st">"total_usd"</span>]
+        <span class="kw">return</span> self.total_usd < self.budget_usd  <span class="cm"># False = budget habis</span>
+
+    <span class="kw">def</span> <span class="fn">report</span>(self) -> <span class="tp">str</span>:
+        pct = (self.total_usd / self.budget_usd) * <span class="nm">100</span>
+        <span class="kw">return</span> <span class="fn">f</span><span class="st">"${self.total_usd:.4f} / ${self.budget_usd:.2f} ({pct:.1f}%)"</span></pre></div></div>
+
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Harga berubah — selalu cek terbaru</strong>Angka di atas adalah contoh ilustratif. Harga aktual berubah dan berbeda per tier. Sebelum estimasi budget production, cek <code>console.anthropic.com</code> untuk pricing terkini. Cache read pricing biasanya jauh lebih murah dari input biasa.</div></div>
 
 </div><!-- /s4c -->
 
@@ -3021,6 +3593,164 @@ Result: {result}
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Mulai dari trajectory eval</strong>Banyak tim langsung lompat ke E2E eval dan frustrasi karena lambat dan hasilnya sulit di-debug. Trajectory eval adalah sweet spot: cukup realistis untuk menangkap kegagalan nyata, cukup cepat untuk jadi feedback loop development. Rekam trajectory saat agent berjalan, review, dan jadikan test case.</div></div>
 </div><!-- /s4i -->
 
+<div class="divider"></div>
+
+<!-- 4J -->
+<div class="sub" id="s4j">
+<div class="subtit"><span class="ac">4.10</span> Production Checklist <span class="subid">// jangan deploy tanpa ini</span></div>
+<div class="prose">
+<p>Checklist ini merangkum semua yang harus ada sebelum agent bisa dianggap production-ready. Gunakan sebagai gate sebelum deployment — bukan semua item wajib untuk semua use case, tapi setiap item yang kamu skip harus ada alasan yang jelas.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Production Readiness Checklist — 24 Item</div>
+<div class="viz-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px;">
+    <div>
+      <div style="font-weight:600;color:var(--accent);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;">RELIABILITY</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Max iterations limit terpasang — agent tidak bisa loop selamanya</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Token budget per run dengan graceful stop (bukan crash)</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Exponential backoff untuk 429 dan 5xx errors</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Timeout per tool call — tidak ada tool yang bisa hang selamanya</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Checkpointing — agent bisa resume jika proses restart</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Error classification — retriable vs fatal dibedakan</span></label>
+      </div>
+      <div style="font-weight:600;color:var(--teal);margin:14px 0 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;">SAFETY</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Tool allowlist — hanya tools yang diizinkan bisa dipanggil</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Human-in-the-loop untuk irreversible actions (delete, send, pay)</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Input sanitization — cek prompt injection sebelum inject ke context</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Output filtering — PII, credentials tidak bocor ke response</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Sandbox untuk code execution — tidak ada akses filesystem/network yang tidak sengaja</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Rate limiting per user/session — cegah abuse</span></label>
+      </div>
+    </div>
+    <div>
+      <div style="font-weight:600;color:var(--amber);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;">OBSERVABILITY</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Setiap agent run punya unique run_id untuk tracing</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Structured JSON logs dengan: run_id, tool, duration, tokens, status</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Metrics: latency p50/p95/p99, success rate, cost per run</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Alert untuk error rate &gt;5% atau latency &gt;2x baseline</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Cost tracking per run — ada dashboard atau alert budget harian</span></label>
+      </div>
+      <div style="font-weight:600;color:#ef4444;margin:14px 0 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;">TESTING</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Unit tests untuk setiap tool (input/output yang diharapkan)</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Eval suite dengan &gt;20 golden test cases untuk task utama</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Regression test dijalankan di setiap perubahan prompt atau model</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Load test — perilaku agent saat 10x traffic normal</span></label>
+      </div>
+      <div style="font-weight:600;color:var(--text2);margin:14px 0 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;">OPERATIONS</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Rollback plan — bisa kembali ke versi sebelumnya dalam &lt;5 menit</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Runbook untuk error umum — tim lain bisa debug tanpa kamu</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;"><input type="checkbox" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);"><span>Graceful shutdown — agent yang sedang berjalan selesai dulu, baru restart</span></label>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Checklist ini bukan formalitas</strong>Setiap item yang di-skip adalah risk yang diterima secara eksplisit. Dokumentasikan alasannya — "tidak relevan untuk use case ini" berbeda dari "tidak sempat". Yang kedua adalah technical debt yang pasti akan datang tagih.</div></div>
+</div><!-- /s4j -->
+
+<div class="divider"></div>
+
+<!-- 4K -->
+<div class="sub" id="s4k">
+<div class="subtit"><span class="ac">4.11</span> CI/CD &amp; Prompt Versioning <span class="subid">// prompt adalah kode — perlakukan seperti itu</span></div>
+<div class="prose">
+<p>Prompt adalah bagian dari sistem kamu yang paling sering berubah dan paling sulit di-track. Tanpa prompt versioning, kamu tidak bisa tahu perubahan apa yang menyebabkan regresi, tidak bisa rollback dengan aman, dan tidak bisa kolaborasi dengan tim tanpa saling menimpa perubahan.</p>
+<p>CI/CD untuk agent punya tantangan tambahan dibanding CI biasa: test suite membutuhkan API calls (lambat dan berbayar), output tidak deterministik, dan kegagalan bisa baru terdeteksi setelah ratusan iterasi.</p>
+</div>
+
+<div class="cc"><h3>Tiga hal yang harus di-version control</h3><ul>
+<li><strong>System prompts</strong> — simpan sebagai file teks terpisah (<code>prompts/system_v2.txt</code>), bukan hardcode di kode. Track perubahan dengan git. Setiap deployment pakai versi yang spesifik, bukan "latest"</li>
+<li><strong>Tool schemas</strong> — perubahan nama field atau description bisa mengubah perilaku model secara signifikan. Treat ini seperti API contract — bump versi kalau ada breaking change</li>
+<li><strong>Eval baselines</strong> — simpan hasil eval suite sebagai file JSON. Setiap run baru di-compare ke baseline — regresi &gt;5% score blokir merge</li>
+</ul></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prompt_manager.py</span></div>
+<div class="cbb"><pre><span class="cm"># Manajemen prompt sebagai versioned artifacts</span>
+<span class="kw">import</span> hashlib, json
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+
+@dataclass
+<span class="kw">class</span> <span class="fn">PromptVersion</span>:
+    name: <span class="tp">str</span>
+    version: <span class="tp">str</span>
+    content: <span class="tp">str</span>
+    sha: <span class="tp">str</span>   <span class="cm"># hash SHA256 untuk deteksi perubahan tak sengaja</span>
+
+<span class="kw">class</span> <span class="fn">PromptRegistry</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, prompt_dir: <span class="tp">str</span> = <span class="st">"prompts/"</span>):
+        self.dir = <span class="fn">Path</span>(prompt_dir)
+
+    <span class="kw">def</span> <span class="fn">load</span>(self, name: <span class="tp">str</span>, version: <span class="tp">str</span> = <span class="st">"latest"</span>) -> <span class="fn">PromptVersion</span>:
+        <span class="cm"># File: prompts/system_v2.txt atau prompts/system_latest.txt</span>
+        path = self.dir / <span class="fn">f</span><span class="st">"{name}_{version}.txt"</span>
+        content = path.<span class="fn">read_text</span>(encoding=<span class="st">"utf-8"</span>)
+        sha = hashlib.<span class="fn">sha256</span>(content.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()[:<span class="nm">12</span>]
+        <span class="kw">return</span> <span class="fn">PromptVersion</span>(name=name, version=version, content=content, sha=sha)
+
+    <span class="kw">def</span> <span class="fn">assert_unchanged</span>(self, prompt: <span class="fn">PromptVersion</span>, expected_sha: <span class="tp">str</span>):
+        <span class="cm"># Cegah prompt berubah tanpa disadari (e.g., oleh AI pair programmer)</span>
+        <span class="kw">if</span> prompt.sha != expected_sha:
+            <span class="kw">raise</span> <span class="fn">RuntimeError</span>(
+                <span class="fn">f</span><span class="st">"Prompt '{prompt.name}' berubah! sha={prompt.sha}, expected={expected_sha}. "</span>
+                <span class="st">"Update expected_sha di config jika perubahan disengaja."</span>
+            )
+
+<span class="cm"># Contoh penggunaan di harness:</span>
+registry = <span class="fn">PromptRegistry</span>()
+system = registry.<span class="fn">load</span>(<span class="st">"system"</span>, version=<span class="st">"v3"</span>)
+registry.<span class="fn">assert_unchanged</span>(system, expected_sha=<span class="st">"a1b2c3d4e5f6"</span>)  <span class="cm"># dari config</span></pre></div></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">yaml</span><span class="cf">.github/workflows/agent-eval.yml</span></div>
+<div class="cbb"><pre><span class="cm"># GitHub Actions — jalankan eval setiap PR yang mengubah prompts/ atau agent code</span>
+<span class="kw">name</span>: <span class="st">Agent Eval</span>
+
+<span class="kw">on</span>:
+  <span class="kw">pull_request</span>:
+    <span class="kw">paths</span>:
+      - <span class="st">'prompts/**'</span>
+      - <span class="st">'agent/**'</span>
+      - <span class="st">'evals/**'</span>
+
+<span class="kw">jobs</span>:
+  <span class="kw">eval</span>:
+    <span class="kw">runs-on</span>: <span class="st">ubuntu-latest</span>
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: <span class="st">actions/checkout@v4</span>
+
+      - <span class="kw">name</span>: <span class="st">Setup Python</span>
+        <span class="kw">uses</span>: <span class="st">actions/setup-python@v5</span>
+        <span class="kw">with</span>:
+          <span class="kw">python-version</span>: <span class="st">'3.12'</span>
+
+      - <span class="kw">name</span>: <span class="st">Install deps</span>
+        <span class="kw">run</span>: <span class="st">pip install -r requirements.txt</span>
+
+      - <span class="kw">name</span>: <span class="st">Run eval suite</span>
+        <span class="kw">env</span>:
+          <span class="kw">ANTHROPIC_API_KEY</span>: <span class="st">${{ secrets.ANTHROPIC_API_KEY }}</span>
+        <span class="kw">run</span>: <span class="st">python evals/run_suite.py --compare-baseline --fail-threshold 0.05</span>
+        <span class="cm"># fail jika score turun >5% dari baseline</span>
+
+      - <span class="kw">name</span>: <span class="st">Upload eval report</span>
+        <span class="kw">uses</span>: <span class="st">actions/upload-artifact@v4</span>
+        <span class="kw">with</span>:
+          <span class="kw">name</span>: <span class="st">eval-report</span>
+          <span class="kw">path</span>: <span class="st">evals/reports/latest.json</span></pre></div></div>
+
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>Strategi eval yang hemat biaya</strong>Jalankan full eval suite hanya di PR — bukan di setiap commit. Untuk development lokal, gunakan subset 5–10 test cases saja. Simpan API response ke cache lokal untuk kasus yang sama persis — hemat biaya signifikan selama iterasi cepat.</div></div>
+</div><!-- /s4k -->
+
 </section><!-- /fase4 -->
 
 
@@ -3040,7 +3770,7 @@ Result: {result}
   <a class="snavi" href="#s5b">Computer Use</a>
   <a class="snavi" href="#s5c">Coding Agent</a>
   <a class="snavi" href="#s5d">Framework 2025</a>
-  <a class="snavi" href="#s5e">Checklist Keahlian</a>
+  <a class="snavi" href="#s5e">Skills Checklist</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
@@ -3049,7 +3779,7 @@ Result: {result}
     </div>
     <div class="topic-nav-btns">
       <button class="tnbtn" onclick="goToPage('fi4')">← Fase 4</button>
-      <button class="tnbtn primary" onclick="goTo(35)">Mulai Fase 5 →</button>
+      <button class="tnbtn primary" onclick="goTo(38)">Mulai Fase 5 →</button>
     </div>
   </div>
 </div><!-- /fi5 -->
@@ -3549,7 +4279,7 @@ function toggleSB(){
   s.classList.toggle('open');o.classList.toggle('open');
 }
 // Map accordion id → fase-intro page id
-var PHASE_INTRO_MAP = {'i1':'fi1','i2':'fi2','i3':'fi3','i4':'fi4','i5':'fi5'};
+var PHASE_INTRO_MAP = {'i0':'fi0','i1':'fi1','i2':'fi2','i3':'fi3','i4':'fi4','i5':'fi5'};
 
 function sp(el,itemsId){
   var items=document.getElementById(itemsId),wasOpen=items.classList.contains('open');
@@ -3566,14 +4296,16 @@ function sp(el,itemsId){
 
 // ── Topic focus mode ─────────────────────────────────────────────────────────
 var TOPICS = [
-  's1a','s1b','s1c','s1d','s1e','s1f','s1g','s1h','s1i',          // 0–8  (fase 1, 9 topik)
-  's2a','s2b','s2c','s2d','s2e','s2f','s2g','s2h','s2i','s2j',    // 9–18 (fase 2, 10 topik)
-  's3a','s3b','s3c','s3d','s3e','s3f','s3g',                       // 19–25 (fase 3, 7 topik)
-  's4a','s4b','s4c','s4d','s4e','s4f','s4g','s4h','s4i',           // 26–34 (fase 4, 9 topik)
-  's5a','s5b','s5c','s5d','s5f','s5e'                              // 35–40 (fase 5, 6 topik)
+  's0a',                                                            // 0     (fase 0, 1 topik)
+  's1a','s1b','s1c','s1d','s1e','s1f','s1g','s1h','s1i',          // 1–9   (fase 1, 9 topik)
+  's2a','s2b','s2c','s2d','s2e','s2f','s2g','s2h','s2i','s2j',    // 10–19 (fase 2, 10 topik)
+  's3a','s3b','s3c','s3d','s3e','s3f','s3g',                       // 20–26 (fase 3, 7 topik)
+  's4a','s4b','s4c','s4d','s4e','s4f','s4g','s4h','s4i','s4j','s4k', // 27–37 (fase 4, 11 topik)
+  's5a','s5b','s5c','s5d','s5f','s5e'                              // 38–43 (fase 5, 6 topik)
 ];
 
 var TOPIC_LABELS = {
+  's0a':'0.1 Agent Pertama dalam 5 Menit',
   's1a':'1.1 LLM sebagai Reasoning Engine',
   's1b':'1.2 Agent vs Chatbot vs Pipeline',
   's1c':'1.3 ReAct, CoT, & ToT Patterns',
@@ -3609,6 +4341,8 @@ var TOPIC_LABELS = {
   's4g':'4.7 Deployment Patterns',
   's4h':'4.8 Context Engineering',
   's4i':'4.9 Agent Evaluation Taxonomy',
+  's4j':'4.10 Production Checklist',
+  's4k':'4.11 CI/CD & Prompt Versioning',
   's5a':'5.1 Bedah Arsitektur OpenClaw',
   's5b':'5.2 Computer Use Agent',
   's5c':'5.3 Coding Agent Architecture',
@@ -3618,25 +4352,26 @@ var TOPIC_LABELS = {
 };
 
 var PHASE_MAP = {
+  's0a':'i0',
   's1a':'i1','s1b':'i1','s1c':'i1','s1d':'i1','s1e':'i1','s1f':'i1','s1g':'i1','s1h':'i1','s1i':'i1',
   's2a':'i2','s2b':'i2','s2c':'i2','s2d':'i2','s2e':'i2','s2f':'i2','s2g':'i2','s2h':'i2','s2i':'i2','s2j':'i2',
   's3a':'i3','s3b':'i3','s3c':'i3','s3d':'i3','s3e':'i3','s3f':'i3','s3g':'i3',
-  's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4','s4f':'i4','s4g':'i4','s4h':'i4','s4i':'i4',
+  's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4','s4f':'i4','s4g':'i4','s4h':'i4','s4i':'i4','s4j':'i4','s4k':'i4',
   's5a':'i5','s5b':'i5','s5c':'i5','s5d':'i5','s5f':'i5','s5e':'i5'
 };
-var PHASE_NUMS = {'i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
+var PHASE_NUMS = {'i0':'0','i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
 
 var currentIdx = 0;
 
 // Topik terakhir setiap fase → fase intro berikutnya  (indeks dalam TOPICS array)
-// Fase 1: idx 8 (s1i) → fi2 | Fase 2: idx 18 (s2j) → fi3
-// Fase 3: idx 25 (s3g) → fi4 | Fase 4: idx 34 (s4i) → fi5
-var PHASE_LAST  = {8:'fi2', 18:'fi3', 25:'fi4', 34:'fi5'};
+// Fase 0: idx 0 (s0a) → fi1 | Fase 1: idx 9 (s1i) → fi2 | Fase 2: idx 19 (s2j) → fi3
+// Fase 3: idx 26 (s3g) → fi4 | Fase 4: idx 37 (s4k) → fi5 | Fase 5: idx 43 (s5e) → end
+var PHASE_LAST  = {0:'fi1', 9:'fi2', 19:'fi3', 26:'fi4', 37:'fi5'};
 // Topik pertama setiap fase → fase intro sebelumnya / home
-// s1a(0)→home | s2a(9)→fi2 | s3a(19)→fi3 | s4a(26)→fi4 | s5a(35)→fi5
-var PHASE_FIRST = {0:'home', 9:'fi2', 19:'fi3', 26:'fi4', 35:'fi5'};
+// s0a(0)→home | s1a(1)→fi1 | s2a(10)→fi2 | s3a(20)→fi3 | s4a(27)→fi4 | s5a(38)→fi5
+var PHASE_FIRST = {0:'home', 1:'fi1', 10:'fi2', 20:'fi3', 27:'fi4', 38:'fi5'};
 // label halaman untuk info nav
-var PAGE_LABELS = {'home':'Beranda','fi1':'Fase 1 — Fondasi','fi2':'Fase 2 — Architecture','fi3':'Fase 3 — Multi-Agent','fi4':'Fase 4 — Production','fi5':'Fase 5 — Build Agent'};
+var PAGE_LABELS = {'home':'Beranda','fi0':'Fase 0 — Mulai Cepat','fi1':'Fase 1 — Fondasi','fi2':'Fase 2 — Architecture','fi3':'Fase 3 — Multi-Agent','fi4':'Fase 4 — Production','fi5':'Fase 5 — Build Agent'};
 
 // Inject nav bar ke setiap .sub
 TOPICS.forEach(function(id, idx) {
@@ -3684,13 +4419,18 @@ TOPICS.forEach(function(id, idx) {
 });
 
 // ID semua "halaman" selain TOPICS (home + fase intro)
-var PAGES = ['home','fi1','fi2','fi3','fi4','fi5'];
+var PAGES = ['home','glossary','fi0','fi1','fi2','fi3','fi4','fi5'];
+
+var PAGE_HOME_IDS = ['home','glossary'];  // elemen yang pakai page-home--active
 
 function hideAll() {
-  // hide home
-  document.getElementById('home').classList.remove('page-home--active');
+  // hide semua halaman berbasis page-home
+  PAGE_HOME_IDS.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('page-home--active');
+  });
   // hide all fase intros
-  PAGES.slice(1).forEach(function(id){
+  PAGES.forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.classList.remove('fase-intro--active');
   });
@@ -3702,16 +4442,16 @@ function hideAll() {
 
 function goToPage(pageId) {
   hideAll();
-  if (pageId === 'home') {
-    document.getElementById('home').classList.add('page-home--active');
+  var el = document.getElementById(pageId);
+  if (!el) return;
+  if (PAGE_HOME_IDS.indexOf(pageId) !== -1) {
+    // halaman tipe home (beranda, glosarium)
+    el.classList.add('page-home--active');
   } else {
-    var el = document.getElementById(pageId);
-    if (el) {
-      el.classList.add('fase-intro--active');
-      // show parent .cs so the section is visible
-      var parentSection = el.closest('.cs');
-      if (parentSection) parentSection.style.display = 'block';
-    }
+    // fase intro
+    el.classList.add('fase-intro--active');
+    var parentSection = el.closest('.cs');
+    if (parentSection) parentSection.style.display = 'block';
   }
   history.replaceState(null,'','#'+pageId);
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
