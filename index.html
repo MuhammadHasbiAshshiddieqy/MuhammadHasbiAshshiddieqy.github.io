@@ -426,7 +426,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   <div style="display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;">
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">44</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">30</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">13</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">25</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">~16mg</div><div style="font-size:11px;color:var(--text3)">kurikulum</div></div>
   </div>
 </div>
@@ -963,14 +963,14 @@ anthropic>=0.40.0
       <div class="cbar-row"><div class="cbar-label">Chatbot</div><div class="cbar-track"><div class="cbar-fill" style="--tw:20%;background:var(--accent);"></div></div><div class="cbar-val">20%</div></div>
       <div class="cbar-row"><div class="cbar-label">LLM Pipeline</div><div class="cbar-track"><div class="cbar-fill" style="--tw:45%;background:var(--teal);"></div></div><div class="cbar-val">45%</div></div>
       <div class="cbar-row"><div class="cbar-label">Single Agent</div><div class="cbar-track"><div class="cbar-fill" style="--tw:75%;background:var(--amber);"></div></div><div class="cbar-val">75%</div></div>
-      <div class="cbar-row"><div class="cbar-label">Multi-Agent</div><div class="cbar-track"><div class="cbar-fill" style="--tw:95%;background:var(--green);"></div></div><div class="cbar-val">95%</div></div>
+      <div class="cbar-row"><div class="cbar-label">Multi-Agent</div><div class="cbar-track"><div class="cbar-fill" style="--tw:85%;background:var(--green);"></div></div><div class="cbar-val">85%</div></div>
     </div>
     <div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em;">Kompleksitas implementasi</div>
       <div class="cbar-row"><div class="cbar-label">Chatbot</div><div class="cbar-track"><div class="cbar-fill" style="--tw:10%;background:var(--accent);"></div></div><div class="cbar-val">10%</div></div>
       <div class="cbar-row"><div class="cbar-label">LLM Pipeline</div><div class="cbar-track"><div class="cbar-fill" style="--tw:35%;background:var(--teal);"></div></div><div class="cbar-val">35%</div></div>
       <div class="cbar-row"><div class="cbar-label">Single Agent</div><div class="cbar-track"><div class="cbar-fill" style="--tw:65%;background:var(--amber);"></div></div><div class="cbar-val">65%</div></div>
-      <div class="cbar-row"><div class="cbar-label">Multi-Agent</div><div class="cbar-track"><div class="cbar-fill" style="--tw:95%;background:var(--coral);"></div></div><div class="cbar-val">95%</div></div>
+      <div class="cbar-row"><div class="cbar-label">Multi-Agent</div><div class="cbar-track"><div class="cbar-fill" style="--tw:90%;background:var(--coral);"></div></div><div class="cbar-val">90%</div></div>
     </div>
   </div>
   <p style="font-size:12px;color:var(--text3);margin-top:18px;font-family:'IBM Plex Mono',monospace;">
@@ -1083,6 +1083,99 @@ Rules:
 <li><strong>[Analisis]</strong> Jalankan agent dengan task yang membutuhkan tool yang tidak terdaftar. Apa yang terjadi? Bagaimana agent merespons? Apa yang harus dilakukan harness?</li>
 <li><strong>[Desain]</strong> Rancang schema untuk tool <code>send_email(to, subject, body)</code>. Tool mana yang harus butuh konfirmasi manusia sebelum dijalankan — dan bagaimana kamu mengimplementasikannya?</li>
 </ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Sequence Diagram — Siapa Memanggil Siapa dalam Agent Loop</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg" style="max-height:360px;">
+  <defs>
+    <marker id="sarr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(124,109,250,0.6)"/>
+    </marker>
+    <marker id="sarr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(45,212,191,0.6)"/>
+    </marker>
+    <marker id="sarr3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(245,158,11,0.6)"/>
+    </marker>
+    <marker id="sarr4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="rgba(74,222,128,0.6)"/>
+    </marker>
+  </defs>
+
+  <!-- Column headers -->
+  <rect x="40" y="10" width="80" height="28" rx="6" fill="rgba(124,109,250,0.12)" stroke="rgba(124,109,250,0.3)"/>
+  <text x="80" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(124,109,250,0.9)">👤 User</text>
+
+  <rect x="180" y="10" width="100" height="28" rx="6" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.3)"/>
+  <text x="230" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">⚙️ Harness</text>
+
+  <rect x="340" y="10" width="80" height="28" rx="6" fill="rgba(45,212,191,0.1)" stroke="rgba(45,212,191,0.3)"/>
+  <text x="380" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🧠 LLM</text>
+
+  <rect x="480" y="10" width="80" height="28" rx="6" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="520" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(74,222,128,0.9)">🔧 Tools</text>
+
+  <!-- Lifelines -->
+  <line x1="80" y1="38" x2="80" y2="310" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="230" y1="38" x2="230" y2="310" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="380" y1="38" x2="380" y2="310" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="520" y1="38" x2="520" y2="310" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Step 1: User → Harness -->
+  <line x1="80" y1="58" x2="228" y2="58" stroke="rgba(124,109,250,0.5)" stroke-width="1.5" marker-end="url(#sarr)"/>
+  <text x="155" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">1. task + API key</text>
+
+  <!-- Step 2: Harness → LLM (with tools) -->
+  <line x1="230" y1="82" x2="378" y2="82" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#sarr2)"/>
+  <text x="304" y="76" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">2. system + tools + messages</text>
+
+  <!-- Box: LLM reasons -->
+  <rect x="345" y="100" width="70" height="22" rx="4" fill="rgba(45,212,191,0.08)" stroke="rgba(45,212,191,0.2)"/>
+  <text x="380" y="115" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">reasoning</text>
+
+  <!-- Step 3: LLM → Harness (tool_use) -->
+  <line x1="378" y1="138" x2="232" y2="138" stroke="rgba(45,212,191,0.5)" stroke-width="1.5" marker-end="url(#sarr3)"/>
+  <text x="304" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">3. stop_reason=tool_use</text>
+
+  <!-- Step 4: Harness → Tools -->
+  <line x1="230" y1="162" x2="518" y2="162" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#sarr4)"/>
+  <text x="374" y="156" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">4. execute tool(name, args)</text>
+
+  <!-- Box: Tool executes -->
+  <rect x="485" y="178" width="70" height="22" rx="4" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.2)"/>
+  <text x="520" y="193" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">bash / API</text>
+
+  <!-- Step 5: Tools → Harness (result) -->
+  <line x1="518" y1="216" x2="232" y2="216" stroke="rgba(74,222,128,0.5)" stroke-width="1.5" marker-end="url(#sarr3)"/>
+  <text x="374" y="210" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">5. tool_result → inject ke context</text>
+
+  <!-- Step 6: Harness → LLM (continue) -->
+  <line x1="230" y1="242" x2="378" y2="242" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#sarr2)"/>
+  <text x="304" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">6. lanjutkan dengan hasil tool</text>
+
+  <!-- Step 7: LLM → Harness (end_turn) -->
+  <line x1="378" y1="268" x2="232" y2="268" stroke="rgba(45,212,191,0.5)" stroke-width="1.5" marker-end="url(#sarr3)"/>
+  <text x="304" y="262" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">7. stop_reason=end_turn</text>
+
+  <!-- Step 8: Harness → User -->
+  <line x1="228" y1="294" x2="82" y2="294" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#sarr)"/>
+  <text x="155" y="288" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">8. final answer</text>
+
+  <!-- Loop annotation -->
+  <rect x="580" y="130" width="88" height="90" rx="6" fill="none" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3,3"/>
+  <text x="624" y="150" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">↺ loop</text>
+  <text x="624" y="164" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">steps</text>
+  <text x="624" y="178" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">3–7</text>
+  <text x="624" y="192" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">sampai</text>
+  <text x="624" y="206" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">end_turn</text>
+
+  <!-- Note -->
+  <text x="340" y="325" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Kunci: LLM tidak pernah langsung eksekusi tool — selalu lewat Harness. Ini adalah security boundary utama.</text>
+</svg>
+</div>
+</div>
+
 </div><!-- /s1d -->
 
 <div class="divider"></div>
@@ -1742,6 +1835,81 @@ Identify which steps can run in parallel (no dependencies).
 """</span>}]
     )
     <span class="kw">return</span> <span class="fn">TaskPlan</span>.<span class="fn">model_validate_json</span>(r.content[<span class="nm">0</span>].text)</pre></div></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Task Decomposition — Dari Goal ke Atomic Steps</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" style="max-height:300px;">
+  <defs>
+    <marker id="tdarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- Root goal -->
+  <rect x="215" y="14" width="250" height="36" rx="8" fill="rgba(124,109,250,0.12)" stroke="rgba(124,109,250,0.4)" stroke-width="1.5"/>
+  <text x="340" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text)">🎯 Build REST API untuk Todo App</text>
+  <text x="340" y="43" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">goal: 1 task selesai dalam 6 jam</text>
+
+  <!-- Decomposition phase label -->
+  <text x="340" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">▼ DECOMPOSE ▼</text>
+
+  <!-- Level 1: Sub-goals -->
+  <rect x="18" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="92" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🗄️ Data Layer</text>
+  <text x="92" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">DB schema + ORM</text>
+
+  <rect x="186" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="260" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🌐 API Endpoints</text>
+  <text x="260" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">CRUD routes</text>
+
+  <rect x="354" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="428" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🔐 Auth</text>
+  <text x="428" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">JWT middleware</text>
+
+  <rect x="522" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="596" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🧪 Tests</text>
+  <text x="596" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">integration + unit</text>
+
+  <!-- Lines from root to sub-goals -->
+  <line x1="280" y1="50" x2="92" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="330" y1="50" x2="260" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="380" y1="50" x2="428" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="430" y1="50" x2="596" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+
+  <!-- Level 2: Atomic tasks (sample for API Endpoints) -->
+  <rect x="186" y="144" width="70" height="28" rx="5" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="221" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(74,222,128,0.9)">GET /</text>
+
+  <rect x="264" y="144" width="70" height="28" rx="5" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="299" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(74,222,128,0.9)">POST /</text>
+
+  <line x1="228" y1="122" x2="221" y2="144" stroke="rgba(74,222,128,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="292" y1="122" x2="299" y2="144" stroke="rgba(74,222,128,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+
+  <!-- Dependency: Auth must be done before API -->
+  <line x1="428" y1="122" x2="340" y2="144" stroke="rgba(248,113,113,0.4)" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="375" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(248,113,113,0.7)">⛓️ depends on</text>
+  <text x="375" y="152" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(248,113,113,0.5)">(Auth harus selesai dulu)</text>
+
+  <!-- Parallel annotation -->
+  <rect x="186" y="188" width="148" height="20" rx="4" fill="none" stroke="rgba(74,222,128,0.2)" stroke-dasharray="2,2"/>
+  <text x="260" y="202" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(74,222,128,0.7)">⚡ bisa paralel (no deps)</text>
+
+  <!-- Legend -->
+  <rect x="18" y="200" width="10" height="10" rx="2" fill="rgba(124,109,250,0.3)"/>
+  <text x="34" y="209" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Goal</text>
+  <rect x="72" y="200" width="10" height="10" rx="2" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="88" y="209" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Sub-goal</text>
+  <rect x="148" y="200" width="10" height="10" rx="2" fill="rgba(74,222,128,0.15)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="164" y="209" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Step</text>
+
+  <!-- Bottom note -->
+  <text x="340" y="252" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Prinsip: decompose sampai setiap step bisa dieksekusi dalam 1–3 tool calls. Ready steps = bisa paralel.</text>
+</svg>
+</div>
+</div>
+
 </div><!-- /s2e -->
 
 <div class="divider"></div>
@@ -1868,6 +2036,80 @@ client = <span class="fn">Anthropic</span>()
 </ul></div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Ukuran chunk yang tepat</strong>Chunk terlalu kecil kehilangan konteks. Chunk terlalu besar membuang token untuk konten yang tidak relevan. Mulai dengan 512–800 token, overlap 10–15%. Ukur dengan precision@k pada eval dataset kamu — ini berbeda per domain.</div></div>
 <div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>Bottleneck RAG bukan di vector DB-nya</strong>Banyak engineer over-focus memilih vector database, padahal bottleneck terbesar RAG ada di: <strong>chunking strategy</strong> (apakah chunk mempertahankan konteks yang cukup?), <strong>document preprocessing</strong> (apakah PDF/HTML sudah di-parse dengan benar?), <strong>metadata filtering</strong> (apakah retrieval bisa disaring berdasarkan atribut relevan?), dan <strong>reranking</strong> (apakah top-k yang diambil benar-benar yang paling relevan?). Pilih vector DB yang cukup baik, lalu investasikan waktu di empat area ini.</div></div>
+
+<div class="viz-wrap">
+<div class="viz-title">RAG Pipeline — Dari Dokumen ke Jawaban</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="max-height:280px;">
+  <defs>
+    <marker id="ragarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.5)"/>
+    </marker>
+    <marker id="ragarr2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(74,222,128,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- OFFLINE: Indexing Phase -->
+  <text x="120" y="22" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">📥 INDEXING (offline)</text>
+
+  <rect x="15" y="36" width="80" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="55" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">📄 Docs</text>
+  <text x="55" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">PDF/HTML</text>
+
+  <line x1="95" y1="52" x2="127" y2="52" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <rect x="130" y="36" width="80" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="170" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">✂️ Chunk</text>
+  <text x="170" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">512-1024 tok</text>
+
+  <line x1="210" y1="52" x2="242" y2="52" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <rect x="245" y="36" width="80" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="285" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">🔢 Embed</text>
+  <text x="285" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">→ vectors</text>
+
+  <line x1="325" y1="52" x2="357" y2="52" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <rect x="360" y="36" width="90" height="32" rx="6" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)"/>
+  <text x="405" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--accent)">🗄️ Vector DB</text>
+  <text x="405" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">pgvector</text>
+
+  <!-- ONLINE: Query Phase -->
+  <text x="520" y="22" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">🔍 QUERY (online)</text>
+
+  <rect x="475" y="36" width="70" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="510" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">❓ Query</text>
+  <text x="510" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">user ask</text>
+
+  <line x1="545" y1="52" x2="577" y2="52" stroke="rgba(74,222,128,0.4)" stroke-width="1" marker-end="url(#ragarr2)"/>
+
+  <rect x="580" y="36" width="85" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="622" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">🔢 Embed</text>
+  <text x="622" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">query vector</text>
+
+  <!-- Down arrow from Vector DB to retrieval -->
+  <line x1="405" y1="68" x2="405" y2="100" stroke="rgba(124,109,250,0.3)" stroke-width="1"/>
+  <line x1="622" y1="68" x2="405" y2="100" stroke="rgba(74,222,128,0.3)" stroke-width="1" marker-end="url(#ragarr2)"/>
+
+  <!-- Retrieval -->
+  <rect x="310" y="102" width="190" height="36" rx="6" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)"/>
+  <text x="405" y="117" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">🎯 Similarity Search</text>
+  <text x="405" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">cosine → top-K chunks</text>
+
+  <line x1="405" y1="138" x2="405" y2="170" stroke="rgba(245,158,11,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <!-- Inject + Generate -->
+  <rect x="265" y="174" width="280" height="42" rx="8" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="405" y="192" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(74,222,128,0.9)">📋 Inject Context + Generate</text>
+  <text x="405" y="208" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">chunks → LLM prompt → jawaban final</text>
+
+  <!-- Bottom note -->
+  <text x="405" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Bottleneck RAG: chunking strategy &amp; reranking — bukan pemilihan vector DB</text>
+</svg>
+</div>
+</div>
+
 </div><!-- /s2g -->
 
 <div class="divider"></div>
@@ -2758,7 +3000,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 <div class="viz-wrap">
 <div class="viz-title">Error Handling Decision Tree — Apa yang harus dilakukan ketika agent gagal?</div>
 <div class="viz-body">
-<svg class="arch-svg" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" style="max-height:340px;">
+<svg class="arch-svg" viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg" style="max-height:360px;">
   <defs>
     <marker id="earr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
       <path d="M0,0 L0,6 L7,3 z" fill="rgba(255,255,255,0.2)"/>
@@ -2770,65 +3012,70 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
   <text x="340" y="27" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="rgba(248,113,113,0.9)">⚠ Error Occurred</text>
   <text x="340" y="44" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">dalam agent execution</text>
 
-  <!-- Branch: API Error? -->
-  <rect x="80" y="90" width="160" height="40" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
-  <text x="160" y="108" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">RateLimit /</text>
-  <text x="160" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Connection Error?</text>
+  <!-- Branch 1: API Error? -->
+  <rect x="18" y="90" width="150" height="44" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
+  <text x="93" y="109" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">RateLimit /</text>
+  <text x="93" y="125" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Connection Error?</text>
 
-  <!-- Branch: Tool Error? -->
-  <rect x="440" y="90" width="160" height="40" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
-  <text x="520" y="108" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Tool Execution</text>
-  <text x="520" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Error?</text>
+  <!-- Branch 2: Context Error? -->
+  <rect x="185" y="90" width="150" height="44" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
+  <text x="260" y="109" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Context Length</text>
+  <text x="260" y="125" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Exceeded?</text>
 
-  <!-- Branch: Context Error? -->
-  <rect x="260" y="90" width="160" height="40" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
-  <text x="340" y="108" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Context Length</text>
-  <text x="340" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Exceeded?</text>
+  <!-- Branch 3: Tool Error? -->
+  <rect x="352" y="90" width="150" height="44" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
+  <text x="427" y="109" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Tool Execution</text>
+  <text x="427" y="125" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Error?</text>
 
-  <!-- Leaf: Exponential backoff -->
-  <rect x="20" y="190" width="150" height="50" rx="8" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)" stroke-width="1"/>
-  <text x="95" y="210" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(124,109,250,0.9)">Exponential Backoff</text>
-  <text x="95" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">1s → 2s → 4s → 8s</text>
-  <text x="95" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">max 5 retries</text>
+  <!-- Branch 4: Max Iter? -->
+  <rect x="519" y="90" width="150" height="44" rx="8" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
+  <text x="594" y="109" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Max Iterations</text>
+  <text x="594" y="125" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text2)">Reached?</text>
 
-  <!-- Leaf: Return to LLM -->
-  <rect x="440" y="190" width="150" height="50" rx="8" fill="rgba(45,212,191,0.08)" stroke="rgba(45,212,191,0.3)" stroke-width="1"/>
-  <text x="515" y="210" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">Return as Observation</text>
-  <text x="515" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">LLM decide next step</text>
-  <text x="515" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">jangan retry di harness</text>
+  <!-- Leaf 1: Exponential backoff -->
+  <rect x="15" y="200" width="156" height="54" rx="8" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)" stroke-width="1"/>
+  <text x="93" y="220" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(124,109,250,0.9)">Exponential Backoff</text>
+  <text x="93" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">1s → 2s → 4s → 8s</text>
+  <text x="93" y="250" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">max 5 retries</text>
 
-  <!-- Leaf: Compress + retry -->
-  <rect x="260" y="190" width="160" height="50" rx="8" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)" stroke-width="1"/>
-  <text x="340" y="210" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">Compress Context</text>
-  <text x="340" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">summarize history</text>
-  <text x="340" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">retry once</text>
+  <!-- Leaf 2: Compress + retry -->
+  <rect x="182" y="200" width="156" height="54" rx="8" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)" stroke-width="1"/>
+  <text x="260" y="220" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">Compress Context</text>
+  <text x="260" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">summarize history</text>
+  <text x="260" y="250" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">retry once</text>
 
-  <!-- Leaf: Max iter -->
-  <rect x="600" y="190" width="72" height="50" rx="8" fill="rgba(248,113,113,0.08)" stroke="rgba(248,113,113,0.3)" stroke-width="1"/>
-  <text x="636" y="210" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(248,113,113,0.9)">Max Iter</text>
-  <text x="636" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">return</text>
-  <text x="636" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">partial</text>
+  <!-- Leaf 3: Return to LLM -->
+  <rect x="349" y="200" width="156" height="54" rx="8" fill="rgba(45,212,191,0.08)" stroke="rgba(45,212,191,0.3)" stroke-width="1"/>
+  <text x="427" y="220" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">Return as Observation</text>
+  <text x="427" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">LLM decide next step</text>
+  <text x="427" y="250" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">jangan retry di harness</text>
 
-  <!-- Lines: root to branches -->
-  <line x1="300" y1="52" x2="160" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
-  <line x1="340" y1="52" x2="340" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
-  <line x1="380" y1="52" x2="520" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
+  <!-- Leaf 4: Graceful stop -->
+  <rect x="516" y="200" width="156" height="54" rx="8" fill="rgba(248,113,113,0.08)" stroke="rgba(248,113,113,0.3)" stroke-width="1"/>
+  <text x="594" y="220" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(248,113,113,0.9)">Graceful Stop</text>
+  <text x="594" y="236" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">return partial result</text>
+  <text x="594" y="250" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">log reason &amp; stats</text>
 
-  <!-- Lines: branches to leaves -->
-  <line x1="120" y1="130" x2="95" y2="190" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#earr)"/>
-  <line x1="200" y1="130" x2="200" y2="155" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-  <line x1="200" y1="155" x2="636" y2="155" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-  <line x1="636" y1="155" x2="636" y2="190" stroke="rgba(248,113,113,0.4)" stroke-width="1" marker-end="url(#earr)"/>
-  <line x1="340" y1="130" x2="340" y2="190" stroke="rgba(245,158,11,0.4)" stroke-width="1" marker-end="url(#earr)"/>
-  <line x1="520" y1="130" x2="515" y2="190" stroke="rgba(45,212,191,0.4)" stroke-width="1" marker-end="url(#earr)"/>
+  <!-- Lines: root to 4 branches -->
+  <line x1="295" y1="52" x2="93" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
+  <line x1="315" y1="52" x2="260" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
+  <line x1="365" y1="52" x2="427" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
+  <line x1="385" y1="52" x2="594" y2="90" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#earr)"/>
+
+  <!-- Lines: branches to leaves (vertical, direct) -->
+  <line x1="93" y1="134" x2="93" y2="200" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#earr)"/>
+  <line x1="260" y1="134" x2="260" y2="200" stroke="rgba(245,158,11,0.4)" stroke-width="1" marker-end="url(#earr)"/>
+  <line x1="427" y1="134" x2="427" y2="200" stroke="rgba(45,212,191,0.4)" stroke-width="1" marker-end="url(#earr)"/>
+  <line x1="594" y1="134" x2="594" y2="200" stroke="rgba(248,113,113,0.4)" stroke-width="1" marker-end="url(#earr)"/>
 
   <!-- Labels on lines -->
-  <text x="105" y="166" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Ya → retry</text>
-  <text x="410" y="166" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Ya → LLM decide</text>
-  <text x="248" y="166" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Ya → compress</text>
+  <text x="98" y="176" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">▶ retry</text>
+  <text x="265" y="176" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">▶ compress</text>
+  <text x="432" y="176" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">▶ LLM decide</text>
+  <text x="599" y="176" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">▶ stop</text>
 
   <!-- Bottom note -->
-  <text x="340" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5a5a6a">Prinsip: API errors → retry di harness | Tool errors → return ke LLM | Context → compress</text>
+  <text x="340" y="290" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5a5a6a">Prinsip: API errors → retry di harness | Tool errors → return ke LLM | Context → compress | Max iter → graceful stop</text>
 </svg>
 </div>
 </div>
@@ -4055,12 +4302,11 @@ not full rewrites.</span></pre></div></div>
     <text class="lbl" x="-75" y="-44" text-anchor="end">DX</text>
 
     <!-- Bare-metal: Control=5,Debug=5,Speed=5,Ecosystem=2,Features=1,DX=2 -->
-    <!-- scale: each point = 16px -->
-    <polygon points="0,-80 55,-28 48,32 0,32 -17,10 -17,-28"
+    <polygon points="0,-80 69,-40 69,40 0,32 -28,16 -28,-16"
       fill="rgba(124,109,250,0.15)" stroke="rgba(124,109,250,0.7)" stroke-width="1.5"/>
 
     <!-- LangGraph: Control=3,Debug=3,Speed=2,Ecosystem=4,Features=5,DX=2 -->
-    <polygon points="0,-48 41,-20 32,32 0,64 -55,26 -17,-28"
+    <polygon points="0,-48 42,-24 28,16 0,64 -69,40 -28,-16"
       fill="rgba(45,212,191,0.1)" stroke="rgba(45,212,191,0.6)" stroke-width="1.5" stroke-dasharray="4,2"/>
 
     <!-- Legend -->
@@ -4090,11 +4336,11 @@ not full rewrites.</span></pre></div></div>
     <text class="lbl" x="-75" y="-44" text-anchor="end">DX</text>
 
     <!-- PydanticAI: Control=4,Debug=4,Speed=4,Ecosystem=3,Features=4,DX=5 -->
-    <polygon points="0,-64 48,-28 48,32 0,48 -55,26 -55,-40"
+    <polygon points="0,-64 55,-32 55,32 0,48 -55,32 -69,-40"
       fill="rgba(74,222,128,0.12)" stroke="rgba(74,222,128,0.7)" stroke-width="1.5"/>
 
     <!-- CrewAI: Control=2,Debug=2,Speed=3,Ecosystem=4,Features=4,DX=5 -->
-    <polygon points="0,-32 28,-12 48,32 0,64 -55,26 -55,-40"
+    <polygon points="0,-32 28,-16 42,24 0,64 -55,32 -69,-40"
       fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.6)" stroke-width="1.5" stroke-dasharray="4,2"/>
 
     <rect x="-80" y="100" width="12" height="4" rx="1" fill="rgba(74,222,128,0.7)"/>

@@ -17,7 +17,7 @@ Personal knowledge hub: **Agentic AI Mastery** — panduan komprehensif dari fon
 | 4 — Production | 11 topik | Error handling, observability, cost optimization, safety, testing & evals, rate limiting, deployment, context engineering, eval taxonomy, production checklist, CI/CD & prompt versioning |
 | 5 — Build Agent | 6 topik | Bedah OpenClaw, computer use, coding agent, framework landscape, voice & multimodal, expert checklist |
 
-**44 topik · 30+ code block · 13+ visualisasi · ~16 minggu kurikulum**
+**44 topik · 30+ code block · 25+ visualisasi · ~16 minggu kurikulum**
 
 ---
 
