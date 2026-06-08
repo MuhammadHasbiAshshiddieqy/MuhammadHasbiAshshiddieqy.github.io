@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentic AI Mastery | Muhammad Hasbi</title>
-<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 25 topik, 19 contoh kode.">
+<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 31 topik, 26 contoh kode.">
 <meta name="author" content="Muhammad Hasbi Ashshiddieqy">
 <meta property="og:title" content="Agentic AI Mastery | Muhammad Hasbi">
-<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 25 topik, kode siap pakai.">
+<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 31 topik, kode siap pakai.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:creator" content="@mhasbi">
@@ -235,6 +235,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s1c"><span class="dot"></span>ReAct, CoT, ToT patterns</a>
     <a class="sit" href="#s1d"><span class="dot"></span>Tool calling fundamentals</a>
     <a class="sit" href="#s1e"><span class="dot"></span>Autonomy spectrum</a>
+    <a class="sit" href="#s1f"><span class="dot"></span>KV Cache &amp; prompt caching</a>
+    <a class="sit" href="#s1g"><span class="dot"></span>Token counting &amp; budget</a>
+    <a class="sit" href="#s1h"><span class="dot"></span>System prompt engineering</a>
   </div>
   <div class="sph" onclick="sp(this,'i2')"><span class="pn">2</span>Architecture</div>
   <div class="sits" id="i2">
@@ -244,6 +247,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s2d"><span class="dot"></span>Context management</a>
     <a class="sit" href="#s2e"><span class="dot"></span>Planning &amp; decomposition</a>
     <a class="sit" href="#s2f"><span class="dot"></span>Structured output</a>
+    <a class="sit" href="#s2g"><span class="dot"></span>RAG &amp; semantic retrieval</a>
+    <a class="sit" href="#s2h"><span class="dot"></span>Checkpointing &amp; resume</a>
   </div>
   <div class="sph" onclick="sp(this,'i3')"><span class="pn">3</span>Multi-Agent</div>
   <div class="sits" id="i3">
@@ -252,6 +257,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     <a class="sit" href="#s3c"><span class="dot"></span>MCP Protocol</a>
     <a class="sit" href="#s3d"><span class="dot"></span>Agent design patterns</a>
     <a class="sit" href="#s3e"><span class="dot"></span>Komunikasi &amp; state</a>
+    <a class="sit" href="#s3f"><span class="dot"></span>Handoff &amp; trust boundary</a>
   </div>
   <div class="sph" onclick="sp(this,'i4')"><span class="pn">4</span>Production</div>
   <div class="sits" id="i4">
@@ -289,7 +295,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   <p class="hdesc">Panduan komprehensif yang saya tulis sebagai software engineer yang mempelajari agentic AI dari bawah: konsep, arsitektur, kode, hingga cara build production-grade agent seperti Claude Code. Bukan sekadar tutorial framework — ini tentang benar-benar paham.</p>
   <div class="hstats">
     <div><div class="hsn">5</div><div class="hsl">Fase pembelajaran</div></div>
-    <div><div class="hsn">20+</div><div class="hsl">Topik deep dive</div></div>
+    <div><div class="hsn">30+</div><div class="hsl">Topik deep dive</div></div>
     <div><div class="hsn">~16</div><div class="hsl">Minggu kurikulum</div></div>
     <div><div class="hsn">15+</div><div class="hsl">Contoh kode siap pakai</div></div>
   </div>
@@ -349,9 +355,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
     Ini adalah catatan belajar saya yang saya buka ke publik. Ditulis dari perspektif seorang engineer yang mempelajari agentic AI secara mendalam—bukan sekadar tutorial "copy-paste framework". Semua kode sudah diuji dan siap pakai.
   </div>
   <div style="display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;">
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">25</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">19</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">9</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">31</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">26</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
+    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">12</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
     <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">~16mg</div><div style="font-size:11px;color:var(--text3)">kurikulum</div></div>
   </div>
 </div>
@@ -372,6 +378,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   <a class="snavi" href="#s1c">Reasoning Patterns</a>
   <a class="snavi" href="#s1d">Tool Calling</a>
   <a class="snavi" href="#s1e">Autonomy Spectrum</a>
+  <a class="snavi" href="#s1f">KV Cache</a>
+  <a class="snavi" href="#s1g">Token Budget</a>
+  <a class="snavi" href="#s1h">System Prompt</a>
 </div>
 
 <!-- 1A -->
@@ -591,6 +600,210 @@ Rules:
 <div class="callout danger"><span class="cico">🔴</span><div class="ctxt"><strong>Prinsip minimal footprint</strong>Agent production yang baik selalu request permission minimal yang dibutuhkan, prefer reversible actions atas irreversible, dan konfirmasi ke user sebelum melakukan sesuatu yang tidak bisa di-undo (hapus file, kirim email, deploy ke production).</div></div>
 </div><!-- /s1e -->
 
+<div class="divider"></div>
+
+<!-- 1F -->
+<div class="sub" id="s1f">
+<div class="subtit"><span class="ac">1.6</span> KV Cache &amp; Prompt Caching <span class="subid">// fondasi efisiensi agent</span></div>
+<div class="prose">
+<p>KV Cache (Key-Value Cache) adalah mekanisme internal transformer yang menyimpan hasil komputasi attention dari token-token yang sudah diproses. Tanpa KV cache, setiap forward pass harus menghitung ulang seluruh sequence dari awal — yang artinya O(n²) setiap iterasi agent loop.</p>
+<p><strong>Prompt Caching</strong> adalah fitur API-level yang memungkinkan kamu "menyematkan" bagian prefix prompt yang panjang agar tidak dihitung ulang di setiap API call. Untuk agent yang loop puluhan kali dengan system prompt panjang, ini adalah penghemat terbesar.</p>
+</div>
+<div class="viz-wrap">
+<div class="viz-title">KV Cache — Tanpa vs Dengan Caching</div>
+<div class="viz-body">
+  <div class="cmp">
+    <div class="cmpc bad">
+      <div class="cmph">❌ Tanpa Prompt Caching</div>
+      <div class="cmpb"><pre>Iterasi 1: hitung 10.000 token system prompt
+Iterasi 2: hitung 10.000 token lagi + tools
+Iterasi 3: hitung 10.000 token lagi + history
+...
+Iterasi 30: hitung 10.000 token lagi + semua
+
+Total: 30 × full computation
+Cost: ~$0.90 hanya untuk system prompt</pre></div>
+    </div>
+    <div class="cmpc good">
+      <div class="cmph">✅ Dengan Prompt Caching</div>
+      <div class="cmpb"><pre>Iterasi 1: hitung 10.000 token (cache write)
+Iterasi 2: cache HIT — skip 10.000 token
+Iterasi 3: cache HIT — skip 10.000 token
+...
+Iterasi 30: cache HIT — skip 10.000 token
+
+Total: 1× full + 29× cache read
+Cost: ~$0.09 — hemat 90%</pre></div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prompt_caching.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic
+
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="cm"># System prompt panjang yang jarang berubah — kandidat utama caching</span>
+SYSTEM_PROMPT = <span class="st">"""You are an expert software engineer agent...
+[panjang — ribuan token berisi tools, conventions, codebase context]
+"""</span>
+
+response = client.messages.<span class="fn">create</span>(
+    model=<span class="st">"claude-sonnet-4-6"</span>,
+    max_tokens=<span class="nm">8192</span>,
+    system=[
+        {
+            <span class="st">"type"</span>: <span class="st">"text"</span>,
+            <span class="st">"text"</span>: SYSTEM_PROMPT,
+            <span class="st">"cache_control"</span>: {<span class="st">"type"</span>: <span class="st">"ephemeral"</span>}  <span class="cm"># TTL: 5 menit</span>
+        }
+    ],
+    messages=messages
+)
+
+<span class="cm"># Cek apakah cache dipakai</span>
+usage = response.usage
+<span class="fn">print</span>(<span class="st">f"Cache read tokens : {usage.cache_read_input_tokens}"</span>)
+<span class="fn">print</span>(<span class="st">f"Cache write tokens: {usage.cache_creation_input_tokens}"</span>)
+<span class="fn">print</span>(<span class="st">f"Regular input     : {usage.input_tokens}"</span>)
+
+<span class="cm"># Strategi: tempatkan cache_control SETELAH bagian yang paling stabil</span>
+<span class="cm"># Urutan yang baik: system instructions → tools → few-shot examples → [cache] → user message</span></pre></div></div>
+<div class="cc"><h3>Strategi caching yang optimal</h3><ul>
+<li><strong>Cache system prompt + tool schemas</strong> — bagian yang paling jarang berubah dan paling panjang. Ini sendiri bisa hemat 60–80% cost.</li>
+<li><strong>Cache few-shot examples</strong> — kalau kamu punya contoh panjang yang selalu disertakan, letakkan di atas message history dan beri cache_control.</li>
+<li><strong>TTL aware</strong> — cache berlaku 5 menit. Untuk agent yang loop cepat ini cukup, tapi untuk scheduled jobs yang jarang, manfaatkan dengan memanggil API "warmup" sebelum burst traffic.</li>
+<li><strong>Cache breakpoint</strong> — hanya bisa ditempatkan di ujung suatu block. Pastikan konten sebelum breakpoint benar-benar stabil — sekali berubah, cache miss dan kamu membayar penuh + biaya write baru.</li>
+</ul></div>
+<div class="callout info"><span class="cico">💡</span><div class="ctxt"><strong>KV Cache vs Prompt Cache</strong>KV cache adalah optimasi <em>internal</em> transformer yang terjadi otomatis dalam satu forward pass (antar token dalam response yang sama). Prompt cache adalah optimasi <em>antar API call</em> yang harus kamu aktifkan secara eksplisit. Keduanya komplementer — dan keduanya krusial untuk agent yang loop banyak.</div></div>
+</div><!-- /s1f -->
+
+<div class="divider"></div>
+
+<!-- 1G -->
+<div class="sub" id="s1g">
+<div class="subtit"><span class="ac">1.7</span> Token Counting &amp; Context Budget <span class="subid">// kelola "memori kerja" agent</span></div>
+<div class="prose">
+<p>Context window adalah resource terbatas — kalau habis, agent crash atau mulai "lupa" informasi penting. Token budget adalah seni mengalokasikan context window secara sadar: berapa untuk system prompt, berapa untuk history, berapa untuk tool results, dan berapa yang tersisa untuk response.</p>
+</div>
+<div class="viz-wrap">
+<div class="viz-title">Alokasi Context Window yang Direkomendasikan</div>
+<div class="viz-body">
+  <div class="cost-meter">
+    <div class="cm-row"><div class="cm-label">System prompt + tools</div><div class="cm-dots"><div class="cm-dot on" style="--dc:var(--accent)"></div><div class="cm-dot on" style="--dc:var(--accent)"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div></div><div class="cm-note">~20%</div></div>
+    <div class="cm-row"><div class="cm-label">Conversation history</div><div class="cm-dots"><div class="cm-dot on" style="--dc:var(--teal)"></div><div class="cm-dot on" style="--dc:var(--teal)"></div><div class="cm-dot on" style="--dc:var(--teal)"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div></div><div class="cm-note">~30%</div></div>
+    <div class="cm-row"><div class="cm-label">Tool results / context</div><div class="cm-dots"><div class="cm-dot on" style="--dc:var(--amber)"></div><div class="cm-dot on" style="--dc:var(--amber)"></div><div class="cm-dot on" style="--dc:var(--amber)"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div></div><div class="cm-note">~30%</div></div>
+    <div class="cm-row"><div class="cm-label">Response buffer (output)</div><div class="cm-dots"><div class="cm-dot on" style="--dc:var(--green)"></div><div class="cm-dot on" style="--dc:var(--green)"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div><div class="cm-dot"></div></div><div class="cm-note">~20%</div></div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:16px;font-family:'IBM Plex Mono',monospace;">Trigger compression/eviction saat total mencapai 70% — jangan tunggu sampai penuh.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">token_budget.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic
+
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="kw">def</span> <span class="fn">count_tokens</span>(messages: <span class="tp">list</span>, system: <span class="tp">str</span>, tools: <span class="tp">list</span>) -> <span class="tp">int</span>:
+    <span class="cm"># Gunakan count_tokens API — akurat dan gratis</span>
+    response = client.messages.<span class="fn">count_tokens</span>(
+        model=<span class="st">"claude-sonnet-4-6"</span>,
+        system=system,
+        tools=tools,
+        messages=messages
+    )
+    <span class="kw">return</span> response.input_tokens
+
+<span class="kw">class</span> <span class="fn">BudgetedAgent</span>:
+    CONTEXT_LIMIT = <span class="nm">200_000</span>   <span class="cm"># claude-sonnet-4-6 context window</span>
+    WARN_THRESHOLD = <span class="nm">0.70</span>    <span class="cm"># mulai compress di 70%</span>
+    HARD_LIMIT = <span class="nm">0.85</span>        <span class="cm"># evict aggressively di 85%</span>
+
+    <span class="kw">def</span> <span class="fn">check_and_compress</span>(self, messages, system, tools):
+        used = <span class="fn">count_tokens</span>(messages, system, tools)
+        ratio = used / self.CONTEXT_LIMIT
+
+        <span class="kw">if</span> ratio > self.HARD_LIMIT:
+            <span class="cm"># Aggressive: ringkas seluruh history jadi summary</span>
+            messages = self.<span class="fn">summarize_history</span>(messages)
+        <span class="kw">elif</span> ratio > self.WARN_THRESHOLD:
+            <span class="cm"># Soft: buang messages lama, pertahankan N terbaru</span>
+            messages = messages[-<span class="nm">10</span>:]  <span class="cm"># keep last 10 turns</span>
+
+        <span class="kw">return</span> messages, used
+
+    <span class="kw">def</span> <span class="fn">summarize_history</span>(self, messages: <span class="tp">list</span>) -> <span class="tp">list</span>:
+        <span class="cm"># Panggil LLM untuk meringkas history lama</span>
+        history_text = <span class="st">"
+"</span>.<span class="fn">join</span>([
+            <span class="st">f"{m['role']}: {str(m['content'])[:200]}"</span>
+            <span class="kw">for</span> m <span class="kw">in</span> messages[:-<span class="nm">4</span>]   <span class="cm"># exclude 4 messages terakhir</span>
+        ])
+        summary = self.<span class="fn">_call_llm</span>(
+            <span class="st">f"Summarize this agent conversation history concisely:\n{history_text}"</span>
+        )
+        <span class="cm"># Ganti history lama dengan summary + pertahankan 4 messages terakhir</span>
+        <span class="kw">return</span> [
+            {<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">f"[Previous context summary]\n{summary}"</span>},
+            {<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: <span class="st">"Understood."</span>}
+        ] + messages[-<span class="nm">4</span>:]</pre></div></div>
+<div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Gunakan count_tokens sebelum setiap API call</strong>API count_tokens tidak dikenakan biaya dan sangat akurat. Selalu cek token count sebelum call — lebih murah daripada kena ContextLengthExceeded error di iterasi ke-40 agent yang sedang berjalan.</div></div>
+</div><!-- /s1g -->
+
+<div class="divider"></div>
+
+<!-- 1H -->
+<div class="sub" id="s1h">
+<div class="subtit"><span class="ac">1.8</span> System Prompt Engineering <span class="subid">// fondasi kepribadian dan kemampuan agent</span></div>
+<div class="prose">
+<p>System prompt adalah "DNA" agent — ia menentukan kepribadian, kapabilitas, batasan, dan cara berpikir agent. System prompt yang buruk akan membuat bahkan model terbaik menjadi tidak reliable. System prompt yang baik adalah dokumen hidup yang berevolusi bersama kebutuhan.</p>
+</div>
+<div class="cc"><h3>Anatomi system prompt agent yang baik</h3><ul>
+<li><strong>Identity &amp; role</strong> — siapa agent ini, apa keahliannya, apa yang dia lakukan dan tidak lakukan. Buat spesifik, bukan generik.</li>
+<li><strong>Mandatory workflow</strong> — urutan langkah yang harus diikuti. Gunakan numbered list, bukan prose. Model mengikuti numbered list lebih konsisten.</li>
+<li><strong>Tool usage rules</strong> — kapan dan bagaimana menggunakan setiap tool. Termasuk kapan TIDAK pakai tool tertentu.</li>
+<li><strong>Output format</strong> — bagaimana response harus diformat. Contoh nyata lebih efektif dari deskripsi.</li>
+<li><strong>Error handling behavior</strong> — apa yang harus dilakukan kalau tool gagal, kalau task ambigu, kalau tidak tahu.</li>
+<li><strong>Boundaries</strong> — apa yang tidak boleh dilakukan. Eksplisit lebih baik dari implisit.</li>
+</ul></div>
+<div class="cmp">
+<div class="cmpc bad"><div class="cmph">❌ System Prompt yang Lemah</div>
+<div class="cmpb"><pre>You are a helpful AI assistant.
+Help users with their coding tasks.
+Be helpful, harmless, and honest.</pre></div></div>
+<div class="cmpc good"><div class="cmph">✅ System Prompt yang Kuat</div>
+<div class="cmpb"><pre>You are a senior backend engineer agent
+specializing in Python and PostgreSQL.
+
+## Workflow (MANDATORY ORDER)
+1. EXPLORE: read relevant files before editing
+2. PLAN: state changes explicitly before coding
+3. IMPLEMENT: use str_replace, not full rewrites
+4. VERIFY: run tests after every change
+5. STOP: only when tests pass
+
+## Rules
+- Never edit a file you haven't read first
+- One tool call per concern
+- If tests fail 3x on same error: rethink
+- Never delete code without understanding it
+
+## When unsure
+Ask the user. Do not guess.</pre></div></div>
+</div>
+<div class="prose">
+<h4>Teknik-teknik lanjutan</h4>
+<ul>
+<li><strong>Few-shot dalam system prompt</strong> — berikan 2–3 contoh Thought/Action/Observation yang ideal. Model akan meniru pola ini jauh lebih konsisten daripada deskripsi saja.</li>
+<li><strong>Negative examples</strong> — tunjukkan juga contoh yang salah dan jelaskan kenapa. Ini efektif mencegah pola yang sering muncul secara tidak diinginkan.</li>
+<li><strong>Conditional instructions</strong> — "If you encounter X, do Y. Otherwise do Z." Lebih presisi dari instruksi umum.</li>
+<li><strong>Self-check prompt</strong> — minta model mereview output-nya sendiri sebelum return: "Before responding, verify: (1) have you read all relevant files? (2) do tests pass?"</li>
+</ul>
+</div>
+<div class="callout warn"><span class="cico">⚠️</span><div class="ctxt"><strong>System prompt bukan pengganti evaluasi</strong>System prompt yang panjang tidak menjamin agent yang reliable. Selalu verifikasi dengan eval suite bahwa instruksi benar-benar diikuti. Seringkali instruksi yang terlalu banyak justru membingungkan model — prioritaskan instruksi yang paling krusial dan simpan sisanya sebagai tool documentation.</div></div>
+</div><!-- /s1h -->
+
 </section><!-- /fase1 -->
 
 <!-- ═══════════════ FASE 2 ═══════════════ -->
@@ -610,6 +823,8 @@ Rules:
   <a class="snavi" href="#s2d">Context Mgmt</a>
   <a class="snavi" href="#s2e">Planning</a>
   <a class="snavi" href="#s2f">Structured Output</a>
+  <a class="snavi" href="#s2g">RAG</a>
+  <a class="snavi" href="#s2h">Checkpointing</a>
 </div>
 
 <!-- 2A -->
@@ -977,6 +1192,169 @@ Identify which steps can run in parallel (no dependencies).
 <div class="callout tip"><span class="cico">💡</span><div class="ctxt"><strong>Tip: gunakan tool use untuk structured output</strong>Daripada meminta model return JSON dalam text response, buat dummy tool dengan schema yang kamu inginkan. Model jauh lebih reliable mengisi tool arguments daripada generate valid JSON dalam prose.</div></div>
 </div><!-- /s2f -->
 
+<div class="divider"></div>
+
+<!-- 2G -->
+<div class="sub" id="s2g">
+<div class="subtit"><span class="ac">2.7</span> RAG &amp; Semantic Retrieval <span class="subid">// beri agent akses ke knowledge besar</span></div>
+<div class="prose">
+<p>RAG (Retrieval-Augmented Generation) adalah pola di mana agent mengambil informasi relevan dari knowledge base eksternal sebelum menjawab — bukan mengandalkan apa yang "diingat" model dari training. Ini solusi untuk dua masalah sekaligus: knowledge cutoff dan context window yang terbatas.</p>
+<p>Tanpa RAG, agent dengan codebase 500 file harus membaca semua file ke context — mustahil. Dengan RAG, agent hanya mengambil 5–10 file yang paling relevan dengan query saat itu.</p>
+</div>
+<div class="fsteps">
+  <div class="fstep"><div class="fsn">1</div><div class="fst">Chunking</div><div class="fsd">Pecah dokumen besar jadi chunk berukuran optimal (512–1024 token). Overlap antar chunk untuk menjaga konteks.</div></div>
+  <div class="fstep"><div class="fsn">2</div><div class="fst">Embedding</div><div class="fsd">Konversi setiap chunk jadi vector representasi semantik menggunakan embedding model (text-embedding-3-small, nomic-embed, dll).</div></div>
+  <div class="fstep"><div class="fsn">3</div><div class="fst">Indexing</div><div class="fsd">Simpan vectors di vector store (pgvector, Qdrant, Chroma). Tambahkan metadata: source, tanggal, section.</div></div>
+  <div class="fstep"><div class="fsn">4</div><div class="fst">Retrieval</div><div class="fsd">Saat query masuk, embed query → cari chunk paling similar (cosine similarity) → ambil top-k.</div></div>
+  <div class="fstep"><div class="fsn">5</div><div class="fst">Generation</div><div class="fsd">Inject chunk yang retrieved ke context agent sebagai "retrieved context", lalu biarkan model menjawab berdasarkan itu.</div></div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">rag_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> anthropic <span class="kw">import</span> Anthropic
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+client = <span class="fn">Anthropic</span>()
+
+<span class="kw">def</span> <span class="fn">embed</span>(text: <span class="tp">str</span>) -> <span class="tp">list</span>[<span class="tp">float</span>]:
+    <span class="cm"># Gunakan embedding model pilihanmu (OpenAI, Cohere, local, dll)</span>
+    <span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+    r = <span class="fn">OpenAI</span>().embeddings.<span class="fn">create</span>(input=text, model=<span class="st">"text-embedding-3-small"</span>)
+    <span class="kw">return</span> r.data[<span class="nm">0</span>].embedding
+
+<span class="kw">def</span> <span class="fn">cosine_similarity</span>(a, b) -> <span class="tp">float</span>:
+    <span class="kw">return</span> np.<span class="fn">dot</span>(a, b) / (np.<span class="fn">linalg</span>.<span class="fn">norm</span>(a) * np.<span class="fn">linalg</span>.<span class="fn">norm</span>(b))
+
+<span class="kw">class</span> <span class="fn">SimpleRAG</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.chunks: <span class="tp">list</span>[<span class="tp">dict</span>] = []   <span class="cm"># {"text": ..., "embedding": ..., "source": ...}</span>
+
+    <span class="kw">def</span> <span class="fn">index</span>(self, text: <span class="tp">str</span>, source: <span class="tp">str</span>, chunk_size: <span class="tp">int</span> = <span class="nm">800</span>, overlap: <span class="tp">int</span> = <span class="nm">100</span>):
+        words = text.<span class="fn">split</span>()
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">0</span>, <span class="fn">len</span>(words), chunk_size - overlap):
+            chunk = <span class="st">" "</span>.<span class="fn">join</span>(words[i:i + chunk_size])
+            <span class="kw">if not</span> chunk.<span class="fn">strip</span>(): <span class="kw">continue</span>
+            self.chunks.<span class="fn">append</span>({
+                <span class="st">"text"</span>: chunk,
+                <span class="st">"embedding"</span>: <span class="fn">embed</span>(chunk),
+                <span class="st">"source"</span>: source
+            })
+
+    <span class="kw">def</span> <span class="fn">retrieve</span>(self, query: <span class="tp">str</span>, top_k: <span class="tp">int</span> = <span class="nm">5</span>) -> <span class="tp">list</span>[<span class="tp">dict</span>]:
+        q_emb = <span class="fn">embed</span>(query)
+        scored = [
+            (<span class="fn">cosine_similarity</span>(q_emb, c[<span class="st">"embedding"</span>]), c)
+            <span class="kw">for</span> c <span class="kw">in</span> self.chunks
+        ]
+        scored.<span class="fn">sort</span>(key=<span class="kw">lambda</span> x: x[<span class="nm">0</span>], reverse=<span class="kw">True</span>)
+        <span class="kw">return</span> [c <span class="kw">for</span> _, c <span class="kw">in</span> scored[:top_k]]
+
+    <span class="kw">def</span> <span class="fn">answer</span>(self, query: <span class="tp">str</span>) -> <span class="tp">str</span>:
+        chunks = self.<span class="fn">retrieve</span>(query)
+        context = <span class="st">"
+
+---
+
+"</span>.<span class="fn">join</span>([
+            <span class="st">f"[Source: {c['source']}]\n{c['text']}"</span> <span class="kw">for</span> c <span class="kw">in</span> chunks
+        ])
+        response = client.messages.<span class="fn">create</span>(
+            model=<span class="st">"claude-sonnet-4-6"</span>,
+            max_tokens=<span class="nm">2048</span>,
+            system=<span class="st">"Answer based on the retrieved context. Cite sources. If context is insufficient, say so."</span>,
+            messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">f"Context:\n{context}\n\nQuestion: {query}"</span>}]
+        )
+        <span class="kw">return</span> response.content[<span class="nm">0</span>].text</pre></div></div>
+<div class="cc"><h3>Strategi retrieval yang lebih canggih</h3><ul>
+<li><strong>Hybrid search</strong> — kombinasikan vector search (semantic) dengan BM25/full-text search (keyword). Vector bagus untuk paraphrase, BM25 bagus untuk exact match nama fungsi atau error message. Hasil digabung dengan Reciprocal Rank Fusion (RRF).</li>
+<li><strong>Re-ranking</strong> — setelah top-k retrieval, gunakan cross-encoder model untuk re-rank berdasarkan relevansi yang lebih akurat. Biasanya ambil top-20 lalu re-rank jadi top-5.</li>
+<li><strong>Query expansion</strong> — minta LLM untuk generate variasi query sebelum retrieval, lalu gabungkan hasil. Efektif untuk query yang ambigu atau terlalu singkat.</li>
+<li><strong>Hierarchical chunking</strong> — simpan dokumen dalam dua level: summary per dokumen (untuk initial retrieval) dan chunks detail (untuk konteks penuh). Retrieve summary dulu, lalu drill down ke chunks yang relevan.</li>
+</ul></div>
+<div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Ukuran chunk yang tepat</strong>Chunk terlalu kecil kehilangan konteks. Chunk terlalu besar membuang token untuk konten yang tidak relevan. Mulai dengan 512–800 token, overlap 10–15%. Ukur dengan precision@k pada eval dataset kamu — ini berbeda per domain.</div></div>
+</div><!-- /s2g -->
+
+<div class="divider"></div>
+
+<!-- 2H -->
+<div class="sub" id="s2h">
+<div class="subtit"><span class="ac">2.8</span> Agent Checkpointing &amp; Resume <span class="subid">// agent yang tidak takut crash</span></div>
+<div class="prose">
+<p>Agent yang berjalan lama — coding agent yang refactor ratusan file, research agent yang butuh 2 jam — sangat rentan terhadap kegagalan di tengah jalan: rate limit, network timeout, server restart, atau bahkan matikan laptop. Tanpa checkpointing, semua progress hilang dan harus mulai dari awal.</p>
+<p>Checkpointing menyimpan state agent secara periodik sehingga bisa di-resume dari titik terakhir, bukan dari awal.</p>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">agent_checkpoint.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> json, os
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, asdict
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+@dataclass
+<span class="kw">class</span> <span class="fn">AgentCheckpoint</span>:
+    run_id: <span class="tp">str</span>
+    iteration: <span class="tp">int</span>
+    messages: <span class="tp">list</span>
+    task: <span class="tp">str</span>
+    metadata: <span class="tp">dict</span>
+    saved_at: <span class="tp">str</span> = <span class="st">""</span>
+
+    <span class="kw">def</span> <span class="fn">save</span>(self, dir: <span class="tp">str</span> = <span class="st">".agent_checkpoints"</span>):
+        self.saved_at = datetime.<span class="fn">now</span>().<span class="fn">isoformat</span>()
+        Path(dir).<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)
+        path = <span class="st">f"{dir}/{self.run_id}.json"</span>
+        <span class="kw">with</span> <span class="fn">open</span>(path, <span class="st">"w"</span>) <span class="kw">as</span> f:
+            json.<span class="fn">dump</span>(<span class="fn">asdict</span>(self), f, indent=<span class="nm">2</span>)
+
+    @classmethod
+    <span class="kw">def</span> <span class="fn">load</span>(cls, run_id: <span class="tp">str</span>, dir: <span class="tp">str</span> = <span class="st">".agent_checkpoints"</span>):
+        path = <span class="st">f"{dir}/{run_id}.json"</span>
+        <span class="kw">if not</span> os.path.<span class="fn">exists</span>(path): <span class="kw">return None</span>
+        <span class="kw">with</span> <span class="fn">open</span>(path) <span class="kw">as</span> f:
+            <span class="kw">return</span> <span class="fn">cls</span>(**json.<span class="fn">load</span>(f))
+
+<span class="kw">class</span> <span class="fn">CheckpointedAgent</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, run_id: <span class="tp">str</span>, checkpoint_every: <span class="tp">int</span> = <span class="nm">5</span>):
+        self.run_id = run_id
+        self.checkpoint_every = checkpoint_every
+
+    <span class="kw">async def</span> <span class="fn">run</span>(self, task: <span class="tp">str</span>, resume: <span class="tp">bool</span> = <span class="kw">True</span>) -> <span class="tp">str</span>:
+        <span class="cm"># Coba resume dari checkpoint yang ada</span>
+        ckpt = <span class="fn">AgentCheckpoint</span>.<span class="fn">load</span>(self.run_id) <span class="kw">if</span> resume <span class="kw">else None</span>
+        <span class="kw">if</span> ckpt:
+            messages = ckpt.messages
+            start_iter = ckpt.iteration
+            <span class="fn">print</span>(<span class="st">f"Resuming from iteration {start_iter}"</span>)
+        <span class="kw">else</span>:
+            messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: task}]
+            start_iter = <span class="nm">0</span>
+
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(start_iter, <span class="nm">100</span>):
+            response = <span class="kw">await</span> self.<span class="fn">_call_llm</span>(messages)
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content})
+
+            <span class="kw">if</span> response.stop_reason == <span class="st">"end_turn"</span>:
+                <span class="cm"># Hapus checkpoint saat selesai</span>
+                Path(<span class="st">f".agent_checkpoints/{self.run_id}.json"</span>).<span class="fn">unlink</span>(missing_ok=<span class="kw">True</span>)
+                <span class="kw">return</span> response.content[<span class="nm">0</span>].text
+
+            <span class="cm"># Tool execution...</span>
+            tool_results = <span class="kw">await</span> self.<span class="fn">_execute_tools</span>(response)
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+
+            <span class="cm"># Simpan checkpoint setiap N iterasi</span>
+            <span class="kw">if</span> (i + <span class="nm">1</span>) % self.checkpoint_every == <span class="nm">0</span>:
+                <span class="fn">AgentCheckpoint</span>(
+                    run_id=self.run_id, iteration=i+<span class="nm">1</span>,
+                    messages=messages, task=task, metadata={}
+                ).<span class="fn">save</span>()</pre></div></div>
+<div class="grid2">
+<div class="gc"><h4>Apa yang perlu disimpan</h4><p>Full message history (termasuk tool calls dan results), nomor iterasi saat ini, task original, dan metadata tambahan (files yang sudah dimodifikasi, tests yang sudah dijalankan). Semakin lengkap state yang disimpan, semakin mulus resume-nya.</p></div>
+<div class="gc"><h4>Storage backend</h4><p>Untuk development: JSON file di disk sudah cukup. Untuk production: Redis (dengan TTL) atau PostgreSQL. Jangan simpan di memory saja — checkpoint harus survive process restart.</p></div>
+<div class="gc"><h4>Checkpoint frequency</h4><p>Setiap 3–10 iterasi adalah sweet spot. Terlalu sering: overhead I/O. Terlalu jarang: banyak iterasi yang terbuang saat crash. Untuk agent yang heavy (computer use, long coding tasks), checkpoint setiap 3 iterasi.</p></div>
+<div class="gc"><h4>Idempotent tools</h4><p>Saat resume, beberapa tool mungkin dipanggil ulang. Design tools agar idempotent: memanggil dua kali hasilnya sama (create_file → overwrite jika ada, bukan error). Hindari side effects yang tidak bisa diulang.</p></div>
+</div>
+</div><!-- /s2h -->
+
 </section><!-- /fase2 -->
 
 <!-- ═══════════════ FASE 3 ═══════════════ -->
@@ -995,6 +1373,7 @@ Identify which steps can run in parallel (no dependencies).
   <a class="snavi" href="#s3c">MCP Protocol</a>
   <a class="snavi" href="#s3d">Design Patterns</a>
   <a class="snavi" href="#s3e">State Sharing</a>
+  <a class="snavi" href="#s3f">Handoff &amp; Trust</a>
 </div>
 
 <!-- 3A -->
@@ -1332,6 +1711,90 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 </div>
 <div class="callout tip"><span class="cico">🎯</span><div class="ctxt"><strong>Rekomendasi</strong>Gunakan context passing sampai kamu benar-benar butuh shared state. Implicit global state membuat debugging multi-agent system jauh lebih sulit — terutama ketika race conditions muncul di production.</div></div>
 </div><!-- /s3e -->
+
+<div class="divider"></div>
+
+<!-- 3F -->
+<div class="sub" id="s3f">
+<div class="subtit"><span class="ac">3.6</span> Agent Handoff &amp; Trust Boundary <span class="subid">// seberapa jauh kamu percaya subagent?</span></div>
+<div class="prose">
+<p>Dalam sistem multi-agent, orchestrator mendelegasikan task ke subagent dan menerima hasilnya kembali. Pertanyaan kritis yang sering diabaikan: <strong>seberapa jauh hasil dari subagent bisa dipercaya?</strong> Subagent adalah LLM — ia bisa halusinasi, salah eksekusi, atau bahkan terpapar prompt injection dari data eksternal yang ia proses.</p>
+</div>
+<div class="viz-wrap">
+<div class="viz-title">Trust Model dalam Multi-Agent System</div>
+<div class="viz-body">
+  <div class="grid2">
+    <div class="gc" style="border-color:rgba(74,222,128,.2);">
+      <h4 style="color:var(--green)">✅ Percaya penuh</h4>
+      <p>Subagent yang kamu control sendiri, berjalan di infrastruktur yang sama, dengan system prompt yang kamu tentukan. Hasil masih perlu divalidasi tapi trust level tinggi.</p>
+    </div>
+    <div class="gc" style="border-color:rgba(245,158,11,.2);">
+      <h4 style="color:var(--amber)">⚠️ Percaya dengan verifikasi</h4>
+      <p>Subagent yang memproses data eksternal (web scraping, user-provided files). Output harus divalidasi sebelum dijadikan input untuk aksi berisiko tinggi.</p>
+    </div>
+    <div class="gc" style="border-color:rgba(248,113,113,.2);">
+      <h4 style="color:var(--coral)">🔴 Tidak percaya langsung</h4>
+      <p>Third-party agents, agents yang terpapar untrusted content, atau hasil dari tool yang bisa dimanipulasi. Wajib sanitasi dan validasi sebelum dipakai.</p>
+    </div>
+    <div class="gc" style="border-color:rgba(124,109,250,.2);">
+      <h4 style="color:var(--accent)">💡 Prinsip zero-trust</h4>
+      <p>Treat setiap agent output seperti input eksternal. Validasi schema, periksa konsistensi, dan jangan izinkan subagent override security constraints orchestrator.</p>
+    </div>
+  </div>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">agent_handoff.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, validator
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+
+<span class="kw">class</span> <span class="fn">TrustLevel</span>(<span class="tp">Enum</span>):
+    HIGH   = <span class="st">"high"</span>    <span class="cm"># internal agent, controlled infra</span>
+    MEDIUM = <span class="st">"medium"</span>  <span class="cm"># internal agent, processes external data</span>
+    LOW    = <span class="st">"low"</span>     <span class="cm"># third-party agent or untrusted content</span>
+
+<span class="kw">class</span> <span class="fn">AgentResult</span>(<span class="tp">BaseModel</span>):
+    agent_id: <span class="tp">str</span>
+    task_id: <span class="tp">str</span>
+    output: <span class="tp">str</span>
+    confidence: <span class="tp">float</span>   <span class="cm"># 0.0 – 1.0, self-reported oleh subagent</span>
+    sources: <span class="tp">list</span>[<span class="tp">str</span>]  <span class="cm"># referensi yang dipakai</span>
+    trust_level: <span class="fn">TrustLevel</span>
+
+    @validator(<span class="st">"confidence"</span>)
+    <span class="kw">def</span> <span class="fn">validate_confidence</span>(cls, v):
+        <span class="kw">if not</span> <span class="nm">0.0</span> <= v <= <span class="nm">1.0</span>: <span class="kw">raise</span> <span class="tp">ValueError</span>(<span class="st">"confidence must be 0-1"</span>)
+        <span class="kw">return</span> v
+
+<span class="kw">class</span> <span class="fn">TrustGate</span>:
+    <span class="kw">def</span> <span class="fn">validate</span>(self, result: <span class="fn">AgentResult</span>, action_risk: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+        <span class="cm"># LOW trust: tidak boleh trigger aksi high-risk</span>
+        <span class="kw">if</span> result.trust_level == <span class="fn">TrustLevel</span>.LOW <span class="kw">and</span> action_risk == <span class="st">"high"</span>:
+            <span class="kw">return False</span>
+
+        <span class="cm"># Confidence rendah: butuh human review untuk aksi apapun</span>
+        <span class="kw">if</span> result.confidence < <span class="nm">0.7</span>:
+            <span class="kw">return</span> self.<span class="fn">_request_human_review</span>(result)
+
+        <span class="cm"># Cek prompt injection: output tidak boleh mengandung instruksi baru</span>
+        injection_patterns = [<span class="st">"ignore previous"</span>, <span class="st">"new instructions"</span>, <span class="st">"system:"</span>]
+        <span class="kw">if</span> <span class="fn">any</span>(p <span class="kw">in</span> result.output.<span class="fn">lower</span>() <span class="kw">for</span> p <span class="kw">in</span> injection_patterns):
+            <span class="kw">raise</span> <span class="tp">SecurityError</span>(<span class="st">f"Possible prompt injection in agent {result.agent_id}"</span>)
+
+        <span class="kw">return True</span>
+
+    <span class="kw">def</span> <span class="fn">_request_human_review</span>(self, result: <span class="fn">AgentResult</span>) -> <span class="tp">bool</span>:
+        <span class="cm"># Implementasi: kirim ke queue review, pause agent, tunggu approval</span>
+        <span class="fn">print</span>(<span class="st">f"[REVIEW REQUIRED] Agent {result.agent_id}: confidence={result.confidence}"</span>)
+        <span class="kw">return False</span>  <span class="cm"># block sampai ada approval</span></pre></div></div>
+<div class="cc"><h3>Pola handoff yang aman</h3><ul>
+<li><strong>Typed contracts</strong> — define schema eksplisit untuk output setiap subagent menggunakan Pydantic atau dataclass. Reject output yang tidak sesuai schema — jangan coba parse manual.</li>
+<li><strong>Confidence score</strong> — minta subagent melaporkan confidence level-nya. Output dengan confidence rendah harus di-flag untuk human review atau verifikasi tambahan.</li>
+<li><strong>Source tracking</strong> — setiap klaim dalam output subagent harus traceable ke sumber. Ini krusial untuk debugging ketika ada rantai agent yang panjang.</li>
+<li><strong>Blast radius limiting</strong> — subagent tidak boleh memiliki akses yang lebih luas dari yang dibutuhkan untuk task-nya. Coding subagent tidak perlu akses ke database production.</li>
+</ul></div>
+<div class="callout danger"><span class="cico">🔴</span><div class="ctxt"><strong>Prompt injection via subagent</strong>Jika subagent memproses konten dari web atau user-provided files, ia bisa terpapar "prompt injection" — instruksi berbahaya yang tertanam dalam konten eksternal yang mencoba mengubah perilaku agent. Selalu sanitasi output subagent yang memproses untrusted data sebelum dipakai sebagai input untuk aksi berisiko.</div></div>
+</div><!-- /s3f -->
 
 </section><!-- /fase3 -->
 
@@ -2166,6 +2629,11 @@ not full rewrites.</span></pre></div></div>
 <li>Paham perbedaan 4 jenis memory dan bisa pilih strategi yang tepat untuk use case spesifik</li>
 <li>Bisa tulis tool schema — deskripsi, argumen, return format — yang LLM hampir tidak pernah salah interpretasi</li>
 <li>Bisa implement context management untuk agent yang run lebih dari 1 jam tanpa crash karena overflow</li>
+<li>Paham cara kerja KV cache dan prompt caching, serta bisa mengaktifkan caching untuk hemat 60–90% cost di agent yang loop banyak</li>
+<li>Bisa hitung token budget secara proaktif sebelum setiap API call dan implement compression strategy sebelum context overflow</li>
+<li>Bisa tulis system prompt yang robust: ada mandatory workflow, tool rules, error behavior, dan negative examples</li>
+<li>Bisa implement RAG pipeline dari scratch: chunking, embedding, indexing, retrieval, dan inject hasil ke context agent</li>
+<li>Bisa build checkpointing system sehingga agent yang berjalan lama bisa resume dari titik terakhir saat crash</li>
 </ul></div>
 <div class="cc"><h3>Multi-Agent (Fase 3)</h3>
 <ul class="chk">
@@ -2173,6 +2641,7 @@ not full rewrites.</span></pre></div></div>
 <li>Bisa implement fan-out/fan-in parallelism dengan rate limiting yang tidak blow up API quota</li>
 <li>Bisa build dan deploy MCP server yang bisa dikonsumsi oleh Claude Desktop dan custom clients</li>
 <li>Tahu kapan multi-agent worth the complexity dan kapan single agent dengan planning yang baik sudah cukup</li>
+<li>Bisa implement trust boundary antar agent: typed contracts, confidence scoring, dan deteksi prompt injection dari subagent yang memproses external data</li>
 </ul></div>
 <div class="cc"><h3>Production Engineering (Fase 4)</h3>
 <ul class="chk">
@@ -2224,9 +2693,9 @@ function sp(el,itemsId){
 // Active sidebar item tracking on scroll
 var allSitems=document.querySelectorAll('.sit');
 var phaseMap={
-  's1a':'i1','s1b':'i1','s1c':'i1','s1d':'i1','s1e':'i1',
-  's2a':'i2','s2b':'i2','s2c':'i2','s2d':'i2','s2e':'i2','s2f':'i2',
-  's3a':'i3','s3b':'i3','s3c':'i3','s3d':'i3','s3e':'i3',
+  's1a':'i1','s1b':'i1','s1c':'i1','s1d':'i1','s1e':'i1','s1f':'i1','s1g':'i1','s1h':'i1',
+  's2a':'i2','s2b':'i2','s2c':'i2','s2d':'i2','s2e':'i2','s2f':'i2','s2g':'i2','s2h':'i2',
+  's3a':'i3','s3b':'i3','s3c':'i3','s3d':'i3','s3e':'i3','s3f':'i3',
   's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4',
   's5a':'i5','s5b':'i5','s5c':'i5','s5d':'i5','s5e':'i5'
 };
