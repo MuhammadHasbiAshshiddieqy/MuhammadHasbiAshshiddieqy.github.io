@@ -10,13 +10,13 @@ Personal knowledge hub: **Agentic AI Mastery** — panduan komprehensif dari fon
 
 | Fase | Topik | Fokus |
 |------|-------|-------|
-| 1 — Fondasi | 5 topik | LLM internals, agent loop, ReAct, tool calling, autonomy spectrum |
-| 2 — Architecture | 6 topik | Harness, memory systems, tool registry, context mgmt, planning, structured output |
-| 3 — Multi-Agent | 5 topik | Orchestrator, parallelism, MCP protocol, design patterns, state sharing |
-| 4 — Production | 5 topik | Error handling, observability, cost optimization, safety, testing & evals |
-| 5 — Build Agent | 5 topik | Bedah OpenClaw, computer use, coding agent, framework landscape, expert checklist |
+| 1 — Fondasi | 9 topik | LLM internals, agent loop, ReAct, tool calling, autonomy spectrum, KV cache, token budget, system prompt, prompt injection |
+| 2 — Architecture | 10 topik | Harness & loop, memory systems, tool registry, context mgmt, planning, structured output, RAG, checkpointing, streaming, session mgmt |
+| 3 — Multi-Agent | 7 topik | Orchestrator-subagent, parallelism, MCP protocol, design patterns, state sharing, handoff & trust, agent-to-agent protocol |
+| 4 — Production | 9 topik | Error handling, observability, cost optimization, safety, testing & evals, rate limiting, deployment, context engineering, eval taxonomy |
+| 5 — Build Agent | 6 topik | Bedah OpenClaw, computer use, coding agent, framework landscape, voice & multimodal, expert checklist |
 
-**25 topik · 19 code block · 9 visualisasi · ~16 minggu kurikulum**
+**41 topik · 26+ code block · 12+ visualisasi · ~16 minggu kurikulum**
 
 ---
 
@@ -32,7 +32,7 @@ Repo ini adalah **user GitHub Pages** (`username.github.io`), sehingga:
 
 ```
 /
-├── index.html      # Halaman utama (178KB, self-contained)
+├── index.html      # Halaman utama (self-contained, single-file)
 ├── _config.yml     # GitHub Pages config
 └── README.md       # Ini
 ```
@@ -41,8 +41,8 @@ Repo ini adalah **user GitHub Pages** (`username.github.io`), sehingga:
 
 ## About
 
-[Muhammad Hasbi Ashshiddieqy](https://github.com/MuhammadHasbiAshshiddieqy) — software engineer, startup founder, dan lecturer. Aktif eksplorasi agentic AI, SLM infrastructure, dan product engineering.
+[Muhammad Hasbi Ashshiddieqy](https://github.com/MuhammadHasbiAshshiddieqy) — software engineer & AI builder. Aktif eksplorasi agentic AI, backend engineering, dan product development.
 
 - 🔗 GitHub: [@MuhammadHasbiAshshiddieqy](https://github.com/MuhammadHasbiAshshiddieqy)
-- 💼 LinkedIn: [Muhammad Hasbi](https://linkedin.com/in/muhammadhasbi)
-- ✍️ Medium: [@hasbi.ashshiddieqy](https://medium.com/@hasbi.ashshiddieqy)
+- 💼 LinkedIn: [Muhammad Hasbi Ashshiddieqy](https://www.linkedin.com/in/muhammadhasbiashshiddieqy/)
+- ✍️ Medium: [@hsbdeveloper97](https://hsbdeveloper97.medium.com)
