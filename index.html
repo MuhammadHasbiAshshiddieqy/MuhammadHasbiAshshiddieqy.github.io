@@ -648,7 +648,7 @@ anthropic>=0.40.0
 </div>
 <div class="cc"><h3>Tiga konsep kunci yang perlu dipahami agent builder</h3><ul>
 <li><strong>Context window</strong> adalah "working memory" agent — semua yang perlu diketahui model saat itu harus ada di sini. Tidak ada "hidden memory" di luar context.</li>
-<li><strong>Temperature &amp; sampling</strong> mengontrol determinisme. Untuk agent, temperature rendah (0.0–0.3) biasanya lebih baik karena kamu butuh consistency, bukan creativity.</li>
+<li><strong>Temperature &amp; sampling</strong> mengontrol determinisme. Temperature 0.0 memakai greedy decoding (selalu pilih token dengan probabilitas tertinggi) — hasilnya konsisten, tapi bukan berarti optimal untuk semua task. <strong>Ikuti panduan provider</strong> untuk model yang kamu pakai: setiap model (dan mode reasoning vs non-reasoning) punya recommended setting berbeda. Untuk evaluasi pada task tertentu, jalankan dengan setting yang direkomendasikan beberapa kali dan hitung confidence interval — bukan memaksa 0.0 demi konsistensi palsu.</li>
 <li><strong>stop_reason</strong> menentukan kapan model berhenti. Nilai <code>end_turn</code> = model selesai. Nilai <code>tool_use</code> = model minta tool dipanggil. Harness wajib cek ini setiap iterasi. <em>Catatan vendor:</em> ini adalah konvensi Anthropic API — OpenAI menggunakan <code>finish_reason == "tool_calls"</code> dengan struktur payload berbeda. Harness yang ingin multi-model harus mengabstraksi layer ini.</li>
 </ul></div>
 <div class="dblock">
@@ -692,7 +692,7 @@ anthropic>=0.40.0
 </div>
 
 <div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></svg> Latihan</h3><ul>
-<li><strong>[Konseptual]</strong> Jelaskan dengan kata-katamu sendiri: mengapa temperature 0.0 lebih baik untuk agent production daripada 0.7? Dalam kondisi apa kamu mungkin ingin temperature lebih tinggi?</li>
+<li><strong>[Konseptual]</strong> Temperature 0.0 menggunakan greedy decoding dan menghasilkan output yang konsisten — tapi belum tentu optimal. Jelaskan dengan kata-katamu sendiri: kapan konsistensi deterministik itu berguna, dan kapan kamu sebaiknya mengikuti recommended setting dari provider model yang kamu pakai?</li>
 <li><strong>[Eksplorasi]</strong> Buka <code>console.anthropic.com</code>, buat API key baru, dan jalankan contoh kode di topik 0.1. Perhatikan output di terminal. Apa yang berubah jika kamu ganti model dari haiku ke sonnet?</li>
 <li><strong>[Diskusi]</strong> LLM disebut "next-token predictor" tapi terasa seperti "reasoning engine". Apa implikasinya untuk cara kamu menulis prompt? Berikan satu contoh konkret.</li>
 </ul></div>
