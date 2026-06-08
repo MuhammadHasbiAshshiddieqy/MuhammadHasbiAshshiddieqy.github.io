@@ -225,9 +225,13 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 @keyframes barIn{from{width:0}to{width:var(--tw)}}
 .cbar-fill.animate{animation:barIn 1.2s cubic-bezier(.4,0,.2,1) forwards;}
 
-/* Focus mode — hide all .sub by default, show only .sub--active */
+/* Focus mode — hide all .sub dan .fase-intro by default */
 .sub{display:none;}
 .sub--active{display:block;}
+.fase-intro{display:none;}
+.fase-intro--active{display:block;}
+.page-home{display:none;}
+.page-home--active{display:block;}
 /* Nav bar antar topik */
 .topic-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 60px;border-top:1px solid var(--border);background:var(--bg2);gap:12px;flex-wrap:wrap;}
 .topic-nav-info{display:flex;flex-direction:column;gap:2px;}
@@ -256,6 +260,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 <div class="layout">
 <nav class="sidebar" id="sidebar">
   <div style="padding:8px 0">
+  <div class="sph" style="border-bottom:1px solid var(--border);margin-bottom:4px;" onclick="goToPage('home');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');"><span class="pn" style="font-size:14px;background:transparent;border:none;">⌂</span>Beranda</div>
   <div class="sph active" onclick="sp(this,'i1')"><span class="pn">1</span>Fondasi</div>
   <div class="sits open" id="i1">
     <a class="sit" href="#s1a"><span class="dot"></span>LLM sebagai reasoning engine</a>
@@ -321,6 +326,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 </nav>
 <main class="main">
 
+<div id="home" class="page-home">
 <div class="ptw-banner">
   <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" class="ptw-logo">
   <div>
@@ -404,8 +410,20 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   </div>
 </div>
 
+  <div class="topic-nav" style="border-top:1px solid var(--border);margin-top:0;">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">Siap mulai?</div>
+      <div class="topic-nav-title">Fase 1 — Fondasi &amp; Mental Model</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn primary" onclick="goToPage('fi1')">Mulai Belajar →</button>
+    </div>
+  </div>
+</div><!-- /home -->
+
 <!-- ═══════════════ FASE 1 ═══════════════ -->
 <section class="cs p1" id="fase1">
+<div class="fase-intro" id="fi1">
 <div class="sh">
   <div class="sbadge">01</div>
   <div>
@@ -424,6 +442,17 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   <a class="snavi" href="#s1g">Token Budget</a>
   <a class="snavi" href="#s1h">System Prompt</a>
 </div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">8 topik · Minggu 1–2</div>
+      <div class="topic-nav-title">Mulai dari: 1.1 LLM sebagai Reasoning Engine</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('home')">← Beranda</button>
+      <button class="tnbtn primary" onclick="goTo(0)">Mulai Fase 1 →</button>
+    </div>
+  </div>
+</div><!-- /fi1 -->
 
 <!-- 1A -->
 <div class="sub" id="s1a">
@@ -851,6 +880,7 @@ Ask the user. Do not guess.</pre></div></div>
 
 <!-- ═══════════════ FASE 2 ═══════════════ -->
 <section class="cs p2" id="fase2">
+<div class="fase-intro" id="fi2">
 <div class="sh">
   <div class="sbadge">02</div>
   <div>
@@ -869,6 +899,17 @@ Ask the user. Do not guess.</pre></div></div>
   <a class="snavi" href="#s2g">RAG</a>
   <a class="snavi" href="#s2h">Checkpointing</a>
 </div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">8 topik · Minggu 3–4</div>
+      <div class="topic-nav-title">Mulai dari: 2.1 Agent Harness &amp; Orchestration Loop</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('fi1')">← Fase 1</button>
+      <button class="tnbtn primary" onclick="goTo(8)">Mulai Fase 2 →</button>
+    </div>
+  </div>
+</div><!-- /fi2 -->
 
 <!-- 2A -->
 <div class="sub" id="s2a">
@@ -1403,6 +1444,7 @@ client = <span class="fn">Anthropic</span>()
 
 <!-- ═══════════════ FASE 3 ═══════════════ -->
 <section class="cs p3" id="fase3">
+<div class="fase-intro" id="fi3">
 <div class="sh">
   <div class="sbadge">03</div>
   <div>
@@ -1419,6 +1461,17 @@ client = <span class="fn">Anthropic</span>()
   <a class="snavi" href="#s3e">State Sharing</a>
   <a class="snavi" href="#s3f">Handoff &amp; Trust</a>
 </div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">6 topik · Minggu 5–7</div>
+      <div class="topic-nav-title">Mulai dari: 3.1 Orchestrator-Subagent Pattern</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('fi2')">← Fase 2</button>
+      <button class="tnbtn primary" onclick="goTo(16)">Mulai Fase 3 →</button>
+    </div>
+  </div>
+</div><!-- /fi3 -->
 
 <!-- 3A -->
 <div class="sub" id="s3a">
@@ -1845,6 +1898,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
 
 <!-- ═══════════════ FASE 4 ═══════════════ -->
 <section class="cs p4" id="fase4">
+<div class="fase-intro" id="fi4">
 <div class="sh">
   <div class="sbadge">04</div>
   <div>
@@ -1860,6 +1914,17 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre></div><
   <a class="snavi" href="#s4d">Safety</a>
   <a class="snavi" href="#s4e">Testing &amp; Evals</a>
 </div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 8–10</div>
+      <div class="topic-nav-title">Mulai dari: 4.1 Error Handling &amp; Retry Strategies</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('fi3')">← Fase 3</button>
+      <button class="tnbtn primary" onclick="goTo(22)">Mulai Fase 4 →</button>
+    </div>
+  </div>
+</div><!-- /fi4 -->
 
 <!-- 4A -->
 <div class="sub" id="s4a">
@@ -2319,6 +2384,7 @@ Result: {result}
 
 <!-- ═══════════════ FASE 5 ═══════════════ -->
 <section class="cs p5" id="fase5">
+<div class="fase-intro" id="fi5">
 <div class="sh">
   <div class="sbadge">05</div>
   <div>
@@ -2334,6 +2400,17 @@ Result: {result}
   <a class="snavi" href="#s5d">Framework 2025</a>
   <a class="snavi" href="#s5e">Checklist Expert</a>
 </div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 11–16</div>
+      <div class="topic-nav-title">Mulai dari: 5.1 Bedah Arsitektur OpenClaw</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('fi4')">← Fase 4</button>
+      <button class="tnbtn primary" onclick="goTo(27)">Mulai Fase 5 →</button>
+    </div>
+  </div>
+</div><!-- /fi5 -->
 
 <!-- 5A -->
 <div class="sub" id="s5a">
@@ -2730,11 +2807,20 @@ function toggleSB(){
   var s=document.getElementById('sidebar'),o=document.getElementById('overlay');
   s.classList.toggle('open');o.classList.toggle('open');
 }
+// Map accordion id → fase-intro page id
+var PHASE_INTRO_MAP = {'i1':'fi1','i2':'fi2','i3':'fi3','i4':'fi4','i5':'fi5'};
+
 function sp(el,itemsId){
   var items=document.getElementById(itemsId),wasOpen=items.classList.contains('open');
   document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
   document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
-  if(!wasOpen){items.classList.add('open');el.classList.add('active');}
+  if(!wasOpen){
+    items.classList.add('open');
+    el.classList.add('active');
+    // navigate to fase intro page
+    var fiId = PHASE_INTRO_MAP[itemsId];
+    if (fiId) goToPage(fiId);
+  }
 }
 
 // ── Topic focus mode ─────────────────────────────────────────────────────────
@@ -2816,15 +2902,52 @@ TOPICS.forEach(function(id, idx) {
   el.appendChild(nav);
 });
 
+// ID semua "halaman" selain TOPICS (home + fase intro)
+var PAGES = ['home','fi1','fi2','fi3','fi4','fi5'];
+
+function hideAll() {
+  // hide home
+  document.getElementById('home').classList.remove('page-home--active');
+  // hide all fase intros
+  PAGES.slice(1).forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('fase-intro--active');
+  });
+  // hide all topics
+  TOPICS.forEach(function(id){ document.getElementById(id).classList.remove('sub--active'); });
+  // hide all .cs section wrappers
+  document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
+}
+
+function goToPage(pageId) {
+  hideAll();
+  if (pageId === 'home') {
+    document.getElementById('home').classList.add('page-home--active');
+  } else {
+    var el = document.getElementById(pageId);
+    if (el) {
+      el.classList.add('fase-intro--active');
+      // show parent .cs so the section is visible
+      var parentSection = el.closest('.cs');
+      if (parentSection) parentSection.style.display = 'block';
+    }
+  }
+  history.replaceState(null,'','#'+pageId);
+  document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function goTo(idx) {
   if (idx < 0 || idx >= TOPICS.length) return;
-  var prevId = TOPICS[currentIdx];
   var nextId = TOPICS[idx];
 
-  // hide all, show target
-  TOPICS.forEach(function(id){ document.getElementById(id).classList.remove('sub--active'); });
+  hideAll();
   document.getElementById(nextId).classList.add('sub--active');
   currentIdx = idx;
+
+  // show parent .cs section
+  var parentSection = document.getElementById(nextId).closest('.cs');
+  if (parentSection) parentSection.style.display = 'block';
 
   // scroll to top of main
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
@@ -2848,11 +2971,6 @@ function goTo(idx) {
     var pv = document.getElementById('pv');
     if (pv) pv.textContent = PHASE_NUMS[grpId]||'1';
   }
-
-  // also show the parent .cs section (hide others)
-  document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
-  var parentSection = document.getElementById(nextId).closest('.cs');
-  if (parentSection) parentSection.style.display='block';
 
   // animate bars in active topic
   document.getElementById(nextId).querySelectorAll('.cbar-fill').forEach(function(bar){
@@ -2884,24 +3002,30 @@ document.querySelectorAll('.sit').forEach(function(a){
   });
 });
 
-// Init: read hash or start at s1a
+// Init: read hash → home / fase-intro / topic
 (function(){
   var hash = location.hash.replace('#','');
-  var startIdx = TOPICS.indexOf(hash);
-  if (startIdx < 0) startIdx = 0;
 
-  // Hide all .cs sections first, then show only the target
+  // Hide everything first
   document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
 
-  goTo(startIdx);
+  if (!hash || hash === 'home') {
+    goToPage('home');
+  } else if (PAGES.indexOf(hash) >= 0) {
+    goToPage(hash);
+  } else {
+    var startIdx = TOPICS.indexOf(hash);
+    if (startIdx < 0) startIdx = 0;
+    goTo(startIdx);
 
-  // Fade-in animation for elements in active topic
-  var activeEl = document.getElementById(TOPICS[startIdx]);
-  if (activeEl) {
-    activeEl.querySelectorAll('.cc,.cb,.callout,.grid2,.fsteps,.cmp,.rt,.dblock').forEach(function(el,i){
-      el.style.cssText='opacity:0;transform:translateY(12px);transition:opacity 0.4s ease '+(i*30)+'ms,transform 0.4s ease '+(i*30)+'ms';
-      setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; },50+i*30);
-    });
+    // Fade-in animation for elements in active topic
+    var activeEl = document.getElementById(TOPICS[startIdx]);
+    if (activeEl) {
+      activeEl.querySelectorAll('.cc,.cb,.callout,.grid2,.fsteps,.cmp,.rt,.dblock').forEach(function(el,i){
+        el.style.cssText='opacity:0;transform:translateY(12px);transition:opacity 0.4s ease '+(i*30)+'ms,transform 0.4s ease '+(i*30)+'ms';
+        setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; },50+i*30);
+      });
+    }
   }
 })();
 
