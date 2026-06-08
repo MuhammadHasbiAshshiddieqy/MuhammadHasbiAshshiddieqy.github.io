@@ -137,8 +137,19 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 .snav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
 .snavi{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:4px 12px;border-radius:100px;text-decoration:none;transition:all .15s;}
 .snavi:hover{color:var(--accent);border-color:rgba(124,109,250,.3);}
-.footer{padding:40px 60px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.footer{padding:40px 60px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:16px;flex-wrap:wrap;}
+.footer-top{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.footer-bottom{display:flex;align-items:center;gap:10px;padding-top:16px;border-top:1px solid var(--border);}
+.footer-bottom-ai{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);line-height:1.6;}
 .ftxt{font-size:12px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}@media(max-width:600px){.footer{padding:30px 24px;}}
+.hlogo{width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+.ptw-banner{display:flex;align-items:center;gap:16px;padding:14px 60px;background:rgba(124,109,250,0.05);border-bottom:1px solid rgba(124,109,250,0.12);}
+.ptw-logo{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.ptw-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;}
+.ptw-name{font-size:13px;font-weight:500;color:var(--text2);}
+.ptw-sep{width:1px;height:32px;background:var(--border2);flex-shrink:0;margin:0 4px;}
+.ptw-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+@media(max-width:600px){.ptw-banner{padding:12px 24px;}.ptw-desc{display:none;}}
 
 /* ═══ VISUALIZATION STYLES ═══ */
 .viz-wrap{margin:24px 0;background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
@@ -220,6 +231,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 
 <header>
   <button class="ham" onclick="toggleSB()" aria-label="Menu"><span></span><span></span><span></span></button>
+  <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" class="hlogo">
   <div class="hl2">hasbi<span>.</span>dev</div>
   <div class="hsub">Agentic AI Mastery — Panduan Lengkap untuk Production Engineers</div>
   <div class="hr"><div class="ppill">Fase <span id="pv">1</span>/5</div></div>
@@ -288,6 +300,16 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
   </div>
 </nav>
 <main class="main">
+
+<div class="ptw-banner">
+  <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" class="ptw-logo">
+  <div>
+    <div class="ptw-label">Part of</div>
+    <div class="ptw-name">Principal Tech Wizard</div>
+  </div>
+  <div class="ptw-sep"></div>
+  <div class="ptw-desc">Seri konten mendalam tentang engineering, AI, dan teknologi — dari perspektif engineer yang membangun produk nyata.</div>
+</div>
 
 <section class="hero">
   <div class="htag">Open Knowledge · Software Engineer · AI Builder</div>
@@ -2664,15 +2686,26 @@ not full rewrites.</span></pre></div></div>
 </section><!-- /fase5 -->
 
 <footer class="footer">
-  <div>
-    <div class="ftxt" style="margin-bottom:4px;">Muhammad Hasbi Ashshiddieqy</div>
-    <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">Software Engineer · AI Enthusiast · Builder · Tech Sharer</div>
+  <div class="footer-top">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" style="width:32px;height:32px;border-radius:7px;object-fit:cover;">
+      <div>
+        <div class="ftxt" style="margin-bottom:2px;">Muhammad Hasbi Ashshiddieqy</div>
+        <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">Principal Tech Wizard · Software Engineer · AI Builder</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">★ GitHub</a>
+      <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">LinkedIn</a>
+      <a href="https://hsbdeveloper97.medium.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Medium</a>
+      <a href="https://twitter.com/mhasbi_dev" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Twitter / X</a>
+    </div>
   </div>
-  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-    <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">★ GitHub</a>
-    <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">LinkedIn</a>
-    <a href="https://hsbdeveloper97.medium.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Medium</a>
-    <a href="https://twitter.com/mhasbi_dev" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:6px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.4)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">Twitter / X</a>
+  <div class="footer-bottom">
+    <span style="font-size:14px;">🤖</span>
+    <div class="footer-bottom-ai">
+      <strong style="color:var(--text2);font-weight:500;">AI-Assisted Content</strong> — Konten pada halaman ini dibuat dengan bantuan AI (Claude) dan direview secara bertahap oleh manusia. Setiap konsep, contoh kode, dan penjelasan telah diverifikasi untuk akurasi teknis sebelum dipublikasikan. AI digunakan sebagai alat bantu penulisan, bukan sebagai pengganti pemahaman engineering yang sesungguhnya.
+    </div>
   </div>
 </footer>
 </main>
