@@ -71,7 +71,7 @@ var TOPIC_LABELS = {
   's5a':'5.1 Bedah Arsitektur OpenClaw',
   's5b':'5.2 Computer Use Agent',
   's5c':'5.3 Coding Agent Architecture',
-  's5d':'5.4 Framework Landscape 2025',
+  's5d':'5.4 Framework Landscape 2026',
   's5f':'5.5 Voice & Multimodal Agent',
   's5e':'5.6 Checklist Keahlian Agent Engineer'
 };
