@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agentic AI Mastery | Muhammad Hasbi</title>
-<meta name="description" content="Panduan komprehensif Agentic AI dari fondasi ke production — oleh Muhammad Hasbi Ashshiddieqy, software engineer & AI builder. 5 fase, 44 topik, 30+ contoh kode lengkap.">
+<title>hasbi.dev — Open Knowledge</title>
+<meta name="description" content="Panduan mendalam tentang AI dan engineering — dari fondasi ke production. Oleh Muhammad Hasbi Ashshiddieqy.">
 <meta name="author" content="Muhammad Hasbi Ashshiddieqy">
-<meta property="og:title" content="Agentic AI Mastery | Muhammad Hasbi">
-<meta property="og:description" content="Panduan komprehensif Agentic AI dari fondasi ke production — 5 fase, 44 topik, 30+ contoh kode lengkap.">
+<meta property="og:title" content="hasbi.dev — Open Knowledge">
+<meta property="og:description" content="Panduan mendalam tentang AI dan engineering — dari fondasi ke production.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:creator" content="@mhasbi">
@@ -16,6 +16,46 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+/* ── Landing page styles ── */
+.landing{display:none;min-height:100vh;flex-direction:column;}
+.landing--active{display:flex;}
+.landing-hero{padding:80px 60px 56px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.landing-hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+.landing-hero::after{content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(124,109,250,.07) 0%,transparent 65%);pointer-events:none;}
+.landing-tag{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);background:var(--accent-glow);border:1px solid rgba(124,109,250,.2);padding:4px 14px;border-radius:100px;margin-bottom:28px;}
+.landing-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+.landing-h1{font-family:'Instrument Serif',serif;font-size:clamp(36px,5vw,58px);font-weight:400;line-height:1.12;color:var(--text);margin-bottom:18px;position:relative;z-index:1;}
+.landing-h1 em{font-style:italic;background:linear-gradient(90deg,var(--accent) 0%,#a78bfa 30%,#38bdf8 50%,#a78bfa 70%,var(--accent) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer-slide 4s linear infinite;}
+.landing-desc{font-size:16px;color:var(--text2);max-width:520px;margin:0 auto 48px;line-height:1.75;position:relative;z-index:1;}
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;padding:48px 60px 64px;max-width:1200px;margin:0 auto;width:100%;}
+.topic-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:16px;}
+.topic-card::before{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,var(--tc-color,rgba(124,109,250,.06)) 0%,transparent 60%);opacity:0;transition:opacity .2s;}
+.topic-card:hover{border-color:var(--tc-color,rgba(124,109,250,.4));transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.topic-card:hover::before{opacity:1;}
+.topic-card-head{display:flex;align-items:flex-start;gap:14px;}
+.topic-card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid;}
+.topic-card-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.topic-card-title{font-family:'Instrument Serif',serif;font-size:20px;font-weight:400;color:var(--text);line-height:1.25;}
+.topic-card-desc{font-size:13px;color:var(--text3);line-height:1.65;flex:1;}
+.topic-card-meta{display:flex;gap:8px;flex-wrap:wrap;}
+.topic-card-pill{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:3px 10px;border-radius:100px;}
+.topic-card-cta{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);}
+.topic-card-cta-label{font-size:12px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+.topic-card-cta-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--tc-txt,var(--accent));display:flex;align-items:center;gap:4px;}
+.topic-card.wip{opacity:.6;cursor:default;}
+.topic-card.wip:hover{transform:none;box-shadow:none;}
+.wip-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);padding:2px 8px;border-radius:100px;margin-left:8px;}
+.landing-footer{padding:32px 60px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:auto;}
+@media(max-width:768px){.landing-hero{padding:56px 24px 40px;}.topics-grid{padding:32px 20px 48px;grid-template-columns:1fr;}.landing-footer{padding:24px 20px;}}
+
+/* ── Sidebar kurrikulum (tersembunyi di landing) ── */
+.sidebar--hidden{display:none !important;}
+.sidebar-back{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;transition:color .15s;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.sidebar-back:hover{color:var(--text);}
+.sidebar-topic-label{padding:6px 16px 4px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.layout--no-sidebar .main{margin-left:0;}
+</style>
 </head>
 <body>
 
@@ -23,79 +63,25 @@
   <button class="ham" onclick="toggleSB()" aria-label="Menu"><span></span><span></span><span></span></button>
   <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" class="hlogo">
   <div class="hl2">hasbi<span>.</span>dev</div>
-  <div class="hsub">Agentic AI Mastery — Panduan Lengkap untuk Production Engineers</div>
-  <div class="hr"><div class="ppill">Fase <span id="pv">1</span>/5</div></div>
+  <div class="hsub" id="header-sub">Open Knowledge — AI &amp; Engineering</div>
+  <div class="hr"><div class="ppill" id="phase-pill" style="display:none">Fase <span id="pv">1</span>/5</div></div>
 </header>
 <div class="overlay" id="overlay" onclick="toggleSB()"></div>
-<div class="layout">
-<nav class="sidebar" id="sidebar">
+<div class="layout layout--no-sidebar" id="layout">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar sidebar--hidden" id="sidebar">
   <div style="padding:8px 0">
-  <div class="sph" style="border-bottom:1px solid var(--border);margin-bottom:4px;" onclick="goToPage('home');document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');"><span class="pn" style="background:transparent;border:none;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>Beranda</div>
-  <div class="sph" onclick="sp(this,'i0')"><span class="pn">0</span>Mulai Cepat</div>
-  <div class="sits" id="i0">
-    <a class="sit" href="#s0a"><span class="dot"></span>Agent pertama dalam 5 menit</a>
+
+  <!-- Back to landing -->
+  <div class="sidebar-back" onclick="showLanding()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Semua Topik
   </div>
-  <div class="sph active" onclick="sp(this,'i1')"><span class="pn">1</span>Fondasi</div>
-  <div class="sits open" id="i1">
-    <a class="sit" href="#s1a"><span class="dot"></span>LLM sebagai reasoning engine</a>
-    <a class="sit" href="#s1b"><span class="dot"></span>Agent vs chatbot vs pipeline</a>
-    <a class="sit" href="#s1c"><span class="dot"></span>ReAct, CoT, ToT patterns</a>
-    <a class="sit" href="#s1d"><span class="dot"></span>Tool calling fundamentals</a>
-    <a class="sit" href="#s1e"><span class="dot"></span>Autonomy spectrum</a>
-    <a class="sit" href="#s1f"><span class="dot"></span>KV Cache &amp; prompt caching</a>
-    <a class="sit" href="#s1g"><span class="dot"></span>Token counting &amp; budget</a>
-    <a class="sit" href="#s1h"><span class="dot"></span>System prompt engineering</a>
-    <a class="sit" href="#s1i"><span class="dot"></span>Prompt injection &amp; adversarial input</a>
-  </div>
-  <div class="sph" onclick="sp(this,'i2')"><span class="pn">2</span>Architecture</div>
-  <div class="sits" id="i2">
-    <a class="sit" href="#s2a"><span class="dot"></span>Agent harness &amp; loop</a>
-    <a class="sit" href="#s2b"><span class="dot"></span>Memory systems</a>
-    <a class="sit" href="#s2c"><span class="dot"></span>Tool registry &amp; schema</a>
-    <a class="sit" href="#s2d"><span class="dot"></span>Context management</a>
-    <a class="sit" href="#s2e"><span class="dot"></span>Planning &amp; decomposition</a>
-    <a class="sit" href="#s2f"><span class="dot"></span>Structured output</a>
-    <a class="sit" href="#s2g"><span class="dot"></span>RAG &amp; semantic retrieval</a>
-    <a class="sit" href="#s2h"><span class="dot"></span>Checkpointing &amp; resume</a>
-    <a class="sit" href="#s2i"><span class="dot"></span>Streaming response handling</a>
-    <a class="sit" href="#s2j"><span class="dot"></span>Session &amp; conversation management</a>
-  </div>
-  <div class="sph" onclick="sp(this,'i3')"><span class="pn">3</span>Multi-Agent</div>
-  <div class="sits" id="i3">
-    <a class="sit" href="#s3a"><span class="dot"></span>Orchestrator-subagent</a>
-    <a class="sit" href="#s3b"><span class="dot"></span>Parallelism &amp; fan-out</a>
-    <a class="sit" href="#s3c"><span class="dot"></span>MCP Protocol</a>
-    <a class="sit" href="#s3d"><span class="dot"></span>Agent design patterns</a>
-    <a class="sit" href="#s3e"><span class="dot"></span>Communication &amp; State</a>
-    <a class="sit" href="#s3f"><span class="dot"></span>Handoff &amp; trust boundary</a>
-    <a class="sit" href="#s3g"><span class="dot"></span>Agent-to-agent protocol</a>
-  </div>
-  <div class="sph" onclick="sp(this,'i4')"><span class="pn">4</span>Production</div>
-  <div class="sits" id="i4">
-    <a class="sit" href="#s4a"><span class="dot"></span>Error handling &amp; retry</a>
-    <a class="sit" href="#s4b"><span class="dot"></span>Observability &amp; tracing</a>
-    <a class="sit" href="#s4c"><span class="dot"></span>Latency &amp; cost optim.</a>
-    <a class="sit" href="#s4d"><span class="dot"></span>Safety &amp; guardrails</a>
-    <a class="sit" href="#s4e"><span class="dot"></span>Testing &amp; evals</a>
-    <a class="sit" href="#s4f"><span class="dot"></span>Rate limiting &amp; backpressure</a>
-    <a class="sit" href="#s4g"><span class="dot"></span>Deployment patterns</a>
-    <a class="sit" href="#s4h"><span class="dot"></span>Context engineering</a>
-    <a class="sit" href="#s4i"><span class="dot"></span>Agent evaluation taxonomy</a>
-    <a class="sit" href="#s4j"><span class="dot"></span>Production checklist</a>
-    <a class="sit" href="#s4k"><span class="dot"></span>CI/CD &amp; prompt versioning</a>
-  </div>
-  <div class="sph" onclick="sp(this,'i5')"><span class="pn">5</span>Build Agent</div>
-  <div class="sits" id="i5">
-    <a class="sit" href="#s5a"><span class="dot"></span>Bedah OpenClaw</a>
-    <a class="sit" href="#s5b"><span class="dot"></span>Computer use agent</a>
-    <a class="sit" href="#s5c"><span class="dot"></span>Coding agent</a>
-    <a class="sit" href="#s5d"><span class="dot"></span>Framework landscape 2026</a>
-    <a class="sit" href="#s5f"><span class="dot"></span>Voice &amp; multimodal agent</a>
-    <a class="sit" href="#s5e"><span class="dot"></span>Skills Checklist</a>
-  </div>
-  <div style="border-top:1px solid var(--border);margin:4px 0;padding:4px 0;">
-    <div class="sph" onclick="goToPage('glossary')" style="text-transform:none;font-size:12px;"><span class="pn" style="background:transparent;border:none;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>Glosarium</div>
-  </div>
+
+  <!-- Sidebar content injected by JS per active curriculum -->
+  <div id="sidebar-content"></div>
+
   </div>
 
   <div style="padding:16px;margin:8px 0;border-top:1px solid var(--border);">
@@ -103,8 +89,7 @@
       <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" style="width:22px;height:22px;border-radius:5px;object-fit:cover;flex-shrink:0;">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;">Principal Tech Wizard</div>
     </div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px;">Muhammad Hasbi Ashshiddieqy — software engineer yang antusias membangun produk sendiri. Tertarik dengan AI dari teori dasar hingga implementasi nyata, dan sedang membangun beberapa produk. Senang berbagi dan membantu orang belajar teknologi, terutama backend engineering &amp; AI.</div>
-    <div style="font-size:11px;color:var(--text3);line-height:1.55;margin-bottom:12px;padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg> Konten dibuat dengan bantuan AI, direview manusia secara bertahap.</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px;">Muhammad Hasbi Ashshiddieqy — software engineer yang antusias membangun produk sendiri. Tertarik dengan AI dari teori dasar hingga implementasi nyata.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:3px 8px;border-radius:4px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">GitHub</a>
       <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:3px 8px;border-radius:4px;text-decoration:none;transition:all .15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='rgba(124,109,250,.3)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">LinkedIn</a>
@@ -112,104 +97,107 @@
     </div>
   </div>
 </nav>
-<main class="main">
 
-<div id="home" class="page-home">
-<div class="ptw-banner">
-  <img src="principal_tech_wizard.png" alt="Principal Tech Wizard" class="ptw-logo">
-  <div>
-    <div class="ptw-label">Part of</div>
-    <div class="ptw-name">Principal Tech Wizard</div>
+<main class="main" id="main">
+
+<!-- ═══════════════ LANDING PAGE ═══════════════ -->
+<div id="landing" class="landing landing--active">
+
+  <div class="landing-hero">
+    <div class="landing-tag">Open Knowledge · Software Engineer · AI Builder</div>
+    <h1 class="landing-h1">Belajar <em>AI & Engineering</em><br>dari Fondasi ke Production</h1>
+    <p class="landing-desc">Catatan belajar saya yang dibuka ke publik — ditulis sebagai software engineer yang mempelajari AI secara mendalam. Bukan sekadar tutorial, tapi benar-benar paham dari dalam.</p>
   </div>
-  <div class="ptw-sep"></div>
-  <div class="ptw-desc">Seri konten mendalam tentang engineering, AI, dan teknologi — dari perspektif engineer yang membangun produk nyata.</div>
-</div>
 
-<section class="hero">
-  <div class="htag">Open Knowledge · Software Engineer · AI Builder</div>
-  <h1>Kuasai <em>Agentic AI</em><br>dari Fondasi ke Production</h1>
-  <p class="hdesc">Panduan komprehensif yang saya tulis sebagai software engineer yang mempelajari agentic AI dari bawah: konsep, arsitektur, kode, hingga cara build production-grade agent seperti Claude Code. Bukan sekadar tutorial framework — ini tentang benar-benar paham.</p>
-  <div class="hstats">
-    <div><div class="hsn">5</div><div class="hsl">Fase pembelajaran</div></div>
-    <div><div class="hsn">44</div><div class="hsl">Topik deep dive</div></div>
-    <div><div class="hsn">~16</div><div class="hsl">Minggu kurikulum</div></div>
-    <div><div class="hsn">30+</div><div class="hsl">Contoh kode</div></div>
-  </div>
-</section>
+  <div class="topics-grid">
 
-
-<div class="viz-wrap" style="margin-bottom:36px;">
-<div class="viz-title">Learning Roadmap — 16 Minggu ke Production Agent</div>
-<div class="viz-body">
-  <div class="timeline">
-    <div class="tl-item">
-      <div class="tl-dot" style="border-color:var(--accent);background:var(--accent-glow)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg></div>
-      <div class="tl-body">
-        <div class="tl-week">Minggu 1–2</div>
-        <div class="tl-title">Fase 1 — Fondasi &amp; Mental Model</div>
-        <div class="tl-desc">LLM internals, agent loop, tool calling, ReAct pattern. Target: bisa explain agent loop ke orang lain dengan confidence.</div>
+    <!-- Agentic AI -->
+    <div class="topic-card" style="--tc-color:rgba(124,109,250,.35);--tc-txt:#a78bfa;" onclick="openCurriculum('agentic-ai')">
+      <div class="topic-card-head">
+        <div class="topic-card-icon" style="background:rgba(124,109,250,.1);border-color:rgba(124,109,250,.25);color:var(--accent);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg>
+        </div>
+        <div>
+          <div class="topic-card-label" style="color:var(--accent);">Kurikulum 01</div>
+          <div class="topic-card-title">Agentic AI Mastery</div>
+        </div>
+      </div>
+      <div class="topic-card-desc">Dari LLM fundamentals hingga production-grade agent. Pelajari cara membangun agent yang sesungguhnya bekerja — harness, memory, multi-agent, observability, dan deployment.</div>
+      <div class="topic-card-meta">
+        <span class="topic-card-pill">5 fase</span>
+        <span class="topic-card-pill">44 topik</span>
+        <span class="topic-card-pill">~16 minggu</span>
+        <span class="topic-card-pill">30+ kode</span>
+      </div>
+      <div class="topic-card-cta">
+        <span class="topic-card-cta-label">Python · Anthropic SDK · Production</span>
+        <span class="topic-card-cta-btn">Buka →</span>
       </div>
     </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="border-color:var(--teal);background:var(--teal-dim)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="m17 20.66-1-1.73"/><path d="M11 10.27 7 3.34"/><path d="m20.66 17-1.73-1"/><path d="m3.34 7 1.73 1"/><path d="M14 12h8"/><path d="M2 12h2"/><path d="m20.66 7-1.73 1"/><path d="m3.34 17 1.73-1"/><path d="m17 3.34-1 1.73"/><path d="m11 13.73-4 6.93"/></svg></div>
-      <div class="tl-body">
-        <div class="tl-week">Minggu 3–4</div>
-        <div class="tl-title">Fase 2 — Agent Architecture</div>
-        <div class="tl-desc">Build harness dari scratch, memory systems, tool registry, context management. Target: agent berjalan end-to-end tanpa framework.</div>
-      </div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="border-color:var(--amber);background:var(--amber-dim)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="19" cy="9" r="1"/><circle cx="19" cy="15" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="5" cy="15" r="1"/><circle cx="5" cy="9" r="1"/><path d="M12 6v3"/><path d="m18.5 9.5-2.5 1.5"/><path d="m18.5 14.5-2.5-1.5"/><path d="M12 18v-3"/><path d="m5.5 14.5 2.5-1.5"/><path d="m5.5 9.5 2.5 1.5"/></svg></div>
-      <div class="tl-body">
-        <div class="tl-week">Minggu 5–7</div>
-        <div class="tl-title">Fase 3 — Multi-Agent Systems</div>
-        <div class="tl-desc">Orchestrator pattern, parallelism, MCP protocol. Target: orchestrator + 3 subagents berjalan parallel.</div>
-      </div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="border-color:var(--coral);background:var(--coral-dim)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-      <div class="tl-body">
-        <div class="tl-week">Minggu 8–10</div>
-        <div class="tl-title">Fase 4 — Production Engineering</div>
-        <div class="tl-desc">Error handling, observability, cost optim, safety guardrails, evals. Target: agent siap deploy dengan full monitoring.</div>
-      </div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="border-color:var(--green);background:var(--green-dim)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
-      <div class="tl-body">
-        <div class="tl-week">Minggu 11–16</div>
-        <div class="tl-title">Fase 5 — Build Production Agent</div>
-        <div class="tl-desc">Coding agent, computer use, bedah OpenClaw. Target: satu production agent yang genuinely dipakai orang lain.</div>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
 
-<div style="padding:20px 60px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:32px;flex-wrap:wrap;align-items:center;">
-  <div style="font-size:13px;color:var(--text2);max-width:520px;line-height:1.6;">
-    Ini adalah catatan belajar saya yang saya buka ke publik. Ditulis dari perspektif seorang engineer yang mempelajari agentic AI secara mendalam—bukan sekadar tutorial "copy-paste framework". Konten dibuat dengan bantuan AI dan direview secara bertahap.
-  </div>
-  <div style="display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;">
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">44</div><div style="font-size:11px;color:var(--text3)">topik</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">30</div><div style="font-size:11px;color:var(--text3)">kode block</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">25</div><div style="font-size:11px;color:var(--text3)">visualisasi</div></div>
-    <div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text)">~16mg</div><div style="font-size:11px;color:var(--text3)">kurikulum</div></div>
-  </div>
-</div>
-
-  <div class="topic-nav" style="border-top:1px solid var(--border);margin-top:0;">
-    <div class="topic-nav-info">
-      <div class="topic-nav-counter">Siap mulai?</div>
-      <div class="topic-nav-title">Fase 0 — Agent Pertama dalam 5 Menit</div>
+    <!-- Language Model Fundamentals -->
+    <div class="topic-card" style="--tc-color:rgba(45,212,191,.35);--tc-txt:var(--teal);" onclick="openCurriculum('language-model')">
+      <div class="topic-card-head">
+        <div class="topic-card-icon" style="background:rgba(45,212,191,.1);border-color:rgba(45,212,191,.25);color:var(--teal);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+          <div class="topic-card-label" style="color:var(--teal);">Kurikulum 02</div>
+          <div class="topic-card-title">Language Model Fundamentals</div>
+        </div>
+      </div>
+      <div class="topic-card-desc">Dari NLP klasik hingga modern LLM. Pelajari bagaimana language model bekerja dari dalam: tokenisasi, embedding, neural network, Transformer, pre-training, RLHF, dan scaling laws.</div>
+      <div class="topic-card-meta">
+        <span class="topic-card-pill">5 fase</span>
+        <span class="topic-card-pill">27 topik</span>
+        <span class="topic-card-pill">~10 minggu</span>
+        <span class="topic-card-pill">25+ kode</span>
+      </div>
+      <div class="topic-card-cta">
+        <span class="topic-card-cta-label">NLP · PyTorch · Transformers</span>
+        <span class="topic-card-cta-btn">Buka →</span>
+      </div>
     </div>
-    <div class="topic-nav-btns">
-      <button class="tnbtn primary" onclick="goToPage('fi0')">Mulai Belajar →</button>
+
+    <!-- Placeholder: MLOps (WIP) -->
+    <div class="topic-card wip" style="--tc-color:rgba(245,158,11,.2);">
+      <div class="topic-card-head">
+        <div class="topic-card-icon" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:var(--amber);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="m17 20.66-1-1.73"/><path d="M11 10.27 7 3.34"/><path d="m20.66 17-1.73-1"/><path d="m3.34 7 1.73 1"/><path d="M14 12h8"/><path d="M2 12h2"/></svg>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="topic-card-label" style="color:var(--amber);">Kurikulum 03</div>
+            <span class="wip-badge">Segera</span>
+          </div>
+          <div class="topic-card-title">MLOps & Model Deployment</div>
+        </div>
+      </div>
+      <div class="topic-card-desc">Pipeline training, experiment tracking, model registry, serving infrastructure, monitoring drift, dan CI/CD untuk ML systems.</div>
+      <div class="topic-card-meta">
+        <span class="topic-card-pill">Dalam persiapan</span>
+      </div>
+      <div class="topic-card-cta">
+        <span class="topic-card-cta-label">MLflow · Ray · Kubernetes</span>
+        <span class="topic-card-cta-btn" style="color:var(--text3);">Segera hadir</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="landing-footer">
+    <div style="font-size:12px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">© 2026 Muhammad Hasbi Ashshiddieqy · Principal Tech Wizard</div>
+    <div style="display:flex;gap:16px;align-items:center;">
+      <a href="https://github.com/MuhammadHasbiAshshiddieqy" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">GitHub</a>
+      <span style="color:var(--border2)">·</span>
+      <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">LinkedIn</a>
+      <span style="color:var(--border2)">·</span>
+      <a href="https://hsbdeveloper97.medium.com" target="_blank" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">Medium</a>
     </div>
   </div>
-</div><!-- /home -->
+</div><!-- /landing -->
 
-<!-- ═══════════════ GLOSARIUM ═══════════════ -->
+<!-- ═══════════════ GLOSARIUM (Agentic AI) ═══════════════ -->
 <div id="glossary" class="page-home">
 <div class="hero">
   <div class="hbadge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Referensi</div>
@@ -226,218 +214,79 @@
 
 <!-- A -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">A</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Agent</div>
-  <div style="color:var(--text2);line-height:1.6;">Sistem yang menggabungkan LLM dengan tools dan execution loop — dapat mengambil tindakan berulang sampai task selesai. Berbeda dari chatbot yang hanya menjawab satu pertanyaan.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Agentic Loop</div>
-  <div style="color:var(--text2);line-height:1.6;">Pola eksekusi berulang: LLM reason → tool call → observe result → repeat. Loop ini yang membedakan agent dari one-shot LLM call.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Attention Mechanism</div>
-  <div style="color:var(--text2);line-height:1.6;">Mekanisme di Transformer yang memungkinkan setiap token "memperhatikan" token lain dalam context window. Dasar dari kemampuan reasoning LLM.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Asyncio</div>
-  <div style="color:var(--text2);line-height:1.6;">Framework Python untuk concurrent programming tanpa multi-threading. Penting untuk agent yang memanggil banyak tools secara paralel. Gunakan <code>async/await</code> dan <code>asyncio.gather()</code>.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Agent</div><div style="color:var(--text2);line-height:1.6;">Sistem yang menggabungkan LLM dengan tools dan execution loop — dapat mengambil tindakan berulang sampai task selesai. Berbeda dari chatbot yang hanya menjawab satu pertanyaan.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Agentic Loop</div><div style="color:var(--text2);line-height:1.6;">Pola eksekusi berulang: LLM reason → tool call → observe result → repeat. Loop ini yang membedakan agent dari one-shot LLM call.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Attention Mechanism</div><div style="color:var(--text2);line-height:1.6;">Mekanisme di Transformer yang memungkinkan setiap token "memperhatikan" token lain dalam context window. Dasar dari kemampuan reasoning LLM.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Asyncio</div><div style="color:var(--text2);line-height:1.6;">Framework Python untuk concurrent programming tanpa multi-threading. Penting untuk agent yang memanggil banyak tools secara paralel. Gunakan <code>async/await</code> dan <code>asyncio.gather()</code>.</div></div>
 <!-- B -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">B</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">BPE (Byte-Pair Encoding)</div>
-  <div style="color:var(--text2);line-height:1.6;">Algoritma tokenisasi yang memecah teks menjadi subword units. "tokenization" → ["token", "ization"]. Kata bahasa Indonesia sering terpecah lebih banyak daripada bahasa Inggris — ini mempengaruhi jumlah token dan biaya.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Backpressure</div>
-  <div style="color:var(--text2);line-height:1.6;">Mekanisme sinyal "sistem penuh, kurangi input" dari downstream ke upstream. Penting agar agent tidak membanjiri tool atau database dengan request melebihi kapasitas.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">BPE (Byte-Pair Encoding)</div><div style="color:var(--text2);line-height:1.6;">Algoritma tokenisasi yang memecah teks menjadi subword units. "tokenization" → ["token", "ization"]. Kata bahasa Indonesia sering terpecah lebih banyak daripada bahasa Inggris — ini mempengaruhi jumlah token dan biaya.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Backpressure</div><div style="color:var(--text2);line-height:1.6;">Mekanisme sinyal "sistem penuh, kurangi input" dari downstream ke upstream. Penting agar agent tidak membanjiri tool atau database dengan request melebihi kapasitas.</div></div>
 <!-- C -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">C</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Context Window</div>
-  <div style="color:var(--text2);line-height:1.6;">"Working memory" LLM — semua teks (system prompt, history, tool results) yang bisa dilihat model saat satu inference. Claude memiliki context window hingga ratusan ribu token.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">CoT (Chain-of-Thought)</div>
-  <div style="color:var(--text2);line-height:1.6;">Teknik prompting yang mendorong model untuk "berpikir langkah demi langkah" sebelum menjawab. Meningkatkan akurasi untuk masalah multi-step. Bisa explicit ("think step by step") atau implicit.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Checkpointing</div>
-  <div style="color:var(--text2);line-height:1.6;">Menyimpan state agent (conversation history, tool results, progress) ke storage persisten. Memungkinkan agent resume jika proses crash atau di-restart, tanpa harus mulai dari awal.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Context Window</div><div style="color:var(--text2);line-height:1.6;">"Working memory" LLM — semua teks (system prompt, history, tool results) yang bisa dilihat model saat satu inference. Claude memiliki context window hingga ratusan ribu token.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">CoT (Chain-of-Thought)</div><div style="color:var(--text2);line-height:1.6;">Teknik prompting yang mendorong model untuk "berpikir langkah demi langkah" sebelum menjawab. Meningkatkan akurasi untuk masalah multi-step.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Checkpointing</div><div style="color:var(--text2);line-height:1.6;">Menyimpan state agent ke storage persisten. Memungkinkan agent resume jika proses crash atau di-restart.</div></div>
 <!-- E -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">E</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Embedding</div>
-  <div style="color:var(--text2);line-height:1.6;">Representasi teks sebagai vektor angka berdimensi tinggi. Teks yang semantically similar menghasilkan vektor yang berdekatan. Dasar dari semantic search dan RAG.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Emergent Behavior</div>
-  <div style="color:var(--text2);line-height:1.6;">Kemampuan yang muncul dari LLM berskala besar tanpa diprogram secara eksplisit — seperti reasoning, analogy, dan code generation. Bukan hasil symbolic programming, tapi pola statistik dari training data.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Embedding</div><div style="color:var(--text2);line-height:1.6;">Representasi teks sebagai vektor angka berdimensi tinggi. Teks yang semantically similar menghasilkan vektor yang berdekatan. Dasar dari semantic search dan RAG.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Emergent Behavior</div><div style="color:var(--text2);line-height:1.6;">Kemampuan yang muncul dari LLM berskala besar tanpa diprogram secara eksplisit — reasoning, analogy, code generation.</div></div>
 <!-- F -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">F</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Fan-Out / Fan-In</div>
-  <div style="color:var(--text2);line-height:1.6;">Pola distribusi kerja: Fan-out = satu task dibagi ke banyak subagent paralel. Fan-in = hasil dikumpulkan dan digabungkan. Efektif untuk tasks yang bisa diparalelisasi (research, batch processing).</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Finish Reason</div>
-  <div style="color:var(--text2);line-height:1.6;">Alasan model berhenti generate. <code>end_turn</code> = selesai natural. <code>tool_use</code> = perlu tool (Anthropic). <code>tool_calls</code> = perlu tool (OpenAI). <code>max_tokens</code> = terpotong. Harness wajib cek ini setiap iterasi.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Fan-Out / Fan-In</div><div style="color:var(--text2);line-height:1.6;">Pola distribusi kerja: Fan-out = satu task dibagi ke banyak subagent paralel. Fan-in = hasil dikumpulkan dan digabungkan.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Finish Reason</div><div style="color:var(--text2);line-height:1.6;">Alasan model berhenti generate. <code>end_turn</code> = selesai natural. <code>tool_use</code> = perlu tool (Anthropic). <code>max_tokens</code> = terpotong.</div></div>
 <!-- G -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">G</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Guardrails</div>
-  <div style="color:var(--text2);line-height:1.6;">Lapisan keamanan yang membatasi tindakan agent — input validation, output filtering, tool allowlist, human-in-the-loop untuk irreversible actions. Tidak boleh ditambahkan belakangan — harus dirancang dari awal.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Guardrails</div><div style="color:var(--text2);line-height:1.6;">Lapisan keamanan yang membatasi tindakan agent — input validation, output filtering, tool allowlist, human-in-the-loop untuk irreversible actions.</div></div>
 <!-- H -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">H</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Hallucination</div>
-  <div style="color:var(--text2);line-height:1.6;">LLM menghasilkan informasi yang terdengar meyakinkan tapi salah atau tidak ada. Konsekuensi dari sifat probabilistik next-token prediction. Atasi dengan tools (grounding ke data nyata) dan verifikasi.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Harness</div>
-  <div style="color:var(--text2);line-height:1.6;">Kode non-LLM yang mengorkestrasi agent: routing tool calls, injecting results, managing history, detecting stopping condition, handling errors. "Pengemudi" yang menggunakan LLM sebagai "mesin".</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">HNSW</div>
-  <div style="color:var(--text2);line-height:1.6;">Hierarchical Navigable Small World — algoritma approximate nearest neighbor search yang digunakan di vector database (Chroma, Qdrant). Cepat tapi approximate (hasilnya bukan pasti yang paling mirip). Alternatif: IVFFlat (lebih eksak, lebih lambat).</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Human-in-the-Loop</div>
-  <div style="color:var(--text2);line-height:1.6;">Pattern di mana agent berhenti dan meminta konfirmasi manusia sebelum mengambil tindakan yang irreversible atau berisiko tinggi. Wajib untuk actions seperti delete, send email, atau financial transactions.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Hallucination</div><div style="color:var(--text2);line-height:1.6;">LLM menghasilkan informasi yang terdengar meyakinkan tapi salah. Atasi dengan tools (grounding ke data nyata) dan verifikasi.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Harness</div><div style="color:var(--text2);line-height:1.6;">Kode non-LLM yang mengorkestrasi agent: routing tool calls, injecting results, managing history, detecting stopping condition, handling errors.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">HNSW</div><div style="color:var(--text2);line-height:1.6;">Hierarchical Navigable Small World — algoritma approximate nearest neighbor search. Cepat tapi approximate.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Human-in-the-Loop</div><div style="color:var(--text2);line-height:1.6;">Pattern di mana agent berhenti dan meminta konfirmasi manusia sebelum tindakan irreversible atau berisiko tinggi.</div></div>
 <!-- I-K -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">I – K</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">IVFFlat</div>
-  <div style="color:var(--text2);line-height:1.6;">Inverted File Index — algoritma vector search yang lebih eksak dari HNSW. Dibagi ke cluster dulu, lalu search dalam cluster. Lebih lambat tapi lebih akurat. Digunakan di pgvector (PostgreSQL).</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">KV Cache</div>
-  <div style="color:var(--text2);line-height:1.6;">Key-Value Cache — menyimpan computed attention key-value pairs dari tokens yang sudah diproses. Accelerates inference untuk pesan yang berulang. Prompt caching Anthropic memanfaatkan ini — token yang sama tidak perlu diproses ulang.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">KV Cache</div><div style="color:var(--text2);line-height:1.6;">Key-Value Cache — menyimpan computed attention key-value pairs. Prompt caching Anthropic memanfaatkan ini — token yang sama tidak perlu diproses ulang.</div></div>
 <!-- L-M -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">L – M</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Langfuse</div>
-  <div style="color:var(--text2);line-height:1.6;">Platform open-source observability untuk LLM/agent. Fitur: trace visualization, token cost tracking, eval scoring. Bisa self-host atau gunakan cloud. Alternatif: LangSmith (LangChain), Helicone.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">MCP (Model Context Protocol)</div>
-  <div style="color:var(--text2);line-height:1.6;">Protokol standar terbuka (Anthropic) untuk menghubungkan LLM dengan tools dan data sources. Memisahkan tool server dari model server — tools bisa di-reuse lintas model dan platform.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Multi-Agent</div>
-  <div style="color:var(--text2);line-height:1.6;">Arsitektur dengan beberapa agent yang bekerja bersama. Orchestrator mendelegasikan ke subagent yang spesialis. Cocok untuk tasks kompleks yang bisa dibagi berdasarkan domain atau paralelisasi.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">MCP (Model Context Protocol)</div><div style="color:var(--text2);line-height:1.6;">Protokol standar terbuka (Anthropic) untuk menghubungkan LLM dengan tools dan data sources. Tools bisa di-reuse lintas model dan platform.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Multi-Agent</div><div style="color:var(--text2);line-height:1.6;">Arsitektur dengan beberapa agent yang bekerja bersama. Orchestrator mendelegasikan ke subagent yang spesialis.</div></div>
 <!-- O-P -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">O – P</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Orchestrator</div>
-  <div style="color:var(--text2);line-height:1.6;">Agent tingkat tinggi yang merencanakan dan mendelegasikan ke subagent. Bertanggung jawab atas decomposition task, routing ke specialist, dan agregasi hasil akhir.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Prompt Injection</div>
-  <div style="color:var(--text2);line-height:1.6;">Serangan di mana konten eksternal (dari web scrape, file, atau user input) menyisipkan instruksi yang mengubah perilaku agent. Misalnya dokumen yang berisi "ignore previous instructions". Wajib di-mitigasi di production.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Orchestrator</div><div style="color:var(--text2);line-height:1.6;">Agent tingkat tinggi yang merencanakan dan mendelegasikan ke subagent.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Prompt Injection</div><div style="color:var(--text2);line-height:1.6;">Serangan di mana konten eksternal menyisipkan instruksi yang mengubah perilaku agent. Wajib di-mitigasi di production.</div></div>
 <!-- R -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">R</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">RAG (Retrieval-Augmented Generation)</div>
-  <div style="color:var(--text2);line-height:1.6;">Teknik menggabungkan vector search dengan LLM: query → semantic search → retrieve relevant chunks → inject ke context → generate. Memungkinkan LLM menjawab berdasarkan knowledge base custom tanpa fine-tuning.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">ReAct Pattern</div>
-  <div style="color:var(--text2);line-height:1.6;">Reasoning + Acting — pola di mana agent bergantian: "think" (reasoning step) dan "act" (tool call). Membuat decision-making agent lebih transparan dan lebih mudah di-debug dibanding langsung action.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">RPM / TPM</div>
-  <div style="color:var(--text2);line-height:1.6;">Requests Per Minute / Tokens Per Minute — batas API dari provider. Anthropic memberlakukan keduanya per API key. Harness production harus track usage dan implement backoff saat mendekati limit.</div>
-</div>
-
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">RAG (Retrieval-Augmented Generation)</div><div style="color:var(--text2);line-height:1.6;">Menggabungkan vector search dengan LLM: query → semantic search → retrieve → inject ke context → generate.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">ReAct Pattern</div><div style="color:var(--text2);line-height:1.6;">Reasoning + Acting — agent bergantian "think" dan "act". Decision-making lebih transparan dan mudah di-debug.</div></div>
 <!-- S-T -->
 <div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">S – T</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">SentencePiece</div>
-  <div style="color:var(--text2);line-height:1.6;">Library tokenisasi Google yang digunakan oleh beberapa model (Gemini, LLaMA). Mirip BPE tapi bekerja pada karakter/byte level, lebih robust untuk bahasa non-Latin.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Stop Reason</div>
-  <div style="color:var(--text2);line-height:1.6;">Lihat: Finish Reason.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Temperature</div>
-  <div style="color:var(--text2);line-height:1.6;">Parameter yang mengontrol "keacakan" output (0.0 = deterministik, 2.0 = sangat random). Untuk agent production: gunakan 0.0–0.3 untuk konsistensi. Untuk creative tasks: 0.7–1.0.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Token</div>
-  <div style="color:var(--text2);line-height:1.6;">Unit terkecil yang diproses LLM — bisa satu kata, satu suku kata, atau satu karakter. "tokenization" ≈ 3-4 tokens. "gajah" ≈ 2-3 tokens. Semua biaya dan limit dihitung dalam token.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">ToT (Tree of Thought)</div>
-  <div style="color:var(--text2);line-height:1.6;">Ekstensi CoT yang mengeksplorasi beberapa reasoning paths sekaligus (tree), bukan satu linear chain. Lebih efektif untuk problems yang butuh backtracking, tapi jauh lebih mahal secara token.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Tool Call / Tool Use</div>
-  <div style="color:var(--text2);line-height:1.6;">Mekanisme di mana LLM tidak langsung menjawab tapi menghasilkan structured request untuk menjalankan fungsi eksternal. Model tidak menjalankan tool sendiri — harness yang mengeksekusi dan mengembalikan hasilnya.</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Trajectory</div>
-  <div style="color:var(--text2);line-height:1.6;">Urutan langkah yang diambil agent untuk menyelesaikan task: thought → action → observation → thought → ... Trajectory eval menganalisis apakah urutan ini efisien dan logis, bukan hanya apakah hasilnya benar.</div>
-</div>
-
-<!-- V-X -->
-<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">V – X</div>
-
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Vector Database</div>
-  <div style="color:var(--text2);line-height:1.6;">Database yang dioptimalkan untuk menyimpan dan mencari embedding vectors. Mendukung similarity search (nearest neighbor). Contoh: Chroma (lokal/mudah), Qdrant (production), pgvector (PostgreSQL extension).</div>
-</div>
-<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;">
-  <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Xvfb</div>
-  <div style="color:var(--text2);line-height:1.6;">X Virtual Framebuffer — virtual display server di Linux yang memungkinkan aplikasi GUI berjalan tanpa monitor fisik. Dibutuhkan untuk computer use agent di server headless.</div>
-</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Temperature</div><div style="color:var(--text2);line-height:1.6;">Parameter yang mengontrol keacakan output via sampling distribution. Ikuti rekomendasi provider untuk model yang digunakan.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Token</div><div style="color:var(--text2);line-height:1.6;">Unit terkecil yang diproses LLM. Semua biaya dan limit dihitung dalam token.</div></div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Tool Call / Tool Use</div><div style="color:var(--text2);line-height:1.6;">Mekanisme LLM menghasilkan structured request untuk menjalankan fungsi eksternal. Harness yang mengeksekusi dan mengembalikan hasilnya.</div></div>
+<!-- V -->
+<div style="padding:6px 16px;background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">V</div>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 16px;font-size:13px;"><div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">Vector Database</div><div style="color:var(--text2);line-height:1.6;">Database yang dioptimalkan untuk menyimpan dan mencari embedding vectors. Contoh: Chroma, Qdrant, pgvector.</div></div>
 
 </div><!-- /table -->
-
 <div style="margin-top:20px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text3);">
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Glosarium ini akan terus diperbarui. Istilah dalam dokumen yang belum ada di sini → buka issue atau submit PR di GitHub.
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Glosarium ini akan terus diperbarui.
 </div>
-
 </div><!-- /content wrapper -->
 </div><!-- /glossary -->
+
+<!-- ═══════════════ CONTAINERS ═══════════════ -->
 <div id="fase0-container"></div>
 <div id="fase1-container"></div>
 <div id="fase2-container"></div>
 <div id="fase3-container"></div>
 <div id="fase4-container"></div>
 <div id="fase5-container"></div>
+<div id="lmfase1-container"></div>
+<div id="lmfase2-container"></div>
+<div id="lmfase3-container"></div>
+<div id="lmfase4-container"></div>
+<div id="lmfase5-container"></div>
 
 <footer class="footer">
   <div class="footer-top">
