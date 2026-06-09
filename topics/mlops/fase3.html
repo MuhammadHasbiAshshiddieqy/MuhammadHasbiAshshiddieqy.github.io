@@ -743,6 +743,83 @@ spec:
 <li><strong>[Eksplorasi]</strong> Setup HPA dengan metric custom menggunakan Prometheus + Prometheus Adapter. Definisikan metric <code>inference_queue_depth</code> dan konfigurasi HPA untuk scale berdasarkan queue depth, bukan CPU. Mengapa ini lebih relevan untuk ML serving?</li>
 </ul></div>
 
+<!-- ═══ Visualisasi Interaktif: K8s Resource Allocator ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">☸️ K8s Resource Allocator — Atur Pod &amp; Resource, Lihat Utilisasi</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="k8s-canvas" width="400" height="220" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Replicas: <span id="k8s-rep-val" style="color:var(--accent);">3</span></label>
+      <input type="range" id="k8s-rep" min="1" max="8" value="3" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">CPU per Pod: <span id="k8s-cpu-val" style="color:var(--teal);">2 cores</span></label>
+      <input type="range" id="k8s-cpu" min="1" max="8" value="2" style="width:100%;margin:4px 0 8px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Memory per Pod: <span id="k8s-mem-val" style="color:var(--amber);">4GB</span></label>
+      <input type="range" id="k8s-mem" min="1" max="8" value="4" style="width:100%;margin:4px 0 12px;accent-color:var(--amber);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>Total CPU: <strong id="k8s-tcpu" style="color:var(--accent);">6 cores</strong></div>
+        <div>Total Memory: <strong id="k8s-tmem" style="color:var(--teal);">12GB</strong></div>
+        <div>Node Utilization: <strong id="k8s-util" style="color:var(--amber);">50%</strong></div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;">Node: 16 cores / 32GB</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=220;
+  function initK8s(){cv=document.getElementById('k8s-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawK8s(){
+    if(!ctx)return;
+    var rep=parseInt(document.getElementById('k8s-rep').value);
+    var cpu=parseInt(document.getElementById('k8s-cpu').value);
+    var mem=parseInt(document.getElementById('k8s-mem').value);
+    document.getElementById('k8s-rep-val').textContent=rep;
+    document.getElementById('k8s-cpu-val').textContent=cpu+' cores';
+    document.getElementById('k8s-mem-val').textContent=mem+'GB';
+    var tcpu=rep*cpu,tmem=rep*mem;
+    document.getElementById('k8s-tcpu').textContent=tcpu+' cores';
+    document.getElementById('k8s-tmem').textContent=tmem+'GB';
+    var nodeC=16,nodeM=32;
+    var util=Math.max(tcpu/nodeC*100,tmem/nodeM*100);
+    document.getElementById('k8s-util').textContent=Math.round(util)+'%';
+    ctx.clearRect(0,0,W,H);
+    // Node box
+    ctx.fillStyle='rgba(255,255,255,0.03)';ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+    ctx.fillRect(20,30,W-40,H-70);ctx.strokeRect(20,30,W-40,H-70);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Node: '+nodeC+' CPU / '+nodeM+'GB RAM',W/2,22);
+    // Pods
+    var cols=Math.min(rep,4),rows=Math.ceil(rep/4);
+    var podW=Math.min(70,(W-60)/cols-8),podH=110/rows-4;
+    for(var i=0;i<rep;i++){
+      var col=i%4,row=Math.floor(i/4);
+      var px=30+col*(podW+6),py=40+row*(podH+4);
+      var cpuW=(cpu/8)*podW,memH=(mem/8)*podH*0.6;
+      ctx.fillStyle='rgba(124,109,250,0.15)';ctx.strokeStyle='rgba(124,109,250,0.4)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.roundRect(px,py,podW,podH,4);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(74,222,128,0.3)';ctx.fillRect(px,py,cpuW,8);
+      ctx.fillStyle='rgba(45,212,191,0.3)';ctx.fillRect(px,py+10,memH,podH-12);
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('Pod '+(i+1),px+podW/2,py+podH-4);
+    }
+    // Utilization bar
+    var barX=W-50,barW=16,barH=H-80;
+    ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(barX,30,barW,barH);
+    var fillH=(util/100)*barH;
+    var grad=ctx.createLinearGradient(0,30+barH-fillH,0,30+barH);
+    grad.addColorStop(0,'rgba(74,222,128,0.6)');grad.addColorStop(1,'rgba(248,113,113,0.6)');
+    ctx.fillStyle=grad;ctx.fillRect(barX,30+barH-fillH,barW,fillH);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(Math.round(util)+'%',barX+barW/2,30+barH+12);
+  }
+  initK8s();drawK8s();
+  ['k8s-rep','k8s-cpu','k8s-mem'].forEach(function(id){document.getElementById(id).addEventListener('input',drawK8s);});
+  window.addEventListener('resize',function(){initK8s();drawK8s();});
+})();
+</script>
+
 </div><!-- /mlops3b -->
 
 <div class="divider"></div>
@@ -1118,6 +1195,73 @@ training_df = store.<span class="fn">get_historical_features</span>(
 <li><strong>[Bug Hunting]</strong> Buat dataset training yang sengaja memiliki training-serving skew: gunakan satu definisi fitur untuk training (rata-rata 7 hari) dan definisi berbeda untuk serving (rata-rata 14 hari). Train model, deploy, dan dokumentasikan berapa besar degradasi metrik yang dihasilkan.</li>
 <li><strong>[Arsitektur]</strong> Bandingkan Feast vs Tecton vs Hopsworks. Untuk startup dengan data &lt;100GB dan tim 5 orang, mana yang paling cost-effective? Buat ADR (Architecture Decision Record) singkat.</li>
 </ul></div>
+
+<!-- ═══ Visualisasi Interaktif: Feature Store Architecture ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🏪 Feature Store Architecture — Online vs Offline Serving</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="fs-canvas" width="420" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik komponen untuk lihat detail</div>
+      <div id="fs-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:80px;">
+        ← Klik komponen di diagram
+      </div>
+      <div style="margin-top:8px;">
+        <label style="font-size:9px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Mode: <span id="fs-mode-val" style="color:var(--accent);">Online Serving</span></label>
+        <input type="range" id="fs-mode" min="0" max="1" value="1" style="width:100%;margin:4px 0 0;accent-color:var(--accent);">
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=420,H=260,fsMode=1,selectedFS=null;
+  var components=[
+    {id:'stream',label:'Stream / Batch Sources',x:60,y:120,color:'rgba(124,109,250,0.3)',desc:'Data sources: Kafka events,<br>batch upload, CDC logs'},
+    {id:'transform',label:'Feature Engineering',x:210,y:70,color:'rgba(45,212,191,0.3)',desc:'Transform raw data → features.<br>Aggregations, embeddings,<br>time-window calculations'},
+    {id:'offline',label:'Offline Store',x:210,y:150,color:'rgba(245,158,11,0.3)',desc:'Data lake / warehouse.<br>Parquet, Delta Lake, Iceberg.<br>Untuk training & batch scoring.'},
+    {id:'online',label:'Online Store',x:360,y:120,color:'rgba(74,222,128,0.3)',desc:'Low-latency KV store.<br>Redis, DynamoDB, Cassandra.<br>Serving real-time predictions.'},
+    {id:'registry',label:'Feature Registry',x:210,y:220,color:'rgba(167,139,250,0.3)',desc:'Metadata catalog.<br>Feature definitions, schemas,<br>lineage, TTL policies.'},
+  ];
+  function initFS(){cv=document.getElementById('fs-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+    cv.onclick=function(e){var rect=cv.getBoundingClientRect();var mx=(e.clientX-rect.left)*(W/rect.width),my=(e.clientY-rect.top)*(H/rect.height);var found=null;components.forEach(function(c){if(Math.abs(mx-c.x)<55&&Math.abs(my-c.y)<20)found=c;});selectedFS=found?found.id:null;drawFS();};
+  }
+  function drawFS(){
+    if(!ctx)return;
+    fsMode=parseInt(document.getElementById('fs-mode').value);
+    document.getElementById('fs-mode-val').textContent=fsMode?'Online Serving':'Offline Training';
+    ctx.clearRect(0,0,W,H);
+    // Flow lines
+    var lines=fsMode?[['stream','transform'],['transform','online'],['transform','registry'],['registry','online']]:[['stream','transform'],['transform','offline'],['transform','registry'],['registry','offline']];
+    lines.forEach(function(l){
+      var a=components.find(function(c){return c.id===l[0];}),b=components.find(function(c){return c.id===l[1];});
+      if(!a||!b)return;
+      ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      // Arrow
+      var mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='12px sans-serif';ctx.textAlign='center';
+    });
+    components.forEach(function(c){
+      var isSel=selectedFS===c.id;
+      var active=fsMode?['online','transform','registry','stream'].indexOf(c.id)>=0:['offline','transform','registry','stream'].indexOf(c.id)>=0;
+      ctx.fillStyle=isSel?'rgba(255,255,255,0.12)':(active?c.color:'rgba(255,255,255,0.04)');
+      ctx.strokeStyle=isSel?'#fff':active?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.06)';ctx.lineWidth=isSel?2.5:1.5;
+      ctx.beginPath();ctx.roundRect(c.x-50,c.y-16,100,32,8);ctx.fill();ctx.stroke();
+      ctx.fillStyle=active?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.2)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(c.label,c.x,c.y+4);
+    });
+    if(selectedFS){var s=components.find(function(c){return c.id===selectedFS;});if(s)document.getElementById('fs-info').innerHTML='<strong style="color:var(--accent);">'+s.label+'</strong><br>'+s.desc;}else document.getElementById('fs-info').innerHTML='← Klik komponen di diagram';
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(fsMode?'Online path: Stream → Transform → Online Store → Model':'Offline path: Stream → Transform → Offline Store → Training',W/2,H-8);
+  }
+  initFS();drawFS();
+  document.getElementById('fs-mode').addEventListener('input',drawFS);
+  window.addEventListener('resize',function(){initFS();drawFS();});
+})();
+</script>
 
 </div><!-- /mlops3d -->
 

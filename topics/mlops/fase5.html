@@ -290,6 +290,88 @@
 </div>
 
 <div class="divider"></div>
+<!-- ═══ Visualisasi Interaktif: Model Testing Matrix ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">✅ Model Testing Matrix — Behavioral Test Checklist Interaktif</div>
+<div class="viz-body" style="padding:0;">
+  <div style="padding:16px 20px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:12px;">Centang tes yang sudah diimplementasikan di pipeline kamu:</div>
+    <div id="mt-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;font-family:'IBM Plex Mono',monospace;"></div>
+    <div style="margin-top:14px;">
+      <div style="display:flex;gap:20px;align-items:center;margin-bottom:8px;">
+        <div style="flex:1;"><span id="mt-covered" style="font-weight:700;color:var(--accent);">0</span>/15 tests covered</div>
+        <div><span id="mt-pct" style="font-weight:700;color:var(--teal);">0%</span></div>
+      </div>
+      <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;"><div id="mt-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--coral),var(--amber),var(--teal),var(--green));border-radius:4px;transition:width .3s;"></div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <canvas id="mt-canvas" width="400" height="160" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);max-width:100%;"></canvas>
+    </div>
+    <div id="mt-assessment" style="margin-top:10px;font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;text-align:center;">
+      ⚠️ Hanya 0% test coverage — model berisiko tinggi di production
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=160;
+  var tests=[
+    {cat:'MFT',label:'Obvious positive detection'},{cat:'MFT',label:'Obvious negative detection'},
+    {cat:'MFT',label:'Edge case: empty input'},{cat:'INV',label:'Typo robustness'},
+    {cat:'INV',label:'Name invariance'},{cat:'INV',label:'Case sensitivity'},
+    {cat:'DIR',label:'Negation flips sentiment'},{cat:'DIR',label:'Intensifier amplifies'},
+    {cat:'DATA',label:'Schema validation'},{cat:'DATA',label:'Null handling'},
+    {cat:'DATA',label:'Outlier detection'},{cat:'PERF',label:'Latency < P95 SLA'},
+    {cat:'PERF',label:'Memory < 2GB'},{cat:'BIAS',label:'Gender fairness'},
+    {cat:'BIAS',label:'Language/dialect fairness'}
+  ];
+  function initMt(){cv=document.getElementById('mt-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function buildMtChecklist(){
+    var html='';
+    tests.forEach(function(t,i){
+      html+='<label style="display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;border-radius:4px;" onmouseenter="this.style.background=\'var(--bg3)\';" onmouseleave="this.style.background=\'transparent\';"><input type="checkbox" id="mt-'+i+'" onchange="drawMt()" style="accent-color:var(--accent);"><span style="font-size:8px;padding:1px 5px;border-radius:3px;background:rgba(124,109,250,0.15);color:var(--accent);">'+t.cat+'</span> '+t.label+'</label>';
+    });
+    document.getElementById('mt-checklist').innerHTML=html;
+  }
+  window.drawMt=function(){
+    if(!ctx)return;
+    var checked=0;
+    tests.forEach(function(t,i){if(document.getElementById('mt-'+i)&&document.getElementById('mt-'+i).checked)checked++;});
+    var pct=Math.round(checked/tests.length*100);
+    document.getElementById('mt-covered').textContent=checked;
+    document.getElementById('mt-pct').textContent=pct+'%';
+    document.getElementById('mt-bar').style.width=pct+'%';
+    var assess=document.getElementById('mt-assessment');
+    if(pct>=80)assess.innerHTML='✅ '+pct+'% coverage — production-ready testing';
+    else if(pct>=50)assess.innerHTML='🟡 '+pct+'% coverage — cukup, tambah MFT dan INV tests';
+    else if(pct>=20)assess.innerHTML='⚠️ '+pct+'% coverage — prioritaskan MFT dan DATA validation';
+    else assess.innerHTML='🔴 '+pct+'% coverage — model berisiko tinggi, mulai dengan MFT basic';
+    ctx.clearRect(0,0,W,H);
+    var cats=['MFT','INV','DIR','DATA','PERF','BIAS'];
+    var colors={MFT:'rgba(124,109,250,0.7)',INV:'rgba(45,212,191,0.7)',DIR:'rgba(245,158,11,0.7)',DATA:'rgba(248,113,113,0.7)',PERF:'rgba(74,222,128,0.7)',BIAS:'rgba(167,139,250,0.7)'};
+    var w=(W-60)/cats.length,barH=H-50;
+    cats.forEach(function(c,ci){
+      var catTests=tests.filter(function(t){return t.cat===c;});
+      var catChecked=catTests.filter(function(t,i){
+        var ti=tests.indexOf(t);return document.getElementById('mt-'+ti)&&document.getElementById('mt-'+ti).checked;
+      }).length;
+      var fillH=catTests.length>0?(catChecked/catTests.length)*barH:0;
+      var x=30+ci*w;
+      ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(x+4,H-30-fillH,w-8,fillH);
+      ctx.fillStyle=colors[c];ctx.fillRect(x+4,H-30-fillH,w-8,fillH);
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(catChecked+'/'+catTests.length,x+w/2,H-34-fillH);
+      ctx.fillText(c,x+w/2,H-10);
+    });
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Coverage by Test Category',W/2,14);
+  };
+  initMt();buildMtChecklist();drawMt();
+  window.addEventListener('resize',function(){initMt();drawMt();});
+})();
+</script>
+
 </div><!-- /mlops5b -->
 
 <!-- 5C -->

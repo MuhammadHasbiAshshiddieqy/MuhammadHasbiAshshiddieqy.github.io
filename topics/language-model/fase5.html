@@ -1117,6 +1117,181 @@ output = model.<span class="fn">generate</span>(**model_inputs, max_new_tokens=<
   </div>
 </div>
 
+<!-- ═══ 5F — Distributed Training ═══ -->
+<div class="sub" id="lm5f">
+<div class="subtit"><span class="ac">5.6</span> Distributed Training <span class="subid">// cara melatih model yang tidak muat di satu GPU</span></div>
+<div class="prose">
+<p>LLM modern memiliki puluhan hingga ratusan miliar parameter — satu GPU tidak akan cukup. Distributed training adalah teknik membagi model dan data ke banyak GPU (atau node) agar training tetap feasible. Ada tiga strategi utama yang sering dikombinasikan: <strong>Data Parallelism</strong> (setiap GPU punya copy model, data dibagi), <strong>Tensor Parallelism</strong> (satu layer di-split ke multiple GPU), dan <strong>Pipeline Parallelism</strong> (layer berbeda di GPU berbeda).</p>
+<p>Framework PyTorch menyediakan <strong>FSDP (Fully Sharded Data Parallel)</strong> — sebuah evolusi dari Data Parallel yang tidak hanya membagi data, tapi juga <strong>membagi (shard) parameter model, gradient, dan optimizer state</strong> ke semua GPU. Ini adalah implementasi dari <strong>ZeRO (Zero Redundancy Optimizer)</strong> paper dari Microsoft DeepSpeed. ZeRO punya 3 stage: Stage 1 (shard optimizer state), Stage 2 (shard gradients + optimizer), Stage 3 (shard parameters + gradients + optimizer). FSDP ~= ZeRO-3.</p>
+</div>
+
+<div class="prose">
+<h4>Tiga strategi parallelism — kapan pakai yang mana</h4>
+<ul>
+<li><strong>Data Parallelism (DP)</strong> — Setiap GPU punya full copy model, data dibagi mini-batch. Gradient di-sync via all-reduce. Simple, tapi boros memory — model harus muat di 1 GPU. Untuk model &lt;1B params dengan GPU besar (A100 80GB), ini sudah cukup.</li>
+<li><strong>Fully Sharded Data Parallel (FSDP / ZeRO-3)</strong> — Parameter, gradient, dan optimizer state di-shard ke semua GPU. Hanya parameter yang dibutuhkan untuk forward/backward pass tertentu yang di-unshard (all-gather) on-the-fly. Bisa training model 10–30× lebih besar dari kapasitas 1 GPU. Overhead komunikasi moderate — sekitar 10–20% overhead vs DP.</li>
+<li><strong>Tensor Parallelism (TP)</strong> — Satu layer Transformer di-split column-wise atau row-wise ke multiple GPU. Berguna untuk layer yang sangat besar (FFN dimension 16K+) yang tidak muat di 1 GPU bahkan setelah FSDP. Overhead komunikasi tinggi (all-reduce setiap forward/backward), jadi biasanya dikombinasikan dengan FSDP (hybrid: FSDP across nodes, TP within node).</li>
+<li><strong>Pipeline Parallelism (PP)</strong> — Layer berbeda di GPU berbeda. GPU 1 handle layer 0-7, GPU 2 handle layer 8-15, dst. Micro-batching mengisi "bubble" idle time. Overhead komunikasi rendah tapi ada pipeline bubbles yang mengurangi efisiensi. Biasanya dikombinasikan dengan TP (3D parallelism: DP + TP + PP).</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">fsdp_training.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch.distributed.fsdp <span class="kw">import</span> (
+    FullyShardedDataParallel <span class="kw">as</span> FSDP,
+    MixedPrecision, ShardingStrategy, BackwardPrefetch,
+)
+<span class="kw">from</span> torch.distributed.fsdp.wrap <span class="kw">import</span> transformer_auto_wrap_policy
+<span class="kw">import</span> functools
+
+<span class="cm"># === FSDP Configuration untuk Transformer ===</span>
+<span class="kw">def</span> <span class="fn">setup_fsdp</span>(model: nn.<span class="fn">Module</span>) -> <span class="fn">FSDP</span>:
+    <span class="st">"""Wrap Transformer model dengan FSDP."""</span>
+    <span class="cm"># Auto-wrap policy: setiap TransformerBlock jadi FSDP unit terpisah</span>
+    transformer_auto_wrap = functools.<span class="fn">partial</span>(
+        transformer_auto_wrap_policy,
+        transformer_layer_cls={<span class="fn">TransformerBlock</span>},
+    )
+
+    <span class="cm"># Mixed precision: forward/backward di bfloat16, reduction di fp32</span>
+    mixed_precision = <span class="fn">MixedPrecision</span>(
+        param_dtype=torch.bfloat16,
+        reduce_dtype=torch.float32,
+        buffer_dtype=torch.bfloat16,
+    )
+
+    model = <span class="fn">FSDP</span>(
+        model,
+        auto_wrap_policy=transformer_auto_wrap,
+        sharding_strategy=<span class="fn">ShardingStrategy</span>.FULL_SHARD,  <span class="cm"># ZeRO-3 equivalent</span>
+        mixed_precision=mixed_precision,
+        backward_prefetch=<span class="fn">BackwardPrefetch</span>.BACKWARD_PRE,  <span class="cm"># Overlap comm & compute</span>
+        device_id=torch.cuda.<span class="fn">current_device</span>(),
+    )
+    <span class="kw">return</span> model
+
+<span class="cm"># === Memory breakdown untuk 7B model (tanpa FSDP) ===</span>
+<span class="kw">def</span> <span class="fn">estimate_memory</span>(params_billions: <span class="tp">float</span>, seq_len: <span class="tp">int</span>, batch_size: <span class="tp">int</span>,
+                     hidden_dim: <span class="tp">int</span> = <span class="nm">4096</span>) -> <span class="fn">dict</span>:
+    <span class="st">"""Estimasi memory usage untuk training LLM."""</span>
+    bytes_per_param = <span class="nm">2</span>  <span class="cm"># bfloat16</span>
+    params_gb = params_billions * <span class="nm">1e9</span> * bytes_per_param / <span class="nm">1e9</span>
+    <span class="cm"># Optimizer state: 2× model (Adam: fp32 master weights + fp32 variance)</span>
+    optimizer_gb = params_gb * <span class="nm">2</span> * <span class="nm">2</span>  <span class="cm"># fp32 = 4 bytes = 2× bf16</span>
+    <span class="cm"># Gradient: 1× model (bfloat16)</span>
+    gradient_gb = params_gb
+    <span class="cm"># Activations: roughly hidden_dim * seq_len * batch * num_layers * 4 bytes</span>
+    num_layers = <span class="fn">max</span>(<span class="nm">1</span>, <span class="fn">int</span>(params_billions / <span class="nm">0.2</span>))  <span class="cm"># rough: 200M per layer</span>
+    activation_gb = hidden_dim * seq_len * batch_size * num_layers * <span class="nm">4</span> / <span class="nm">1e9</span>
+    total = params_gb + optimizer_gb + gradient_gb + activation_gb
+    <span class="kw">return</span> {
+        <span class="st">"params_gb"</span>: params_gb,
+        <span class="st">"optimizer_gb"</span>: optimizer_gb,
+        <span class="st">"gradient_gb"</span>: gradient_gb,
+        <span class="st">"activation_gb"</span>: activation_gb,
+        <span class="st">"total_gb"</span>: total,
+    }
+
+<span class="cm"># === Contoh: LLaMA 7B, seq=2048, batch=4 ===</span>
+mem = <span class="fn">estimate_memory</span>(<span class="nm">7</span>, <span class="nm">2048</span>, <span class="nm">4</span>)
+<span class="fn">print</span>(<span class="st">f"Memory needed: {mem['total_gb']:.1f} GB"</span>)
+<span class="cm"># Dengan FSDP di 4 GPU: total/4 ~= 25% per GPU</span>
+<span class="fn">print</span>(<span class="st">f"With FSDP (4 GPUs): ~{mem['total_gb']/4:.1f} GB per GPU"</span>)</pre></div>
+</div>
+
+<!-- ═══ Visualisasi: Parallelism Explorer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🖥️ Parallelism Explorer — Split Model Across GPUs</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="dist-canvas" width="420" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Model Size: <span id="ds-size-val" style="color:var(--accent);">7B</span></label>
+      <input type="range" id="ds-size" min="0" max="3" value="1" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Num GPUs: <span id="ds-gpu-val" style="color:var(--teal);">4</span></label>
+      <input type="range" id="ds-gpu" min="1" max="8" value="4" style="width:100%;margin:4px 0 8px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Strategy:</label>
+      <div style="display:flex;gap:4px;margin:4px 0 12px;flex-wrap:wrap;">
+        <button onclick="distStrat('fsdp')" id="ds-btn-fsdp" style="font-family:'IBM Plex Mono',monospace;font-size:8px;padding:4px 8px;border-radius:5px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">FSDP</button>
+        <button onclick="distStrat('tp')" id="ds-btn-tp" style="font-family:'IBM Plex Mono',monospace;font-size:8px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">TP</button>
+        <button onclick="distStrat('pp')" id="ds-btn-pp" style="font-family:'IBM Plex Mono',monospace;font-size:8px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">PP</button>
+        <button onclick="distStrat('3d')" id="ds-btn-3d" style="font-family:'IBM Plex Mono',monospace;font-size:8px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">3D</button>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>Memory/GPU: <strong id="ds-mem" style="color:var(--accent);">14GB</strong></div>
+        <div>Comm Overhead: <strong id="ds-comm" style="color:var(--teal);">15%</strong></div>
+        <div>Utilization: <strong id="ds-util" style="color:var(--amber);">85%</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=420,H=240,strat='fsdp',sizes=['1B','7B','13B','70B'];
+  function initDs(){cv=document.getElementById('dist-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  window.distStrat=function(s){strat=s;['fsdp','tp','pp','3d'].forEach(function(x){var b=document.getElementById('ds-btn-'+x);b.style.background=x===s?'var(--accent-glow)':'transparent';b.style.color=x===s?'var(--accent)':'var(--text3)';b.style.borderColor=x===s?'var(--accent)':'var(--border)';});drawDs();};
+  function drawDs(){
+    if(!ctx)return;
+    var si=parseInt(document.getElementById('ds-size').value);
+    var gpu=parseInt(document.getElementById('ds-gpu').value);
+    var sz=sizes[si];var params={3:{mem:28,layers:32},7:{mem:56,layers:32},13:{mem:100,layers:40},70:{mem:280,layers:80}};
+    var p=params[si===0?1:si===1?7:si===2?13:70];
+    document.getElementById('ds-size-val').textContent=sz;
+    document.getElementById('ds-gpu-val').textContent=gpu;
+    var memPerGpu=p.mem/gpu,comm=15,util=85;
+    if(strat==='tp'){memPerGpu=p.mem*1.1/gpu;comm=40;util=70;}
+    else if(strat==='pp'){memPerGpu=p.mem*1.05/gpu;comm=5;util=60;}
+    else if(strat==='3d'){memPerGpu=p.mem*1.3/gpu;comm=30;util=78;}
+    document.getElementById('ds-mem').textContent=memPerGpu.toFixed(0)+'GB';
+    document.getElementById('ds-comm').textContent=comm+'%';
+    document.getElementById('ds-util').textContent=util+'%';
+    ctx.clearRect(0,0,W,H);
+    // Draw GPUs
+    var cols=Math.min(gpu,4),gpuW=65,gpuH=70,startX=(W-cols*gpuW-(cols-1)*8)/2,startY=40;
+    for(var i=0;i<gpu;i++){
+      var col=i%4,row=Math.floor(i/4);
+      var gx=startX+col*(gpuW+8),gy=startY+row*(gpuH+8);
+      ctx.fillStyle='rgba(124,109,250,0.1)';ctx.strokeStyle='rgba(124,109,250,0.4)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(gx,gy,gpuW,gpuH,6);ctx.fill();ctx.stroke();
+      // Show sharding pattern
+      if(strat==='fsdp'){
+        var rows=Math.ceil(p.layers/gpu);
+        for(var j=0;j<Math.min(rows,6);j++){ctx.fillStyle='rgba(45,212,191,0.3)';ctx.fillRect(gx+4,gy+8+j*8,gpuW-8,5);}
+      } else if(strat==='tp'){
+        for(var j=0;j<6;j++){ctx.fillStyle='rgba(245,158,11,0.3)';ctx.fillRect(gx+4+j*4,gy+8,4,gpuH-16);}
+      } else if(strat==='pp'){
+        var n=Math.floor(p.layers/gpu);
+        for(var j=0;j<Math.min(n,8);j++){ctx.fillStyle='rgba(74,222,128,0.3)';ctx.fillRect(gx+4,gy+6+j*8,gpuW-8,5);}
+      } else {
+        for(var j=0;j<3;j++){ctx.fillStyle='rgba(167,139,250,0.3)';ctx.fillRect(gx+4,gy+4+j*8,gpuW-8,4);}
+      }
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('GPU '+(i+1),gx+gpuW/2,gy+gpuH-6);
+    }
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(strat.toUpperCase()+' — '+sz+' model across '+gpu+' GPUs',W/2,startY-12);
+  }
+  initDs();drawDs();
+  document.getElementById('ds-size').addEventListener('input',drawDs);document.getElementById('ds-gpu').addEventListener('input',drawDs);
+  window.addEventListener('resize',function(){initDs();drawDs();});
+})();
+</script>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Kapan cukup satu GPU saja?</strong>Dengan FSDP + activation checkpointing + mixed precision, kamu bisa training model 7B di 4×A100 80GB, atau bahkan 1×H100 80GB dengan optimasi agresif. Untuk prototyping dan fine-tuning, satu GPU besar seringkali cukup. Distributed training di-justifikasi saat: model >1B params dengan dataset >100B tokens, atau saat wall-clock time training single-GPU tidak feasible (&gt;1 minggu).</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan ZeRO-1, ZeRO-2, dan ZeRO-3. Di stage mana gradient di-shard? Di stage mana parameter di-shard?</li>
+<li><strong>[Kode]</strong> Gunakan <code>estimate_memory</code> untuk menghitung memory yang dibutuhkan LLaMA 70B dengan seq_len=4096, batch=2. Berapa GPU A100 80GB yang dibutuhkan dengan FSDP? Dengan DP saja?</li>
+<li><strong>[Eksplorasi]</strong> Baca paper ZeRO (Rajbhandari et al., 2020) dan FSDP documentation PyTorch. Apa tradeoff antara FSDP "FULL_SHARD" vs "SHARD_GRAD_OP" vs "NO_SHARD"? Kapan setiap mode lebih optimal?</li>
+</ul></div>
+</div><!-- /lm5f -->
+
 </div><!-- /lm5e -->
 
 </section><!-- /lmfase5 -->

@@ -890,6 +890,80 @@ batch_logits = client.<span class="fn">predict</span>(batch_input)</pre></div>
 <li><strong>[Eksplorasi]</strong> Gunakan <code>torch.compile(model, mode="max-autotune")</code> pada transformer model (distilbert-base). Ukur first inference (termasuk compilation overhead) vs subsequent inference. Kapan overhead compilation terbayarkan?</li>
 </ul></div>
 
+<!-- ═══ Visualisasi Interaktif: Quantization Tradeoff Explorer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">📉 Quantization Tradeoff Explorer — Accuracy vs Speed vs Memory</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="quant-canvas" width="420" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Precision: <span id="qt-prec-val" style="color:var(--accent);">FP32</span></label>
+      <input type="range" id="qt-prec" min="0" max="3" value="0" style="width:100%;margin:4px 0 12px;accent-color:var(--accent);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>Accuracy: <strong id="qt-acc" style="color:var(--accent);">94.2%</strong></div>
+        <div>Latency: <strong id="qt-lat" style="color:var(--teal);">10ms</strong></div>
+        <div>Model Size: <strong id="qt-size" style="color:var(--amber);">350MB</strong></div>
+        <div>Memory/Batch: <strong id="qt-mem" style="color:var(--coral);">2.8GB</strong></div>
+        <div style="margin-top:4px;font-size:9px;color:var(--text3);">Throughput: <span id="qt-tp">100 req/s</span></div>
+      </div>
+      <button onclick="quantApply()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 16px;margin-top:8px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;width:100%;">✅ Apply Quantization</button>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=420,H=240;
+  var precisions=[{name:'FP32',acc:94.2,lat:10,size:350,mem:2.8,tp:100,color:'var(--accent)'},{name:'FP16',acc:94.1,lat:8,size:175,mem:1.4,tp:160,color:'var(--teal)'},{name:'INT8',acc:93.5,lat:5,size:88,mem:0.7,tp:300,color:'var(--amber)'},{name:'INT4',acc:91.8,lat:3.5,size:44,mem:0.35,tp:500,color:'var(--coral)'}];
+  var applied=null;
+  function initQt(){cv=document.getElementById('quant-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawQt(){
+    if(!ctx)return;
+    var pi=parseInt(document.getElementById('qt-prec').value);
+    var p=precisions[pi];
+    document.getElementById('qt-prec-val').textContent=p.name;
+    document.getElementById('qt-acc').textContent=p.acc+'%';
+    document.getElementById('qt-lat').textContent=p.lat+'ms';
+    document.getElementById('qt-size').textContent=p.size+'MB';
+    document.getElementById('qt-mem').textContent=p.mem+'GB';
+    document.getElementById('qt-tp').textContent=p.tp+' req/s';
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<H;gy+=30){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    var metrics=[
+      {label:'Accuracy',vals:precisions.map(function(x){return x.acc;}),max:95,unit:'%',color:'var(--accent)'},
+      {label:'Latency',vals:precisions.map(function(x){return 12-x.lat;}),max:12,unit:'ms',color:'var(--teal)',inv:true},
+      {label:'Size',vals:precisions.map(function(x){return 400-x.size;}),max:400,unit:'MB',color:'var(--amber)',inv:true},
+      {label:'Throughput',vals:precisions.map(function(x){return x.tp;}),max:550,unit:'r/s',color:'var(--coral)'}
+    ];
+    metrics.forEach(function(m,i){
+      var y=30+i*50;
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='right';
+      ctx.fillText(m.label,48,y+16);
+      for(var j=0;j<4;j++){
+        var h=(m.vals[j]/m.max)*40,bx=60+j*85;
+        ctx.fillStyle=j===pi?precisions[j].color.replace('var(','').replace(')',''):'rgba(255,255,255,0.1)';
+        ctx.fillRect(bx,y+20-h,70,h);
+        ctx.fillStyle=j===pi?'#fff':'rgba(255,255,255,0.3)';
+        ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='center';
+        ctx.fillText(m.inv?(m.max-precisions[j][{Accuracy:'acc',Latency:'lat',Size:'size',Throughput:'tp'}[m.label]]).toFixed(0)+m.unit:precisions[j][{Accuracy:'acc',Latency:'lat',Size:'size',Throughput:'tp'}[m.label]]+m.unit,bx+35,y+16);
+      }
+    });
+    // FP labels
+    ['FP32','FP16','INT8','INT4'].forEach(function(l,i){
+      ctx.fillStyle=i===pi?'#fff':'rgba(255,255,255,0.4)';
+      ctx.font=(i===pi?'bold ':'')+'8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(l,95+i*85,18);
+    });
+  }
+  window.quantApply=function(){applied=parseInt(document.getElementById('qt-prec').value);drawQt();};
+  initQt();drawQt();
+  document.getElementById('qt-prec').addEventListener('input',drawQt);
+  window.addEventListener('resize',function(){initQt();drawQt();});
+})();
+</script>
+
 </div><!-- /mlops2d -->
 
 <div class="divider"></div>

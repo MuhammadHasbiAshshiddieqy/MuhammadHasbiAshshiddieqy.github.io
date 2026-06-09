@@ -1060,6 +1060,80 @@ DRIFT_RUNBOOK = [
 <li><strong>[Eksplorasi]</strong> Baca dokumentasi Alertmanager tentang "inhibition rules" dan "routing". Bagaimana kamu akan mendesain routing agar alert P2 dari production dikirim ke on-call engineer, tapi alert P3 dari staging hanya masuk ke Slack channel?</li>
 </ul></div>
 
+<!-- ═══ Visualisasi Interaktif: Alerting Threshold Simulator ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🚨 Alerting Threshold Simulator — Set Threshold, Lihat Precision vs Recall</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="alert-canvas" width="400" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Alert Threshold: <span id="al-th-val" style="color:var(--accent);">PSI > 0.15</span></label>
+      <input type="range" id="al-th" min="1" max="30" value="15" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Drift Frequency: <span id="al-freq-val" style="color:var(--teal);">20% of days</span></label>
+      <input type="range" id="al-freq" min="5" max="80" value="20" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>True Drifts Detected: <strong id="al-tp" style="color:var(--green);">18/20</strong></div>
+        <div>False Alarms: <strong id="al-fp" style="color:var(--coral);">5 days</strong></div>
+        <div>Missed Drifts: <strong id="al-fn" style="color:var(--amber);">2</strong></div>
+        <div>Precision: <strong id="al-prec" style="color:var(--accent);">78%</strong></div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;">Threshold rendah = banyak alert, tinggi = banyak missed</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=240;
+  function initAl(){cv=document.getElementById('alert-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawAl(){
+    if(!ctx)return;
+    var th=parseInt(document.getElementById('al-th').value)/100;
+    var freq=parseInt(document.getElementById('al-freq').value)/100;
+    document.getElementById('al-th-val').textContent='PSI > '+th.toFixed(2);
+    document.getElementById('al-freq-val').textContent=(freq*100).toFixed(0)+'% of days';
+    // Simulate 100 days
+    var trueDrifts=Math.round(100*freq),tp=0,fp=0,fn=0;
+    for(var i=0;i<100;i++){
+      var psi=i<trueDrifts?0.1+Math.random()*0.3:0.01+Math.random()*0.08;
+      if(i<trueDrifts&&psi>th)tp++;else if(i>=trueDrifts&&psi>th)fp++;else if(i<trueDrifts&&psi<=th)fn++;
+    }
+    document.getElementById('al-tp').textContent=tp+'/'+trueDrifts;
+    document.getElementById('al-fp').textContent=fp+' days';
+    document.getElementById('al-fn').textContent=fn;
+    var prec=tp+fp>0?(tp/(tp+fp)*100):0;
+    document.getElementById('al-prec').textContent=prec.toFixed(0)+'%';
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<H;gy+=30){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // 100 day dots
+    for(var i=0;i<100;i++){
+      var psi=i<trueDrifts?0.1+Math.random()*0.3:0.01+Math.random()*0.08;
+      var x=30+i*(W-50)/100,y=H-30-(psi/0.4)*(H-50);
+      ctx.fillStyle=i<trueDrifts?'rgba(248,113,113,0.4)':'rgba(74,222,128,0.4)';
+      ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();
+    }
+    // Threshold line
+    var thY=H-30-(th/0.4)*(H-50);
+    ctx.strokeStyle='var(--accent)';ctx.lineWidth=2;ctx.setLineDash([6,3]);
+    ctx.beginPath();ctx.moveTo(30,thY);ctx.lineTo(W-20,thY);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='var(--accent)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='left';ctx.fillText('Threshold = '+th.toFixed(2),W-160,thY-4);
+    // Legend
+    ctx.fillStyle='rgba(248,113,113,0.5)';ctx.beginPath();ctx.arc(40,16,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.fillText('Real Drift',48,20);
+    ctx.fillStyle='rgba(74,222,128,0.5)';ctx.beginPath();ctx.arc(110,16,3,0,Math.PI*2);ctx.fill();
+    ctx.fillText('Normal Day',118,20);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('100 production days',W/2,H-8);
+    ctx.fillText('PSI →',W-20,thY+14);
+  }
+  initAl();drawAl();
+  ['al-th','al-freq'].forEach(function(id){document.getElementById(id).addEventListener('input',drawAl);});
+  window.addEventListener('resize',function(){initAl();drawAl();});
+})();
+</script>
+
 </div><!-- /mlops4d -->
 
 <div class="divider"></div>
@@ -1323,5 +1397,289 @@ replay_buffer = <span class="fn">deque</span>(maxlen=<span class="nm">1000</span
 </div>
 
 </div><!-- /mlops4e -->
+
+<div class="divider"></div>
+
+<!-- 4F — A/B Testing untuk ML -->
+<div class="sub" id="mlops4f">
+<div class="subtit"><span class="ac">4.6</span> A/B Testing untuk ML <span class="subid">// validasi model di production, bukan di lab</span></div>
+<div class="prose">
+<p>A/B testing untuk ML secara fundamental berbeda dari A/B testing untuk UI. Di UI, kamu mengubah warna tombol dan mengukur conversion — hasilnya terlihat dalam hitungan jam, sample size mudah dihitung, dan metrics deterministic. Di ML, kamu membandingkan dua prediktor probabilistik — metrics lebih noisy, efek lebih kecil, dan ground truth sering delayed (kamu baru tahu akurasi model churn 30 hari kemudian). Ini mengubah hampir seluruh metodologi statistik yang digunakan.</p>
+<p>Konsep kunci yang harus dipahami: <strong>online metrics vs offline metrics</strong>. Offline metrics (accuracy, F1, AUC) diukur pada holdout dataset — ini yang kamu lihat di MLflow. Tapi yang benar-benar penting adalah online metrics (revenue, user retention, click-through rate) yang diukur langsung dari perilaku pengguna di production. Model dengan accuracy 94% bisa kalah dari model dengan accuracy 92% dalam online metrics — karena metrik bisnis yang sebenarnya tidak selalu berkorelasi sempurna dengan metrik ML.</p>
+</div>
+
+<div class="prose">
+<h4>Komponen A/B test yang rigorous untuk ML</h4>
+<ul>
+<li><strong>Sample size calculation</strong> — pakai power analysis (bukan "kita test 2 minggu"). Butuh minimal detectable effect (MDE), significance level (α = 0.05), dan statistical power (1-β = 0.8). Tools: <code>statsmodels.stats.power</code> atau kalkulator online Evan Miller.</li>
+<li><strong>Randomization unit</strong> — user_id (bukan session_id atau request_id). Satu user harus selalu dapat treatment yang sama. Kalau tidak, kamu measurement-nya invalid.</li>
+<li><strong>Ramp-up strategy</strong> — mulai 5% traffic ke model baru, monitor 24 jam, naikkan ke 25%, monitor lagi, baru ke 50/50. Jangan langsung 50/50 — kalau model baru ada bug, 50% user terdampak.</li>
+<li><strong>Guardrail metrics</strong> — metrik yang tidak boleh degradasi: latency, error rate, cost per request. Model mungkin lebih akurat tapi 3× lebih lambat — tradeoff yang harus eksplisit.</li>
+<li><strong>Peeking problem</strong> — jangan cek hasil setiap hari dan stop saat p-value < 0.05. Itu inflates false positive rate drastis. Tentukan durasi test di awal, jalankan sampai selesai.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">ab_test_framework.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+
+<span class="kw">class</span> <span class="fn">TestStatus</span>(Enum):
+    RUNNING = <span class="st">"running"</span>
+    WINNER_A = <span class="st">"winner_a"</span>      <span class="cm"># model existing menang</span>
+    WINNER_B = <span class="st">"winner_b"</span>      <span class="cm"># model baru menang</span>
+    INCONCLUSIVE = <span class="st">"inconclusive"</span>  <span class="cm"># sample terlalu kecil</span>
+
+@dataclass
+<span class="kw">class</span> <span class="fn">ABTestResult</span>:
+    status: <span class="fn">TestStatus</span>
+    p_value: <span class="tp">float</span>
+    relative_lift: <span class="tp">float</span>        <span class="cm"># e.g. 0.03 = model baru +3%</span>
+    ci_95: <span class="tp">tuple</span>[<span class="tp">float</span>, <span class="tp">float</span>]   <span class="cm"># 95% confidence interval untuk lift</span>
+    sample_size_a: <span class="tp">int</span>
+    sample_size_b: <span class="tp">int</span>
+
+<span class="kw">def</span> <span class="fn">analyze_ab_test</span>(
+    conversions_a: <span class="tp">list</span>[<span class="tp">int</span>],  <span class="cm"># 0/1 per user di grup A (existing)</span>
+    conversions_b: <span class="tp">list</span>[<span class="tp">int</span>],  <span class="cm"># 0/1 per user di grup B (new model)</span>
+    alpha: <span class="tp">float</span> = <span class="nm">0.05</span>,
+    min_lift: <span class="tp">float</span> = <span class="nm">0.01</span>,    <span class="cm"># minimal lift yang dianggap signifikan</span>
+) -> <span class="fn">ABTestResult</span>:
+    n_a, n_b = <span class="fn">len</span>(conversions_a), <span class="fn">len</span>(conversions_b)
+    rate_a = <span class="fn">sum</span>(conversions_a) / n_a
+    rate_b = <span class="fn">sum</span>(conversions_b) / n_b
+    lift = (rate_b - rate_a) / rate_a
+
+    <span class="cm"># Two-proportion z-test</span>
+    count_a, count_b = <span class="fn">sum</span>(conversions_a), <span class="fn">sum</span>(conversions_b)
+    z_stat, p_value = stats.proportions_ztest(
+        [count_b, count_a], [n_b, n_a],
+        alternative=<span class="st">'two-sided'</span>
+    )
+
+    <span class="cm"># Confidence interval untuk difference (Newey-West style)</span>
+    se = np.<span class="fn">sqrt</span>(rate_a * (<span class="nm">1</span> - rate_a) / n_a + rate_b * (<span class="nm">1</span> - rate_b) / n_b)
+    ci_low = (rate_b - rate_a) - <span class="nm">1.96</span> * se
+    ci_high = (rate_b - rate_a) + <span class="nm">1.96</span> * se
+
+    <span class="kw">if</span> p_value < alpha <span class="kw">and</span> lift > min_lift:
+        status = <span class="fn">TestStatus</span>.WINNER_B
+    <span class="kw">elif</span> p_value < alpha <span class="kw">and</span> lift < -min_lift:
+        status = <span class="fn">TestStatus</span>.WINNER_A
+    <span class="kw">else</span>:
+        status = <span class="fn">TestStatus</span>.INCONCLUSIVE
+
+    <span class="kw">return</span> <span class="fn">ABTestResult</span>(
+        status=status, p_value=p_value, relative_lift=lift,
+        ci_95=(ci_low / rate_a, ci_high / rate_a),
+        sample_size_a=n_a, sample_size_b=n_b,
+    )
+
+<span class="cm"># === Contoh: simulasi A/B test ===</span>
+np.random.<span class="fn">seed</span>(<span class="nm">42</span>)
+<span class="cm"># Model existing: conversion 10%</span>
+control = np.random.<span class="fn">binomial</span>(<span class="nm">1</span>, <span class="nm">0.10</span>, <span class="nm">5000</span>)
+<span class="cm"># Model baru: conversion 10.5% (0.5% absolute lift)</span>
+treatment = np.random.<span class="fn">binomial</span>(<span class="nm">1</span>, <span class="nm">0.105</span>, <span class="nm">5000</span>)
+
+result = <span class="fn">analyze_ab_test</span>(control, treatment)
+<span class="fn">print</span>(<span class="st">f"Status: {result.status.value}"</span>)
+<span class="fn">print</span>(<span class="st">f"P-value: {result.p_value:.4f}"</span>)
+<span class="fn">print</span>(<span class="st">f"Lift: {result.relative_lift:.2%}"</span>)
+<span class="fn">print</span>(<span class="st">f"95% CI: [{result.ci_95[0]:.2%}, {result.ci_95[1]:.2%}]"</span>)</pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>P-value < 0.05 bukan berarti "model baru lebih baik"</strong>Statistical significance mengukur "apakah perbedaan ini mungkin terjadi karena random chance", bukan "apakah perbedaan ini penting secara bisnis". Model baru bisa signifikan secara statistik (p=0.01) dengan lift 0.1% — secara bisnis tidak meaningful. Sebaliknya, lift 5% bisa tidak signifikan (p=0.15) karena sample size terlalu kecil. Keduanya harus dipertimbangkan bersama.</div>
+</div>
+
+<!-- ═══ Visualisasi Interaktif: A/B Test Simulator ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🎯 A/B Test Simulator — Geser Sample Size &amp; Effect, Lihat Significance</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="ab-canvas" width="400" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Baseline Rate: <span id="ab-br-val" style="color:var(--accent);">10%</span></label>
+      <input type="range" id="ab-br" min="2" max="50" value="10" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Effect Size (lift): <span id="ab-es-val" style="color:var(--teal);">+2.0%</span></label>
+      <input type="range" id="ab-es" min="1" max="30" value="10" style="width:100%;margin:4px 0 8px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Sample per Group: <span id="ab-n-val" style="color:var(--amber);">1,000</span></label>
+      <input type="range" id="ab-n" min="1" max="5" value="2" style="width:100%;margin:4px 0 12px;accent-color:var(--amber);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>P-value: <strong id="ab-pv" style="color:var(--accent);">0.15</strong></div>
+        <div>95% CI: <strong id="ab-ci" style="color:var(--teal);">[-1.2%, +5.2%]</strong></div>
+        <div>Status: <strong id="ab-st" style="color:var(--amber);">🟡 Inconclusive</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=200,sizes=[100,500,1000,5000,10000];
+  function initAb(){cv=document.getElementById('ab-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawAb(){
+    if(!ctx)return;
+    var br=parseInt(document.getElementById('ab-br').value)/100;
+    var es=parseInt(document.getElementById('ab-es').value)/1000;
+    var n=sizes[parseInt(document.getElementById('ab-n').value)-1];
+    document.getElementById('ab-br-val').textContent=(br*100).toFixed(0)+'%';
+    document.getElementById('ab-es-val').textContent=(es>0?'+':'')+(es*100).toFixed(1)+'%';
+    document.getElementById('ab-n-val').textContent=n.toLocaleString();
+    // Simulate results
+    var p=br+es*br;
+    var seA=Math.sqrt(br*(1-br)/n),seB=Math.sqrt(p*(1-p)/n);
+    var diff=p-br,seDiff=Math.sqrt(seA*seA+seB*seB);
+    var z=diff/seDiff;
+    var pv=2*(1-Math.min(0.9999,Math.abs(z)<3?0.5+0.5*Math.erf(Math.abs(z)/Math.sqrt(2)):z>0?1:0));
+    pv=Math.max(0.0001,Math.min(0.9999,pv));
+    var ciLow=diff-1.96*seDiff,ciHigh=diff+1.96*seDiff;
+    document.getElementById('ab-pv').textContent=pv.toFixed(pv<0.01?4:3);
+    document.getElementById('ab-ci').textContent='['+(ciLow*100).toFixed(1)+'%, +'+(ciHigh*100).toFixed(1)+'%]';
+    var st=document.getElementById('ab-st');
+    if(pv<0.05&&diff>0){st.textContent='✅ Winner: New Model';st.style.color='var(--green)';}
+    else if(pv<0.05&&diff<0){st.textContent='❌ Winner: Existing';st.style.color='var(--coral)';}
+    else {st.textContent='🟡 Inconclusive — butuh lebih banyak data';st.style.color='var(--amber)';}
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    // Distributions
+    var xA=W*0.35,xB=W*0.65;
+    for(var x=0;x<W;x++){
+      var distA=Math.exp(-Math.pow((x-xA)/(W*0.08),2)/2)*120;
+      ctx.fillStyle='rgba(124,109,250,0.3)';ctx.fillRect(x,H-30-distA,1,distA);
+      var distB=Math.exp(-Math.pow((x-xB)/(W*0.08),2)/2)*120;
+      ctx.fillStyle='rgba(74,222,128,0.3)';ctx.fillRect(x,H-30-distB,1,distB);
+    }
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Existing: '+(br*100).toFixed(1)+'%',xA,H-32-125);
+    ctx.fillText('New: '+((br+es*br)*100).toFixed(1)+'%',xB,H-32-125);
+    // P-value gauge
+    var gx=W-30,gy=30,gh=H-70;
+    ctx.fillStyle='rgba(74,222,128,0.3)';ctx.fillRect(gx,gy,14,gh*0.6);
+    ctx.fillStyle='rgba(248,113,113,0.3)';ctx.fillRect(gx,gy+gh*0.6,14,gh*0.4);
+    var pY=gy+Math.min(pv/0.1*gh,gh);
+    ctx.fillStyle='#fff';ctx.fillRect(gx-2,pY-1,18,3);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('p',gx+7,gy-6);ctx.fillText('.05',gx+7,gy+gh*0.6+10);
+  }
+  initAb();drawAb();
+  ['ab-br','ab-es','ab-n'].forEach(function(id){document.getElementById(id).addEventListener('input',drawAb);});
+  window.addEventListener('resize',function(){initAb();drawAb();});
+})();
+</script>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan "peeking problem" dalam A/B testing. Mengapa mengecek hasil setiap hari dan stop saat p < 0.05 menghasilkan false positive rate yang jauh lebih tinggi dari 5%?</li>
+<li><strong>[Kode]</strong> Gunakan <code>statsmodels.stats.power.TTestIndPower</code> untuk menghitung sample size yang dibutuhkan: effect size 2%, power 0.8, alpha 0.05. Berapa banyak user per grup yang dibutuhkan?</li>
+<li><strong>[Eksplorasi]</strong> Desain A/B test untuk rekomendasi produk: apa yang jadi metrik primer, randomization unit, dan berapa lama test harus berjalan? Tulis rencana 1 halaman.</li>
+</ul></div>
+</div><!-- /mlops4f -->
+
+<div class="divider"></div>
+
+<!-- 4G — Feedback Loops -->
+<div class="sub" id="mlops4g">
+<div class="subtit"><span class="ac">4.7</span> Feedback Loops <span class="subid">// saat prediksi model mengubah data masa depan</span></div>
+<div class="prose">
+<p>Salah satu failure mode paling berbahaya dalam ML production adalah <strong>feedback loop</strong>: model membuat prediksi → prediksi tersebut memengaruhi perilaku sistem/pengguna → data baru yang dihasilkan mencerminkan prediksi model sebelumnya → model di-retrain pada data ini → model menjadi semakin bias atau semakin jauh dari realitas. Ini adalah vicious cycle yang bisa berjalan tanpa terdeteksi selama berbulan-bulan.</p>
+<p>Contoh klasik: model rekomendasi yang merekomendasikan konten populer → pengguna melihat konten populer → data training baru didominasi konten populer → model semakin bias ke konten populer → konten niche tidak pernah direkomendasikan → diversity kolaps. Atau model fraud detection yang terlalu agresif → memblokir transaksi legitimate → pengguna komplain → model belajar bahwa "transaksi dari pelanggan yang komplain" = OK → model menjadi terlalu permisif.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Vicious Cycle — Bagaimana Feedback Loop Mencemari Data Training</div>
+<div class="viz-body">
+  <div class="aloop">
+    <div class="ln"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><div class="lnn">1. Model membuat prediksi</div><div class="lnd">Rekomendasi, fraud score, ranking — dipakai sistem production</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(245,158,11,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="lnn">2. Prediksi memengaruhi user behavior</div><div class="lnd">User klik rekomendasi, transaksi diblokir, ranking mengubah exposure</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(248,113,113,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="lnn">3. Data baru mencerminkan bias prediksi</div><div class="lnd">Data training berikutnya hanya berisi "apa yang model pilih untuk ditampilkan"</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(74,222,128,.3)"><div class="lni" style="background:rgba(74,222,128,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div><div><div class="lnn">4. Retrain → model makin bias</div><div class="lnd">↺ Loop berulang, diversity kolaps, model makin jauh dari realitas</div></div></div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:16px;font-family:'IBM Plex Mono',monospace;">↑ Feedback loop adalah alasan #1 kenapa model yang "akurat" saat deployment bisa menjadi useless dalam 3-6 bulan tanpa disadari.</p>
+</div>
+</div>
+
+<div class="prose">
+<h4>Strategi mitigasi feedback loop</h4>
+<ul>
+<li><strong>Holdout baseline yang tidak terkontaminasi</strong> — Sisakan sekelompok pengguna yang TIDAK mendapat prediksi model (atau dapat prediksi random). Bandingkan behavior grup ini dengan grup yang kena model. Ini adalah cara paling akurat untuk mengukur true model impact.</li>
+<li><strong>Epsilon-greedy exploration</strong> — Model tidak selalu memilih prediksi optimalnya. Dengan probabilitas kecil (ε), pilih random. Exploration ini mencegah model stuck di local optimum dan memberikan data tentang "apa yang terjadi jika kita memilih opsi lain".</li>
+<li><strong>Counterfactual evaluation</strong> — Gunakan importance sampling atau inverse propensity scoring untuk mengestimasi "apa yang akan terjadi jika kita menggunakan model lain". Teknik ini berasal dari contextual bandit literature.</li>
+<li><strong>Monitor diversity metrics</strong> — Selain accuracy, monitor apakah distribusi output model berubah: apakah model makin sedikit merekomendasikan kategori tertentu? Apakah fraud score distribution bergeser? Diversity collapse sering mendahului accuracy drop.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">feedback_detector.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+
+<span class="kw">class</span> <span class="fn">FeedbackLoopDetector</span>:
+    <span class="st">"""Deteksi apakah model output distribution mulai collapse (feedback loop)."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, window_size: <span class="tp">int</span> = <span class="nm">1000</span>):
+        self.window = window_size
+        self.history = defaultdict(list)  <span class="cm"># metric_name → [values]</span>
+        self.baseline_distribution = <span class="kw">None</span>
+
+    <span class="kw">def</span> <span class="fn">set_baseline</span>(self, predictions: np.ndarray):
+        <span class="st">"""Rekam distribusi output baseline (saat model sehat)."""</span>
+        self.baseline_distribution = np.<span class="fn">histogram</span>(
+            predictions, bins=<span class="nm">20</span>, density=<span class="kw">True</span>
+        )[<span class="nm">0</span>]
+
+    <span class="kw">def</span> <span class="fn">record_batch</span>(self, predictions: np.ndarray) -> <span class="fn">dict</span>:
+        <span class="st">"""Rekam satu batch prediksi, return diversity metrics."""</span>
+        current_dist = np.<span class="fn">histogram</span>(
+            predictions, bins=<span class="nm">20</span>, density=<span class="kw">True</span>
+        )[<span class="nm">0</span>]
+
+        metrics = {
+            <span class="st">"n_unique"</span>: <span class="fn">len</span>(np.<span class="fn">unique</span>(predictions)),
+            <span class="st">"entropy"</span>: self.<span class="fn">_distribution_entropy</span>(current_dist),
+            <span class="st">"mode_frequency"</span>: <span class="fn">float</span>(current_dist.<span class="fn">max</span>()),
+        }
+
+        <span class="kw">if</span> self.baseline_distribution <span class="kw">is not</span> <span class="kw">None</span>:
+            <span class="cm"># Jensen-Shannon divergence: 0 = identik, 1 = totally berbeda</span>
+            metrics[<span class="st">"js_divergence"</span>] = self.<span class="fn">_js_divergence</span>(
+                self.baseline_distribution, current_dist
+            )
+            metrics[<span class="st">"diversity_warning"</span>] = metrics[<span class="st">"js_divergence"</span>] > <span class="nm">0.3</span>
+
+        <span class="kw">for</span> k, v <span class="kw">in</span> metrics.<span class="fn">items</span>():
+            self.history[k].<span class="fn">append</span>(v)
+            <span class="kw">if</span> <span class="fn">len</span>(self.history[k]) > self.window:
+                self.history[k].<span class="fn">pop</span>(<span class="nm">0</span>)
+
+        <span class="kw">return</span> metrics
+
+    <span class="kw">def</span> <span class="fn">_distribution_entropy</span>(self, dist: np.ndarray) -> <span class="tp">float</span>:
+        dist = dist[dist > <span class="nm">0</span>]
+        <span class="kw">return</span> <span class="tp">float</span>(-np.<span class="fn">sum</span>(dist * np.<span class="fn">log</span>(dist)))
+
+    <span class="kw">def</span> <span class="fn">_js_divergence</span>(self, p: np.ndarray, q: np.ndarray) -> <span class="tp">float</span>:
+        m = (p + q) / <span class="nm">2</span>
+        <span class="kw">return</span> <span class="tp">float</span>((np.<span class="fn">sum</span>(p * np.<span class="fn">log</span>(p / m + <span class="nm">1e-10</span>)) +
+                        np.<span class="fn">sum</span>(q * np.<span class="fn">log</span>(q / m + <span class="nm">1e-10</span>))) / <span class="nm">2</span>)</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Feedback loop berbeda dari data drift</strong>Data drift terjadi ketika distribusi input berubah karena faktor eksternal (musim, tren pasar, perubahan user behavior). Feedback loop terjadi karena MODEL SENDIRI yang menyebabkan perubahan pada data masa depan. Solusi untuk drift adalah retraining. Solusi untuk feedback loop adalah exploration strategy + holdout groups — retraining saja justru memperburuk masalah.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara data drift dan feedback loop. Mengapa solusi "retrain dengan data terbaru" bisa memperburuk feedback loop?</li>
+<li><strong>[Kode]</strong> Implementasikan epsilon-greedy exploration sederhana: model predict dengan prob 90%, random dengan prob 10%. Log metrik diversity setiap 1000 prediksi. Apakah diversity tetap stabil?</li>
+<li><strong>[Eksplorasi]</strong> Baca paper "The Problem of Bias in Training Data" dan "Feedback Loop and Echo Chamber Effects". Bagaimana platform seperti YouTube dan TikTok menangani feedback loop dalam sistem rekomendasi mereka?</li>
+</ul></div>
+</div><!-- /mlops4g -->
 
 </section><!-- /mlopsfase4 -->

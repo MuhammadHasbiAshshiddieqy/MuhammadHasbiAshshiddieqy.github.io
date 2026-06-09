@@ -188,6 +188,7 @@ function renderSidebar(curriculum) {
     sc.innerHTML = [
       '<div class="sidebar-topic-label">MLOps & Model Deployment</div>',
       sbPhase('mlopsi1','Fase 1 — ML Pipeline','mlopsfi1',[
+        ['mlops1z','1.0 Data Quality & Validation'],
         ['mlops1a','1.1 Kenapa MLOps?'],
         ['mlops1b','1.2 Data Versioning (DVC)'],
         ['mlops1c','1.3 Experiment Tracking (MLflow)'],
@@ -213,7 +214,9 @@ function renderSidebar(curriculum) {
         ['mlops4b','4.2 Evidently AI'],
         ['mlops4c','4.3 Prometheus & Grafana'],
         ['mlops4d','4.4 Alerting & Incident Response'],
-        ['mlops4e','4.5 Retraining Triggers']
+        ['mlops4e','4.5 Retraining Triggers'],
+        ['mlops4f','4.6 A/B Testing untuk ML'],
+        ['mlops4g','4.7 Feedback Loops']
       ]),
       sbPhase('mlopsi5','Fase 5 — CI/CD & Checklist','mlopsfi5',[
         ['mlops5a','5.1 CI/CD untuk ML'],
@@ -250,18 +253,21 @@ function renderSidebar(curriculum) {
         ['lm3e','3.5 Varian Transformer']
       ]),
       sbPhase('lmi4','Fase 4 — LLM','lmfi4',[
+        ['lm4z','4.0 Data Curation untuk Pre-training'],
         ['lm4a','4.1 Pre-training LLM'],
         ['lm4b','4.2 BERT — Encoder LLM'],
         ['lm4c','4.3 GPT — Decoder LLM'],
         ['lm4d','4.4 Fine-tuning Strategies'],
-        ['lm4e','4.5 RLHF & Alignment']
+        ['lm4e','4.5 RLHF & Alignment'],
+        ['lm4f','4.6 LLM Evaluation']
       ]),
       sbPhase('lmi5','Fase 5 — Scaling & Produksi','lmfi5',[
         ['lm5a','5.1 Scaling Laws'],
         ['lm5b','5.2 Mixture of Experts'],
         ['lm5c','5.3 Inference Optimization'],
         ['lm5d','5.4 Multimodal LLM'],
-        ['lm5e','5.5 Memilih LLM yang Tepat']
+        ['lm5e','5.5 Memilih LLM yang Tepat'],
+        ['lm5f','5.6 Distributed Training']
       ])
     ].join('');
   }
@@ -345,29 +351,32 @@ var PHASE_INTRO_MAP = {'i0':'fi0','i1':'fi1','i2':'fi2','i3':'fi3','i4':'fi4','i
 
 // ── MLOPS Topics ──────────────────────────────────────────────────────────────
 var MLOPS_TOPICS = [
+  'mlops1z',
   'mlops1a','mlops1b','mlops1c','mlops1d','mlops1e',
   'mlops2a','mlops2b','mlops2c','mlops2d','mlops2e',
   'mlops3a','mlops3b','mlops3c','mlops3d','mlops3e',
-  'mlops4a','mlops4b','mlops4c','mlops4d','mlops4e',
+  'mlops4a','mlops4b','mlops4c','mlops4d','mlops4e','mlops4f','mlops4g',
   'mlops5a','mlops5b','mlops5c','mlops5d','mlops5e'
 ];
 var MLOPS_TOPIC_LABELS = {
+  'mlops1z':'1.0 Data Quality & Validation',
   'mlops1a':'1.1 Kenapa MLOps?','mlops1b':'1.2 Data Versioning','mlops1c':'1.3 Experiment Tracking','mlops1d':'1.4 Model Registry','mlops1e':'1.5 Pipeline Orchestration',
   'mlops2a':'2.1 Serving Fundamentals','mlops2b':'2.2 FastAPI untuk ML','mlops2c':'2.3 Triton Inference Server','mlops2d':'2.4 Model Optimization','mlops2e':'2.5 Serving Patterns',
   'mlops3a':'3.1 Docker untuk ML','mlops3b':'3.2 Kubernetes untuk ML','mlops3c':'3.3 Ray Distributed','mlops3d':'3.4 Feature Store','mlops3e':'3.5 Cloud ML Platforms',
-  'mlops4a':'4.1 ML Monitoring Fundamentals','mlops4b':'4.2 Evidently AI','mlops4c':'4.3 Prometheus & Grafana','mlops4d':'4.4 Alerting & Incident Response','mlops4e':'4.5 Retraining Triggers',
+  'mlops4a':'4.1 ML Monitoring Fundamentals','mlops4b':'4.2 Evidently AI','mlops4c':'4.3 Prometheus & Grafana','mlops4d':'4.4 Alerting & Incident Response','mlops4e':'4.5 Retraining Triggers','mlops4f':'4.6 A/B Testing untuk ML','mlops4g':'4.7 Feedback Loops',
   'mlops5a':'5.1 CI/CD untuk ML','mlops5b':'5.2 Model Testing Strategies','mlops5c':'5.3 Deployment Strategies','mlops5d':'5.4 Cost Optimization','mlops5e':'5.5 MLOps Maturity & Checklist'
 };
 var MLOPS_PHASE_MAP = {
+  'mlops1z':'mlopsi1',
   'mlops1a':'mlopsi1','mlops1b':'mlopsi1','mlops1c':'mlopsi1','mlops1d':'mlopsi1','mlops1e':'mlopsi1',
   'mlops2a':'mlopsi2','mlops2b':'mlopsi2','mlops2c':'mlopsi2','mlops2d':'mlopsi2','mlops2e':'mlopsi2',
   'mlops3a':'mlopsi3','mlops3b':'mlopsi3','mlops3c':'mlopsi3','mlops3d':'mlopsi3','mlops3e':'mlopsi3',
-  'mlops4a':'mlopsi4','mlops4b':'mlopsi4','mlops4c':'mlopsi4','mlops4d':'mlopsi4','mlops4e':'mlopsi4',
+  'mlops4a':'mlopsi4','mlops4b':'mlopsi4','mlops4c':'mlopsi4','mlops4d':'mlopsi4','mlops4e':'mlopsi4','mlops4f':'mlopsi4','mlops4g':'mlopsi4',
   'mlops5a':'mlopsi5','mlops5b':'mlopsi5','mlops5c':'mlopsi5','mlops5d':'mlopsi5','mlops5e':'mlopsi5'
 };
 var MLOPS_PHASE_NUMS = {'mlopsi1':'1','mlopsi2':'2','mlopsi3':'3','mlopsi4':'4','mlopsi5':'5'};
-var MLOPS_PHASE_LAST  = {4:'mlopsfi2', 9:'mlopsfi3', 14:'mlopsfi4', 19:'mlopsfi5'};
-var MLOPS_PHASE_FIRST = {0:'mlopshome', 5:'mlopsfi2', 10:'mlopsfi3', 15:'mlopsfi4', 20:'mlopsfi5'};
+var MLOPS_PHASE_LAST  = {5:'mlopsfi2', 10:'mlopsfi3', 15:'mlopsfi4', 22:'mlopsfi5'};
+var MLOPS_PHASE_FIRST = {0:'mlopshome', 6:'mlopsfi2', 11:'mlopsfi3', 16:'mlopsfi4', 23:'mlopsfi5'};
 var MLOPS_PAGE_LABELS = {'mlopshome':'Beranda MLOps','mlopsfi1':'Fase 1 — ML Pipeline','mlopsfi2':'Fase 2 — Model Serving','mlopsfi3':'Fase 3 — Infrastructure','mlopsfi4':'Fase 4 — Monitoring','mlopsfi5':'Fase 5 — CI/CD & Checklist'};
 var MLOPS_PHASE_INTRO_MAP = {'mlopsi1':'mlopsfi1','mlopsi2':'mlopsfi2','mlopsi3':'mlopsfi3','mlopsi4':'mlopsfi4','mlopsi5':'mlopsfi5'};
 
@@ -376,28 +385,30 @@ var LM_TOPICS = [
   'lm1a','lm1b','lm1c','lm1d','lm1e','lm1f',
   'lm2a','lm2b','lm2c','lm2d','lm2e','lm2f',
   'lm3a','lm3b','lm3c','lm3d','lm3e',
-  'lm4a','lm4b','lm4c','lm4d','lm4e',
-  'lm5a','lm5b','lm5c','lm5d','lm5e'
+  'lm4z','lm4a','lm4b','lm4c','lm4d','lm4e','lm4f',
+  'lm5a','lm5b','lm5c','lm5d','lm5e','lm5f'
 ];
 
 var LM_TOPIC_LABELS = {
   'lm1a':'1.1 NLP Klasik','lm1b':'1.2 Representasi Teks','lm1c':'1.3 Word Embeddings','lm1d':'1.4 Language Modeling Klasik','lm1e':'1.5 Subword Tokenization','lm1f':'1.6 Evaluasi NLP',
   'lm2a':'2.1 Fondasi Neural Network','lm2b':'2.2 CNN untuk Teks','lm2c':'2.3 RNN & Vanishing Gradient','lm2d':'2.4 LSTM & GRU','lm2e':'2.5 Seq2Seq & Encoder-Decoder','lm2f':'2.6 Regularisasi & Training',
   'lm3a':'3.1 Attention Mechanism','lm3b':'3.2 Self-Attention','lm3c':'3.3 Multi-Head & Positional Encoding','lm3d':'3.4 Arsitektur Transformer','lm3e':'3.5 Varian Transformer',
-  'lm4a':'4.1 Pre-training LLM','lm4b':'4.2 BERT — Encoder LLM','lm4c':'4.3 GPT — Decoder LLM','lm4d':'4.4 Fine-tuning Strategies','lm4e':'4.5 RLHF & Alignment',
-  'lm5a':'5.1 Scaling Laws','lm5b':'5.2 Mixture of Experts','lm5c':'5.3 Inference Optimization','lm5d':'5.4 Multimodal LLM','lm5e':'5.5 Memilih LLM yang Tepat'
+  'lm4z':'4.0 Data Curation untuk Pre-training',
+  'lm4a':'4.1 Pre-training LLM','lm4b':'4.2 BERT — Encoder LLM','lm4c':'4.3 GPT — Decoder LLM','lm4d':'4.4 Fine-tuning Strategies','lm4e':'4.5 RLHF & Alignment','lm4f':'4.6 LLM Evaluation',
+  'lm5a':'5.1 Scaling Laws','lm5b':'5.2 Mixture of Experts','lm5c':'5.3 Inference Optimization','lm5d':'5.4 Multimodal LLM','lm5e':'5.5 Memilih LLM yang Tepat','lm5f':'5.6 Distributed Training'
 };
 
 var LM_PHASE_MAP = {
   'lm1a':'lmi1','lm1b':'lmi1','lm1c':'lmi1','lm1d':'lmi1','lm1e':'lmi1','lm1f':'lmi1',
   'lm2a':'lmi2','lm2b':'lmi2','lm2c':'lmi2','lm2d':'lmi2','lm2e':'lmi2','lm2f':'lmi2',
   'lm3a':'lmi3','lm3b':'lmi3','lm3c':'lmi3','lm3d':'lmi3','lm3e':'lmi3',
-  'lm4a':'lmi4','lm4b':'lmi4','lm4c':'lmi4','lm4d':'lmi4','lm4e':'lmi4',
-  'lm5a':'lmi5','lm5b':'lmi5','lm5c':'lmi5','lm5d':'lmi5','lm5e':'lmi5'
+  'lm4z':'lmi4',
+  'lm4a':'lmi4','lm4b':'lmi4','lm4c':'lmi4','lm4d':'lmi4','lm4e':'lmi4','lm4f':'lmi4',
+  'lm5a':'lmi5','lm5b':'lmi5','lm5c':'lmi5','lm5d':'lmi5','lm5e':'lmi5','lm5f':'lmi5'
 };
 var LM_PHASE_NUMS = {'lmi1':'1','lmi2':'2','lmi3':'3','lmi4':'4','lmi5':'5'};
-var LM_PHASE_LAST  = {5:'lmfi2', 11:'lmfi3', 16:'lmfi4', 21:'lmfi5'};
-var LM_PHASE_FIRST = {0:'lmhome', 6:'lmfi2', 12:'lmfi3', 17:'lmfi4', 22:'lmfi5'};
+var LM_PHASE_LAST  = {5:'lmfi2', 11:'lmfi3', 16:'lmfi4', 23:'lmfi5'};
+var LM_PHASE_FIRST = {0:'lmhome', 6:'lmfi2', 12:'lmfi3', 17:'lmfi4', 24:'lmfi5'};
 var LM_PAGE_LABELS = {'lmhome':'Beranda LM','lmfi1':'Fase 1 — NLP Klasik','lmfi2':'Fase 2 — Neural Network','lmfi3':'Fase 3 — Transformer','lmfi4':'Fase 4 — LLM','lmfi5':'Fase 5 — Scaling & Produksi'};
 var LM_PHASE_INTRO_MAP = {'lmi1':'lmfi1','lmi2':'lmfi2','lmi3':'lmfi3','lmi4':'lmfi4','lmi5':'lmfi5'};
 

@@ -40,6 +40,84 @@
 <div class="ctxt"><strong>Prasyarat</strong><ul style="margin:6px 0 0;padding-left:16px;"><li><strong>Python:</strong> familiar dengan class, virtual environment, dan packaging dasar. Kode menggunakan MLflow, DVC, dan Prefect — semua di-install via pip.</li><li><strong>ML basics:</strong> sudah pernah melatih model (scikit-learn atau PyTorch/Keras) dan familiar dengan konsep train/val/test split, hyperparameter, dan metrik evaluasi.</li><li><strong>Git:</strong> paham dasar-dasar Git — commit, branch, push/pull. DVC dibangun di atas Git.</li><li><strong>Tools:</strong> Python 3.10+, Git, Docker (opsional tapi direkomendasikan untuk fase berikutnya).</li></ul></div>
 </div>
 
+<!-- 1Z — Data Quality & Validation -->
+<div class="sub" id="mlops1z">
+<div class="subtit"><span class="ac">1.0</span> Data Quality &amp; Validation <span class="subid">// garbage in, garbage out — di-scale</span></div>
+<div class="prose">
+<p>Sebelum bicara tentang experiment tracking, model registry, atau pipeline orchestration — ada satu fondasi yang lebih fundamental: kualitas data. Model ML sehebat apapun tidak akan menghasilkan prediksi yang berguna jika data yang masuk tidak valid, corrupt, atau berbeda secara fundamental dari data training. Dan dalam production, data rarely perfect: schema berubah, null muncul tiba-tiba, nilai outlier yang sebelumnya tidak ada mulai bermunculan.</p>
+<p>Data validation bukan sekadar "cek apakah ada null". Ia adalah disiplin engineering yang melibatkan <strong>schema contracts</strong>, <strong>statistical profiling</strong>, dan <strong>expectation-based testing</strong>. Tools seperti Great Expectations memungkinkan kamu mendefinisikan ekspektasi tentang data — seperti "kolom age harus antara 0 dan 120", "kolom country tidak boleh null lebih dari 1%", "distribusi kolom amount tidak boleh berubah lebih dari 2 standar deviasi" — dan memvalidasi data secara otomatis di setiap step pipeline.</p>
+</div>
+
+<div class="prose">
+<h4>Kenapa data validation penting di konteks MLOps?</h4>
+<ul>
+<li><strong>Cegah silent failures</strong> — Model tetap berjalan saat skema data upstream berubah, menghasilkan prediksi yang semakin tidak akurat tanpa ada yang sadar. Validation gates mencegah data invalid masuk ke pipeline.</li>
+<li><strong>Konsistensi training-serving</strong> — Data yang digunakan untuk training dan inference harus memiliki schema dan distribusi yang konsisten. Validation di kedua sisi memastikan ini.</li>
+<li><strong>Reproducibility</strong> — Tanpa data validation, sulit membedakan "model performance drop karena data baru beda" vs "model performance drop karena bug di pipeline preprocessing".</li>
+<li><strong>Trust antar tim</strong> — Data engineer kirim data ke ML team. ML team pakai data dari data warehouse. Data validation sebagai kontrak eksplisit antara tim.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">great_expectations_basics.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> great_expectations <span class="kw">as</span> gx
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># === Setup Great Expectations context ===</span>
+context = gx.<span class="fn">get_context</span>()
+
+<span class="cm"># === Baca data yang akan divalidasi ===</span>
+df = pd.<span class="fn">read_parquet</span>(<span class="st">"data/incoming/weekly_batch.parquet"</span>)
+
+<span class="cm"># === Definisikan ekspektasi sebagai code (bukan config file) ===</span>
+validator = context.sources.pandas_default.<span class="fn">read_dataframe</span>(df)
+
+<span class="cm"># Expectation 1: Schema — kolom harus ada dan tipe benar</span>
+validator.<span class="fn">expect_column_to_exist</span>(<span class="st">"customer_id"</span>)
+validator.<span class="fn">expect_column_to_exist</span>(<span class="st">"amount"</span>)
+validator.<span class="fn">expect_column_values_to_be_of_type</span>(<span class="st">"amount"</span>, <span class="st">"float64"</span>)
+
+<span class="cm"># Expectation 2: Range — nilai harus dalam batas yang masuk akal</span>
+validator.<span class="fn">expect_column_values_to_be_between</span>(
+    <span class="st">"amount"</span>, min_value=<span class="nm">0.01</span>, max_value=<span class="nm">100000</span>
+)
+
+<span class="cm"># Expectation 3: Null rate — tidak boleh terlalu banyak missing</span>
+validator.<span class="fn">expect_column_values_to_not_be_null</span>(<span class="st">"customer_id"</span>)
+validator.<span class="fn">expect_column_values_to_not_be_null</span>(
+    <span class="st">"amount"</span>, mostly=<span class="nm">0.99</span>  <span class="cm"># maximal 1% null allowed</span>
+)
+
+<span class="cm"># Expectation 4: Distribusi — unique values harus masuk akal</span>
+validator.<span class="fn">expect_column_unique_value_count_to_be_between</span>(
+    <span class="st">"customer_id"</span>, min_value=<span class="nm">1000</span>
+)
+
+<span class="cm"># Expectation 5: Set-based — nilai kategorikal harus valid</span>
+validator.<span class="fn">expect_column_values_to_be_in_set</span>(
+    <span class="st">"plan_type"</span>, value_set=[<span class="st">"basic"</span>, <span class="st">"premium"</span>, <span class="st">"enterprise"</span>, <span class="st">"trial"</span>]
+)
+
+<span class="cm"># === Jalankan validasi & lihat hasil ===</span>
+validation_result = validator.<span class="fn">validate</span>()
+<span class="fn">print</span>(validation_result.success)  <span class="cm"># True jika semua expectation passed</span>
+<span class="fn">print</span>(validation_result.statistics)  <span class="cm"># {"successful": 7, "unsuccessful": 0}</span></pre></div>
+</div>
+
+<div class="callout danger">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Data validation sendiri tidak cukup</strong>Validation gates penting, tapi jangan bikin pipeline terlalu rigid sehingga menolak data yang sebenarnya valid hanya karena sedikit di luar ekspektasi. Klasifikasikan failure ke dalam: <strong>blocking</strong> (harus gagal total — e.g. kolom wajib hilang), <strong>warning</strong> (lanjut tapi alert — e.g. null rate naik dari 0.1% ke 0.5%), dan <strong>informational</strong> (catat untuk audit — e.g. distribusi sedikit berubah tapi masih dalam threshold).</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Apa perbedaan antara schema validation dan statistical validation? Berikan contoh situasi di mana schema validation passes tapi data tetap invalid.</li>
+<li><strong>[Kode]</strong> Install Great Expectations dan buat 10 expectations untuk dataset customer. Jalankan dengan data "sehat" dan data yang sengaja di-corrupt — bandingkan hasilnya.</li>
+<li><strong>[Eksplorasi]</strong> Integrasikan Great Expectations ke GitHub Actions CI/CD: setiap PR yang mengubah preprocessing pipeline harus trigger data validation. Pipeline gagal jika validation fail.</li>
+</ul></div>
+</div><!-- /mlops1z -->
+
+<div class="divider"></div>
+
 <!-- 1A -->
 <div class="sub" id="mlops1a">
 <div class="subtit"><span class="ac">1.1</span> Kenapa MLOps? <span class="subid">// gap antara riset dan production</span></div>
@@ -464,6 +542,81 @@ Path(<span class="st">"metrics"</span>).<span class="fn">mkdir</span>(exist_ok=<
 <li><strong>[Kode]</strong> Buat project DVC minimal: init repo, tambahkan satu file CSV kecil, buat dvc.yaml dengan satu stage preprocessing, dan jalankan <code>dvc repro</code>. Verifikasi bahwa <code>dvc.lock</code> berisi hash yang benar. Ubah satu parameter di <code>params.yaml</code> dan jalankan repro lagi — stage mana yang dijalankan ulang?</li>
 <li><strong>[Eksplorasi]</strong> Setup DVC dengan remote storage lokal (<code>dvc remote add -d localremote /tmp/dvc-storage</code>). Simulasikan workflow tim: clone repo di direktori berbeda, jalankan <code>dvc pull</code>, dan verifikasi kamu mendapat file yang identik byte-per-byte.</li>
 </ul></div>
+
+<!-- ═══ Visualisasi Interaktif: DVC Pipeline DAG Visualizer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🔗 DVC Pipeline DAG — Klik Node untuk Lihat Dependencies</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="dvc-canvas" width="440" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik node untuk lihat detail stage</div>
+      <div id="dvc-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:80px;">
+        ← Klik node di DAG
+      </div>
+      <div style="margin-top:8px;font-size:9px;color:var(--text3);">
+        🔵 Data &nbsp; 🟢 Script &nbsp; 🟠 Stage &nbsp; ⚪ Output
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=440,H=260,selected=null;
+  var nodes=[
+    {id:'raw',label:'raw/customers.csv',x:60,y:40,type:'data',desc:'Data mentah dari source system.<br>Ditrack oleh DVC.<br>Berubah → trigger repro.'},
+    {id:'prep',label:'preprocess.py',x:60,y:140,type:'script',desc:'Script preprocessing.<br>Dependency: raw data.<br>Output: features.csv'},
+    {id:'feat',label:'features.csv',x:220,y:140,type:'output',desc:'Data hasil preprocessing.<br>Di-cache oleh DVC.<br>Tidak berubah → skip training.'},
+    {id:'train',label:'train.py',x:220,y:40,type:'script',desc:'Training script.<br>Dependency: features.csv + params.yaml.<br>Output: model.pkl + metrics.json'},
+    {id:'params',label:'params.yaml',x:140,y:40,type:'data',desc:'Hyperparameters.<br>Ditrack oleh Git (file kecil).<br>Berubah → retrain full.'},
+    {id:'model',label:'model.pkl',x:380,y:40,type:'output',desc:'Model artifact.<br>Ditrack oleh DVC.<br>Bisa di dvc pull kapan saja.'},
+    {id:'eval',label:'evaluate.py',x:380,y:140,type:'script',desc:'Evaluation script.<br>Dependency: model.pkl + test data.<br>Output: evaluation report.'},
+    {id:'report',label:'metrics.json',x:380,y:220,type:'output',desc:'Final metrics.<br>Commit ke Git.<br>Dipakai CI/CD untuk gate.'}
+  ];
+  var edges=[['raw','prep'],['prep','feat'],['feat','train'],['params','train'],['train','model'],['model','eval'],['eval','report']];
+  function initDvc(){cv=document.getElementById('dvc-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+    cv.onclick=function(e){
+      var rect=cv.getBoundingClientRect();var mx=(e.clientX-rect.left)*(W/rect.width),my=(e.clientY-rect.top)*(H/rect.height);
+      var found=null;nodes.forEach(function(n){if(Math.abs(mx-n.x)<55&&Math.abs(my-n.y)<18)found=n;});
+      selected=found?found.id:null;drawDvc();
+    };
+  }
+  function drawDvc(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,W,H);
+    edges.forEach(function(e){
+      var a=nodes.find(function(n){return n.id===e[0];}),b=nodes.find(function(n){return n.id===e[1];});
+      if(!a||!b)return;
+      ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(a.x,a.y+18);ctx.lineTo(b.x,b.y-18);ctx.stroke();
+    });
+    nodes.forEach(function(n){
+      var isSel=selected===n.id;
+      var colors={data:'rgba(124,109,250,0.2)',script:'rgba(45,212,191,0.18)',output:'rgba(245,158,11,0.15)'};
+      var borders={data:'rgba(124,109,250,0.5)',script:'rgba(45,212,191,0.5)',output:'rgba(245,158,11,0.4)'};
+      ctx.fillStyle=isSel?'rgba(255,255,255,0.12)':(colors[n.type]||colors.data);
+      ctx.strokeStyle=isSel?'#fff':(borders[n.type]||borders.data);
+      ctx.lineWidth=isSel?2.5:1.2;
+      var w=n.type==='script'?95:n.type==='output'?80:105;
+      ctx.beginPath();ctx.roundRect(n.x-w/2,n.y-16,w,32,6);ctx.fill();ctx.stroke();
+      ctx.fillStyle=isSel?'#fff':'rgba(255,255,255,0.7)';
+      ctx.font=(isSel?'bold ':'')+'8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(n.label,n.x,n.y+4);
+      if(isSel){
+        ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='7px IBM Plex Mono,monospace';
+        ctx.fillText(n.type.toUpperCase(),n.x,n.y+28);
+      }
+    });
+    if(selected){
+      var sn=nodes.find(function(n){return n.id===selected;});
+      if(sn)document.getElementById('dvc-info').innerHTML='<strong style="color:var(--accent);">'+sn.label+'</strong><br>Type: '+sn.type+'<br>'+sn.desc;
+    } else document.getElementById('dvc-info').innerHTML='← Klik node di DAG';
+  }
+  initDvc();drawDvc();
+  window.addEventListener('resize',function(){initDvc();drawDvc();});
+})();
+</script>
 
 </div><!-- /mlops1b -->
 

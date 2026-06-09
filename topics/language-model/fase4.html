@@ -27,6 +27,156 @@
 </div>
 </div><!-- /lmfi4 -->
 
+<!-- 4Z — Data Curation untuk Pre-training -->
+<div class="sub" id="lm4z">
+<div class="subtit"><span class="ac">4.0</span> Data Curation untuk Pre-training <span class="subid">// kualitas data > kuantitas model</span></div>
+<div class="prose">
+<p>Sebelum melatih model bahasa, ada satu keputusan yang dampaknya melebihi semua hyperparameter: <strong>data apa yang digunakan untuk training?</strong> Kualitas data pre-training adalah prediktor tunggal terkuat dari performa model — jauh di atas jumlah parameter atau arsitektur. LLM terbaik saat ini (LLaMA 3, Claude, Gemini) berinvestasi besar-besaran dalam data curation pipeline yang ketat.</p>
+<p>Data curation untuk LLM bukan sekadar "membersihkan teks". Ia melibatkan pipeline bertahap: <strong>deduplication</strong> (menghapus konten duplikat dan near-duplicate yang memboroskan compute dan menyebabkan memorization), <strong>quality filtering</strong> (menghapus teks berkualitas rendah menggunakan classifier atau heuristics), <strong>toxicity & PII filtering</strong>, dan <strong>data mixing</strong> (menyeimbangkan proporsi dari berbagai sumber: web, code, books, academic papers, multilingual).</p>
+</div>
+
+<div class="prose">
+<h4>Pipeline data curation — dari raw dump ke training-ready</h4>
+<ul>
+<li><strong>Deduplication</strong> — Exact dedup (hash-based) menghapus duplikat sempurna. Near-dedup (MinHash, SimHash) menghapus dokumen yang 80%+ mirip — ini jauh lebih penting karena web penuh dengan konten boilerplate dan mirror. Dampak: mengurangi memorization, meningkatkan generalization, dan menghemat compute training.</li>
+<li><strong>Quality filtering</strong> — Gunakan lightweight classifier (fastText, KenLM perplexity) atau heuristic rules (panjang teks &gt; 100 karakter, proporsi stop words, jumlah unique tokens). Pilihan: aggressive filtering menghasilkan data lebih kecil tapi lebih bersih vs permissive yang mempertahankan diversity.</li>
+<li><strong>Data mixing</strong> — Tentukan proporsi sumber data: web (Common Crawl, C4) 60–70%, code (GitHub, Stack Overflow) 10–15%, books/academic 5–10%, Wikipedia 3–5%, multilingual 5–10%. LLaMA paper menunjukkan bahwa menambah code dan academic text secara dramatis meningkatkan reasoning ability.</li>
+<li><strong>Decontamination</strong> — Hapus data training yang overlap dengan benchmark evaluation sets. Jika model "melihat" soal ujian saat training, evaluasi menjadi tidak valid. Ini tantangan besar karena benchmark dataset sering tersebar di web.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">data_curation.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> hashlib
+<span class="kw">from</span> datasketch <span class="kw">import</span> MinHash, MinHashLSH
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+<span class="kw">import</span> re
+
+<span class="kw">class</span> <span class="fn">DataCurationPipeline</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, min_text_length: <span class="tp">int</span> = <span class="nm">100</span>,
+                 near_dedup_threshold: <span class="tp">float</span> = <span class="nm">0.8</span>):
+        self.seen_hashes = <span class="fn">set</span>()
+        self.lsh = <span class="fn">MinHashLSH</span>(threshold=near_dedup_threshold, num_perm=<span class="nm">128</span>)
+        self.min_length = min_text_length
+
+    <span class="kw">def</span> <span class="fn">is_duplicate_exact</span>(self, text: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+        text_hash = <span class="fn">hashlib.sha256</span>(text.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+        <span class="kw">if</span> text_hash <span class="kw">in</span> self.seen_hashes: <span class="kw">return</span> <span class="kw">True</span>
+        self.seen_hashes.<span class="fn">add</span>(text_hash)
+        <span class="kw">return</span> <span class="kw">False</span>
+
+    <span class="kw">def</span> <span class="fn">is_duplicate_near</span>(self, text: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+        <span class="cm"># MinHash: representasi compressed dari set n-gram</span>
+        m = <span class="fn">MinHash</span>(num_perm=<span class="nm">128</span>)
+        <span class="kw">for</span> word <span class="kw">in</span> text.<span class="fn">lower</span>().<span class="fn">split</span>():
+            m.<span class="fn">update</span>(word.<span class="fn">encode</span>(<span class="st">'utf8'</span>))
+        result = self.lsh.<span class="fn">query</span>(m)
+        self.lsh.<span class="fn">insert</span>(<span class="fn">hash</span>(text), m)
+        <span class="kw">return</span> <span class="fn">len</span>(result) > <span class="nm">0</span>
+
+    <span class="kw">def</span> <span class="fn">quality_filter</span>(self, text: <span class="tp">str</span>) -> <span class="tp">tuple</span>[<span class="tp">bool</span>, <span class="tp">dict</span>]:
+        metrics = {}
+        <span class="cm"># Length check</span>
+        <span class="kw">if</span> <span class="fn">len</span>(text) < self.min_length:
+            <span class="kw">return</span> <span class="kw">False</span>, {<span class="st">"reason"</span>: <span class="st">"too_short"</span>}
+        <span class="cm"># Word count must be reasonable</span>
+        words = text.<span class="fn">split</span>()
+        <span class="kw">if</span> <span class="fn">len</span>(words) < <span class="nm">10</span>:
+            <span class="kw">return</span> <span class="kw">False</span>, {<span class="st">"reason"</span>: <span class="st">"too_few_words"</span>}
+        <span class="cm"># Mean word length — filter gibberish</span>
+        avg_word_len = <span class="fn">sum</span>(<span class="fn">len</span>(w) <span class="kw">for</span> w <span class="kw">in</span> words) / <span class="fn">len</span>(words)
+        <span class="kw">if</span> avg_word_len < <span class="nm">2.5</span> <span class="kw">or</span> avg_word_len > <span class="nm">12</span>:
+            <span class="kw">return</span> <span class="kw">False</span>, {<span class="st">"reason"</span>: <span class="st">"abnormal_word_length"</span>}
+        <span class="cm"># Ratio of "normal" ASCII text — filter non-text content</span>
+        ascii_ratio = <span class="fn">sum</span>(<span class="nm">1</span> <span class="kw">for</span> c <span class="kw">in</span> text <span class="kw">if</span> <span class="nm">32</span> <= <span class="fn">ord</span>(c) <= <span class="nm">126</span>) / <span class="fn">len</span>(text)
+        <span class="kw">if</span> ascii_ratio < <span class="nm">0.7</span>:
+            <span class="kw">return</span> <span class="kw">False</span>, {<span class="st">"reason"</span>: <span class="st">"non_text_content"</span>}
+        <span class="kw">return</span> <span class="kw">True</span>, {<span class="st">"avg_word_len"</span>: avg_word_len, <span class="st">"words"</span>: <span class="fn">len</span>(words)}
+
+<span class="cm"># === Data mixing strategy ===</span>
+<span class="kw">def</span> <span class="fn">sample_mixture</span>(sources: <span class="tp">dict</span>[<span class="tp">str</span>, <span class="tp">list</span>], ratios: <span class="tp">dict</span>[<span class="tp">str</span>, <span class="tp">float</span>],
+                    total: <span class="tp">int</span>) -> <span class="tp">list</span>:
+    <span class="st">"""Sample dari berbagai sumber sesuai rasio mixing."""</span>
+    <span class="kw">import</span> random
+    sampled = []
+    <span class="kw">for</span> source, docs <span class="kw">in</span> sources.<span class="fn">items</span>():
+        n = <span class="fn">max</span>(<span class="nm">1</span>, <span class="fn">int</span>(total * ratios.<span class="fn">get</span>(source, <span class="nm">0.1</span>)))
+        sampled.<span class="fn">extend</span>(random.<span class="fn">sample</span>(docs, <span class="fn">min</span>(n, <span class="fn">len</span>(docs))))
+    random.<span class="fn">shuffle</span>(sampled)
+    <span class="kw">return</span> sampled[:total]</pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Data contamination: musuh evaluasi yang valid</strong>Benchmark dataset seperti MMLU, HellaSwag, dan GSM8K sering muncul di data training web. Tanpa decontamination, kamu tidak tahu apakah model "benar-benar reasoning" atau "hanya menghafal jawaban". Tools seperti LMSys's decontaminator dan EleutherAI's lm-eval harness menyediakan n-gram overlap detection untuk mengidentifikasi kontaminasi sebelum evaluasi.</div>
+</div>
+
+<!-- ═══ Visualisasi: Data Curation Pipeline ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🧹 Data Curation Pipeline — Geser Filter, Lihat Data Tersisa</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="curate-canvas" width="400" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Quality Strictness: <span id="cu-qual-val" style="color:var(--accent);">Medium</span></label>
+      <input type="range" id="cu-qual" min="0" max="2" value="1" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Dedup Threshold: <span id="cu-dedup-val" style="color:var(--teal);">80%</span></label>
+      <input type="range" id="cu-dedup" min="50" max="95" value="80" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>Raw data: <strong style="color:var(--text);">10TB</strong></div>
+        <div>After curation: <strong id="cu-remain" style="color:var(--accent);">2.8TB</strong></div>
+        <div>Retained: <strong id="cu-pct" style="color:var(--teal);">28%</strong></div>
+        <div style="margin-top:2px;">Estimated PPL gain: <strong id="cu-ppl" style="color:var(--green);">-3.2</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=200;
+  function initCu(){cv=document.getElementById('curate-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawCu(){
+    if(!ctx)return;
+    var qual=parseInt(document.getElementById('cu-qual').value);
+    var dedup=parseInt(document.getElementById('cu-dedup').value);
+    var qualLabels=['Permissive','Medium','Strict'];
+    document.getElementById('cu-qual-val').textContent=qualLabels[qual];
+    document.getElementById('cu-dedup-val').textContent=dedup+'%';
+    var retention=1.0-(qual*0.2+0.2)-((100-dedup)/100*0.4);
+    retention=Math.max(0.1,Math.min(0.6,retention));
+    var remain=(10*retention).toFixed(1);
+    document.getElementById('cu-remain').textContent=remain+'TB';
+    document.getElementById('cu-pct').textContent=(retention*100).toFixed(0)+'%';
+    document.getElementById('cu-ppl').textContent=(-3.5+qual*1.2+((100-dedup)/10)*0.3).toFixed(1);
+    ctx.clearRect(0,0,W,H);
+    // Pipeline funnel
+    var stages=[{label:'Raw (10TB)',pct:1,color:'rgba(124,109,250,0.6)'},{label:'Dedup',pct:1-(100-dedup)/250,color:'rgba(45,212,191,0.6)'},{label:'Quality',pct:1-qual*0.3,color:'rgba(245,158,11,0.6)'},{label:'Final',pct:retention,color:'rgba(74,222,128,0.6)'}];
+    var cumRet=1;
+    stages.forEach(function(s,i){
+      cumRet=Math.min(cumRet,s.pct);
+      var bw=80+((cumRet)*200);
+      var x=(W-bw)/2,y=20+i*42;
+      ctx.fillStyle=s.color;ctx.fillRect(x,y,bw,32);
+      ctx.fillStyle='#fff';ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(s.label+' → '+(cumRet*10).toFixed(1)+'TB ('+(cumRet*100).toFixed(0)+'%)',W/2,y+21);
+    });
+  }
+  initCu();drawCu();
+  ['cu-qual','cu-dedup'].forEach(function(id){document.getElementById(id).addEventListener('input',drawCu);});
+  window.addEventListener('resize',function(){initCu();drawCu();});
+})();
+</script>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa near-deduplication lebih penting dari exact deduplication untuk web-scale data? Jelaskan konsep "boilerplate content" dan dampaknya ke model.</li>
+<li><strong>[Kode]</strong> Gunakan MinHash untuk deduplicate 1000 dokumen dari Common Crawl sample. Ukur berapa persen yang terhapus. Bandingkan dengan exact dedup.</li>
+<li><strong>[Eksplorasi]</strong> Baca paper LLaMA (Touvron et al., 2023) section tentang data curation. Apa perbedaan pendekatan data mixing LLaMA vs GPT-3?</li>
+</ul></div>
+</div><!-- /lm4z -->
+
+<div class="divider"></div>
+
 <!-- 4A -->
 <div class="sub" id="lm4a">
 <div class="subtit"><span class="ac">4.1</span> Paradigma Pre-training <span class="subid">// kenapa self-supervised learning revolusioner</span></div>
@@ -752,6 +902,78 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
     <button class="tnbtn primary" onclick="goToPage('lmfi5')">Fase 5 →</button>
   </div>
 </div>
+
+<!-- ═══ 4F — LLM Evaluation ═══ -->
+<div class="sub" id="lm4f">
+<div class="subtit"><span class="ac">4.6</span> LLM Evaluation <span class="subid">// bagaimana tahu model mana yang benar-benar lebih baik?</span></div>
+<div class="prose">
+<p>Mengevaluasi LLM adalah salah satu masalah tersulit dalam AI modern. Tidak seperti model ML klasik yang punya ground truth yang jelas (fraud/not fraud, churn/not churn), kualitas teks bersifat subjektif, multi-dimensional, dan konteks-dependent. Model yang menang di benchmark akademik seringkali bukan yang terbaik untuk use case spesifik kamu.</p>
+<p>Ada tiga pendekatan utama yang saling melengkapi: <strong>benchmark evaluation</strong> (MMLU, HellaSwag, GSM8K, HumanEval — terstandarisasi tapi rentan contamination), <strong>human evaluation</strong> (LMSys Chatbot Arena, pairwise comparison — gold standard tapi mahal), dan <strong>LLM-as-judge</strong> (menggunakan LLM yang lebih kuat untuk menilai output LLM lain — scalable tapi punya bias sendiri). Tidak ada yang sempurna — kombinasi ketiganya memberikan gambaran paling akurat.</p>
+</div>
+
+<div class="prose">
+<h4>Tiga pilar LLM evaluation</h4>
+<ul>
+<li><strong>Benchmark Evaluation</strong> — Dataset terstandarisasi dengan jawaban benar. MMLU (57 subjek, multiple choice), GSM8K (math reasoning), HumanEval (code generation), HellaSwag (commonsense). Masalah utama: benchmark contamination — data training tidak sengaja mengandung soal ujian. Solusi: gunakan benchmark yang frequently updated (LiveBench), private test sets, atau dynamic generation.</li>
+<li><strong>Human Evaluation</strong> — LMSys Chatbot Arena: user bandingkan dua model anonim, voting mana yang lebih baik. Hasilnya diranking dengan Elo rating system (seperti catur). Keunggulan: menangkap "usefulness" yang tidak bisa diukur benchmark. Kelemahan: mahal, lambat, dan ada positional bias (model yang muncul di kiri cenderung dipilih).</li>
+<li><strong>LLM-as-Judge</strong> — GPT-4 atau Claude digunakan untuk menilai output LLM lain. Contoh: beri dua respons, minta judge memilih yang lebih baik dengan justifikasi. MT-Bench dan AlpacaEval adalah contoh benchmark yang menggunakan pendekatan ini. Keunggulan: scalable, cepat, reproducible. Kelemahan: judge model punya bias sendiri (position bias, verbosity bias — cenderung memilih respons yang lebih panjang).</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">llm_evaluation.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="kw">class</span> <span class="fn">EloRating</span>:
+    <span class="st">"""Elo rating system untuk pairwise model comparison (Arena-style)."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, k_factor: <span class="tp">int</span> = <span class="nm">32</span>, base_rating: <span class="tp">int</span> = <span class="nm">1000</span>):
+        self.ratings = {}
+        self.k = k_factor
+        self.base = base_rating
+
+    <span class="kw">def</span> <span class="fn">get_rating</span>(self, model: <span class="tp">str</span>) -> <span class="tp">float</span>:
+        <span class="kw">return</span> self.ratings.<span class="fn">get</span>(model, self.base)
+
+    <span class="kw">def</span> <span class="fn">expected_score</span>(self, rating_a: <span class="tp">float</span>, rating_b: <span class="tp">float</span>) -> <span class="tp">float</span>:
+        <span class="kw">return</span> <span class="nm">1</span> / (<span class="nm">1</span> + <span class="nm">10</span> ** ((rating_b - rating_a) / <span class="nm">400</span>))
+
+    <span class="kw">def</span> <span class="fn">update</span>(self, winner: <span class="tp">str</span>, loser: <span class="tp">str</span>):
+        rw = self.<span class="fn">get_rating</span>(winner)
+        rl = self.<span class="fn">get_rating</span>(loser)
+        expected = self.<span class="fn">expected_score</span>(rw, rl)
+        self.ratings[winner] = rw + self.k * (<span class="nm">1</span> - expected)
+        self.ratings[loser]  = rl + self.k * (<span class="nm">0</span> - (<span class="nm">1</span> - expected))
+
+<span class="cm"># === Contoh: simulasi Arena comparison ===</span>
+elo = <span class="fn">EloRating</span>()
+<span class="cm"># Model A menang 7 dari 10 kali melawan Model B</span>
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">7</span>): elo.<span class="fn">update</span>(<span class="st">"Model-A"</span>, <span class="st">"Model-B"</span>)
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">3</span>): elo.<span class="fn">update</span>(<span class="st">"Model-B"</span>, <span class="st">"Model-A"</span>)
+<span class="fn">print</span>(<span class="st">f"Model A ELO: {elo.get_rating('Model-A'):.0f}"</span>)
+<span class="fn">print</span>(<span class="st">f"Model B ELO: {elo.get_rating('Model-B'):.0f}"</span>)
+
+<span class="cm"># === Statistical significance untuk pairwise comparison ===</span>
+<span class="kw">def</span> <span class="fn">bootstrap_confidence</span>(model_a_wins: <span class="tp">int</span>, total_games: <span class="tp">int</span>,
+                          n_bootstrap: <span class="tp">int</span> = <span class="nm">10000</span>) -> <span class="tp">tuple</span>[<span class="tp">float</span>, <span class="tp">float</span>]:
+    observed_winrate = model_a_wins / total_games
+    bootstraps = np.random.<span class="fn">binomial</span>(total_games, observed_winrate, n_bootstrap) / total_games
+    ci_low = np.<span class="fn">percentile</span>(bootstraps, <span class="nm">2.5</span>)
+    ci_high = np.<span class="fn">percentile</span>(bootstraps, <span class="nm">97.5</span>)
+    <span class="kw">return</span> ci_low, ci_high</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Jangan percaya benchmark leaderboard begitu saja</strong>Leaderboard ranking bisa berbeda drastis dengan performance di task spesifik kamu. Model dengan MMLU 85% bisa kalah dari model MMLU 80% untuk coding task kamu. Selalu evaluasi pada data dan task yang actual kamu gunakan — minimal 50-100 contoh dari production.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan "benchmark contamination" dan mengapa sulit dihindari. Bagaimana cara mendeteksi apakah model sudah ter-expose ke benchmark evaluation set saat training?</li>
+<li><strong>[Kode]</strong> Gunakan LMSys Chatbot Arena dataset publik. Hitung ulang Elo rating untuk 5 model. Apakah ranking-mu konsisten dengan leaderboard resmi?</li>
+<li><strong>[Eksplorasi]</strong> Uji GPT-4 dan Claude sebagai LLM judge: beri 20 pasangan respons, minta kedua model menilai. Apakah kedua judge konsisten? Apakah ada bias terhadap model dari provider yang sama?</li>
+</ul></div>
+</div><!-- /lm4f -->
 
 </div><!-- /lm4e -->
 
