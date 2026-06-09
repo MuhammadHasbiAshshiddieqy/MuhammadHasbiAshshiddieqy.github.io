@@ -45,7 +45,7 @@ var I18N = {
     'builtby.label':        'Built by',
 
     // ── Landing footer ──
-    'footer.copy':          '© 2026 Principal Tech Wizard',
+    'footer.copy':          '© 2026 Principal Tech Sage',
     'footer.team':          'Tim',
     'footer.about':         'Tentang',
 
@@ -74,8 +74,8 @@ var I18N = {
     'lm.phase5':            'Fase 5 — LLM Modern',
 
     // ── About page ──
-    'about.back':           '← Principal Tech Wizard',
-    'about.tag':            'Principal Tech Wizard',
+    'about.back':           '← Principal Tech Sage',
+    'about.tag':            'Principal Tech Sage',
     'about.role':           'Backend Engineer · AI Builder · Knowledge Sharer',
     'about.section.about':  'Tentang',
     'about.section.focus':  'Area Fokus',
@@ -89,11 +89,11 @@ var I18N = {
     'about.focus.rag.d':    'Retrieval-augmented generation, semantic search, vector DB',
     'about.focus.workflow':  'Workflow Automation',
     'about.focus.workflow.d':'AI-driven pipelines, recommendation systems, process optimization',
-    'about.site.body':      '<a href="/" style="color:var(--accent);text-decoration:none;">Principal Tech Wizard</a> adalah situs pengetahuan terbuka — catatan dari sesi belajar mendalam, ditulis sebagai software engineer yang membangun produk nyata. Tersedia dua kurikulum: <strong style="color:var(--text);">Language Model Fundamentals</strong> (NLP → Transformer → LLM) dan <strong style="color:var(--text);">Agentic AI Mastery</strong> (agent harness → multi-agent → production).',
+    'about.site.body':      '<a href="/" style="color:var(--accent);text-decoration:none;">Principal Tech Sage</a> adalah situs pengetahuan terbuka — catatan dari sesi belajar mendalam, ditulis sebagai software engineer yang membangun produk nyata. Tersedia dua kurikulum: <strong style="color:var(--text);">Language Model Fundamentals</strong> (NLP → Transformer → LLM) dan <strong style="color:var(--text);">Agentic AI Mastery</strong> (agent harness → multi-agent → production).',
     'about.copy':           '© 2026 Muhammad Hasbi Ashshiddieqy',
 
     // ── Team page ──
-    'team.back':            '← Principal Tech Wizard',
+    'team.back':            '← Principal Tech Sage',
     'team.tag':             'Meet the Team',
     'team.h1':              'Dibangun oleh <em>praktisi</em>,<br>untuk praktisi',
     'team.desc':            'Peneliti dan engineer yang sehari-harinya membangun sistem AI nyata — dan berbagi apa yang mereka pelajari.',
@@ -103,8 +103,8 @@ var I18N = {
     'team.usamah.bio':      'Berpengalaman dalam AI/ML engineering, computer vision, LLM systems, dan deployment solusi AI dari riset ke production.',
     'team.hasbi.role':      'Backend Engineer · Applied AI Practitioner',
     'team.hasbi.bio':       'Membangun sistem backend scalable dan mengimplementasikan teknologi AI untuk memecahkan masalah bisnis nyata.',
-    'team.copy':            '© 2026 Principal Tech Wizard',
-    'team.footer.back':     '← Principal Tech Wizard',
+    'team.copy':            '© 2026 Principal Tech Sage',
+    'team.footer.back':     '← Principal Tech Sage',
   },
 
   en: {
@@ -149,7 +149,7 @@ var I18N = {
     'builtby.label':        'Built by',
 
     // ── Landing footer ──
-    'footer.copy':          '© 2026 Principal Tech Wizard',
+    'footer.copy':          '© 2026 Principal Tech Sage',
     'footer.team':          'Team',
     'footer.about':         'About',
 
@@ -178,8 +178,8 @@ var I18N = {
     'lm.phase5':            'Phase 5 — Modern LLMs',
 
     // ── About page ──
-    'about.back':           '← Principal Tech Wizard',
-    'about.tag':            'Principal Tech Wizard',
+    'about.back':           '← Principal Tech Sage',
+    'about.tag':            'Principal Tech Sage',
     'about.role':           'Backend Engineer · AI Builder · Knowledge Sharer',
     'about.section.about':  'About',
     'about.section.focus':  'Focus Areas',
@@ -193,11 +193,11 @@ var I18N = {
     'about.focus.rag.d':    'Retrieval-augmented generation, semantic search, vector DB',
     'about.focus.workflow':  'Workflow Automation',
     'about.focus.workflow.d':'AI-driven pipelines, recommendation systems, process optimization',
-    'about.site.body':      '<a href="/" style="color:var(--accent);text-decoration:none;">Principal Tech Wizard</a> is an open knowledge site — notes from deep learning sessions, written as a software engineer building real products. Two curricula available: <strong style="color:var(--text);">Language Model Fundamentals</strong> (NLP → Transformer → LLM) and <strong style="color:var(--text);">Agentic AI Mastery</strong> (agent harness → multi-agent → production).',
+    'about.site.body':      '<a href="/" style="color:var(--accent);text-decoration:none;">Principal Tech Sage</a> is an open knowledge site — notes from deep learning sessions, written as a software engineer building real products. Two curricula available: <strong style="color:var(--text);">Language Model Fundamentals</strong> (NLP → Transformer → LLM) and <strong style="color:var(--text);">Agentic AI Mastery</strong> (agent harness → multi-agent → production).',
     'about.copy':           '© 2026 Muhammad Hasbi Ashshiddieqy',
 
     // ── Team page ──
-    'team.back':            '← Principal Tech Wizard',
+    'team.back':            '← Principal Tech Sage',
     'team.tag':             'Meet the Team',
     'team.h1':              'Built by <em>practitioners</em>,<br>for practitioners',
     'team.desc':            'Researchers and engineers who spend their days building real AI systems — and share what they learn along the way.',
@@ -207,8 +207,8 @@ var I18N = {
     'team.usamah.bio':      'Experienced in AI/ML engineering, computer vision, LLM systems, and deploying AI solutions from research to production.',
     'team.hasbi.role':      'Backend Engineer · Applied AI Practitioner',
     'team.hasbi.bio':       'Building scalable backend systems and implementing AI technologies to solve real-world business problems.',
-    'team.copy':            '© 2026 Principal Tech Wizard',
-    'team.footer.back':     '← Principal Tech Wizard',
+    'team.copy':            '© 2026 Principal Tech Sage',
+    'team.footer.back':     '← Principal Tech Sage',
   }
 };
 
