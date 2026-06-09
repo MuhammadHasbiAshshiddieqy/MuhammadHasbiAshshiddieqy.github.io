@@ -88,7 +88,10 @@ function showLanding() {
   activeCurriculum = null;
   hideAll();
   document.getElementById('landing').classList.add('landing--active');
-  document.getElementById('sidebar').classList.add('sidebar--hidden');
+  var sb = document.getElementById('sidebar');
+  sb.classList.remove('open');
+  sb.classList.add('sidebar--hidden');
+  document.getElementById('overlay').classList.remove('open');
   document.getElementById('layout').classList.add('layout--no-sidebar');
   document.getElementById('header-sub').innerHTML = (typeof t === 'function' ? t('header.sub') : 'Open Knowledge — AI &amp; Engineering');
   history.replaceState(null,'','#');
