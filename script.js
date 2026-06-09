@@ -37,7 +37,21 @@ function loadFase(faseId) {
   loadedFases[faseId] = fetch(file)
     .then(function(r){ return r.text(); })
     .then(function(html){
-      container.innerHTML = html;
+      // Ekstrak dan eksekusi <script> — innerHTML tidak menjalankan script!
+      var scripts = [];
+      var cleaned = html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, function(match, code) {
+        scripts.push(code);
+        return '';
+      });
+      container.innerHTML = cleaned;
+      // Eksekusi script yang diekstrak
+      scripts.forEach(function(code) {
+        var s = document.createElement('script');
+        s.textContent = code;
+        document.body.appendChild(s);
+        // Bersihkan setelah eksekusi (opsional, mencegah polusi DOM)
+        // document.body.removeChild(s);
+      });
       injectNavBars();
     });
   return loadedFases[faseId];
