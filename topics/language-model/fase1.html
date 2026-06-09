@@ -1,0 +1,619 @@
+<section class="cs p1" id="lmfase1">
+<div class="fase-intro" id="lmfi1">
+<div class="sh">
+  <div class="sbadge p1">01</div>
+  <div>
+    <div class="stitle">Fase 1 — Linguistik &amp; Representasi</div>
+    <div class="sdesc">Sebelum bisa memahami LLM modern, kamu harus tahu bagaimana komputer merepresentasikan teks. Fase ini membangun fondasi: dari pipeline NLP klasik, cara encoding teks, hingga word embeddings yang menjadi cikal bakal semua model bahasa modern.</div>
+    <div class="smeta"><span class="mc">6 topik</span><span class="mc">Minggu 1–2</span><span class="mc">Fondasi NLP</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#lm1a">NLP Klasik</a>
+  <a class="snavi" href="#lm1b">Representasi Teks</a>
+  <a class="snavi" href="#lm1c">Word Embeddings</a>
+  <a class="snavi" href="#lm1d">LM Klasik</a>
+  <a class="snavi" href="#lm1e">Subword Tokenization</a>
+  <a class="snavi" href="#lm1f">Evaluasi NLP</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">6 topik · Minggu 1–2</div>
+    <div class="topic-nav-title">Mulai dari: 1.1 NLP Klasik &amp; Pipeline Teks</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('home')">← Beranda</button>
+    <button class="tnbtn primary" onclick="goTo(0)">Mulai Fase 1 →</button>
+  </div>
+</div>
+</div><!-- /lmfi1 -->
+
+<!-- 1A -->
+<div class="sub" id="lm1a">
+<div class="subtit"><span class="ac">1.1</span> NLP Klasik &amp; Pipeline Teks <span class="subid">// sebelum era deep learning</span></div>
+<div class="prose">
+<p>Natural Language Processing (NLP) klasik adalah kumpulan teknik berbasis aturan dan statistik yang dikembangkan jauh sebelum neural network mendominasi. Meski terasa "kuno", pemahaman pipeline klasik krusial — bukan hanya historis, tapi karena banyak konsepnya masih hidup di preprocessing modern, dan karena memahami <em>keterbatasannya</em> adalah cara terbaik untuk mengerti mengapa neural LM lahir.</p>
+<p>Pipeline NLP tradisional adalah serangkaian transformasi berurutan: teks mentah diproses melalui tokenisasi, normalisasi, analisis morfologi, tagging sintaktik, hingga pengenalan entitas. Setiap langkah membutuhkan aturan atau model terpisah yang dioptimasi secara manual untuk bahasa tertentu — inilah yang membuatnya tidak scalable lintas bahasa.</p>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Mengapa belajar NLP klasik?</strong>LLM modern mengabstraksi banyak langkah ini — tapi pipeline klasik masih dipakai untuk data preprocessing, untuk bahasa dengan resource terbatas, dan sebagai baseline perbandingan. Selain itu, banyak konsep (tokenisasi, stemming, n-gram) muncul kembali dalam wujud modern di dalam LLM itu sendiri.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Pipeline NLP Klasik — Urutan Transformasi Teks</div>
+<div class="viz-body">
+  <div class="tok-flow">
+    <div class="tok-node">Raw Text<br><span style="color:var(--text3);font-size:10px">"John loves NLP!"</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">Tokenize<br><span style="color:var(--text3);font-size:10px">["John","loves","NLP","!"]</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">Normalize<br><span style="color:var(--text3);font-size:10px">lowercase, strip</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">POS Tag<br><span style="font-size:10px">NNP VBZ NNP</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">NER<br><span style="color:var(--text3);font-size:10px">John=PERSON</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">Features<br><span style="font-size:10px">for downstream</span></div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:14px;font-family:'IBM Plex Mono',monospace;">↑ Setiap tahap menghasilkan representasi yang digunakan tahap berikutnya. Error di awal pipeline mengkascade ke bawah.</p>
+</div>
+</div>
+
+<div class="prose">
+<h4>Komponen pipeline yang perlu dipahami</h4>
+<ul>
+<li><strong>Tokenisasi</strong> — memecah teks menjadi unit-unit (token). Trivial untuk Inggris (split by space), kompleks untuk bahasa tanpa spasi (Chinese, Japanese) atau bahasa aglutinatif (Turkish, Finnish). Bahasa Indonesia sendiri punya tantangan karena prefiks/sufiks yang kaya.</li>
+<li><strong>Stemming vs Lemmatization</strong> — stemming memotong akhiran secara mekanik ("running" → "runn"), lemmatization memetakan ke bentuk kamus ("better" → "good"). Lemmatization lebih akurat tapi butuh lexicon.</li>
+<li><strong>POS Tagging</strong> (Part-of-Speech) — memberi label grammatical setiap token: noun, verb, adjective. Dipakai untuk parsing sintaksis dan feature engineering.</li>
+<li><strong>NER</strong> (Named Entity Recognition) — mengidentifikasi entitas bernama: orang, tempat, organisasi, tanggal, nilai uang. Krusial untuk information extraction.</li>
+<li><strong>Dependency Parsing</strong> — menganalisis hubungan gramatikal antar kata dalam kalimat. Lebih dalam dari POS tagging, dipakai untuk question answering dan relation extraction.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">nlp_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> spacy
+<span class="kw">from</span> nltk.stem <span class="kw">import</span> PorterStemmer, WordNetLemmatizer
+<span class="kw">import</span> nltk
+
+<span class="cm"># spaCy: library NLP modern dengan pipeline lengkap</span>
+nlp = spacy.<span class="fn">load</span>(<span class="st">"en_core_web_sm"</span>)
+
+text = <span class="st">"Apple's CEO Tim Cook announced new products in San Francisco yesterday."</span>
+doc = <span class="fn">nlp</span>(text)
+
+<span class="cm"># Tokenisasi + POS + Lemmatization</span>
+<span class="kw">for</span> token <span class="kw">in</span> doc:
+    <span class="fn">print</span>(<span class="st">f"{token.text:15} POS:{token.pos_:8} LEMMA:{token.lemma_:12} STOP:{token.is_stop}"</span>)
+
+<span class="cm"># NER — Named Entity Recognition</span>
+<span class="fn">print</span>(<span class="st">"\n=== Named Entities ==="</span>)
+<span class="kw">for</span> ent <span class="kw">in</span> doc.ents:
+    <span class="fn">print</span>(<span class="st">f"{ent.text:20} → {ent.label_} ({spacy.explain(ent.label_)})"</span>)
+<span class="cm"># Output: Apple → ORG, Tim Cook → PERSON, San Francisco → GPE</span>
+
+<span class="cm"># Stemming manual dengan NLTK (lebih agresif dari lemmatization)</span>
+stemmer = <span class="fn">PorterStemmer</span>()
+words = [<span class="st">"running"</span>, <span class="st">"better"</span>, <span class="st">"organizational"</span>, <span class="st">"generalization"</span>]
+<span class="kw">for</span> w <span class="kw">in</span> words:
+    <span class="fn">print</span>(<span class="st">f"{w:20} → stem: {stemmer.stem(w)}"</span>)
+<span class="cm"># running → run, better → better, organizational → organiz</span>
+
+<span class="cm"># Dependency parsing — siapa subject, verb, object?</span>
+<span class="fn">print</span>(<span class="st">"\n=== Dependency Tree ==="</span>)
+<span class="kw">for</span> token <span class="kw">in</span> doc:
+    <span class="kw">if</span> token.dep_ <span class="kw">in</span> [<span class="st">"nsubj"</span>, <span class="st">"dobj"</span>, <span class="st">"ROOT"</span>]:
+        <span class="fn">print</span>(<span class="st">f"{token.dep_:10} → '{token.text}' (head: '{token.head.text}')"</span>)</pre></div>
+</div>
+
+<div class="cc"><h3>Perbandingan: NLP Klasik vs Modern</h3><ul>
+<li><strong>Klasik</strong> — pipeline modular, rule-based/statistical, butuh feature engineering manual, tidak transfer well lintas domain, deterministic dan interpretable</li>
+<li><strong>Modern (neural)</strong> — end-to-end learned, transfer learning, butuh data besar, black box, tapi jauh lebih akurat dan generalizable</li>
+<li><strong>Hybrid</strong> — kombinasi keduanya masih umum: preprocessing dengan spaCy, lalu feed ke BERT/GPT. Tokenisasi modern (BPE) pun mewarisi intuisi dari tokenisasi klasik</li>
+<li><strong>Kapan pakai klasik</strong> — dataset kecil, butuh determinism (auditable), resource terbatas (embedded system), bahasa dengan resource training minim</li>
+</ul></div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara stemming dan lemmatization. Berikan contoh kasus di mana stemming menghasilkan output yang salah secara linguistik tapi masih berguna untuk information retrieval.</li>
+<li><strong>[Kode]</strong> Install spaCy dan jalankan contoh di atas. Tambahkan kode untuk menampilkan dependency tree (token.dep_, token.head.text) dan identifikasi subjek dan objek kalimat "The model generates accurate predictions."</li>
+<li><strong>[Eksplorasi]</strong> Coba tokenisasi teks berbahasa Indonesia dengan spaCy (model <code>xx_ent_wiki_sm</code> untuk multilingual). Bandingkan hasil NER-nya dengan teks Inggris — apakah kualitasnya setara?</li>
+</ul></div>
+
+</div><!-- /lm1a -->
+
+<div class="divider"></div>
+
+<!-- 1B -->
+<div class="sub" id="lm1b">
+<div class="subtit"><span class="ac">1.2</span> Representasi Teks <span class="subid">// dari kata ke angka</span></div>
+<div class="prose">
+<p>Machine learning hanya bisa bekerja dengan angka — tapi teks adalah simbol. Representasi teks adalah jembatan antara dunia linguistik dan dunia numerik. Cara kita merepresentasikan teks secara fundamental menentukan apa yang bisa dipelajari model dari data tersebut.</p>
+<p>Evolusi representasi teks mencerminkan evolusi pemahaman kita tentang bahasa: dari one-hot encoding yang sepenuhnya mengabaikan makna, hingga TF-IDF yang memperhitungkan pentingnya kata dalam corpus, hingga dense embeddings yang menangkap hubungan semantik secara implisit.</p>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>One-Hot Encoding</h4><p>Setiap kata direpresentasikan sebagai vektor biner dengan dimensi sebesar ukuran vocabulary. Hanya satu posisi yang bernilai 1. Masalah: vektor sangat sparse, tidak ada informasi semantik, "cat" dan "dog" sama jauhnya dengan "cat" dan "car".</p></div>
+<div class="gc"><h4>Bag of Words (BoW)</h4><p>Dokumen direpresentasikan sebagai vektor frekuensi kata, mengabaikan urutan. "The cat sat" dan "The sat cat" identik. Berguna untuk klasifikasi teks sederhana tapi kehilangan konteks posisi dan semantik.</p></div>
+<div class="gc"><h4>TF-IDF</h4><p>Term Frequency × Inverse Document Frequency. Kata yang sering muncul di satu dokumen tapi jarang di corpus lain diberi bobot tinggi. Lebih informatif dari BoW — kata seperti "the" yang ada di mana-mana mendapat bobot rendah otomatis.</p></div>
+<div class="gc"><h4>Sparse vs Dense</h4><p>BoW dan TF-IDF menghasilkan vektor sparse (ribuan dimensi, kebanyakan nol). Word embeddings menghasilkan vektor dense (100–300 dimensi, semua terisi). Dense lebih efisien komputasi dan menangkap similaritas semantik.</p></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Keterbatasan representasi berbasis frekuensi</strong>TF-IDF tidak menangkap polisemi (satu kata, banyak makna: "bank" sebagai institusi vs tepi sungai) dan tidak menangkap sinonim ("car" dan "automobile" terlihat sangat berbeda). Keterbatasan ini mendorong lahirnya word embeddings.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">text_representation.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> sklearn.feature_extraction.text <span class="kw">import</span> CountVectorizer, TfidfVectorizer
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+corpus = [
+    <span class="st">"the cat sat on the mat"</span>,
+    <span class="st">"the dog sat on the rug"</span>,
+    <span class="st">"cats and dogs are animals"</span>,
+]
+
+<span class="cm"># === Bag of Words ===</span>
+bow = <span class="fn">CountVectorizer</span>()
+bow_matrix = bow.<span class="fn">fit_transform</span>(corpus)
+<span class="fn">print</span>(<span class="st">"Vocabulary:"</span>, bow.<span class="fn">get_feature_names_out</span>())
+<span class="fn">print</span>(<span class="st">"BoW matrix shape:"</span>, bow_matrix.<span class="fn">shape</span>)  <span class="cm"># (3, 10) — sparse</span>
+<span class="fn">print</span>(<span class="st">"Doc 1:"</span>, bow_matrix[<span class="nm">0</span>].<span class="fn">toarray</span>())
+
+<span class="cm"># === TF-IDF ===</span>
+tfidf = <span class="fn">TfidfVectorizer</span>()
+tfidf_matrix = tfidf.<span class="fn">fit_transform</span>(corpus)
+
+<span class="cm"># Kata "the" muncul di semua dokumen → IDF rendah → bobot rendah</span>
+<span class="cm"># Kata "cat" hanya di doc 1 → IDF tinggi → bobot tinggi</span>
+feature_names = tfidf.<span class="fn">get_feature_names_out</span>()
+doc1_tfidf = tfidf_matrix[<span class="nm">0</span>].<span class="fn">toarray</span>()[<span class="nm">0</span>]
+
+<span class="cm"># Sort berdasarkan bobot — kata paling "penting" di doc 1</span>
+top_words = <span class="fn">sorted</span>(<span class="fn">zip</span>(feature_names, doc1_tfidf), key=<span class="kw">lambda</span> x: x[<span class="nm">1</span>], reverse=<span class="kw">True</span>)[:<span class="nm">5</span>]
+<span class="fn">print</span>(<span class="st">"Top TF-IDF words in doc 1:"</span>, top_words)
+<span class="cm"># [('cat', 0.49), ('mat', 0.49), ('sat', 0.37), ('on', 0.37), ('the', 0.25)]</span>
+
+<span class="cm"># === Cosine Similarity antara dokumen ===</span>
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+sim = <span class="fn">cosine_similarity</span>(tfidf_matrix)
+<span class="fn">print</span>(<span class="st">f"\nSimilarity doc1 vs doc2: {sim[0,1]:.3f}"</span>)  <span class="cm"># tinggi — sama-sama "sat on the"</span>
+<span class="fn">print</span>(<span class="st">f"Similarity doc1 vs doc3: {sim[0,2]:.3f}"</span>)  <span class="cm"># rendah — vocabulary berbeda</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Dimensi & Sparsity — Perbandingan Representasi</div>
+<div class="viz-body">
+  <div class="cbar-row"><div class="cbar-label">One-Hot (50K vocab)</div><div class="cbar-track"><div class="cbar-fill" style="--tw:98%;background:var(--coral);"></div></div><div class="cbar-val">50K dim</div></div>
+  <div class="cbar-row"><div class="cbar-label">BoW / TF-IDF</div><div class="cbar-track"><div class="cbar-fill" style="--tw:80%;background:var(--amber);"></div></div><div class="cbar-val">|vocab| dim</div></div>
+  <div class="cbar-row"><div class="cbar-label">Word2Vec / GloVe</div><div class="cbar-track"><div class="cbar-fill" style="--tw:30%;background:var(--teal);"></div></div><div class="cbar-val">100–300</div></div>
+  <div class="cbar-row"><div class="cbar-label">Transformer hidden</div><div class="cbar-track"><div class="cbar-fill" style="--tw:55%;background:var(--accent);"></div></div><div class="cbar-val">768–4096</div></div>
+  <p style="font-size:12px;color:var(--text3);margin-top:14px;font-family:'IBM Plex Mono',monospace;">↑ Dimensi lebih sedikit bukan berarti lebih buruk — dense vectors pack informasi lebih efisien daripada sparse vectors.</p>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa TF-IDF kurang efektif untuk query pendek (1-2 kata) dibandingkan dokumen panjang? Apa yang terjadi dengan IDF ketika query hanya terdiri dari stop words?</li>
+<li><strong>[Kode]</strong> Buat matriks TF-IDF dari 10 artikel Wikipedia pendek. Hitung cosine similarity antar artikel dan cari pasangan yang paling mirip. Apakah hasilnya masuk akal secara semantik?</li>
+<li><strong>[Eksplorasi]</strong> Eksperimen dengan parameter <code>max_features</code> dan <code>ngram_range=(1,2)</code> di TfidfVectorizer. Bagaimana bigram mengubah kualitas representasi? Uji dengan klasifikasi sentimen sederhana menggunakan <code>LogisticRegression</code>.</li>
+</ul></div>
+
+</div><!-- /lm1b -->
+
+<div class="divider"></div>
+
+<!-- 1C -->
+<div class="sub" id="lm1c">
+<div class="subtit"><span class="ac">1.3</span> Word Embeddings <span class="subid">// geometri makna</span></div>
+<div class="prose">
+<p>Word embeddings adalah salah satu ide paling elegan dalam NLP: representasikan setiap kata sebagai titik dalam ruang vektor berdimensi rendah (biasanya 100–300 dimensi), sedemikian hingga kata-kata dengan makna serupa berada berdekatan satu sama lain. Hasilnya adalah geometri makna yang bisa dikuantifikasi — dan bahkan diaritmetikakan.</p>
+<p>Kunci intuisi di balik word embeddings adalah <strong>distributional hypothesis</strong>: kata-kata yang muncul dalam konteks yang sama cenderung memiliki makna yang sama ("a word is known by the company it keeps" — Firth, 1957). Word2Vec mengeksploitasi hipotesis ini secara langsung: dengan melatih neural network sederhana untuk memprediksi kata berdasarkan konteksnya, embedding yang dihasilkan secara otomatis menangkap hubungan semantik dan sintaktik.</p>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Word arithmetic yang terkenal</strong><code>king - man + woman ≈ queen</code>. Ini bukan magic — ini konsekuensi dari struktur ruang vektor yang dipelajari. Dimensi-dimensi tertentu dalam ruang embedding menangkap konsep seperti "royalty", "gender", "animacy". Fenomena ini menjadi bukti pertama bahwa representasi neural bisa menangkap struktur semantik secara implisit.</div>
+</div>
+
+<div class="prose">
+<h4>Dua arsitektur Word2Vec</h4>
+<ul>
+<li><strong>CBOW (Continuous Bag of Words)</strong> — prediksi kata target dari window konteks di sekitarnya. Rata-rata vektor konteks, prediksi kata tengah. Lebih cepat dilatih, bekerja baik untuk kata yang sering muncul.</li>
+<li><strong>Skip-gram</strong> — kebalikannya: dari kata target, prediksi kata-kata di window konteksnya. Lebih lambat dilatih tapi representasi lebih baik untuk kata jarang (rare words). Default yang disarankan untuk dataset besar.</li>
+<li><strong>GloVe (Global Vectors)</strong> — pendekatan berbeda: factorize matriks co-occurrence global. Menggabungkan kekuatan statistik global (seperti LSA) dengan pembelajaran lokal konteks (seperti Word2Vec). Umumnya sedikit lebih baik dari Word2Vec pada tugas semantic similarity.</li>
+<li><strong>FastText</strong> — ekstensi Word2Vec dari Facebook yang memecah kata menjadi character n-grams. Keunggulan utama: bisa menghasilkan embedding untuk kata yang tidak ada di training vocabulary (OOV), dan representasinya lebih baik untuk bahasa morfologis kaya seperti Bahasa Indonesia atau Turki.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">word_embeddings.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> gensim.models <span class="kw">import</span> Word2Vec, KeyedVectors
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Training Word2Vec dari scratch</span>
+sentences = [
+    [<span class="st">"the"</span>, <span class="st">"cat"</span>, <span class="st">"sat"</span>, <span class="st">"on"</span>, <span class="st">"the"</span>, <span class="st">"mat"</span>],
+    [<span class="st">"the"</span>, <span class="st">"dog"</span>, <span class="st">"ran"</span>, <span class="st">"in"</span>, <span class="st">"the"</span>, <span class="st">"park"</span>],
+    <span class="cm"># ... ribuan kalimat dari corpus</span>
+]
+
+model = <span class="fn">Word2Vec</span>(
+    sentences,
+    vector_size=<span class="nm">100</span>,    <span class="cm"># dimensi embedding</span>
+    window=<span class="nm">5</span>,           <span class="cm"># context window size</span>
+    min_count=<span class="nm">5</span>,        <span class="cm"># abaikan kata yang muncul < 5x</span>
+    workers=<span class="nm">4</span>,          <span class="cm"># parallelism</span>
+    sg=<span class="nm">1</span>,               <span class="cm"># 1=skip-gram, 0=CBOW</span>
+    epochs=<span class="nm">10</span>,
+)
+
+<span class="cm"># Load pre-trained Word2Vec (Google News, 3M words, 300 dim)</span>
+<span class="cm"># wv = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)</span>
+
+wv = model.wv  <span class="cm"># KeyedVectors — hanya weights, tanpa training overhead</span>
+
+<span class="cm"># Semantic similarity</span>
+<span class="fn">print</span>(wv.<span class="fn">similarity</span>(<span class="st">"cat"</span>, <span class="st">"dog"</span>))    <span class="cm"># tinggi — keduanya hewan peliharaan</span>
+<span class="fn">print</span>(wv.<span class="fn">similarity</span>(<span class="st">"cat"</span>, <span class="st">"car"</span>))    <span class="cm"># rendah</span>
+
+<span class="cm"># Most similar words</span>
+<span class="fn">print</span>(wv.<span class="fn">most_similar</span>(<span class="st">"king"</span>, topn=<span class="nm">5</span>))
+
+<span class="cm"># Word arithmetic: king - man + woman = ?</span>
+result = wv.<span class="fn">most_similar</span>(
+    positive=[<span class="st">"king"</span>, <span class="st">"woman"</span>],
+    negative=[<span class="st">"man"</span>],
+    topn=<span class="nm">3</span>
+)
+<span class="fn">print</span>(<span class="st">"king - man + woman ="</span>, result)  <span class="cm"># → [('queen', 0.71), ...]</span>
+
+<span class="cm"># Mendeteksi kata yang "tidak sekelompok"</span>
+<span class="fn">print</span>(wv.<span class="fn">doesnt_match</span>([<span class="st">"cat"</span>, <span class="st">"dog"</span>, <span class="st">"fish"</span>, <span class="st">"laptop"</span>]))  <span class="cm"># → laptop</span>
+
+<span class="cm"># Visualisasi dengan PCA (dimensionality reduction ke 2D)</span>
+<span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> PCA
+words = [<span class="st">"king"</span>, <span class="st">"queen"</span>, <span class="st">"man"</span>, <span class="st">"woman"</span>, <span class="st">"cat"</span>, <span class="st">"dog"</span>]
+vectors = np.<span class="fn">array</span>([wv[w] <span class="kw">for</span> w <span class="kw">in</span> words])
+pca = <span class="fn">PCA</span>(n_components=<span class="nm">2</span>)
+coords = pca.<span class="fn">fit_transform</span>(vectors)  <span class="cm"># 2D coords untuk plotting</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Ruang Semantik Word Embeddings — Hubungan Analogis</div>
+<div class="viz-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;">Relasi Gender (paralel)</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:var(--accent-glow);border:1px solid rgba(124,109,250,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);">king</span>
+          <span style="color:var(--text3);font-size:12px;">→ offset →</span>
+          <span style="background:var(--teal-dim);border:1px solid rgba(45,212,191,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);">queen</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:var(--accent-glow);border:1px solid rgba(124,109,250,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);">man</span>
+          <span style="color:var(--text3);font-size:12px;">→ offset →</span>
+          <span style="background:var(--teal-dim);border:1px solid rgba(45,212,191,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);">woman</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:var(--accent-glow);border:1px solid rgba(124,109,250,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);">actor</span>
+          <span style="color:var(--text3);font-size:12px;">→ offset →</span>
+          <span style="background:var(--teal-dim);border:1px solid rgba(45,212,191,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--teal);">actress</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;">Relasi Ibu Kota (paralel)</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);">France</span>
+          <span style="color:var(--text3);font-size:12px;">→ offset →</span>
+          <span style="background:var(--green-dim);border:1px solid rgba(74,222,128,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);">Paris</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);">Germany</span>
+          <span style="color:var(--text3);font-size:12px;">→ offset →</span>
+          <span style="background:var(--green-dim);border:1px solid rgba(74,222,128,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);">Berlin</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="background:var(--amber-dim);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);">Japan</span>
+          <span style="color:var(--text3);font-size:12px;">→ offset →</span>
+          <span style="background:var(--green-dim);border:1px solid rgba(74,222,128,.3);border-radius:6px;padding:6px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);">Tokyo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:18px;font-family:'IBM Plex Mono',monospace;">↑ Vektor offset yang paralel ini adalah bukti bahwa model mempelajari relasi semantik sebagai arah dalam ruang vektor.</p>
+</div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Word2Vec vs. embedding layer di Transformer</strong>Word2Vec menghasilkan embedding statis — satu kata selalu punya satu vektor, terlepas dari konteks. Transformer menghasilkan embedding kontekstual — "bank" dalam "river bank" dan "bank account" punya vektor berbeda. Ini adalah leap terbesar dari word embeddings ke model bahasa modern.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa FastText lebih baik dari Word2Vec untuk kata-kata yang jarang muncul (rare words)? Jelaskan mekanisme character n-gram dan berikan contoh kasus nyata di mana perbedaan ini signifikan.</li>
+<li><strong>[Kode]</strong> Load pre-trained GloVe vectors (tersedia gratis di nlp.stanford.edu/projects/glove/). Lakukan analisis bias: hitung cosine similarity antara ("programmer", "man") vs ("programmer", "woman"). Apa yang kamu temukan?</li>
+<li><strong>[Eksplorasi]</strong> Train Word2Vec dengan <code>sg=0</code> (CBOW) dan <code>sg=1</code> (Skip-gram) pada corpus yang sama. Bandingkan hasil <code>most_similar("python")</code> — apakah ada perbedaan kualitas untuk kata teknikal?</li>
+</ul></div>
+
+</div><!-- /lm1c -->
+
+<div class="divider"></div>
+
+<!-- 1D -->
+<div class="sub" id="lm1d">
+<div class="subtit"><span class="ac">1.4</span> Language Modeling Klasik <span class="subid">// prediksi kata dengan statistik</span></div>
+<div class="prose">
+<p>Language model adalah model probabilistik yang mengassign probabilitas pada suatu urutan kata. Pertanyaan yang dijawab: "Seberapa mungkin kalimat ini ada dalam bahasa X?" atau lebih pratisnya: "Kata apa yang paling mungkin muncul setelah urutan kata ini?" Ini adalah tugas yang sama yang dilakukan LLM modern — perbedaannya hanya pada cara menjawabnya.</p>
+<p>N-gram language model adalah pendekatan klasik yang paling luas digunakan sebelum era neural. Prinsipnya sederhana: probabilitas kata berikutnya hanya bergantung pada N-1 kata sebelumnya (Markov assumption). Meski terlihat naif, N-gram model menjadi backbone sistem speech recognition, machine translation, dan spell checking selama dekade.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">ngram_lm.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> collections <span class="kw">import</span> defaultdict, Counter
+<span class="kw">import</span> math
+<span class="kw">import</span> random
+
+<span class="kw">class</span> <span class="fn">NgramLM</span>:
+    <span class="st">"""Bigram Language Model dengan Laplace smoothing."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, n: <span class="tp">int</span> = <span class="nm">2</span>):
+        self.n = n
+        self.ngrams = <span class="fn">defaultdict</span>(Counter)  <span class="cm"># context → {next_word: count}</span>
+        self.vocab = <span class="fn">set</span>()
+
+    <span class="kw">def</span> <span class="fn">train</span>(self, corpus: <span class="tp">list</span>[<span class="tp">list</span>[<span class="tp">str</span>]]):
+        <span class="kw">for</span> sentence <span class="kw">in</span> corpus:
+            tokens = [<span class="st">"&lt;s&gt;"</span>] * (self.n - <span class="nm">1</span>) + sentence + [<span class="st">"&lt;/s&gt;"</span>]
+            self.vocab.<span class="fn">update</span>(sentence)
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(tokens) - self.n + <span class="nm">1</span>):
+                context = <span class="fn">tuple</span>(tokens[i:i+self.n-<span class="nm">1</span>])
+                next_word = tokens[i+self.n-<span class="nm">1</span>]
+                self.ngrams[context][next_word] += <span class="nm">1</span>
+
+    <span class="kw">def</span> <span class="fn">prob</span>(self, word: <span class="tp">str</span>, context: <span class="tp">tuple</span>) -> <span class="tp">float</span>:
+        <span class="cm"># Laplace (add-1) smoothing: P(w|ctx) = (count+1)/(total+|V|)</span>
+        counts = self.ngrams[context]
+        total = <span class="fn">sum</span>(counts.<span class="fn">values</span>())
+        V = <span class="fn">len</span>(self.vocab)
+        <span class="kw">return</span> (counts[word] + <span class="nm">1</span>) / (total + V)
+
+    <span class="kw">def</span> <span class="fn">perplexity</span>(self, test_corpus: <span class="tp">list</span>[<span class="tp">list</span>[<span class="tp">str</span>]]) -> <span class="tp">float</span>:
+        <span class="st">"""Perplexity: ukuran seberapa "terkejut" model melihat test data.
+        Perplexity rendah = model bagus. PP = 2^(average negative log-prob)."""</span>
+        log_prob_sum = <span class="nm">0</span>
+        N = <span class="nm">0</span>
+        <span class="kw">for</span> sentence <span class="kw">in</span> test_corpus:
+            tokens = [<span class="st">"&lt;s&gt;"</span>] * (self.n - <span class="nm">1</span>) + sentence + [<span class="st">"&lt;/s&gt;"</span>]
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(self.n - <span class="nm">1</span>, <span class="fn">len</span>(tokens)):
+                ctx = <span class="fn">tuple</span>(tokens[i-self.n+<span class="nm">1</span>:i])
+                word = tokens[i]
+                log_prob_sum += math.<span class="fn">log2</span>(self.<span class="fn">prob</span>(word, ctx))
+                N += <span class="nm">1</span>
+        <span class="kw">return</span> <span class="nm">2</span> ** (-log_prob_sum / N)
+
+    <span class="kw">def</span> <span class="fn">generate</span>(self, max_len: <span class="tp">int</span> = <span class="nm">20</span>) -> <span class="tp">str</span>:
+        tokens = [<span class="st">"&lt;s&gt;"</span>] * (self.n - <span class="nm">1</span>)
+        <span class="kw">while</span> <span class="fn">len</span>(tokens) < max_len:
+            ctx = <span class="fn">tuple</span>(tokens[-(self.n-<span class="nm">1</span>):])
+            candidates = <span class="fn">list</span>(self.ngrams[ctx].<span class="fn">keys</span>())
+            weights = <span class="fn">list</span>(self.ngrams[ctx].<span class="fn">values</span>())
+            <span class="kw">if</span> <span class="kw">not</span> candidates: <span class="kw">break</span>
+            next_word = random.<span class="fn">choices</span>(candidates, weights=weights)[<span class="nm">0</span>]
+            <span class="kw">if</span> next_word == <span class="st">"&lt;/s&gt;"</span>: <span class="kw">break</span>
+            tokens.<span class="fn">append</span>(next_word)
+        <span class="kw">return</span> <span class="st">" "</span>.<span class="fn">join</span>(tokens[self.n-<span class="nm">1</span>:])</pre></div>
+</div>
+
+<div class="prose">
+<h4>Masalah fundamentall N-gram model</h4>
+<ul>
+<li><strong>Sparsity problem</strong> — sebagian besar N-gram yang valid secara linguistik tidak pernah muncul di training data. Smoothing (Laplace, Kneser-Ney, Good-Turing) merupakan cara mengatasi ini, tapi tidak sempurna.</li>
+<li><strong>Long-range dependency</strong> — kalimat "The man who works at the factory where my brother used to work <em>is</em> tired." — model bigram tidak bisa menangkap bahwa "is" harus agree dengan "man", bukan "work".</li>
+<li><strong>Curse of dimensionality</strong> — untuk vocabulary V, trigram model butuh V³ parameter. Dengan V=50.000, ini 125 miliar parameter hanya untuk trigram — tidak tractable.</li>
+<li><strong>Tidak ada generalisasi</strong> — "dog eats food" dan "cat eats food" adalah trigram berbeda sepenuhnya, meski maknanya hampir sama. Model tidak menyadari "dog" dan "cat" mirip.</li>
+</ul>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Perplexity sebagai metrik intrinsik</strong>Perplexity mengukur rata-rata jumlah pilihan yang dipertimbangkan model per token. PP=100 berarti "model seolah memilih dari 100 kata secara acak setiap langkah". Model bahasa inggris yang bagus punya PP 50–100 pada test set standard. Perplexity berguna untuk membandingkan model dalam setting yang sama, tapi tidak selalu berkorelasi dengan performa downstream task.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan mengapa perplexity rendah tidak selalu berarti model bahasa yang berguna untuk aplikasi downstream. Berikan contoh situasi di mana model dengan perplexity tinggi justru lebih diinginkan.</li>
+<li><strong>[Kode]</strong> Implementasikan class <code>NgramLM</code> di atas, train dengan 100 baris teks bebas, lalu bandingkan perplexity bigram vs trigram. Apa trade-off yang kamu observasi?</li>
+<li><strong>[Eksplorasi]</strong> Coba generate teks dengan bigram vs trigram dari corpus artikel berita. Apakah teks yang dihasilkan lebih "masuk akal" dengan N lebih besar? Di titik mana meningkatkan N tidak lagi membantu?</li>
+</ul></div>
+
+</div><!-- /lm1d -->
+
+<div class="divider"></div>
+
+<!-- 1E -->
+<div class="sub" id="lm1e">
+<div class="subtit"><span class="ac">1.5</span> Subword Tokenization <span class="subid">// solusi OOV yang elegan</span></div>
+<div class="prose">
+<p>Semua model bahasa modern — GPT, BERT, T5 — menggunakan subword tokenization. Ini bukan detail implementasi kecil; ini adalah keputusan arsitektur fundamental yang menentukan bagaimana model "melihat" bahasa. Memahami subword tokenization adalah kunci untuk memahami mengapa model berperilaku seperti yang kita lihat.</p>
+<p>Problem yang diselesaikan: word-level tokenization menghasilkan vocabulary terlalu besar (jutaan kata termasuk variasi morfologi dan misspelling) dengan banyak OOV (out-of-vocabulary). Character-level tokenization tidak mengalami OOV tapi sequence jadi sangat panjang dan sulit dipelajari. Subword tokenization adalah jalan tengah yang elegan: pecah kata menjadi sub-unit yang sering muncul, sehingga semua kata bisa direpresentasikan dari vocabulary yang manageable.</p>
+</div>
+
+<div class="prose">
+<h4>Tiga algoritma utama</h4>
+<ul>
+<li><strong>BPE (Byte-Pair Encoding)</strong> — mulai dari karakter individual, iteratif merge pasangan karakter yang paling sering muncul bersamaan. "low", "lower", "newest" → ["low", "er", "new", "est"]. Digunakan oleh GPT series.</li>
+<li><strong>WordPiece</strong> — mirip BPE tapi merge berdasarkan likelihood (bukan frekuensi). Prefix "##" menandai sub-token yang bukan awal kata. "playing" → ["play", "##ing"]. Digunakan oleh BERT dan Google.</li>
+<li><strong>SentencePiece / Unigram LM</strong> — model berbasis probabilistik yang dimulai dari vocabulary besar dan memangkas. Tidak butuh pre-tokenization berbasis spasi — language-agnostic. Digunakan oleh T5, LLaMA, Gemini.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">tokenization.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> tokenizers <span class="kw">import</span> Tokenizer
+<span class="kw">from</span> tokenizers.models <span class="kw">import</span> BPE
+<span class="kw">from</span> tokenizers.trainers <span class="kw">import</span> BpeTrainer
+<span class="kw">from</span> tokenizers.pre_tokenizers <span class="kw">import</span> Whitespace
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoTokenizer
+
+<span class="cm"># === Training BPE Tokenizer dari Scratch ===</span>
+tokenizer = <span class="fn">Tokenizer</span>(<span class="fn">BPE</span>(unk_token=<span class="st">"[UNK]"</span>))
+tokenizer.pre_tokenizer = <span class="fn">Whitespace</span>()
+
+trainer = <span class="fn">BpeTrainer</span>(
+    vocab_size=<span class="nm">5000</span>,
+    special_tokens=[<span class="st">"[UNK]"</span>, <span class="st">"[CLS]"</span>, <span class="st">"[SEP]"</span>, <span class="st">"[PAD]"</span>],
+    min_frequency=<span class="nm">2</span>
+)
+
+files = [<span class="st">"corpus.txt"</span>]
+tokenizer.<span class="fn">train</span>(files, trainer)
+tokenizer.<span class="fn">save</span>(<span class="st">"bpe_tokenizer.json"</span>)
+
+<span class="cm"># === Memakai tokenizer GPT-2 (BPE) ===</span>
+gpt2_tok = AutoTokenizer.<span class="fn">from_pretrained</span>(<span class="st">"gpt2"</span>)
+tokens = gpt2_tok.<span class="fn">tokenize</span>(<span class="st">"tokenization is fascinating!"</span>)
+<span class="fn">print</span>(tokens)
+<span class="cm"># ['token', 'ization', ' is', ' fascinating', '!']</span>
+
+ids = gpt2_tok.<span class="fn">encode</span>(<span class="st">"tokenization is fascinating!"</span>)
+<span class="fn">print</span>(ids)  <span class="cm"># [30001, 1634, 318, 13413, 0]</span>
+<span class="fn">print</span>(gpt2_tok.<span class="fn">decode</span>(ids))  <span class="cm"># reconstruct original text</span>
+
+<span class="cm"># === Memakai tokenizer BERT (WordPiece) ===</span>
+bert_tok = AutoTokenizer.<span class="fn">from_pretrained</span>(<span class="st">"bert-base-uncased"</span>)
+tokens = bert_tok.<span class="fn">tokenize</span>(<span class="st">"unaffordable generalization"</span>)
+<span class="fn">print</span>(tokens)
+<span class="cm"># ['un', '##afford', '##able', 'general', '##ization']</span>
+<span class="cm"># Note ##prefix → sub-token bukan di awal kata</span>
+
+<span class="cm"># === Vocabulary size trade-off ===</span>
+<span class="kw">for</span> size <span class="kw">in</span> [<span class="nm">1000</span>, <span class="nm">8000</span>, <span class="nm">32000</span>, <span class="nm">100000</span>]:
+    <span class="fn">print</span>(<span class="st">f"vocab={size:6d}: avg tokens per word ≈ {estimate_fertility(size):.2f}"</span>)
+<span class="cm"># Fertility rendah = efisien. GPT-4 menggunakan ~100K vocab untuk fertility ~1.3 pada English</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Trade-off Vocabulary Size</div>
+<div class="viz-body">
+  <div class="cbar-row"><div class="cbar-label">Vocab kecil (1K)</div><div class="cbar-track"><div class="cbar-fill" style="--tw:90%;background:var(--coral);"></div></div><div class="cbar-val">fertility tinggi</div></div>
+  <div class="cbar-row"><div class="cbar-label">Vocab sedang (32K)</div><div class="cbar-track"><div class="cbar-fill" style="--tw:45%;background:var(--amber);"></div></div><div class="cbar-val">balanced</div></div>
+  <div class="cbar-row"><div class="cbar-label">Vocab besar (100K)</div><div class="cbar-track"><div class="cbar-fill" style="--tw:20%;background:var(--green);"></div></div><div class="cbar-val">fertility rendah</div></div>
+  <p style="font-size:12px;color:var(--text3);margin-top:14px;font-family:'IBM Plex Mono',monospace;">↑ Fertility = rata-rata jumlah token per kata. Vocab besar → lebih efisien tapi embedding matrix lebih besar. Sweet spot biasanya 32K–100K untuk multilingual.</p>
+</div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Tokenizer mismatch adalah bug yang halus</strong>Selalu gunakan tokenizer yang sama dengan model yang kamu pakai. Menghitung token "manual" dengan <code>len(text.split())</code> bisa off 2–5x dari jumlah token sebenarnya, terutama untuk kode, angka, atau bahasa non-Inggris. Gunakan <code>tokenizer.encode(text)</code> untuk count yang akurat sebelum mengestimasi cost API.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa tokenisasi Bahasa Indonesia dengan tokenizer yang dilatih pada English corpus menghasilkan fertility yang lebih tinggi? Apa implikasinya untuk cost API dan context window usage?</li>
+<li><strong>[Kode]</strong> Bandingkan tokenisasi kalimat yang sama menggunakan GPT-2, BERT, dan LLaMA tokenizer. Berapa jumlah token yang dihasilkan masing-masing? Untuk kalimat berbahasa Indonesia?</li>
+<li><strong>[Eksplorasi]</strong> Train BPE tokenizer dengan vocab_size=1000 dan 32000 pada corpus teks Indonesia. Hitung fertility masing-masing. Berikan contoh kata yang di-split secara berbeda.</li>
+</ul></div>
+
+</div><!-- /lm1e -->
+
+<div class="divider"></div>
+
+<!-- 1F -->
+<div class="sub" id="lm1f">
+<div class="subtit"><span class="ac">1.6</span> Evaluasi NLP <span class="subid">// mengukur apa yang susah diukur</span></div>
+<div class="prose">
+<p>Evaluasi adalah salah satu masalah tersulit dalam NLP — lebih sulit dari membangun modelnya sendiri. Teks adalah output open-ended: untuk satu input bisa ada ratusan output yang "benar" dan baik, dan kualitas seringkali bersifat subjektif. Metrik otomatis adalah proxy yang tidak sempurna, human evaluation mahal dan tidak scalable, dan benchmark sering di-overfit.</p>
+<p>Pemahaman metrik evaluasi bukan sekadar akademik — ini langsung mempengaruhi keputusan engineering: kapan model cukup baik untuk production, bagaimana membandingkan dua model, dan bagaimana mendeteksi regresi saat finetuning. Salah memilih metrik bisa membuat kamu optimize hal yang salah.</p>
+</div>
+
+<div class="prose">
+<h4>Metrik yang wajib diketahui</h4>
+<ul>
+<li><strong>BLEU (Bilingual Evaluation Understudy)</strong> — mengukur overlap n-gram antara teks yang dihasilkan dan referensi. Standard untuk machine translation. Masalah: tidak sensitif terhadap parafrase, menghukum variasi linguistik yang sah. Score 0.3 bisa sangat baik atau sangat buruk tergantung task.</li>
+<li><strong>ROUGE (Recall-Oriented Understudy for Gisting Evaluation)</strong> — mirip BLEU tapi fokus pada recall. ROUGE-N mengukur n-gram overlap, ROUGE-L mengukur longest common subsequence. Standard untuk summarization.</li>
+<li><strong>Perplexity</strong> — metrik intrinsik untuk language modeling. Sudah dibahas di topik sebelumnya. Berguna untuk membandingkan model tapi tidak langsung berkorelasi dengan downstream task quality.</li>
+<li><strong>BERTScore</strong> — menggunakan contextual embeddings dari BERT untuk mengukur similarity semantik. Lebih korelasi dengan human judgment dibanding BLEU/ROUGE karena memahami parafrase. Lebih lambat dihitung.</li>
+<li><strong>Human Evaluation</strong> — gold standard. Mahal, tidak scalable, rentan inter-annotator disagreement. Biasanya dilakukan pada sampel kecil sebagai kalibrasi untuk metrik otomatis.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">evaluation_metrics.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> nltk.translate.bleu_score <span class="kw">import</span> sentence_bleu, SmoothingFunction
+<span class="kw">from</span> rouge_score <span class="kw">import</span> rouge_scorer
+<span class="kw">from</span> bert_score <span class="kw">import</span> score <span class="kw">as</span> bert_score
+
+<span class="cm"># === BLEU Score ===</span>
+reference = [[<span class="st">"the"</span>, <span class="st">"cat"</span>, <span class="st">"is"</span>, <span class="st">"on"</span>, <span class="st">"the"</span>, <span class="st">"mat"</span>]]
+hypothesis1 = [<span class="st">"the"</span>, <span class="st">"cat"</span>, <span class="st">"is"</span>, <span class="st">"on"</span>, <span class="st">"the"</span>, <span class="st">"mat"</span>]   <span class="cm"># perfect</span>
+hypothesis2 = [<span class="st">"the"</span>, <span class="st">"feline"</span>, <span class="st">"rests"</span>, <span class="st">"on"</span>, <span class="st">"the"</span>, <span class="st">"rug"</span>]  <span class="cm"># paraphrase</span>
+
+smooth = <span class="fn">SmoothingFunction</span>().method1
+<span class="fn">print</span>(<span class="st">f"BLEU (perfect): {sentence_bleu(reference, hypothesis1, smoothing_function=smooth):.3f}"</span>)
+<span class="fn">print</span>(<span class="st">f"BLEU (paraphrase): {sentence_bleu(reference, hypothesis2, smoothing_function=smooth):.3f}"</span>)
+<span class="cm"># paraphrase = ~0.13 meski maknanya hampir sama — ini masalah BLEU</span>
+
+<span class="cm"># === ROUGE Score ===</span>
+scorer = <span class="fn">rouge_scorer</span>.<span class="fn">RougeScorer</span>([<span class="st">'rouge1'</span>, <span class="st">'rouge2'</span>, <span class="st">'rougeL'</span>], use_stemmer=<span class="kw">True</span>)
+
+reference_text = <span class="st">"The president signed the bill into law yesterday."</span>
+generated_summary = <span class="st">"Yesterday, the bill was signed by the president."</span>
+
+scores = scorer.<span class="fn">score</span>(reference_text, generated_summary)
+<span class="kw">for</span> metric, result <span class="kw">in</span> scores.<span class="fn">items</span>():
+    <span class="fn">print</span>(<span class="st">f"{metric}: P={result.precision:.3f} R={result.recall:.3f} F1={result.fmeasure:.3f}"</span>)
+
+<span class="cm"># === BERTScore ===</span>
+candidates = [<span class="st">"The feline rests on the floor mat."</span>]
+references  = [<span class="st">"The cat is lying on the mat."</span>]
+P, R, F1 = <span class="fn">bert_score</span>(candidates, references, lang=<span class="st">"en"</span>, verbose=<span class="kw">False</span>)
+<span class="fn">print</span>(<span class="st">f"BERTScore F1: {F1.mean():.3f}"</span>)  <span class="cm"># ~0.90 — menangkap semantic similarity</span>
+<span class="cm"># vs BLEU yang hanya ~0.15 untuk kalimat yang sama</span></pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Benchmark overfitting adalah masalah nyata</strong>Banyak model modern secara tidak sengaja "belajar" benchmark tertentu karena data evaluasi bocor ke training set, atau karena model dioptimasi terlalu spesifik untuk benchmark tersebut. Skor MMLU tinggi tidak selalu berarti model lebih berguna di dunia nyata. Selalu uji dengan data internal dan use case spesifik kamu.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Metrik Evaluasi — Apa yang Diukur &amp; Keterbatasannya</div>
+<div class="viz-body">
+<div style="overflow-x:auto">
+<table class="rt">
+<thead><tr><th>Metrik</th><th>Mengukur</th><th>Cocok untuk</th><th>Keterbatasan</th></tr></thead>
+<tbody>
+<tr><td>BLEU</td><td>N-gram precision</td><td>Machine translation</td><td>Tidak tangkap parafrase</td></tr>
+<tr><td>ROUGE-L</td><td>LCS recall</td><td>Summarization</td><td>Sensitif ke panjang output</td></tr>
+<tr><td>Perplexity</td><td>Token prediction confidence</td><td>LM comparison</td><td>Tidak korelasi ke usability</td></tr>
+<tr><td>BERTScore</td><td>Semantic similarity</td><td>Semua generation task</td><td>Lambat, model-dependent</td></tr>
+<tr><td>Human Eval</td><td>Kualitas aktual</td><td>Final release QA</td><td>Mahal, tidak scalable</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Sebuah model summarization mendapat ROUGE-L 0.55 pada test set. Apakah ini model yang baik? Apa pertanyaan lanjutan yang perlu kamu jawab sebelum memutuskan apakah model ini layak production?</li>
+<li><strong>[Kode]</strong> Buat evaluasi pipeline sederhana: generate 20 summary dengan dua model berbeda (misalnya dua versi prompt), hitung ROUGE dan BERTScore untuk keduanya. Apakah ranking kedua model sama di dua metrik tersebut?</li>
+<li><strong>[Eksplorasi]</strong> Baca paper "BLEU: a Method for Automatic Evaluation of Machine Translation" (Papineni et al., 2002). Identifikasi satu asumsi dalam paper itu yang tidak lagi berlaku untuk LLM modern generasi 2024–2025.</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 1 selesai · 6/27 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 2 — Neural Networks untuk Teks</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(4)">← 1.5 Subword</button>
+    <button class="tnbtn primary" onclick="goToPage('lmfi2')">Fase 2 →</button>
+  </div>
+</div>
+
+</div><!-- /lm1f -->
+
+</section><!-- /lmfase1 -->
