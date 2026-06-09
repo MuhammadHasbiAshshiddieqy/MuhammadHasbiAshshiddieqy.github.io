@@ -308,22 +308,22 @@
 
 <!-- ═══ Visualisasi Interaktif: Docker Layer Cache Visualizer ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🐳 Docker Layer Cache Visualizer — Lihat Layer Mana yang Rebuild</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>Docker Layer Cache Visualizer — Lihat Layer Mana yang Rebuild</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="docker-canvas" width="400" height="300" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
     <div style="flex:1;min-width:200px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik layer untuk simulasi perubahan kode</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">Klik layer untuk simulasi perubahan kode</div>
       <div id="docker-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:80px;">
         ← Klik layer untuk lihat detail
       </div>
       <div style="margin-top:8px;display:flex;gap:6px;">
         <button onclick="dockerReset()" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">↺ Reset Cache</button>
-        <button onclick="dockerChange('requirements')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--amber);background:transparent;color:var(--amber);cursor:pointer;">📦 Ubah Requirements</button>
-        <button onclick="dockerChange('code')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--teal);background:transparent;color:var(--teal);cursor:pointer;">📝 Ubah Kode</button>
+        <button onclick="dockerChange('requirements')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--amber);background:transparent;color:var(--amber);cursor:pointer;">Ubah Requirements</button>
+        <button onclick="dockerChange('code')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--teal);background:transparent;color:var(--teal);cursor:pointer;">Ubah Kode</button>
       </div>
       <div style="font-size:9px;color:var(--text3);margin-top:8px;">
-        🟢 Cached &nbsp; 🟡 Rebuild &nbsp; ⚪ Base
+        Cached &nbsp; Rebuild &nbsp; Base
       </div>
     </div>
   </div>
@@ -336,15 +336,15 @@
     {id:'base',label:'FROM nvidia/cuda:12.1.0',y:30,h:36,color:'rgba(100,100,120,0.3)',dep:null,desc:'Base image — jarang berubah'},
     {id:'apt',label:'RUN apt-get install python3.11',y:76,h:36,color:'rgba(45,212,191,0.4)',dep:'base',desc:'System packages — rebuild kalau base berubah'},
     {id:'pip',label:'RUN pip install --upgrade pip',y:122,h:36,color:'rgba(45,212,191,0.4)',dep:'apt',desc:'Pip upgrade — depend on apt layer'},
-    {id:'requirements',label:'COPY requirements.txt + pip install',y:168,h:36,color:'rgba(245,158,11,0.5)',dep:'pip',desc:'⚠️ Sering berubah — di-cache kalau requirements.txt tidak berubah'},
-    {id:'code',label:'COPY . . (source code)',y:214,h:36,color:'rgba(74,222,128,0.5)',dep:'requirements',desc:'⚠️ SELALU rebuild saat kode berubah. Letakkan di akhir!'},
+    {id:'requirements',label:'COPY requirements.txt + pip install',y:168,h:36,color:'rgba(245,158,11,0.5)',dep:'pip',desc:'[!] Sering berubah — di-cache kalau requirements.txt tidak berubah'},
+    {id:'code',label:'COPY . . (source code)',y:214,h:36,color:'rgba(74,222,128,0.5)',dep:'requirements',desc:'[!] SELALU rebuild saat kode berubah. Letakkan di akhir!'},
     {id:'entry',label:'CMD ["python", "serve.py"]',y:260,h:28,color:'rgba(124,109,250,0.4)',dep:'code',desc:'Entrypoint — rebuild kalau code berubah'}
   ];
   function initDkr(){cv=document.getElementById('docker-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
     cv.onclick=function(e){
       var rect=cv.getBoundingClientRect();var my=(e.clientY-rect.top)*(H/rect.height);
       var found=layers.find(function(l){return my>=l.y-4&&my<=l.y+l.h+4;});
-      if(found){document.getElementById('docker-info').innerHTML='<strong style="color:var(--accent);">'+found.label.split(' ').slice(0,3).join(' ')+'</strong><br>'+found.desc+(invalids[found.id]?'<br><br><strong style="color:var(--coral);">🔴 REBUILD — '+invalids[found.id]+'</strong>':found.id==='requirements'||found.id==='code'?'<br><br>💡 Layer ini yang paling sering berubah':'<br><br>✅ Jarang berubah — hampir selalu cached');}
+      if(found){document.getElementById('docker-info').innerHTML='<strong style="color:var(--accent);">'+found.label.split(' ').slice(0,3).join(' ')+'</strong><br>'+found.desc+(invalids[found.id]?'<br><br><strong style="color:var(--coral);">REBUILD — '+invalids[found.id]+'</strong>':found.id==='requirements'||found.id==='code'?'<br><br>Layer ini yang paling sering berubah':'<br><br>Jarang berubah — hampir selalu cached');}
     };
   }
   window.dockerChange=function(id){invalids[id]=invalids[id]?null:'berubah saat build';drawDkr();};
@@ -363,8 +363,8 @@
       ctx.fillStyle=expired?'rgba(248,113,113,0.8)':'rgba(255,255,255,0.6)';
       ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='left';
       ctx.fillText(l.label,74,l.y+l.h/2+4);
-      if(expired&&invalidFrom===l.id){ctx.fillStyle='rgba(248,113,113,0.9)';ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='right';ctx.fillText('🔴 REBUILD ↓',W-20,l.y+l.h/2+4);}
-      if(!expired&&l.id!=='base'){ctx.fillStyle='rgba(74,222,128,0.6)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='right';ctx.fillText('cached ✓',W-20,l.y+l.h/2+4);}
+      if(expired&&invalidFrom===l.id){ctx.fillStyle='rgba(248,113,113,0.9)';ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='right';ctx.fillText('REBUILD ↓',W-20,l.y+l.h/2+4);}
+      if(!expired&&l.id!=='base'){ctx.fillStyle='rgba(74,222,128,0.6)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='right';ctx.fillText('cached',W-20,l.y+l.h/2+4);}
     });
     // Build time bar
     var rebuilds=invalidFrom?layers.filter(function(l){var idx=layers.indexOf(l);var invIdx=layers.findIndex(function(x){return x.id===invalidFrom;});return idx>=invIdx;}).length:0;
@@ -674,7 +674,7 @@ spec:
       statusMsg = '↓ HPA: scale down -' + (currentPods-targetPods) + ' pod(s) (stabilization window)';
       statusColor = 'rgba(245,158,11,0.8)';
     } else {
-      statusMsg = '✓ Stable — ' + currentPods + ' pods running';
+      statusMsg = 'Stable — ' + currentPods + ' pods running';
       statusColor = 'rgba(45,212,191,0.8)';
     }
     ctx.fillStyle=statusColor;ctx.font='bold 10px IBM Plex Mono,monospace';ctx.textAlign='center';
@@ -745,7 +745,7 @@ spec:
 
 <!-- ═══ Visualisasi Interaktif: K8s Resource Allocator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">☸️ K8s Resource Allocator — Atur Pod &amp; Resource, Lihat Utilisasi</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/></svg>K8s Resource Allocator — Atur Pod &amp; Resource, Lihat Utilisasi</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="k8s-canvas" width="400" height="220" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -1175,11 +1175,11 @@ training_df = store.<span class="fn">get_historical_features</span>(
       <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;">Jan 15 ← label</div>
       <div style="background:rgba(45,212,191,.1);border-left:2px solid var(--teal);border-radius:4px;padding:6px 8px;font-size:10px;">
         <strong>Training event:</strong> "customer churned" (label = 1)<br>
-        <span style="color:var(--teal);">Feast ambil fitur dari Jan 1 (sebelum Jan 15) → 85.2 ✓</span>
+        <span style="color:var(--teal);">Feast ambil fitur dari Jan 1 (sebelum Jan 15) → 85.2</span>
       </div>
       <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;">Feb 1</div>
       <div style="background:rgba(245,158,11,.1);border-left:2px solid var(--amber);border-radius:4px;padding:6px 8px;font-size:10px;">Feature diupdate: avg_spend_7d = 210.5 (customer beli banyak)</div>
-      <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;color:rgba(248,113,113,.8);">❌ WRONG</div>
+      <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;color:rgba(248,113,113,.8);">WRONG</div>
       <div style="background:rgba(248,113,113,.1);border-left:2px solid rgba(248,113,113,.6);border-radius:4px;padding:6px 8px;font-size:10px;">
         Tanpa point-in-time: ambil fitur "sekarang" (Feb 1) = <strong style="color:rgba(248,113,113,.8);">210.5</strong><br>
         → Data leakage! Model belajar dari informasi yang belum ada saat churn
@@ -1198,12 +1198,12 @@ training_df = store.<span class="fn">get_historical_features</span>(
 
 <!-- ═══ Visualisasi Interaktif: Feature Store Architecture ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🏪 Feature Store Architecture — Online vs Offline Serving</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Feature Store Architecture — Online vs Offline Serving</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="fs-canvas" width="420" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
     <div style="flex:1;min-width:180px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik komponen untuk lihat detail</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">Klik komponen untuk lihat detail</div>
       <div id="fs-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:80px;">
         ← Klik komponen di diagram
       </div>

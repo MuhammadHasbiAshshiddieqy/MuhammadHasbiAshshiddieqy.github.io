@@ -269,7 +269,7 @@ log = structlog.<span class="fn">get_logger</span>()
 
 <!-- ═══ Visualisasi Interaktif: Drift Detection Simulator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">📈 Drift Detection Simulator — Geser Distribusi, Lihat PSI Naik</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Drift Detection Simulator — Geser Distribusi, Lihat PSI Naik</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="drift-canvas" width="420" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -283,7 +283,7 @@ log = structlog.<span class="fn">get_logger</span>()
       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
         <div>PSI: <strong id="dr-psi" style="color:var(--accent);">0.02</strong></div>
         <div>KS p-value: <strong id="dr-ks" style="color:var(--teal);">0.85</strong></div>
-        <div style="margin-top:2px;">Status: <strong id="dr-status" style="color:var(--green);">✅ Stable</strong></div>
+        <div style="margin-top:2px;">Status: <strong id="dr-status" style="color:var(--green);">Stable</strong></div>
         <div style="font-size:8px;color:var(--text3);margin-top:4px;">PSI &lt;0.1 = stable | 0.1-0.2 = warning | &gt;0.2 = drift</div>
       </div>
     </div>
@@ -308,9 +308,9 @@ log = structlog.<span class="fn">get_logger</span>()
     document.getElementById('dr-psi').textContent=psi.toFixed(3);
     document.getElementById('dr-ks').textContent=ksP.toFixed(2);
     var status=document.getElementById('dr-status');
-    if(psi>0.2){status.textContent='🔴 Drift Detected!';status.style.color='var(--coral)';}
-    else if(psi>0.1){status.textContent='🟡 Warning';status.style.color='var(--amber)';}
-    else {status.textContent='✅ Stable';status.style.color='var(--green)';}
+    if(psi>0.2){status.textContent='Drift Detected!';status.style.color='var(--coral)';}
+    else if(psi>0.1){status.textContent='Warning';status.style.color='var(--amber)';}
+    else {status.textContent='Stable';status.style.color='var(--green)';}
     ctx.clearRect(0,0,W,H);
     ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
     for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
@@ -1062,7 +1062,7 @@ DRIFT_RUNBOOK = [
 
 <!-- ═══ Visualisasi Interaktif: Alerting Threshold Simulator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🚨 Alerting Threshold Simulator — Set Threshold, Lihat Precision vs Recall</div>
+<div class="viz-title">Alerting Threshold Simulator — Set Threshold, Lihat Precision vs Recall</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="alert-canvas" width="400" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -1498,7 +1498,7 @@ result = <span class="fn">analyze_ab_test</span>(control, treatment)
 
 <!-- ═══ Visualisasi Interaktif: A/B Test Simulator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🎯 A/B Test Simulator — Geser Sample Size &amp; Effect, Lihat Significance</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>A/B Test Simulator — Geser Sample Size &amp; Effect, Lihat Significance</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="ab-canvas" width="400" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -1512,7 +1512,7 @@ result = <span class="fn">analyze_ab_test</span>(control, treatment)
       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
         <div>P-value: <strong id="ab-pv" style="color:var(--accent);">0.15</strong></div>
         <div>95% CI: <strong id="ab-ci" style="color:var(--teal);">[-1.2%, +5.2%]</strong></div>
-        <div>Status: <strong id="ab-st" style="color:var(--amber);">🟡 Inconclusive</strong></div>
+        <div>Status: <strong id="ab-st" style="color:var(--amber);">Inconclusive</strong></div>
       </div>
     </div>
   </div>
@@ -1541,9 +1541,9 @@ result = <span class="fn">analyze_ab_test</span>(control, treatment)
     document.getElementById('ab-pv').textContent=pv.toFixed(pv<0.01?4:3);
     document.getElementById('ab-ci').textContent='['+(ciLow*100).toFixed(1)+'%, +'+(ciHigh*100).toFixed(1)+'%]';
     var st=document.getElementById('ab-st');
-    if(pv<0.05&&diff>0){st.textContent='✅ Winner: New Model';st.style.color='var(--green)';}
-    else if(pv<0.05&&diff<0){st.textContent='❌ Winner: Existing';st.style.color='var(--coral)';}
-    else {st.textContent='🟡 Inconclusive — butuh lebih banyak data';st.style.color='var(--amber)';}
+    if(pv<0.05&&diff>0){st.textContent='Winner: New Model';st.style.color='var(--green)';}
+    else if(pv<0.05&&diff<0){st.textContent='Winner: Existing';st.style.color='var(--coral)';}
+    else {st.textContent='Inconclusive — butuh lebih banyak data';st.style.color='var(--amber)';}
     ctx.clearRect(0,0,W,H);
     ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
     for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}

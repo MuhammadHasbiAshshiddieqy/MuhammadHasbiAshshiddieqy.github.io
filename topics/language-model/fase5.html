@@ -168,7 +168,7 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 <!-- 🖐️ Visualisasi Interaktif: Scaling Law Interactive Explorer -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <div class="viz-wrap">
-<div class="viz-title">📈 Scaling Law Interactive Explorer — Geser untuk Prediksi Loss</div>
+<div class="viz-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Scaling Law Interactive Explorer — Geser untuk Prediksi Loss</div>
 <div class="viz-body" style="padding:0;">
   <div class="viz-canvas-wrap" style="padding:16px 20px;">
     <canvas id="scale-canvas" width="400" height="280"></canvas>
@@ -180,7 +180,7 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:2.2;color:var(--text2);background:var(--bg3);padding:12px;border-radius:8px;">
         <div>Predicted Loss: <strong id="sc-loss" style="color:var(--coral);font-size:14px;">2.85</strong></div>
         <div style="font-size:10px;color:var(--text3);">D/N ratio: <span id="sc-ratio">20.0</span></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Status: <span id="sc-status" style="color:var(--green);">✅ Chinchilla-optimal</span></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Status: <span id="sc-status" style="color:var(--green);">Chinchilla-optimal</span></div>
         <div style="font-size:9px;color:var(--text3);margin-top:6px;">Loss = 1.69 + 406.4/N<sup>0.34</sup> + 410.7/D<sup>0.28</sup></div>
       </div>
     </div>
@@ -221,9 +221,9 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
     document.getElementById('sc-loss').textContent = loss.toFixed(2);
     document.getElementById('sc-ratio').textContent = ratio.toFixed(1);
     var statusEl = document.getElementById('sc-status');
-    if(ratio>18&&ratio<22){statusEl.textContent='✅ Chinchilla-optimal';statusEl.style.color='var(--green)';}
-    else if(ratio>22){statusEl.textContent='⚠️ Over-trained (efficient inference)';statusEl.style.color='var(--amber)';}
-    else {statusEl.textContent='⚠️ Under-trained (model too big for data)';statusEl.style.color='var(--coral)';}
+    if(ratio>18&&ratio<22){statusEl.textContent='Chinchilla-optimal';statusEl.style.color='var(--green)';}
+    else if(ratio>22){statusEl.textContent='Over-trained (efficient inference)';statusEl.style.color='var(--amber)';}
+    else {statusEl.textContent='Under-trained (model too big for data)';statusEl.style.color='var(--coral)';}
 
     ctx.clearRect(0,0,W,H);
     ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
@@ -366,7 +366,7 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 <!-- 🖐️ Visualisasi Interaktif: MoE Router Visualizer -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <div class="viz-wrap">
-<div class="viz-title">🧭 MoE Router Visualizer — Token Mana ke Expert Mana?</div>
+<div class="viz-title">MoE Router Visualizer — Token Mana ke Expert Mana?</div>
 <div class="viz-body" style="padding:0;">
   <div class="viz-canvas-wrap" style="padding:16px 20px;">
     <canvas id="moe-canvas" width="420" height="250"></canvas>
@@ -496,10 +496,10 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
         var a = getAssignments(i, numExperts, topK);
         if (a.indexOf(selectedExpert) >= 0) assigned.push(tokens[i]);
       }
-      info.innerHTML = '<div style="color:var(--accent);font-weight:600;">🎯 Expert '+(selectedExpert+1)+' — '+expertNames[selectedExpert%expertNames.length]+'</div><div style="margin-top:4px;">Token: <strong style="color:var(--text);">'+(assigned.length?assigned.join(', '):'(tidak ada)')+'</strong></div><div style="margin-top:2px;font-size:9px;color:var(--text3);">Load: '+assigned.length+'/'+Math.min(tokens.length,12)+' token</div>';
+      info.innerHTML = '<div style="color:var(--accent);font-weight:600;">Expert '+(selectedExpert+1)+' — '+expertNames[selectedExpert%expertNames.length]+'</div><div style="margin-top:4px;">Token: <strong style="color:var(--text);">'+(assigned.length?assigned.join(', '):'(tidak ada)')+'</strong></div><div style="margin-top:2px;font-size:9px;color:var(--text3);">Load: '+assigned.length+'/'+Math.min(tokens.length,12)+' token</div>';
     } else {
       var pct = (topK/numExperts*100).toFixed(0);
-      info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+pct+'% per expert</div><div style="margin-top:4px;color:var(--text3);font-size:9px;">💡 Klik expert (canvas atau tombol) untuk filter</div><div style="color:var(--text2);">Active params: ~'+pct+'% dari total</div>';
+      info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+pct+'% per expert</div><div style="margin-top:4px;color:var(--text3);font-size:9px;">Klik expert (canvas atau tombol) untuk filter</div><div style="color:var(--text2);">Active params: ~'+pct+'% dari total</div>';
     }
   }
 
@@ -742,7 +742,7 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
 <!-- 🖐️ Visualisasi Interaktif: KV Cache Memory Calculator -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <div class="viz-wrap">
-<div class="viz-title">💾 KV Cache Memory Calculator — Atur Parameter, Lihat Memory</div>
+<div class="viz-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>KV Cache Memory Calculator — Atur Parameter, Lihat Memory</div>
 <div class="viz-body">
   <div class="viz-canvas-wrap">
     <div class="viz-canvas-controls">
@@ -766,7 +766,7 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
       </div>
       <div style="font-size:9px;color:var(--text3);margin-top:4px;">Relative to 24GB GPU memory</div>
       <div style="font-size:10px;color:var(--text3);margin-top:8px;">
-        <span id="kv-warning" style="color:var(--green);">✅ Fits comfortably in consumer GPU</span>
+        <span id="kv-warning" style="color:var(--green);">Fits comfortably in consumer GPU</span>
       </div>
       <canvas id="kv-canvas" width="300" height="80" style="margin-top:12px;"></canvas>
     </div>
@@ -813,10 +813,10 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
     document.getElementById('kv-bar').style.width = pct+'%';
 
     var warn=document.getElementById('kv-warning');
-    if(kvGB<8){warn.textContent='✅ Fits comfortably in consumer GPU';warn.style.color='var(--green)';}
-    else if(kvGB<20){warn.textContent='⚠️ Significant memory — consider quantization';warn.style.color='var(--amber)';}
-    else if(kvGB<40){warn.textContent='🔴 May exceed GPU memory — use GQA/MQA or offloading';warn.style.color='var(--coral)';}
-    else {warn.textContent='💀 Needs multi-GPU or extreme optimization';warn.style.color='var(--coral)';}
+    if(kvGB<8){warn.textContent='Fits comfortably in consumer GPU';warn.style.color='var(--green)';}
+    else if(kvGB<20){warn.textContent='[!] Significant memory — consider quantization';warn.style.color='var(--amber)';}
+    else if(kvGB<40){warn.textContent='[!] May exceed GPU memory — use GQA/MQA or offloading';warn.style.color='var(--coral)';}
+    else {warn.textContent='Needs multi-GPU or extreme optimization';warn.style.color='var(--coral)';}
 
     // Canvas: model weight vs KV cache comparison
     if(!ctx) return;
@@ -1203,7 +1203,7 @@ mem = <span class="fn">estimate_memory</span>(<span class="nm">7</span>, <span c
 
 <!-- ═══ Visualisasi: Parallelism Explorer ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🖥️ Parallelism Explorer — Split Model Across GPUs</div>
+<div class="viz-title">Parallelism Explorer — Split Model Across GPUs</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="dist-canvas" width="420" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>

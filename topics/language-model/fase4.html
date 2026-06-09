@@ -113,7 +113,7 @@
 
 <!-- ═══ Visualisasi: Data Curation Pipeline ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🧹 Data Curation Pipeline — Geser Filter, Lihat Data Tersisa</div>
+<div class="viz-title">Data Curation Pipeline — Geser Filter, Lihat Data Tersisa</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="curate-canvas" width="400" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -448,7 +448,7 @@ Sentiment:"""</span>
 <!-- 🖐️ Visualisasi Interaktif: Decoding Strategy Explorer -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <div class="viz-wrap">
-<div class="viz-title">🎲 Decoding Strategy Explorer — Temperature, Top-K, Top-P</div>
+<div class="viz-title">Decoding Strategy Explorer — Temperature, Top-K, Top-P</div>
 <div class="viz-body" style="padding:0;">
   <div class="viz-canvas-wrap" style="padding:16px 20px;">
     <canvas id="decode-canvas" width="380" height="220"></canvas>
@@ -681,7 +681,7 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
   </defs>
 
   <!-- Full Fine-tuning -->
-  <text x="130" y="22" font-family="IBM Plex Mono" font-size="10" fill="rgba(248,113,113,0.9)">❌ Full Fine-tuning</text>
+  <text x="130" y="22" font-family="IBM Plex Mono" font-size="10" fill="rgba(248,113,113,0.9)">Full Fine-tuning</text>
   <rect x="15" y="38" width="80" height="30" rx="5" fill="var(--bg3)" stroke="rgba(248,113,113,0.3)"/>
   <text x="55" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">W (d×k)</text>
   <text x="55" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">4096×4096</text>
@@ -692,7 +692,7 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
   <text x="230" y="56" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">semua weight berubah</text>
 
   <!-- LoRA -->
-  <text x="120" y="112" font-family="IBM Plex Mono" font-size="10" fill="rgba(74,222,128,0.9)">✅ LoRA Fine-tuning</text>
+  <text x="120" y="112" font-family="IBM Plex Mono" font-size="10" fill="rgba(74,222,128,0.9)">LoRA Fine-tuning</text>
   <rect x="15" y="128" width="80" height="30" rx="5" fill="var(--bg3)" stroke="rgba(74,222,128,0.3)"/>
   <text x="55" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">W (frozen)</text>
   <text x="55" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">4096×4096</text>
@@ -717,7 +717,7 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
 
   <!-- Rank explanation -->
   <rect x="15" y="180" width="650" height="56" rx="6" fill="rgba(124,109,250,0.04)" stroke="rgba(124,109,250,0.1)"/>
-  <text x="340" y="200" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--accent)">🔑 Rank r ≪ min(d, k)  —  biasanya r = 4, 8, 16, atau 64</text>
+  <text x="340" y="200" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--accent)">Rank r ≪ min(d, k)  —  biasanya r = 4, 8, 16, atau 64</text>
   <text x="340" y="216" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">d=4096, r=8 → B·A hanya 4096×8 + 8×4096 = 65K params vs 16.8M (0.4% dari original!)</text>
   <text x="340" y="230" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Mengapa bisa? Weight updates selama fine-tuning memiliki intrinsic low rank — tidak semua dimensi berubah signifikan</text>
 
@@ -731,7 +731,7 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
 <!-- 🖐️ Visualisasi Interaktif: LoRA Rank Explorer -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <div class="viz-wrap">
-<div class="viz-title">🔬 LoRA Rank Explorer — Geser Rank, Lihat Efisiensi</div>
+<div class="viz-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M14.5 2 20 7.5l-9.646 9.646a2 2 0 0 1-.929.518l-4.287 1.07a.5.5 0 0 1-.609-.61l1.072-4.286a2 2 0 0 1 .518-.929Z"/><path d="M9 7l2 2"/></svg>LoRA Rank Explorer — Geser Rank, Lihat Efisiensi</div>
 <div class="viz-body">
   <div class="viz-canvas-wrap">
     <div class="viz-canvas-controls">

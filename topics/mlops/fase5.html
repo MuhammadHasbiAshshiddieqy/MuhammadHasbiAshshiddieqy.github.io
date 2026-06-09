@@ -40,19 +40,19 @@
 <div class="viz-body">
   <div style="display:flex;flex-direction:column;gap:0;font-family:'IBM Plex Mono',monospace;font-size:11px;">
     <div style="display:flex;align-items:center;gap:0;">
-      <div style="background:rgba(124,109,250,0.1);border:1px solid rgba(124,109,250,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--accent);">📝 Code Push</div>
+      <div style="background:rgba(124,109,250,0.1);border:1px solid rgba(124,109,250,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--accent);">Code Push</div>
       <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
-      <div style="background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--teal);">🧪 Lint &amp; Unit Test</div>
+      <div style="background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--teal);">Lint &amp; Unit Test</div>
       <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
-      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--amber);">📊 Data Validation</div>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--amber);">Data Validation</div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding-right:55px;"><div style="width:1px;height:20px;background:var(--border2);margin-right:55px;"></div></div>
     <div style="display:flex;align-items:center;gap:0;flex-direction:row-reverse;">
-      <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--green);">🚀 Deploy (Canary)</div>
+      <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--green);">Deploy (Canary)</div>
       <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
-      <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--coral);">🤖 Model Test</div>
+      <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--coral);">Model Test</div>
       <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
-      <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--accent);">🏋️ Train &amp; Eval</div>
+      <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--accent);">Train &amp; Eval</div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin-top:12px;line-height:1.7;">
       Setiap stage bisa fail-fast: data validation gagal → training tidak jalan. Model test gagal → deploy tidak terjadi.
@@ -292,7 +292,7 @@
 <div class="divider"></div>
 <!-- ═══ Visualisasi Interaktif: Model Testing Matrix ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">✅ Model Testing Matrix — Behavioral Test Checklist Interaktif</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M20 6 9 17l-5-5"/></svg>Model Testing Matrix — Behavioral Test Checklist Interaktif</div>
 <div class="viz-body" style="padding:0;">
   <div style="padding:16px 20px;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:12px;">Centang tes yang sudah diimplementasikan di pipeline kamu:</div>
@@ -308,7 +308,7 @@
       <canvas id="mt-canvas" width="400" height="160" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);max-width:100%;"></canvas>
     </div>
     <div id="mt-assessment" style="margin-top:10px;font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;text-align:center;">
-      ⚠️ Hanya 0% test coverage — model berisiko tinggi di production
+      [!] Hanya 0% test coverage — model berisiko tinggi di production
     </div>
   </div>
 </div>
@@ -343,10 +343,10 @@
     document.getElementById('mt-pct').textContent=pct+'%';
     document.getElementById('mt-bar').style.width=pct+'%';
     var assess=document.getElementById('mt-assessment');
-    if(pct>=80)assess.innerHTML='✅ '+pct+'% coverage — production-ready testing';
-    else if(pct>=50)assess.innerHTML='🟡 '+pct+'% coverage — cukup, tambah MFT dan INV tests';
-    else if(pct>=20)assess.innerHTML='⚠️ '+pct+'% coverage — prioritaskan MFT dan DATA validation';
-    else assess.innerHTML='🔴 '+pct+'% coverage — model berisiko tinggi, mulai dengan MFT basic';
+    if(pct>=80)assess.innerHTML=pct+'% coverage — production-ready testing';
+    else if(pct>=50)assess.innerHTML=pct+'% coverage — cukup, tambah MFT dan INV tests';
+    else if(pct>=20)assess.innerHTML='[!] '+pct+'% coverage — prioritaskan MFT dan DATA validation';
+    else assess.innerHTML='[low] '+pct+'% coverage — model berisiko tinggi, mulai dengan MFT basic';
     ctx.clearRect(0,0,W,H);
     var cats=['MFT','INV','DIR','DATA','PERF','BIAS'];
     var colors={MFT:'rgba(124,109,250,0.7)',INV:'rgba(45,212,191,0.7)',DIR:'rgba(245,158,11,0.7)',DATA:'rgba(248,113,113,0.7)',PERF:'rgba(74,222,128,0.7)',BIAS:'rgba(167,139,250,0.7)'};
@@ -384,7 +384,7 @@
 
 <div class="cmp">
   <div class="cmpc good">
-    <div class="cmph">🔵 Blue-Green Deployment</div>
+    <div class="cmph">Blue-Green Deployment</div>
     <div class="cmpb"><pre>Blue (current): 100% traffic
 Green (new): 0% traffic
 
@@ -394,11 +394,11 @@ Switch: green = 100%
 blue = 0% (standby)
 
 Rollback: switch back instantly
-Zero-downtime: ✅
+Zero-downtime: Yes
 Risk: all-or-nothing switch</pre></div>
   </div>
   <div class="cmpc good">
-    <div class="cmph">🐤 Canary Release</div>
+    <div class="cmph">Canary Release</div>
     <div class="cmpb"><pre>Step 1: new model = 5% traffic
          monitor 1 hour
 Step 2: new model = 25% traffic
@@ -411,7 +411,7 @@ Risk: limited blast radius
 Best for: production ML models</pre></div>
   </div>
   <div class="cmpc">
-    <div class="cmph">👻 Shadow Deployment</div>
+    <div class="cmph">Shadow Deployment</div>
     <div class="cmpb"><pre>Production model: serves users
 Shadow model: receives same
   requests but responses DISCARDED
@@ -511,7 +511,7 @@ app = <span class="fn">FastAPI</span>()
 <div class="divider"></div>
 <!-- ═══ Visualisasi Interaktif: Deployment Strategy Visualizer ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🚦 Deployment Strategy Visualizer — Canary vs Blue-Green vs Rolling</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>Deployment Strategy Visualizer — Canary vs Blue-Green vs Rolling</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="deploy-canvas" width="420" height="220" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -599,7 +599,7 @@ app = <span class="fn">FastAPI</span>()
 </div>
 
 <div class="viz-wrap">
-<div class="viz-title">💰 ML Cost Breakdown — Training vs Inference</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>ML Cost Breakdown — Training vs Inference</div>
 <div class="viz-body" style="padding:16px 20px;">
   <div class="viz-canvas-wrap">
     <canvas id="cost-canvas" width="400" height="260"></canvas>
@@ -756,7 +756,7 @@ app = <span class="fn">FastAPI</span>()
 <div class="divider"></div>
 <!-- ═══ Visualisasi Interaktif: Cloud GPU Cost Calculator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">💰 Cloud GPU Cost Calculator — Bandingkan Biaya Training</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cloud GPU Cost Calculator — Bandingkan Biaya Training</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="gpu-canvas" width="380" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
@@ -830,7 +830,7 @@ app = <span class="fn">FastAPI</span>()
 </div>
 
 <div class="viz-wrap">
-<div class="viz-title">🎯 MLOps Maturity Level Explorer</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>MLOps Maturity Level Explorer</div>
 <div class="viz-body" style="padding:16px 20px;">
   <div class="viz-canvas-wrap">
     <canvas id="maturity-canvas" width="380" height="300"></canvas>
@@ -953,7 +953,7 @@ app = <span class="fn">FastAPI</span>()
 </div>
 
 <div class="viz-wrap">
-<div class="viz-title">✅ Pre-Production Checklist</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M20 6 9 17l-5-5"/></svg>Pre-Production Checklist</div>
 <div class="viz-body">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px;">
     <div>
@@ -1021,10 +1021,10 @@ app = <span class="fn">FastAPI</span>()
 
 <!-- ═══ Visualisasi Interaktif: MLOps Maturity Self-Assessment ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🏆 MLOps Maturity Self-Assessment — Di Level Mana Tim Kamu?</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>MLOps Maturity Self-Assessment — Di Level Mana Tim Kamu?</div>
 <div class="viz-body" style="padding:0;">
   <div style="padding:16px 20px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:12px;">✅ Centang yang sudah diterapkan di tim kamu:</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:12px;">Centang yang sudah diterapkan di tim kamu:</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;" id="mat-checklist"></div>
     <div style="margin-top:16px;display:flex;gap:12px;align-items:center;">
       <div id="mat-meter" style="flex:1;height:12px;background:var(--bg3);border-radius:6px;overflow:hidden;"><div id="mat-fill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--teal),var(--amber),var(--coral));border-radius:6px;transition:width .4s;"></div></div>
@@ -1053,11 +1053,11 @@ app = <span class="fn">FastAPI</span>()
     {id:'mat-retrain',label:'Auto-retraining triggered by drift',level:4},
   ];
   var levels=[
-    {range:[0,20],name:'Level 0 — Manual Process',color:'var(--coral)',desc:'Training di notebook, deployment manual.<br>⚠️ Tidak scalable, sulit kolaborasi.'},
-    {range:[21,45],name:'Level 1 — Basic Automation',color:'var(--amber)',desc:'Experiment tracking + data versioning.<br>📊 Mulai reproducible, tapi masih banyak manual.'},
-    {range:[46,70],name:'Level 2 — Pipeline Automation',color:'var(--teal)',desc:'Training pipeline otomatis, CI/CD dasar.<br>🚀 Cocok untuk tim ML 3-5 orang.'},
-    {range:[71,90],name:'Level 3 — Full CI/CD + Monitoring',color:'var(--accent)',desc:'Drift monitoring, alerting, auto-retraining.<br>✅ Production-grade untuk sebagian besar use case.'},
-    {range:[91,100],name:'Level 4 — Autonomous MLOps',color:'var(--green)',desc:'Full auto-retraining, A/B testing, feature store.<br>🏆 Target perusahaan ML-mature (tim >10).'}
+    {range:[0,20],name:'Level 0 — Manual Process',color:'var(--coral)',desc:'Training di notebook, deployment manual.<br>[!] Tidak scalable, sulit kolaborasi.'},
+    {range:[21,45],name:'Level 1 — Basic Automation',color:'var(--amber)',desc:'Experiment tracking + data versioning.<br>Mulai reproducible, tapi masih banyak manual.'},
+    {range:[46,70],name:'Level 2 — Pipeline Automation',color:'var(--teal)',desc:'Training pipeline otomatis, CI/CD dasar.<br>Cocok untuk tim ML 3-5 orang.'},
+    {range:[71,90],name:'Level 3 — Full CI/CD + Monitoring',color:'var(--accent)',desc:'Drift monitoring, alerting, auto-retraining.<br>Production-grade untuk sebagian besar use case.'},
+    {range:[91,100],name:'Level 4 — Autonomous MLOps',color:'var(--green)',desc:'Full auto-retraining, A/B testing, feature store.<br>Target perusahaan ML-mature (tim >10).'}
   ];
   function buildChecklist(){
     var html='';

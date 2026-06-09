@@ -264,16 +264,16 @@ Rules:
 
   <!-- Column headers -->
   <rect x="40" y="10" width="80" height="28" rx="6" fill="rgba(124,109,250,0.12)" stroke="rgba(124,109,250,0.3)"/>
-  <text x="80" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(124,109,250,0.9)">👤 User</text>
+  <text x="80" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(124,109,250,0.9)">User</text>
 
   <rect x="180" y="10" width="100" height="28" rx="6" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.3)"/>
-  <text x="230" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">⚙️ Harness</text>
+  <text x="230" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">Harness</text>
 
   <rect x="340" y="10" width="80" height="28" rx="6" fill="rgba(45,212,191,0.1)" stroke="rgba(45,212,191,0.3)"/>
-  <text x="380" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🧠 LLM</text>
+  <text x="380" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">LLM</text>
 
   <rect x="480" y="10" width="80" height="28" rx="6" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.3)"/>
-  <text x="520" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(74,222,128,0.9)">🔧 Tools</text>
+  <text x="520" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(74,222,128,0.9)">Tools</text>
 
   <!-- Lifelines -->
   <line x1="80" y1="38" x2="80" y2="310" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
@@ -352,26 +352,26 @@ Rules:
 <div class="callout danger"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span><div class="ctxt"><strong>Prinsip minimal footprint</strong>Agent production yang baik selalu request permission minimal yang dibutuhkan, prefer reversible actions atas irreversible, dan konfirmasi ke user sebelum melakukan sesuatu yang tidak bisa di-undo (hapus file, kirim email, deploy ke production).</div></div>
 <!-- ═══ Visualisasi Interaktif: Autonomy Spectrum Slider ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🎚️ Autonomy Spectrum — Geser untuk Lihat Peran AI vs Human</div>
+<div class="viz-title">Autonomy Spectrum — Geser untuk Lihat Peran AI vs Human</div>
 <div class="viz-body" style="padding:0;">
   <div style="padding:20px 24px;">
     <div style="margin-bottom:16px;">
       <input type="range" id="autonomy-slider" min="0" max="100" value="50" style="width:100%;accent-color:var(--accent);height:8px;">
     </div>
     <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:20px;">
-      <span>🤚 Human-in-the-loop</span><span>🤝 Shared</span><span>🚀 Fully Autonomous</span>
+      <span>Human-in-the-loop</span><span>Shared</span><span>Fully Autonomous</span>
     </div>
     <div style="display:flex;gap:12px;align-items:stretch;min-height:120px;">
       <div id="aut-human-bar" style="background:rgba(45,212,191,0.15);border:1px solid rgba(45,212,191,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .3s;min-width:80px;flex:1;">
         <div style="text-align:center;padding:12px;">
-          <div style="font-size:24px;">🧑</div>
+          <div style="font-size:24px;"></div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--teal);margin-top:4px;">Human</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:var(--teal);" id="aut-human-pct">50%</div>
         </div>
       </div>
       <div id="aut-ai-bar" style="background:rgba(124,109,250,0.15);border:1px solid rgba(124,109,250,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .3s;min-width:80px;flex:1;">
         <div style="text-align:center;padding:12px;">
-          <div style="font-size:24px;">🤖</div>
+          <div style="font-size:24px;"></div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);margin-top:4px;">AI Agent</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:var(--accent);" id="aut-ai-pct">50%</div>
         </div>
@@ -386,10 +386,10 @@ Rules:
 <script>
 (function(){
   var levels=[
-    {range:[0,25],name:'Level 1 — Human-in-the-loop',color:'var(--teal)',desc:'Agent menyarankan, manusia approve tiap tindakan.<br>✅ High-stakes, domain baru, compliance ketat'},
-    {range:[26,50],name:'Level 2 — Human Approve Rencana',color:'var(--teal)',desc:'Agent buat plan, manusia approve, lalu eksekusi otomatis.<br>✅ Complex planning, multi-step tasks'},
-    {range:[51,75],name:'Level 3 — Shared Autonomy',color:'var(--amber)',desc:'Agent jalan otomatis, manusia bisa interrupt kapanpun.<br>✅ Sebagian besar production use case'},
-    {range:[76,100],name:'Level 4 — Fully Autonomous',color:'var(--coral)',desc:'Agent mandiri penuh, semua action dicatat.<br>⚠️ Trust tinggi, monitoring ketat, reversible actions'}
+    {range:[0,25],name:'Level 1 — Human-in-the-loop',color:'var(--teal)',desc:'Agent menyarankan, manusia approve tiap tindakan.<br>High-stakes, domain baru, compliance ketat'},
+    {range:[26,50],name:'Level 2 — Human Approve Rencana',color:'var(--teal)',desc:'Agent buat plan, manusia approve, lalu eksekusi otomatis.<br>Complex planning, multi-step tasks'},
+    {range:[51,75],name:'Level 3 — Shared Autonomy',color:'var(--amber)',desc:'Agent jalan otomatis, manusia bisa interrupt kapanpun.<br>Sebagian besar production use case'},
+    {range:[76,100],name:'Level 4 — Fully Autonomous',color:'var(--coral)',desc:'Agent mandiri penuh, semua action dicatat.<br>[!] Trust tinggi, monitoring ketat, reversible actions'}
   ];
   function updateAut(){
     var v=parseInt(document.getElementById('autonomy-slider').value);
@@ -557,7 +557,7 @@ client = anthropic.<span class="fn">Anthropic</span>()
 <div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Gunakan count_tokens sebelum setiap API call</strong>API count_tokens tidak dikenakan biaya dan sangat akurat. Selalu cek token count sebelum call — lebih murah daripada kena ContextLengthExceeded error di iterasi ke-40 agent yang sedang berjalan.</div></div>
 <!-- ═══ Visualisasi Interaktif: Token Budget Calculator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🧮 Token Budget Calculator — Alokasikan Context Window</div>
+<div class="viz-title">Token Budget Calculator — Alokasikan Context Window</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <div style="flex:1;min-width:200px;">
@@ -575,7 +575,7 @@ client = anthropic.<span class="fn">Anthropic</span>()
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center;margin-top:10px;" id="tb-summary">
         Used: <strong id="tb-used" style="color:var(--accent);">42K</strong> / 200K &nbsp;|&nbsp; Free: <strong id="tb-free" style="color:var(--green);">158K</strong>
       </div>
-      <div id="tb-warning" style="font-size:10px;text-align:center;color:var(--green);margin-top:4px;">✅ Aman — baru 21% terpakai</div>
+      <div id="tb-warning" style="font-size:10px;text-align:center;color:var(--green);margin-top:4px;">Aman — baru 21% terpakai</div>
     </div>
   </div>
 </div>
@@ -593,10 +593,10 @@ client = anthropic.<span class="fn">Anthropic</span>()
     document.getElementById('tb-used').textContent=(usedT/1000).toFixed(0)+'K';
     document.getElementById('tb-free').textContent=((CONTEXT-usedT)/1000).toFixed(0)+'K';
     var warn=document.getElementById('tb-warning');
-    if(totalPct>85){warn.textContent='🔴 KRITIS — Compress sekarang!';warn.style.color='var(--coral)';}
-    else if(totalPct>70){warn.textContent='⚠️ WARNING — pertimbangkan compress';warn.style.color='var(--amber)';}
-    else if(totalPct>50){warn.textContent='🟡 Hati-hati';warn.style.color='var(--amber)';}
-    else {warn.textContent='✅ Aman — baru '+totalPct+'%';warn.style.color='var(--green)';}
+    if(totalPct>85){warn.textContent='KRITIS — Compress sekarang!';warn.style.color='var(--coral)';}
+    else if(totalPct>70){warn.textContent='[!] WARNING — pertimbangkan compress';warn.style.color='var(--amber)';}
+    else if(totalPct>50){warn.textContent='Hati-hati';warn.style.color='var(--amber)';}
+    else {warn.textContent='Aman — baru '+totalPct+'%';warn.style.color='var(--green)';}
     ctx.clearRect(0,0,300,180);
     var colors=['rgba(124,109,250,0.7)','rgba(45,212,191,0.7)','rgba(245,158,11,0.7)','rgba(74,222,128,0.7)'];
     var y=30;

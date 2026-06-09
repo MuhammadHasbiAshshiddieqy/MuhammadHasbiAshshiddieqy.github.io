@@ -427,9 +427,9 @@ Path(<span class="st">"metrics"</span>).<span class="fn">mkdir</span>(exist_ok=<
   var nodeInfo = {
     raw:     'deps: none\ntype: raw data (DVC tracked)\nhash: sha256:a3f9b...\nsize: 12.4 MB',
     params:  'deps: none\ntype: config (Git tracked)\ncontains: preprocessing.test_size=0.2\n         train.n_estimators=100',
-    prep:    'cmd: python src/preprocess.py\ndeps: data/raw/customers.csv, params.yaml\nouts: data/processed/features.csv\nstatus: ✓ cached (no changes)',
+    prep:    'cmd: python src/preprocess.py\ndeps: data/raw/customers.csv, params.yaml\nouts: data/processed/features.csv\nstatus: cached (no changes)',
     feats:   'deps: stage:preprocess\ntype: processed features (DVC tracked)\nhash: sha256:7c21d...\nrows: 5,634 · cols: 18',
-    train:   'cmd: python src/train.py\ndeps: data/processed/features.csv, params.yaml\nouts: models/rf_model.pkl\nstatus: ✓ cached',
+    train:   'cmd: python src/train.py\ndeps: data/processed/features.csv, params.yaml\nouts: models/rf_model.pkl\nstatus: cached',
     model:   'deps: stage:train\ntype: model artifact (DVC tracked)\nhash: sha256:4e8a1...\nalgorithm: RandomForest\nsize: 2.1 MB',
     metrics: 'deps: stage:train\ntype: metrics (Git tracked, not cached)\naccuracy: 0.931\nf1_weighted: 0.928',
   };
@@ -545,17 +545,17 @@ Path(<span class="st">"metrics"</span>).<span class="fn">mkdir</span>(exist_ok=<
 
 <!-- ═══ Visualisasi Interaktif: DVC Pipeline DAG Visualizer ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">🔗 DVC Pipeline DAG — Klik Node untuk Lihat Dependencies</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>DVC Pipeline DAG — Klik Node untuk Lihat Dependencies</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="dvc-canvas" width="440" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
     <div style="flex:1;min-width:180px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik node untuk lihat detail stage</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">Klik node untuk lihat detail stage</div>
       <div id="dvc-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:80px;">
         ← Klik node di DAG
       </div>
       <div style="margin-top:8px;font-size:9px;color:var(--text3);">
-        🔵 Data &nbsp; 🟢 Script &nbsp; 🟠 Stage &nbsp; ⚪ Output
+        Data &nbsp; Script &nbsp; Stage &nbsp; Output
       </div>
     </div>
   </div>
@@ -780,12 +780,12 @@ best_model = mlflow.sklearn.<span class="fn">load_model</span>(model_uri)
 
 <!-- ═══ Visualisasi Interaktif: MLflow Run Comparator ═══ -->
 <div class="viz-wrap">
-<div class="viz-title">📊 MLflow Run Comparator — Bandingkan Metric Antar Eksperimen</div>
+<div class="viz-title"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>MLflow Run Comparator — Bandingkan Metric Antar Eksperimen</div>
 <div class="viz-body" style="padding:0;">
   <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
     <canvas id="mlflow-canvas" width="400" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
     <div style="flex:1;min-width:200px;">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Geser slider untuk lihat tradeoff metric</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">Geser slider untuk lihat tradeoff metric</div>
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">n_estimators: <span id="mlf-ne-val" style="color:var(--accent);">100</span></label>
       <input type="range" id="mlf-ne" min="10" max="300" step="10" value="100" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">max_depth: <span id="mlf-md-val" style="color:var(--teal);">5</span></label>
