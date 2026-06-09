@@ -9,9 +9,10 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 #pv{color:var(--accent);}
 .ham{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:4px;background:none;border:none;}
 .ham span{display:block;width:18px;height:1.5px;background:var(--text2);border-radius:1px;}
-@media(max-width:768px){.ham.ham--visible{display:flex;}}
+.ham.ham--visible{display:flex;}
 .layout{display:flex;padding-top:var(--hh);min-height:100vh;}
 .sidebar{width:var(--sw);flex-shrink:0;position:fixed;top:var(--hh);left:0;bottom:0;overflow-y:auto;background:var(--bg);border-right:1px solid var(--border);padding:12px 0 40px;transition:transform .3s ease;z-index:90;}
+.sidebar.collapsed{transform:translateX(-100%);}
 @media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);box-shadow:4px 0 30px rgba(0,0,0,.5);}}
 .sidebar--hidden{display:none !important;transform:translateX(-100%) !important;visibility:hidden !important;}
 .sph{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;color:var(--text2);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;transition:color .15s;user-select:none;}
@@ -21,7 +22,9 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 .sit{display:flex;align-items:flex-start;gap:8px;padding:6px 16px 6px 44px;cursor:pointer;color:var(--text3);font-size:12px;line-height:1.4;transition:all .15s;border-left:2px solid transparent;text-decoration:none;}
 .sit:hover{color:var(--text2);}.sit.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow);}
 .sit .dot{width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;margin-top:5px;}
-.main{margin-left:var(--sw);flex:1;min-width:0;}@media(max-width:768px){.main{margin-left:0;}}
+.main{margin-left:var(--sw);flex:1;min-width:0;transition:margin-left .3s ease;}
+.layout--no-sidebar .main{margin-left:0;}
+@media(max-width:768px){.main{margin-left:0;}}
 .hero{padding:80px 60px 60px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
 .hero::before{content:'';position:absolute;top:-80px;right:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,109,250,.08) 0%,transparent 70%);pointer-events:none;}
 @media(max-width:600px){.hero{padding:40px 24px;}}

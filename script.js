@@ -80,10 +80,15 @@ function loadFase(faseId) {
   return loadedFases[faseId];
 }
 
-// ── Sidebar toggle (mobile) ──────────────────────────────────────────────────
+// ── Sidebar toggle ────────────────────────────────────────────────────────────
 function toggleSB(){
-  var s=document.getElementById('sidebar'),o=document.getElementById('overlay');
-  s.classList.toggle('open');o.classList.toggle('open');
+  var s=document.getElementById('sidebar'),o=document.getElementById('overlay'),l=document.getElementById('layout');
+  if(window.innerWidth<=768){
+    s.classList.toggle('open');o.classList.toggle('open');
+  } else {
+    var isCollapsed=s.classList.toggle('collapsed');
+    l.classList.toggle('layout--no-sidebar',isCollapsed);
+  }
 }
 
 // ── Curriculum open/close ─────────────────────────────────────────────────────
