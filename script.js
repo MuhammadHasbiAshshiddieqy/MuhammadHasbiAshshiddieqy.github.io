@@ -86,17 +86,15 @@ function openCurriculum(id) {
 
 function showLanding() {
   activeCurriculum = null;
-  // Tutup sidebar & overlay dulu sebelum hide
   var sb = document.getElementById('sidebar');
   var ov = document.getElementById('overlay');
+  // Sembunyikan sidebar & overlay sekaligus
   sb.classList.remove('open');
+  sb.classList.add('sidebar--hidden');
   ov.classList.remove('open');
   ov.style.display = 'none';
-  sb.style.transform = 'translateX(-100%)';
   hideAll();
   document.getElementById('landing').classList.add('landing--active');
-  sb.classList.add('sidebar--hidden');
-  sb.style.transform = '';
   document.getElementById('layout').classList.add('layout--no-sidebar');
   document.getElementById('header-sub').innerHTML = (typeof t === 'function' ? t('header.sub') : 'Open Knowledge — AI &amp; Engineering');
   history.replaceState(null,'','#');
