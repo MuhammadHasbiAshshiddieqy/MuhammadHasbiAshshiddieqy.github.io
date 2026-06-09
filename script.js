@@ -64,7 +64,7 @@ function showLanding() {
   document.getElementById('landing').classList.add('landing--active');
   document.getElementById('sidebar').classList.add('sidebar--hidden');
   document.getElementById('layout').classList.add('layout--no-sidebar');
-  document.getElementById('header-sub').textContent = 'Open Knowledge — AI & Engineering';
+  document.getElementById('header-sub').innerHTML = (typeof t === 'function' ? t('header.sub') : 'Open Knowledge — AI &amp; Engineering');
   history.replaceState(null,'','#');
   document.querySelector('.main').scrollTo({top:0});
   document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
@@ -304,32 +304,32 @@ function injectNavBars() {
 
     var nextLabel, nextBtn;
     if (isVeryLast) {
-      nextLabel = 'Selesai!';
-      nextBtn = '<button class="tnbtn primary" onclick="showLanding()">Kembali ke Semua Topik ↺</button>';
+      nextLabel = t('nav.done') || 'Selesai!';
+      nextBtn = '<button class="tnbtn primary" onclick="showLanding()">'+(t('nav.back-all')||'Kembali ke Semua Topik')+' ↺</button>';
     } else if (nextPageId) {
       nextLabel = pageLabels[nextPageId] || nextPageId;
-      nextBtn = '<button class="tnbtn primary" onclick="goToPage(\''+nextPageId+'\')">Selanjutnya →</button>';
+      nextBtn = '<button class="tnbtn primary" onclick="goToPage(\''+nextPageId+'\')">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     } else {
       nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
-      nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="'+idx+'">Selanjutnya →</button>';
+      nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="'+idx+'">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     }
 
     var prevBtn;
     if (prevPageId === 'home' || prevPageId === 'lmhome') {
-      prevBtn = '<button class="tnbtn" onclick="showLanding()">← Semua Topik</button>';
+      prevBtn = '<button class="tnbtn" onclick="showLanding()">← '+(t('sidebar.back')||'Semua Topik')+'</button>';
     } else if (prevPageId) {
-      prevBtn = '<button class="tnbtn" onclick="goToPage(\''+prevPageId+'\')">← Sebelumnya</button>';
+      prevBtn = '<button class="tnbtn" onclick="goToPage(\''+prevPageId+'\')">'+(t('nav.prev')||'← Sebelumnya')+'</button>';
     } else if (idx > 0) {
-      prevBtn = '<button class="tnbtn prev-btn" data-idx="'+idx+'">← Sebelumnya</button>';
+      prevBtn = '<button class="tnbtn prev-btn" data-idx="'+idx+'">'+(t('nav.prev')||'← Sebelumnya')+'</button>';
     } else {
-      prevBtn = '<button class="tnbtn" disabled>← Sebelumnya</button>';
+      prevBtn = '<button class="tnbtn" disabled>'+(t('nav.prev')||'← Sebelumnya')+'</button>';
     }
 
     var nav = document.createElement('div');
     nav.className = 'topic-nav';
     nav.innerHTML =
       '<div class="topic-nav-info">'
-      + '<div class="topic-nav-counter">Topik '+(idx+1)+' / '+topics.length+'</div>'
+      + '<div class="topic-nav-counter">'+(t('nav.topic')||'Topik')+' '+(idx+1)+' / '+topics.length+'</div>'
       + '<div class="topic-nav-title">'+nextLabel+'</div>'
       + '</div>'
       + '<div class="topic-nav-btns">'+prevBtn+nextBtn+'</div>';

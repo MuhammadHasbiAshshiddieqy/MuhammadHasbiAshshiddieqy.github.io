@@ -15,7 +15,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="i18n.js"></script>
 <style>
+.lang-toggle{display:flex;align-items:center;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;border:1px solid var(--border);border-radius:6px;overflow:hidden;position:fixed;top:14px;right:16px;z-index:100;}
+.lang-toggle button{padding:3px 8px;border:none;background:transparent;cursor:pointer;transition:all .15s;line-height:1;}
+.lang-toggle button:hover{background:var(--bg3);}
+.lang-toggle .sep{color:var(--border2);pointer-events:none;}
 body{min-height:100vh;display:flex;flex-direction:column;}
 .team-wrap{max-width:860px;margin:0 auto;padding:80px 40px 100px;width:100%;flex:1;}
 .team-back{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;margin-bottom:56px;transition:color .15s;}
@@ -40,20 +45,26 @@ body{min-height:100vh;display:flex;flex-direction:column;}
 </head>
 <body>
 
+<div class="lang-toggle" id="lang-toggle">
+  <button onclick="toggleLang()" data-lang-id style="color:var(--text2);" title="Bahasa Indonesia">ID</button>
+  <span class="sep">|</span>
+  <button onclick="toggleLang()" data-lang-en style="color:var(--text3);" title="English">EN</button>
+</div>
+
 <div class="team-wrap">
 
   <a href="/" class="team-back">
     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-    Principal Tech Wizard
+    <span data-i18n="team.back">← Principal Tech Wizard</span>
   </a>
 
   <div class="team-hero">
     <div class="team-tag">
       <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Meet the Team
+      <span data-i18n="team.tag">Meet the Team</span>
     </div>
-    <h1 class="team-h1">Built by <em>practitioners</em>,<br>for practitioners</h1>
-    <p class="team-desc">Researchers and engineers who spend their days building real AI systems — and share what they learn along the way.</p>
+    <h1 class="team-h1" data-i18n="team.h1">Built by <em>practitioners</em>,<br>for practitioners</h1>
+    <p class="team-desc" data-i18n="team.desc">Researchers and engineers who spend their days building real AI systems — and share what they learn along the way.</p>
   </div>
 
   <div class="team-grid">
@@ -62,8 +73,8 @@ body{min-height:100vh;display:flex;flex-direction:column;}
     <div class="member-card">
       <img src="https://github.com/faizghifari.png" alt="Faiz Ghifari Haznitrama" class="member-avatar">
       <div class="member-name">Faiz Ghifari Haznitrama</div>
-      <div class="member-role">AI Researcher · PhD Candidate at KAIST</div>
-      <div class="member-bio">Advancing AI through research, experimentation, and academic collaboration at one of Asia's leading AI institutions.</div>
+      <div class="member-role" data-i18n="team.faiz.role">AI Researcher · PhD Candidate at KAIST</div>
+      <div class="member-bio" data-i18n="team.faiz.bio">Advancing AI through research, experimentation, and academic collaboration at one of Asia's leading AI institutions.</div>
       <div class="member-links">
         <a href="https://www.linkedin.com/in/faiz-haznitrama/" target="_blank" class="member-link">
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
@@ -80,8 +91,8 @@ body{min-height:100vh;display:flex;flex-direction:column;}
     <div class="member-card">
       <img src="https://github.com/usamahjundia.png" alt="Usamah Jundi" class="member-avatar">
       <div class="member-name">Usamah Jundi</div>
-      <div class="member-role">AI Engineer · ML Systems Builder</div>
-      <div class="member-bio">Experienced in AI/ML engineering, computer vision, LLM systems, and deploying AI solutions from research to production.</div>
+      <div class="member-role" data-i18n="team.usamah.role">AI Engineer · ML Systems Builder</div>
+      <div class="member-bio" data-i18n="team.usamah.bio">Experienced in AI/ML engineering, computer vision, LLM systems, and deploying AI solutions from research to production.</div>
       <div class="member-links">
         <a href="https://www.linkedin.com/in/usamah-jundi/" target="_blank" class="member-link">
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
@@ -98,8 +109,8 @@ body{min-height:100vh;display:flex;flex-direction:column;}
     <div class="member-card">
       <img src="https://github.com/MuhammadHasbiAshshiddieqy.png" alt="Muhammad Hasbi Ashshiddieqy" class="member-avatar">
       <div class="member-name">Muhammad Hasbi Ashshiddieqy</div>
-      <div class="member-role">Backend Engineer · Applied AI Practitioner</div>
-      <div class="member-bio">Building scalable backend systems and implementing AI technologies to solve real-world business problems.</div>
+      <div class="member-role" data-i18n="team.hasbi.role">Backend Engineer · Applied AI Practitioner</div>
+      <div class="member-bio" data-i18n="team.hasbi.bio">Building scalable backend systems and implementing AI technologies to solve real-world business problems.</div>
       <div class="member-links">
         <a href="https://www.linkedin.com/in/muhammadhasbiashshiddieqy/" target="_blank" class="member-link">
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
@@ -116,8 +127,8 @@ body{min-height:100vh;display:flex;flex-direction:column;}
 </div>
 
 <footer style="padding:24px 40px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">© 2026 Principal Tech Wizard</div>
-  <a href="/" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Principal Tech Wizard</a>
+  <div data-i18n="team.copy" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">© 2026 Principal Tech Wizard</div>
+  <a data-i18n="team.footer.back" href="/" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Principal Tech Wizard</a>
 </footer>
 
 </body>
