@@ -513,10 +513,12 @@ function _showPage(pageId) {
     var parentSection = el.closest('.cs');
     if (parentSection) parentSection.style.display = 'block';
   }
-  history.replaceState(null,'','#'+pageId);
+  if (!_isPopstate) history.pushState(null,'','#'+pageId);
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+var _isPopstate = false;
 
 // ── goTo ──────────────────────────────────────────────────────────────────────
 function goTo(idx) {
@@ -541,7 +543,7 @@ function goTo(idx) {
 
     document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
     window.scrollTo({top:0,behavior:'smooth'});
-    history.replaceState(null,'','#'+nextId);
+    if (!_isPopstate) history.pushState(null,'','#'+nextId);
 
     document.querySelectorAll('.sit').forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
@@ -628,4 +630,31 @@ function enterCurriculum(id, label) {
     document.getElementById('landing').classList.add('landing--active');
     document.getElementById('sidebar').classList.add('sidebar--hidden');
   }
+
+  window.addEventListener('popstate', function() {
+    var h = location.hash.replace('#','');
+    _isPopstate = true;
+    if (!h || h === 'landing') { showLanding(); _isPopstate = false; return; }
+    var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h);
+    if (lmIdx >= 0) {
+      if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
+      goTo(lmIdx);
+    } else if (aaIdx >= 0) {
+      if (activeCurriculum !== 'agentic-ai') enterCurriculum('agentic-ai','Agentic AI Mastery');
+      goTo(aaIdx);
+    } else if (mlIdx >= 0) {
+      if (activeCurriculum !== 'mlops') enterCurriculum('mlops','MLOps & Model Deployment');
+      goTo(mlIdx);
+    } else if (LM_PAGES.indexOf(h) >= 0) {
+      if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
+      goToPage(h);
+    } else if (AA_PAGES.indexOf(h) >= 0) {
+      if (activeCurriculum !== 'agentic-ai') enterCurriculum('agentic-ai','Agentic AI Mastery');
+      goToPage(h);
+    } else if (MLOPS_PAGES.indexOf(h) >= 0) {
+      if (activeCurriculum !== 'mlops') enterCurriculum('mlops','MLOps & Model Deployment');
+      goToPage(h);
+    }
+    _isPopstate = false;
+  });
 })();
