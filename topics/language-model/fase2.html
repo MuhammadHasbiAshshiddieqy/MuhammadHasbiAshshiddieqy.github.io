@@ -36,6 +36,382 @@
 <p>Konsep kunci yang sering disalahpahami: neural network <em>tidak</em> "menemukan aturan" secara eksplisit. Ia mengoptimasi sekumpulan parameter numerik (bobot) sehingga fungsi yang dipetakan oleh jaringan tersebut memiliki output yang mendekati target pada data training. Seluruh "kecerdasan" tersimpan dalam ratusan juta angka floating-point — dan backpropagation adalah algoritma yang mengupdate angka-angka tersebut secara efisien.</p>
 </div>
 
+<!-- ── Visualisasi Interaktif: Persamaan Garis → Neuron → Network ── -->
+<div class="viz-wrap" style="margin-bottom:0;">
+<div class="viz-title">Dari Persamaan Garis ke Neural Network — Bangun Intuisi</div>
+<div class="viz-body" style="padding:0;overflow:hidden;">
+
+<div style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;">
+  <button id="nn-tab-0" onclick="nnTab(0)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:var(--accent-glow);color:var(--accent);cursor:pointer;flex-shrink:0;">① Persamaan Garis</button>
+  <button id="nn-tab-1" onclick="nnTab(1)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;">② Satu Neuron</button>
+  <button id="nn-tab-2" onclick="nnTab(2)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;">③ Aktivasi Non-Linear</button>
+  <button id="nn-tab-3" onclick="nnTab(3)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;">④ Mini Network</button>
+</div>
+
+<!-- Panel 0: Persamaan Garis -->
+<div id="nn-panel-0" style="padding:20px 24px;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Neural network dimulai dari <strong style="color:var(--text);">persamaan garis: y = w·x + b</strong>. Geser slider untuk lihat bagaimana <em>weight (w)</em> mengubah kemiringan dan <em>bias (b)</em> menggeser garis.</p>
+  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
+    <canvas id="nn-canvas-line" width="320" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:16px;" id="nn-eq-line">y = 1.0·x + 0.0</div>
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">weight w = <span id="nn-w-val">1.0</span></label>
+      <input type="range" id="nn-w" min="-3" max="3" step="0.1" value="1" style="width:100%;margin:6px 0 16px;accent-color:var(--accent);">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">bias b = <span id="nn-b-val">0.0</span></label>
+      <input type="range" id="nn-b" min="-3" max="3" step="0.1" value="0" style="width:100%;margin:6px 0 16px;accent-color:var(--accent);">
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;font-family:'IBM Plex Mono',monospace;">
+        <div>w → kemiringan garis</div>
+        <div>b → geser naik/turun</div>
+        <div style="margin-top:8px;color:var(--text2);">Satu neuron = <em>satu persamaan garis</em></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 1: Satu Neuron -->
+<div id="nn-panel-1" style="padding:20px 24px;display:none;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Sebuah neuron menerima <strong style="color:var(--text);">beberapa input</strong>, masing-masing dikali weight-nya, dijumlah, ditambah bias. Geser x₁ dan x₂ untuk lihat bagaimana output berubah.</p>
+  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
+    <canvas id="nn-canvas-neuron" width="320" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:16px;line-height:1.7;" id="nn-eq-neuron">z = w₁x₁ + w₂x₂ + b</div>
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">x₁ = <span id="nn-x1-val">1.0</span></label>
+      <input type="range" id="nn-x1" min="-2" max="2" step="0.1" value="1" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">x₂ = <span id="nn-x2-val">1.0</span></label>
+      <input type="range" id="nn-x2" min="-2" max="2" step="0.1" value="1" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:4px;font-family:'IBM Plex Mono',monospace;">w₁=0.8, w₂=0.5, b=0.2<br>z = weighted sum of inputs<br><span style="color:var(--text2);">output z = <strong id="nn-z-out" style="color:var(--accent);">1.50</strong></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 2: Aktivasi Non-Linear -->
+<div id="nn-panel-2" style="padding:20px 24px;display:none;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Tanpa aktivasi, jaringan sebesar apapun hanya bisa belajar fungsi linear. <strong style="color:var(--text);">Fungsi aktivasi</strong> menambahkan non-linearitas — inilah yang membuat neural network bisa memahami pola kompleks.</p>
+  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
+    <canvas id="nn-canvas-act" width="320" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Pilih aktivasi:</label>
+      <div style="display:flex;gap:6px;margin:8px 0 16px;flex-wrap:wrap;">
+        <button onclick="setAct('relu')" id="act-relu" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">ReLU</button>
+        <button onclick="setAct('sigmoid')" id="act-sigmoid" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">Sigmoid</button>
+        <button onclick="setAct('tanh')" id="act-tanh" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">Tanh</button>
+        <button onclick="setAct('gelu')" id="act-gelu" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">GELU</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.8;font-family:'IBM Plex Mono',monospace;" id="act-desc">
+        <strong style="color:var(--text2);">ReLU:</strong> max(0, x)<br>Output negatif → 0<br>Output positif → identik<br><br>Sederhana, cepat, paling umum
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 3: Mini Network -->
+<div id="nn-panel-3" style="padding:20px 24px;display:none;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Susun neuron-neuron menjadi <strong style="color:var(--text);">layer</strong>. Output satu layer jadi input layer berikutnya. Geser input untuk lihat bagaimana sinyal mengalir dari kiri ke kanan.</p>
+  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
+    <canvas id="nn-canvas-net" width="340" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Input x₁ = <span id="nn-net-x1">0.8</span></label>
+      <input type="range" id="nn-net-x1-sl" min="0" max="1" step="0.05" value="0.8" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Input x₂ = <span id="nn-net-x2">0.5</span></label>
+      <input type="range" id="nn-net-x2-sl" min="0" max="1" step="0.05" value="0.5" style="width:100%;margin:4px 0 16px;accent-color:var(--teal);">
+      <div style="font-size:11px;color:var(--text3);line-height:1.8;font-family:'IBM Plex Mono',monospace;">
+        <div>Input → Hidden (ReLU) → Output</div>
+        <div style="margin-top:8px;color:var(--text2);">Output: <strong id="nn-net-out" style="color:var(--accent);">–</strong></div>
+        <div style="margin-top:8px;">Warna node = aktivasi<br>Tebal edge = bobot koneksi</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /viz-body -->
+</div><!-- /viz-wrap -->
+
+<script>
+(function(){
+  var currentAct = 'relu';
+  var panels = [0,1,2,3];
+
+  function rgb(r,g,b,a){return 'rgba('+r+','+g+','+b+','+(a||1)+')';}
+  var C = {
+    bg:    getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f0f13',
+    grid:  'rgba(255,255,255,0.05)',
+    axis:  'rgba(255,255,255,0.15)',
+    line:  '#7c6dfa',
+    teal:  '#2dd4bf',
+    amber: '#f59e0b',
+    text:  'rgba(255,255,255,0.5)',
+  };
+
+  // ── Tab switcher ──
+  window.nnTab = function(idx) {
+    panels.forEach(function(i){
+      document.getElementById('nn-panel-'+i).style.display = i===idx?'block':'none';
+      var btn = document.getElementById('nn-tab-'+i);
+      btn.style.background = i===idx?'var(--accent-glow)':'transparent';
+      btn.style.color = i===idx?'var(--accent)':'var(--text3)';
+    });
+    if(idx===0) drawLine();
+    if(idx===1) drawNeuron();
+    if(idx===2) drawAct();
+    if(idx===3) drawNet();
+  };
+
+  // ── Panel 0: Garis ──
+  function drawLine(){
+    var cv = document.getElementById('nn-canvas-line'); if(!cv) return;
+    var ctx = cv.getContext('2d'), W=cv.width, H=cv.height;
+    var w = parseFloat(document.getElementById('nn-w').value);
+    var b = parseFloat(document.getElementById('nn-b').value);
+    document.getElementById('nn-w-val').textContent = w.toFixed(1);
+    document.getElementById('nn-b-val').textContent = b.toFixed(1);
+    document.getElementById('nn-eq-line').textContent = 'y = '+w.toFixed(1)+'·x + '+b.toFixed(1);
+
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle = C.grid; ctx.lineWidth=1;
+    for(var gx=0;gx<=W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<=H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // axes
+    ctx.strokeStyle=C.axis; ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+    // axis labels
+    ctx.fillStyle=C.text;ctx.font='10px IBM Plex Mono,monospace';
+    ctx.fillText('x',W-14,H/2-6);ctx.fillText('y',W/2+6,12);
+    // scale: canvas coord → math coord [-4,4]
+    var sc=W/8;
+    function toCV(mx,my){return{x:W/2+mx*sc, y:H/2-my*sc};}
+    // line
+    ctx.strokeStyle=C.line; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    var p0=toCV(-4, w*-4+b), p1=toCV(4, w*4+b);
+    ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y); ctx.stroke();
+    // dot at x=1
+    var dotX=1, dotY=w*dotX+b, dp=toCV(dotX,dotY);
+    ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(dp.x,dp.y,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=C.text;ctx.font='10px IBM Plex Mono,monospace';
+    ctx.fillText('(1, '+dotY.toFixed(1)+')',dp.x+8,dp.y-6);
+  }
+  document.getElementById('nn-w').addEventListener('input', drawLine);
+  document.getElementById('nn-b').addEventListener('input', drawLine);
+  drawLine();
+
+  // ── Panel 1: Neuron ──
+  function drawNeuron(){
+    var cv=document.getElementById('nn-canvas-neuron'); if(!cv) return;
+    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+    var x1=parseFloat(document.getElementById('nn-x1').value);
+    var x2=parseFloat(document.getElementById('nn-x2').value);
+    var w1=0.8,w2=0.5,bias=0.2;
+    var z=w1*x1+w2*x2+bias;
+    document.getElementById('nn-x1-val').textContent=x1.toFixed(1);
+    document.getElementById('nn-x2-val').textContent=x2.toFixed(1);
+    document.getElementById('nn-z-out').textContent=z.toFixed(2);
+    document.getElementById('nn-eq-neuron').textContent='z = '+w1+'·('+x1.toFixed(1)+') + '+w2+'·('+x2.toFixed(1)+') + '+bias+'\n  = '+z.toFixed(2);
+
+    ctx.clearRect(0,0,W,H);
+    var iNodes=[{x:70,y:80,label:'x₁='+x1.toFixed(1),w:w1},
+                {x:70,y:160,label:'x₂='+x2.toFixed(1),w:w2}];
+    var oNode={x:250,y:H/2};
+    var bNode={x:70,y:220};
+
+    // edges from inputs
+    iNodes.forEach(function(n){
+      var alpha=Math.min(1,Math.abs(n.w)*0.8+0.2);
+      ctx.strokeStyle='rgba(124,109,250,'+alpha.toFixed(2)+')';
+      ctx.lineWidth=Math.abs(n.w)*3+1;
+      ctx.beginPath();ctx.moveTo(n.x+18,n.y);ctx.lineTo(oNode.x-18,oNode.y);ctx.stroke();
+      // weight label
+      ctx.fillStyle='rgba(124,109,250,0.8)';ctx.font='10px IBM Plex Mono,monospace';
+      ctx.fillText('w='+n.w, (n.x+oNode.x)/2-14, (n.y+oNode.y)/2-6);
+    });
+    // bias edge
+    ctx.strokeStyle='rgba(245,158,11,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(bNode.x+18,bNode.y);ctx.lineTo(oNode.x-18,oNode.y);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // input nodes
+    iNodes.forEach(function(n){
+      ctx.fillStyle='rgba(45,212,191,0.15)';ctx.strokeStyle='rgba(45,212,191,0.6)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(n.x,n.y,18,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle=C.teal;ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(n.label,n.x,n.y+4);
+    });
+    // bias node
+    ctx.fillStyle='rgba(245,158,11,0.1)';ctx.strokeStyle='rgba(245,158,11,0.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(bNode.x,bNode.y,16,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=C.amber;ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('b='+bias,bNode.x,bNode.y+4);
+    // output node
+    var intensity=Math.min(1,Math.max(0,(z+3)/6));
+    ctx.fillStyle='rgba(124,109,250,'+(0.1+intensity*0.4)+')';
+    ctx.strokeStyle='rgba(124,109,250,'+(0.4+intensity*0.6)+')';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(oNode.x,oNode.y,24,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#a78bfa';ctx.font='bold 12px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('z='+z.toFixed(2),oNode.x,oNode.y+5);
+    // Σ label
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='18px sans-serif';
+    ctx.fillText('Σ',oNode.x,oNode.y-8);
+    ctx.textAlign='left';
+  }
+  document.getElementById('nn-x1').addEventListener('input',drawNeuron);
+  document.getElementById('nn-x2').addEventListener('input',drawNeuron);
+
+  // ── Panel 2: Aktivasi ──
+  var actDescs = {
+    relu:    '<strong style="color:var(--text2)">ReLU:</strong> max(0, x)<br>Output negatif → 0<br>Output positif → identik<br><br>Sederhana, cepat, paling umum',
+    sigmoid: '<strong style="color:var(--text2)">Sigmoid:</strong> 1/(1+e⁻ˣ)<br>Output selalu antara 0–1<br>Saturasi → vanishing gradient<br><br>Cocok untuk output biner',
+    tanh:    '<strong style="color:var(--text2)">Tanh:</strong> (eˣ−e⁻ˣ)/(eˣ+e⁻ˣ)<br>Output antara −1 hingga 1<br>Centered di nol (lebih baik dari sigmoid)<br><br>Umum di RNN',
+    gelu:    '<strong style="color:var(--text2)">GELU:</strong> x·Φ(x)<br>Smooth, probabilistik<br>Lebih baik dari ReLU di Transformer<br><br>Dipakai BERT, GPT, semua LLM modern',
+  };
+  window.setAct = function(name){
+    currentAct=name;
+    ['relu','sigmoid','tanh','gelu'].forEach(function(a){
+      var btn=document.getElementById('act-'+a);
+      btn.style.background = a===name?'var(--accent-glow)':'transparent';
+      btn.style.color = a===name?'var(--accent)':'var(--text3)';
+      btn.style.borderColor = a===name?'var(--accent)':'var(--border)';
+    });
+    document.getElementById('act-desc').innerHTML=actDescs[name];
+    drawAct();
+  };
+  function actFn(name,x){
+    if(name==='relu') return Math.max(0,x);
+    if(name==='sigmoid') return 1/(1+Math.exp(-x));
+    if(name==='tanh') return Math.tanh(x);
+    if(name==='gelu'){var c=0.7978845608;return 0.5*x*(1+Math.tanh(c*(x+0.044715*x*x*x)));}
+    return x;
+  }
+  function drawAct(){
+    var cv=document.getElementById('nn-canvas-act'); if(!cv) return;
+    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+    for(var gx=0;gx<=W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<=H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // axes
+    ctx.strokeStyle=C.axis;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+    ctx.fillStyle=C.text;ctx.font='10px IBM Plex Mono,monospace';
+    ctx.fillText('x',W-14,H/2-6);ctx.fillText('y',W/2+6,12);
+    // linear reference
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    for(var px=0;px<W;px++){var mx=(px-W/2)/40,my=mx,cy2=H/2-my*40;if(px===0)ctx.moveTo(px,cy2);else ctx.lineTo(px,cy2);}
+    ctx.stroke();ctx.setLineDash([]);
+    // activation curve
+    var colors={relu:C.line,sigmoid:C.teal,tanh:'#f472b6',gelu:C.amber};
+    ctx.strokeStyle=colors[currentAct]||C.line;ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(var px2=0;px2<W;px2++){
+      var mx2=(px2-W/2)/40, ay=actFn(currentAct,mx2), cy3=H/2-ay*40;
+      if(px2===0) ctx.moveTo(px2,cy3); else ctx.lineTo(px2,cy3);
+    }
+    ctx.stroke();
+    // dot at x=1
+    var dotA=actFn(currentAct,1);
+    ctx.fillStyle=colors[currentAct]||C.line;
+    ctx.beginPath();ctx.arc(W/2+40,H/2-dotA*40,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=C.text;ctx.font='10px IBM Plex Mono,monospace';
+    ctx.fillText('f(1)='+dotA.toFixed(2),W/2+46,H/2-dotA*40-8);
+  }
+
+  // ── Panel 3: Mini Network ──
+  var NW = {
+    // w[layer][to][from]
+    w1: [[0.7,-0.4],[0.5,0.8],[-0.3,0.6]],  // hidden (3 nodes, 2 inputs)
+    w2: [[0.6,-0.3,0.7]],                    // output (1 node, 3 hidden)
+    b1: [0.1,-0.2,0.3],
+    b2: [0.1],
+  };
+  function relu(x){return Math.max(0,x);}
+  function forwardNet(x1,x2){
+    var h=NW.w1.map(function(ws,i){return relu(ws[0]*x1+ws[1]*x2+NW.b1[i]);});
+    var o=NW.w2.map(function(ws,i){return ws[0]*h[0]+ws[1]*h[1]+ws[2]*h[2]+NW.b2[i];});
+    return {h:h,o:o};
+  }
+  function drawNet(){
+    var cv=document.getElementById('nn-canvas-net'); if(!cv) return;
+    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+    var x1=parseFloat(document.getElementById('nn-net-x1-sl').value);
+    var x2=parseFloat(document.getElementById('nn-net-x2-sl').value);
+    document.getElementById('nn-net-x1').textContent=x1.toFixed(2);
+    document.getElementById('nn-net-x2').textContent=x2.toFixed(2);
+    var fwd=forwardNet(x1,x2);
+    document.getElementById('nn-net-out').textContent=fwd.o[0].toFixed(3);
+
+    ctx.clearRect(0,0,W,H);
+    var iNodes=[{x:60,y:90,v:x1,lbl:'x₁'},{x:60,y:170,v:x2,lbl:'x₂'}];
+    var hNodes=[{x:180,y:60},{x:180,y:130},{x:180,y:200}];
+    var oNode={x:300,y:130};
+
+    function nodeColor(v,alpha){
+      var t=Math.min(1,Math.max(0,v));
+      return 'rgba(124,109,250,'+(0.08+t*0.5)+')';
+    }
+    function edgeAlpha(w){return Math.min(1,Math.abs(w)*0.7+0.15);}
+
+    // draw edges input→hidden
+    iNodes.forEach(function(n,ni){
+      hNodes.forEach(function(h,hi){
+        var w=NW.w1[hi][ni];
+        ctx.strokeStyle=w>0?'rgba(45,212,191,'+edgeAlpha(w)+')':'rgba(248,113,113,'+edgeAlpha(w)+')';
+        ctx.lineWidth=Math.abs(w)*2.5+0.5;
+        ctx.beginPath();ctx.moveTo(n.x+16,n.y);ctx.lineTo(h.x-16,h.y);ctx.stroke();
+      });
+    });
+    // edges hidden→output
+    hNodes.forEach(function(h,hi){
+      var w=NW.w2[0][hi];
+      ctx.strokeStyle=w>0?'rgba(45,212,191,'+edgeAlpha(w)+')':'rgba(248,113,113,'+edgeAlpha(w)+')';
+      ctx.lineWidth=Math.abs(w)*2.5+0.5;
+      ctx.beginPath();ctx.moveTo(h.x+16,h.y);ctx.lineTo(oNode.x-16,oNode.y);ctx.stroke();
+    });
+
+    // draw input nodes
+    iNodes.forEach(function(n){
+      ctx.fillStyle='rgba(45,212,191,0.15)';ctx.strokeStyle='rgba(45,212,191,0.6)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(n.x,n.y,16,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle=C.teal;ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(n.lbl,n.x,n.y-4);ctx.fillText(n.v.toFixed(2),n.x,n.y+8);
+    });
+    // hidden nodes
+    hNodes.forEach(function(h,i){
+      var act=fwd.h[i];
+      ctx.fillStyle=nodeColor(act);ctx.strokeStyle='rgba(124,109,250,'+(0.3+act*0.5)+')';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(h.x,h.y,16,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#a78bfa';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(act.toFixed(2),h.x,h.y+4);
+    });
+    // output node
+    var outV=fwd.o[0];
+    ctx.fillStyle='rgba(245,158,11,0.15)';ctx.strokeStyle='rgba(245,158,11,0.7)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(oNode.x,oNode.y,20,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle=C.amber;ctx.font='bold 11px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(outV.toFixed(2),oNode.x,oNode.y+4);
+
+    // labels
+    ctx.fillStyle=C.text;ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Input',60,240);ctx.fillText('Hidden (ReLU)',180,240);ctx.fillText('Output',300,240);
+    ctx.textAlign='left';
+
+    // legend
+    ctx.fillStyle='rgba(45,212,191,0.7)';ctx.fillRect(10,10,16,2);
+    ctx.fillStyle=C.text;ctx.font='9px IBM Plex Mono,monospace';ctx.fillText('bobot +',28,14);
+    ctx.fillStyle='rgba(248,113,113,0.7)';ctx.fillRect(90,10,16,2);
+    ctx.fillStyle=C.text;ctx.fillText('bobot −',108,14);
+  }
+  document.getElementById('nn-net-x1-sl').addEventListener('input',drawNet);
+  document.getElementById('nn-net-x2-sl').addEventListener('input',drawNet);
+  drawNet();
+
+  // init tab 0
+  nnTab(0);
+})();
+</script>
+
 <div class="viz-wrap">
 <div class="viz-title">Forward Pass — Dari Input ke Prediksi</div>
 <div class="viz-body">
