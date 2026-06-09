@@ -37,22 +37,22 @@ function loadFase(faseId) {
   loadedFases[faseId] = fetch(file)
     .then(function(r){ return r.text(); })
     .then(function(html){
-      // Ekstrak dan eksekusi <script> — innerHTML tidak menjalankan script!
       var scripts = [];
-      var cleaned = html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, function(match, code) {
+      var cleaned = html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, function(_, code) {
         scripts.push(code);
         return '';
       });
       container.innerHTML = cleaned;
-      // Eksekusi script yang diekstrak
+      injectNavBars();
       scripts.forEach(function(code) {
         var s = document.createElement('script');
         s.textContent = code;
         document.body.appendChild(s);
-        // Bersihkan setelah eksekusi (opsional, mencegah polusi DOM)
-        // document.body.removeChild(s);
+        document.body.removeChild(s);
       });
-      injectNavBars();
+    })
+    .catch(function(err) {
+      console.error('Gagal load fase:', file, err);
     });
   return loadedFases[faseId];
 }
