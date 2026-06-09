@@ -407,6 +407,63 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
 <li><strong>[Eksplorasi]</strong> Eksperimen dengan berbagai rank LoRA (r=4, 8, 16, 64) pada task yang sama. Plot validation loss vs jumlah trainable parameters. Temukan titik diminishing returns untuk dataset spesifik kamu.</li>
 </ul></div>
 
+<div class="viz-wrap">
+<div class="viz-title">LoRA — Low-Rank Adaptation Decomposition</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 270" xmlns="http://www.w3.org/2000/svg" style="max-height:290px;">
+  <defs>
+    <marker id="lorarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- Full Fine-tuning -->
+  <text x="130" y="22" font-family="IBM Plex Mono" font-size="10" fill="rgba(248,113,113,0.9)">❌ Full Fine-tuning</text>
+  <rect x="15" y="38" width="80" height="30" rx="5" fill="var(--bg3)" stroke="rgba(248,113,113,0.3)"/>
+  <text x="55" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">W (d×k)</text>
+  <text x="55" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">4096×4096</text>
+  <text x="110" y="56" font-family="IBM Plex Mono" font-size="9" fill="rgba(248,113,113,0.7)">→</text>
+  <rect x="130" y="38" width="80" height="30" rx="5" fill="rgba(248,113,113,0.1)" stroke="rgba(248,113,113,0.3)"/>
+  <text x="170" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">W + ΔW</text>
+  <text x="170" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">16.8M params</text>
+  <text x="230" y="56" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">semua weight berubah</text>
+
+  <!-- LoRA -->
+  <text x="120" y="112" font-family="IBM Plex Mono" font-size="10" fill="rgba(74,222,128,0.9)">✅ LoRA Fine-tuning</text>
+  <rect x="15" y="128" width="80" height="30" rx="5" fill="var(--bg3)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="55" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">W (frozen)</text>
+  <text x="55" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">4096×4096</text>
+
+  <text x="110" y="145" font-family="IBM Plex Mono" font-size="9" fill="var(--accent)">+</text>
+
+  <rect x="130" y="128" width="55" height="30" rx="5" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)"/>
+  <text x="157" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--accent)">B</text>
+  <text x="157" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">d×r</text>
+
+  <text x="195" y="145" font-family="IBM Plex Mono" font-size="9" fill="var(--text3)">×</text>
+
+  <rect x="210" y="128" width="55" height="30" rx="5" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)"/>
+  <text x="237" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--accent)">A</text>
+  <text x="237" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">r×k</text>
+
+  <text x="280" y="145" font-family="IBM Plex Mono" font-size="9" fill="rgba(74,222,128,0.7)">=</text>
+
+  <rect x="300" y="128" width="90" height="30" rx="5" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="345" y="142" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">W + B·A</text>
+  <text x="345" y="154" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">16.8M + 32K</text>
+
+  <!-- Rank explanation -->
+  <rect x="15" y="180" width="650" height="56" rx="6" fill="rgba(124,109,250,0.04)" stroke="rgba(124,109,250,0.1)"/>
+  <text x="340" y="200" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--accent)">🔑 Rank r ≪ min(d, k)  —  biasanya r = 4, 8, 16, atau 64</text>
+  <text x="340" y="216" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">d=4096, r=8 → B·A hanya 4096×8 + 8×4096 = 65K params vs 16.8M (0.4% dari original!)</text>
+  <text x="340" y="230" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Mengapa bisa? Weight updates selama fine-tuning memiliki intrinsic low rank — tidak semua dimensi berubah signifikan</text>
+
+  <!-- Bottom -->
+  <text x="340" y="258" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Asumsi kunci LoRA: ΔW memiliki rank rendah → bisa di-decompose jadi B·A tanpa kehilangan informasi penting</text>
+</svg>
+</div>
+</div>
+
 </div><!-- /lm4d -->
 
 <div class="divider"></div>

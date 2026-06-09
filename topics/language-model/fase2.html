@@ -508,6 +508,77 @@ Parameter count: lebih sedikit → lebih cepat</pre></div>
 <li><strong>[Eksplorasi]</strong> Baca section 2 dari paper "Neural Machine Translation by Jointly Learning to Align and Translate" (Bahdanau et al., 2014). Apa tepatnya yang dimaksud dengan "alignment" dan bagaimana paper ini mengaitkannya dengan attention?</li>
 </ul></div>
 
+<div class="viz-wrap">
+<div class="viz-title">Teacher Forcing — Training vs Inference di Seq2Seq</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 310" xmlns="http://www.w3.org/2000/svg" style="max-height:330px;">
+  <defs>
+    <marker id="tfarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.5)"/>
+    </marker>
+    <marker id="tfarr2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(74,222,128,0.5)"/>
+    </marker>
+    <marker id="tfarr3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(248,113,113,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- TRAINING section -->
+  <text x="170" y="22" font-family="IBM Plex Mono" font-size="10" fill="rgba(74,222,128,0.9)">📚 TRAINING (teacher forcing)</text>
+
+  <rect x="15" y="38" width="80" height="30" rx="6" fill="rgba(45,212,191,0.08)" stroke="rgba(45,212,191,0.3)"/>
+  <text x="55" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">Encoder</text>
+  <text x="55" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">"Ich liebe"</text>
+
+  <line x1="95" y1="53" x2="127" y2="53" stroke="rgba(74,222,128,0.4)" stroke-width="1" marker-end="url(#tfarr2)"/>
+
+  <rect x="130" y="38" width="90" height="30" rx="6" fill="rgba(45,212,191,0.08)" stroke="rgba(45,212,191,0.3)"/>
+  <text x="175" y="52" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">Decoder</text>
+  <text x="175" y="64" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">step 1: &lt;SOS&gt;</text>
+
+  <!-- Teacher forcing: ground truth fed as input -->
+  <rect x="290" y="32" width="160" height="42" rx="6" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.25)" stroke-dasharray="3,2"/>
+  <text x="370" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(74,222,128,0.8)">✅ Ground Truth Input</text>
+  <text x="370" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">"I" → "love" → "&lt;EOS&gt;"</text>
+
+  <line x1="220" y1="53" x2="370" y2="53" stroke="rgba(74,222,128,0.3)" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="295" y="48" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(74,222,128,0.6)">each step gets correct token</text>
+
+  <!-- INFERENCE section -->
+  <text x="150" y="110" font-family="IBM Plex Mono" font-size="10" fill="rgba(248,113,113,0.9)">🚀 INFERENCE (autoregressive)</text>
+
+  <rect x="15" y="126" width="80" height="30" rx="6" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.25)"/>
+  <text x="55" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">Encoder</text>
+  <text x="55" y="152" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">"Ich liebe"</text>
+
+  <line x1="95" y1="141" x2="127" y2="141" stroke="rgba(248,113,113,0.3)" stroke-width="1" marker-end="url(#tfarr3)"/>
+
+  <rect x="130" y="126" width="90" height="30" rx="6" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.25)"/>
+  <text x="175" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">Decoder</text>
+  <text x="175" y="152" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">step 1: &lt;SOS&gt;</text>
+
+  <!-- Feedback loop -->
+  <rect x="290" y="120" width="170" height="42" rx="6" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.25)" stroke-dasharray="3,2"/>
+  <text x="375" y="138" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(248,113,113,0.8)">⚠️ Own Prediction as Input</text>
+  <text x="375" y="153" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">pred₁ → pred₂ → ... → &lt;EOS&gt;</text>
+
+  <line x1="220" y1="141" x2="288" y2="141" stroke="rgba(248,113,113,0.3)" stroke-width="1"/>
+  <!-- Feedback arc -->
+  <path d="M375,162 L375,180 Q375,190 385,190 L460,190 Q470,190 470,180 L470,156" fill="none" stroke="rgba(248,113,113,0.4)" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="510" y="180" font-family="IBM Plex Mono" font-size="7" fill="rgba(248,113,113,0.5)">↺ feedback</text>
+
+  <!-- Error accumulation -->
+  <rect x="15" y="190" width="640" height="44" rx="6" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)"/>
+  <text x="335" y="208" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(248,113,113,0.8)">⚠ Exposure Bias: Model hanya lihat data sempurna saat training, tapi harus handle error sendiri saat inference</text>
+  <text x="335" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Solusi: Scheduled Sampling — campur ground truth &amp; prediction secara bertahap selama training</text>
+
+  <!-- Bottom note -->
+  <text x="335" y="270" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Teacher forcing = belajar dari kunci jawaban. Inference = ujian sesungguhnya tanpa contekan.</text>
+</svg>
+</div>
+</div>
+
 </div><!-- /lm2e -->
 
 <div class="divider"></div>
