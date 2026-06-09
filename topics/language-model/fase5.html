@@ -170,9 +170,9 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 <div class="viz-wrap">
 <div class="viz-title">📈 Scaling Law Interactive Explorer — Geser untuk Prediksi Loss</div>
 <div class="viz-body" style="padding:0;">
-  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
-    <canvas id="scale-canvas" width="400" height="280" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:200px;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="scale-canvas" width="400" height="280"></canvas>
+    <div class="viz-canvas-controls">
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Parameters (N): <span id="sc-n-val" style="color:var(--accent);">10B</span></label>
       <input type="range" id="sc-n" min="1" max="7" value="4" style="width:100%;margin:4px 0 12px;accent-color:var(--accent);">
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Training Tokens (D): <span id="sc-d-val" style="color:var(--teal);">500B</span></label>
@@ -195,7 +195,10 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
   var N_values = [1e8,5e8,1e9,5e9,1e10,5e10,1e11,5e11];
   var D_values = [1e10,5e10,1e11,5e11,1e12,5e12,1e13,5e13];
 
-  function initSc(){cv=document.getElementById('scale-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+  function initSc(){cv=document.getElementById('scale-canvas');if(!cv)return;
+    var cw=cv.parentElement.clientWidth||cv.offsetWidth||400;
+    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(280/400));}
+    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
 
   function chinchillaLoss(N,D){
     return 1.69 + 406.4/Math.pow(N,0.34) + 410.7/Math.pow(D,0.28);
@@ -361,9 +364,9 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 <div class="viz-wrap">
 <div class="viz-title">🧭 MoE Router Visualizer — Token Mana ke Expert Mana?</div>
 <div class="viz-body" style="padding:0;">
-  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
-    <canvas id="moe-canvas" width="420" height="250" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:180px;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="moe-canvas" width="420" height="250"></canvas>
+    <div class="viz-canvas-controls">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">
         Input tokens mengalir melalui router → dipetakan ke top-2 experts
       </div>
@@ -386,7 +389,10 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
   var tokens = ['The','cat','sat','on','the','mat','and','slept','peacefully','.','dog','ran'];
   var expertColors = ['rgba(124,109,250,0.7)','rgba(45,212,191,0.7)','rgba(245,158,11,0.7)','rgba(248,113,113,0.7)','rgba(74,222,128,0.7)','rgba(167,139,250,0.7)','rgba(251,146,60,0.7)','rgba(96,165,250,0.7)','rgba(244,114,182,0.7)','rgba(148,163,184,0.7)','rgba(34,211,238,0.7)','rgba(163,230,53,0.7)','rgba(232,121,249,0.7)','rgba(250,204,21,0.7)','rgba(129,140,248,0.7)','rgba(52,211,153,0.7)'];
 
-  function initMoe(){cv=document.getElementById('moe-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+  function initMoe(){cv=document.getElementById('moe-canvas');if(!cv)return;
+    var cw=cv.parentElement.clientWidth||cv.offsetWidth||420;
+    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(250/420));}
+    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
 
   function drawMoe(){
     if(!ctx) return;
@@ -612,8 +618,8 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
 <div class="viz-wrap">
 <div class="viz-title">💾 KV Cache Memory Calculator — Atur Parameter, Lihat Memory</div>
 <div class="viz-body">
-  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
-    <div style="flex:1;min-width:200px;">
+  <div class="viz-canvas-wrap">
+    <div class="viz-canvas-controls">
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Layers: <span id="kv-l-val" style="color:var(--accent);">32</span></label>
       <input type="range" id="kv-l" min="4" max="96" step="4" value="32" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Heads: <span id="kv-h-val" style="color:var(--teal);">32</span></label>
@@ -625,7 +631,7 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
       <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Batch Size: <span id="kv-bs-val" style="color:var(--green);">1</span></label>
       <input type="range" id="kv-bs" min="1" max="32" value="1" style="width:100%;margin:4px 0 0;accent-color:var(--green);">
     </div>
-    <div style="flex:1;min-width:200px;text-align:center;">
+    <div style="flex:1 1 200px;min-width:0;text-align:center;">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px;">KV Cache Size</div>
       <div style="font-size:36px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--accent);" id="kv-size">4.0 GB</div>
       <div style="font-size:9px;color:var(--text3);margin-bottom:12px;">Formula: 2 × L × H × D × S × B × 2 bytes</div>
@@ -636,7 +642,7 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
       <div style="font-size:10px;color:var(--text3);margin-top:8px;">
         <span id="kv-warning" style="color:var(--green);">✅ Fits comfortably in consumer GPU</span>
       </div>
-      <canvas id="kv-canvas" width="300" height="80" style="margin-top:12px;max-width:100%;"></canvas>
+      <canvas id="kv-canvas" width="300" height="80" style="margin-top:12px;"></canvas>
     </div>
   </div>
 </div>
@@ -647,7 +653,10 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
   var seqValues = [512,1024,2048,4096,8192,16384,32768];
   var cv, ctx, W, H;
 
-  function initKv(){cv=document.getElementById('kv-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+  function initKv(){cv=document.getElementById('kv-canvas');if(!cv)return;
+    var cw=cv.parentElement.clientWidth||cv.offsetWidth||300;
+    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(80/300));}
+    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
 
   function drawKv(){
     var L=parseInt(document.getElementById('kv-l').value);

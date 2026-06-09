@@ -51,9 +51,9 @@
 <!-- Panel 0: Persamaan Garis -->
 <div id="nn-panel-0" style="padding:20px 24px;">
   <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Neural network dimulai dari <strong style="color:var(--text);">persamaan garis: y = w·x + b</strong>. Geser slider untuk lihat bagaimana <em>weight (w)</em> mengubah kemiringan dan <em>bias (b)</em> menggeser garis.</p>
-  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
-    <canvas id="nn-canvas-line" width="320" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:180px;">
+  <div class="viz-canvas-wrap">
+    <canvas id="nn-canvas-line" width="320" height="240"></canvas>
+    <div class="viz-canvas-controls">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:16px;" id="nn-eq-line">y = 1.0·x + 0.0</div>
       <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">weight w = <span id="nn-w-val">1.0</span></label>
       <input type="range" id="nn-w" min="-3" max="3" step="0.1" value="1" style="width:100%;margin:6px 0 16px;accent-color:var(--accent);">
@@ -71,9 +71,9 @@
 <!-- Panel 1: Satu Neuron -->
 <div id="nn-panel-1" style="padding:20px 24px;display:none;">
   <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Sebuah neuron menerima <strong style="color:var(--text);">beberapa input</strong>, masing-masing dikali weight-nya, dijumlah, ditambah bias. Geser x₁ dan x₂ untuk lihat bagaimana output berubah.</p>
-  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
-    <canvas id="nn-canvas-neuron" width="320" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:180px;">
+  <div class="viz-canvas-wrap">
+    <canvas id="nn-canvas-neuron" width="320" height="240"></canvas>
+    <div class="viz-canvas-controls">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:16px;line-height:1.7;" id="nn-eq-neuron">z = w₁x₁ + w₂x₂ + b</div>
       <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">x₁ = <span id="nn-x1-val">1.0</span></label>
       <input type="range" id="nn-x1" min="-2" max="2" step="0.1" value="1" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
@@ -87,9 +87,9 @@
 <!-- Panel 2: Aktivasi Non-Linear -->
 <div id="nn-panel-2" style="padding:20px 24px;display:none;">
   <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Tanpa aktivasi, jaringan sebesar apapun hanya bisa belajar fungsi linear. <strong style="color:var(--text);">Fungsi aktivasi</strong> menambahkan non-linearitas — inilah yang membuat neural network bisa memahami pola kompleks.</p>
-  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
-    <canvas id="nn-canvas-act" width="320" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:180px;">
+  <div class="viz-canvas-wrap">
+    <canvas id="nn-canvas-act" width="320" height="240"></canvas>
+    <div class="viz-canvas-controls">
       <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Pilih aktivasi:</label>
       <div style="display:flex;gap:6px;margin:8px 0 16px;flex-wrap:wrap;">
         <button onclick="setAct('relu')" id="act-relu" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">ReLU</button>
@@ -107,9 +107,9 @@
 <!-- Panel 3: Mini Network -->
 <div id="nn-panel-3" style="padding:20px 24px;display:none;">
   <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Susun neuron-neuron menjadi <strong style="color:var(--text);">layer</strong>. Output satu layer jadi input layer berikutnya. Geser input untuk lihat bagaimana sinyal mengalir dari kiri ke kanan.</p>
-  <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
-    <canvas id="nn-canvas-net" width="340" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:180px;">
+  <div class="viz-canvas-wrap">
+    <canvas id="nn-canvas-net" width="340" height="260"></canvas>
+    <div class="viz-canvas-controls">
       <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Input x₁ = <span id="nn-net-x1">0.8</span></label>
       <input type="range" id="nn-net-x1-sl" min="0" max="1" step="0.05" value="0.8" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
       <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Input x₂ = <span id="nn-net-x2">0.5</span></label>
@@ -406,6 +406,29 @@
   document.getElementById('nn-net-x1-sl').addEventListener('input',drawNet);
   document.getElementById('nn-net-x2-sl').addEventListener('input',drawNet);
   drawNet();
+
+  // ── ResizeObserver: redraw canvas saat ukuran container berubah ──
+  function resizeCanvas(cv, drawFn) {
+    var w = cv.parentElement.clientWidth;
+    if (w < 10) return;
+    var ratio = cv.height / cv.width;
+    cv.width = w;
+    cv.height = Math.round(w * ratio);
+    drawFn();
+  }
+  if (window.ResizeObserver) {
+    var canvasDrawMap = [
+      ['nn-canvas-line', drawLine],
+      ['nn-canvas-neuron', drawNeuron],
+      ['nn-canvas-act', drawAct],
+      ['nn-canvas-net', drawNet],
+    ];
+    canvasDrawMap.forEach(function(pair) {
+      var cv = document.getElementById(pair[0]);
+      if (!cv) return;
+      new ResizeObserver(function() { resizeCanvas(cv, pair[1]); }).observe(cv);
+    });
+  }
 
   // init tab 0
   nnTab(0);

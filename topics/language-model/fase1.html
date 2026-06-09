@@ -482,9 +482,9 @@ coords = pca.<span class="fn">fit_transform</span>(vectors)  <span class="cm"># 
 <div class="viz-wrap">
 <div class="viz-title">🌌 Embedding Space Explorer — Geser untuk Lihat Relasi Semantik</div>
 <div class="viz-body" style="padding:0;">
-  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;padding:16px 20px;">
-    <canvas id="emb-canvas" width="360" height="320" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:200px;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="emb-canvas" width="360" height="320"></canvas>
+    <div class="viz-canvas-controls" style="min-width:200px;">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:12px;">Pilih kata untuk melihat vektor analoginya:</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;">
         <button onclick="embSelect('king')" id="emb-btn-king" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">king</button>
@@ -537,6 +537,8 @@ coords = pca.<span class="fn">fit_transform</span>(vectors)  <span class="cm"># 
 
   function initEmb(){
     canvas = document.getElementById('emb-canvas'); if(!canvas) return;
+    var cw = canvas.parentElement.clientWidth || canvas.offsetWidth || 360;
+    if(cw > 10){ canvas.width = cw; canvas.height = Math.round(cw * (320/360)); }
     ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
   }
 

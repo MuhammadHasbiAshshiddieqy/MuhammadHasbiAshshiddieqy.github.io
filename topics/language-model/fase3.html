@@ -133,9 +133,9 @@
 <div class="viz-wrap">
 <div class="viz-title">🎯 Interactive Attention Explorer — Hover untuk Lihat Koneksi</div>
 <div class="viz-body" style="padding:0;">
-  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
-    <canvas id="attn-canvas" width="380" height="280" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:200px;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="attn-canvas" width="380" height="280"></canvas>
+    <div class="viz-canvas-controls">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:12px;">
         <div style="margin-bottom:6px;">Input: <strong style="color:var(--accent);">"The cat sat on the mat"</strong></div>
         <div style="color:var(--text3);">Output: <strong style="color:var(--teal);">"Le chat était sur le tapis"</strong></div>
@@ -169,6 +169,8 @@
 
   function initAttn(){
     canvas = document.getElementById('attn-canvas'); if(!canvas) return;
+    var cw=canvas.parentElement.clientWidth||canvas.offsetWidth||380;
+    if(cw>10){canvas.width=cw;canvas.height=Math.round(cw*(280/380));}
     ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
     buildOutputTokens();
     drawAttn();
@@ -509,9 +511,9 @@
 <div class="viz-wrap">
 <div class="viz-title">🌊 Positional Encoding Wave Explorer — Sin & Cos per Dimensi</div>
 <div class="viz-body" style="padding:0;">
-  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
-    <canvas id="pe-canvas" width="400" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
-    <div style="flex:1;min-width:180px;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="pe-canvas" width="400" height="260"></canvas>
+    <div class="viz-canvas-controls">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:12px;">
         PE(pos, 2i) = sin(pos / 10000<sup>2i/d</sup>)<br>
         PE(pos, 2i+1) = cos(pos / 10000<sup>2i/d</sup>)
@@ -534,6 +536,8 @@
   var canvas, ctx, W, H;
   function initPE(){
     canvas = document.getElementById('pe-canvas'); if(!canvas) return;
+    var cw=canvas.parentElement.clientWidth||canvas.offsetWidth||400;
+    if(cw>10){canvas.width=cw;canvas.height=Math.round(cw*(260/400));}
     ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
   }
 
