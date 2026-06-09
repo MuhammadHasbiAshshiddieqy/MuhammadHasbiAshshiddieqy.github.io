@@ -315,7 +315,9 @@ function injectNavBars() {
     }
 
     var prevBtn;
-    if (prevPageId) {
+    if (prevPageId === 'home' || prevPageId === 'lmhome') {
+      prevBtn = '<button class="tnbtn" onclick="showLanding()">← Semua Topik</button>';
+    } else if (prevPageId) {
       prevBtn = '<button class="tnbtn" onclick="goToPage(\''+prevPageId+'\')">← Sebelumnya</button>';
     } else if (idx > 0) {
       prevBtn = '<button class="tnbtn prev-btn" data-idx="'+idx+'">← Sebelumnya</button>';
