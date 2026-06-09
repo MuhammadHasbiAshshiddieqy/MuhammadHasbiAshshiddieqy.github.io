@@ -1,7 +1,7 @@
 // ── Lazy-load fase ───────────────────────────────────────────────────────────
 var FASE_FILES = {
-  'i0':'fase0.html', 'i1':'fase1.html', 'i2':'fase2.html',
-  'i3':'fase3.html', 'i4':'fase4.html', 'i5':'fase5.html'
+  'i0':'topics/agentic-ai/fase0.html', 'i1':'topics/agentic-ai/fase1.html', 'i2':'topics/agentic-ai/fase2.html',
+  'i3':'topics/agentic-ai/fase3.html', 'i4':'topics/agentic-ai/fase4.html', 'i5':'topics/agentic-ai/fase5.html'
 };
 // map fase id → container id
 var FASE_CONTAINERS = {
