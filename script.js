@@ -112,7 +112,7 @@ function showLanding() {
   document.querySelector('.main').scrollTo({top:0});
   document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
   var ham = document.querySelector('.ham');
-  if (ham) ham.style.display = 'none';
+  if (ham) ham.classList.remove('ham--visible');
 }
 
 // ── Sidebar dinamis ───────────────────────────────────────────────────────────
@@ -566,7 +566,7 @@ function enterCurriculum(id, label) {
   renderSidebar(id);
   document.getElementById('header-sub').textContent = label;
   var ham = document.querySelector('.ham');
-  if (ham) ham.style.display = 'flex';
+  if (ham) ham.classList.add('ham--visible');
 }
 
 (function(){
@@ -580,7 +580,7 @@ function enterCurriculum(id, label) {
   if (!hash || hash === 'landing') {
     document.getElementById('landing').classList.add('landing--active');
     document.getElementById('sidebar').classList.add('sidebar--hidden');
-    var ham = document.querySelector('.ham'); if (ham) ham.style.display = 'none';
+    var ham = document.querySelector('.ham'); if (ham) ham.classList.remove('ham--visible');
   } else if (lmTopicIdx >= 0) {
     enterCurriculum('language-model','Language Model Fundamentals');
     goTo(lmTopicIdx);

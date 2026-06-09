@@ -8,7 +8,8 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 .hr{margin-left:auto;}.ppill{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:4px 10px;border-radius:100px;}
 #pv{color:var(--accent);}
 .ham{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:4px;background:none;border:none;}
-.ham span{display:block;width:18px;height:1.5px;background:var(--text2);border-radius:1px;}@media(max-width:768px){.ham{display:flex;}}
+.ham span{display:block;width:18px;height:1.5px;background:var(--text2);border-radius:1px;}
+@media(max-width:768px){.ham.ham--visible{display:flex;}}
 .layout{display:flex;padding-top:var(--hh);min-height:100vh;}
 .sidebar{width:var(--sw);flex-shrink:0;position:fixed;top:var(--hh);left:0;bottom:0;overflow-y:auto;background:var(--bg);border-right:1px solid var(--border);padding:12px 0 40px;transition:transform .3s ease;z-index:90;}
 @media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);box-shadow:4px 0 30px rgba(0,0,0,.5);}}
