@@ -360,6 +360,19 @@ function hideAll() {
 var HOME_PAGE_IDS = ['glossary'];
 
 function goToPage(pageId) {
+  // cari fase yang harus di-load untuk page ini
+  var faseId = null;
+  Object.keys(PHASE_INTRO_MAP).forEach(function(k){ if (PHASE_INTRO_MAP[k] === pageId) faseId = k; });
+  Object.keys(LM_PHASE_INTRO_MAP).forEach(function(k){ if (LM_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
+
+  if (faseId) {
+    loadFase(faseId).then(function(){ _showPage(pageId); });
+  } else {
+    _showPage(pageId);
+  }
+}
+
+function _showPage(pageId) {
   hideAll();
   var el = document.getElementById(pageId);
   if (!el) return;
