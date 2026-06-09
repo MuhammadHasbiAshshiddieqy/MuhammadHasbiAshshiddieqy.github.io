@@ -306,6 +306,78 @@
 <li><strong>[Eksplorasi]</strong> Jalankan <code>docker run --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi</code> di mesin dengan GPU. Eksperimen dengan <code>--gpus device=0</code> vs <code>--gpus all</code> untuk resource isolation. Bagaimana ini relevan untuk multi-tenant serving?</li>
 </ul></div>
 
+<!-- ═══ Visualisasi Interaktif: Docker Layer Cache Visualizer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🐳 Docker Layer Cache Visualizer — Lihat Layer Mana yang Rebuild</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="docker-canvas" width="400" height="300" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik layer untuk simulasi perubahan kode</div>
+      <div id="docker-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:80px;">
+        ← Klik layer untuk lihat detail
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <button onclick="dockerReset()" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">↺ Reset Cache</button>
+        <button onclick="dockerChange('requirements')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--amber);background:transparent;color:var(--amber);cursor:pointer;">📦 Ubah Requirements</button>
+        <button onclick="dockerChange('code')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:4px 12px;border-radius:6px;border:1px solid var(--teal);background:transparent;color:var(--teal);cursor:pointer;">📝 Ubah Kode</button>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:8px;">
+        🟢 Cached &nbsp; 🟡 Rebuild &nbsp; ⚪ Base
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=300,invalids={};
+  var layers=[
+    {id:'base',label:'FROM nvidia/cuda:12.1.0',y:30,h:36,color:'rgba(100,100,120,0.3)',dep:null,desc:'Base image — jarang berubah'},
+    {id:'apt',label:'RUN apt-get install python3.11',y:76,h:36,color:'rgba(45,212,191,0.4)',dep:'base',desc:'System packages — rebuild kalau base berubah'},
+    {id:'pip',label:'RUN pip install --upgrade pip',y:122,h:36,color:'rgba(45,212,191,0.4)',dep:'apt',desc:'Pip upgrade — depend on apt layer'},
+    {id:'requirements',label:'COPY requirements.txt + pip install',y:168,h:36,color:'rgba(245,158,11,0.5)',dep:'pip',desc:'⚠️ Sering berubah — di-cache kalau requirements.txt tidak berubah'},
+    {id:'code',label:'COPY . . (source code)',y:214,h:36,color:'rgba(74,222,128,0.5)',dep:'requirements',desc:'⚠️ SELALU rebuild saat kode berubah. Letakkan di akhir!'},
+    {id:'entry',label:'CMD ["python", "serve.py"]',y:260,h:28,color:'rgba(124,109,250,0.4)',dep:'code',desc:'Entrypoint — rebuild kalau code berubah'}
+  ];
+  function initDkr(){cv=document.getElementById('docker-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+    cv.onclick=function(e){
+      var rect=cv.getBoundingClientRect();var my=(e.clientY-rect.top)*(H/rect.height);
+      var found=layers.find(function(l){return my>=l.y-4&&my<=l.y+l.h+4;});
+      if(found){document.getElementById('docker-info').innerHTML='<strong style="color:var(--accent);">'+found.label.split(' ').slice(0,3).join(' ')+'</strong><br>'+found.desc+(invalids[found.id]?'<br><br><strong style="color:var(--coral);">🔴 REBUILD — '+invalids[found.id]+'</strong>':found.id==='requirements'||found.id==='code'?'<br><br>💡 Layer ini yang paling sering berubah':'<br><br>✅ Jarang berubah — hampir selalu cached');}
+    };
+  }
+  window.dockerChange=function(id){invalids[id]=invalids[id]?null:'berubah saat build';drawDkr();};
+  window.dockerReset=function(){invalids={};drawDkr();};
+  function drawDkr(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,W,H);
+    var invalidFrom=null;
+    layers.forEach(function(l){if(invalids[l.id])invalidFrom=l.id;});
+    layers.forEach(function(l){
+      var expired=invalidFrom&&layers.indexOf(l)>=layers.findIndex(function(x){return x.id===invalidFrom;});
+      ctx.fillStyle=expired?'rgba(248,113,113,0.15)':l.color;
+      ctx.strokeStyle=expired?'rgba(248,113,113,0.5)':'rgba(255,255,255,0.1)';
+      ctx.lineWidth=expired?2:1;
+      ctx.beginPath();ctx.roundRect(60,l.y,W-80,l.h,6);ctx.fill();ctx.stroke();
+      ctx.fillStyle=expired?'rgba(248,113,113,0.8)':'rgba(255,255,255,0.6)';
+      ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='left';
+      ctx.fillText(l.label,74,l.y+l.h/2+4);
+      if(expired&&invalidFrom===l.id){ctx.fillStyle='rgba(248,113,113,0.9)';ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='right';ctx.fillText('🔴 REBUILD ↓',W-20,l.y+l.h/2+4);}
+      if(!expired&&l.id!=='base'){ctx.fillStyle='rgba(74,222,128,0.6)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='right';ctx.fillText('cached ✓',W-20,l.y+l.h/2+4);}
+    });
+    // Build time bar
+    var rebuilds=invalidFrom?layers.filter(function(l){var idx=layers.indexOf(l);var invIdx=layers.findIndex(function(x){return x.id===invalidFrom;});return idx>=invIdx;}).length:0;
+    var totalTime=rebuilds>0?15+rebuilds*45:3;
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Build time: '+totalTime+'s'+(' ('+rebuilds+' layer rebuild)'),W/2,H-4);
+    ctx.fillText('Urutan COPY penting: requirements dulu, kode terakhir',W/2,18);
+  }
+  initDkr();drawDkr();
+  window.addEventListener('resize',function(){initDkr();drawDkr();});
+})();
+</script>
+
 </div><!-- /mlops3a -->
 
 <div class="divider"></div>

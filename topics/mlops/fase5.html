@@ -427,6 +427,86 @@ app = <span class="fn">FastAPI</span>()
 </div>
 
 <div class="divider"></div>
+<!-- ═══ Visualisasi Interaktif: Deployment Strategy Visualizer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🚦 Deployment Strategy Visualizer — Canary vs Blue-Green vs Rolling</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="deploy-canvas" width="420" height="220" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Strategy:</label>
+      <div style="display:flex;gap:5px;margin:6px 0 12px;flex-wrap:wrap;">
+        <button onclick="deployStrategy('canary')" id="dep-btn-canary" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">Canary</button>
+        <button onclick="deployStrategy('bluegreen')" id="dep-btn-bluegreen" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">Blue-Green</button>
+        <button onclick="deployStrategy('rolling')" id="dep-btn-rolling" style="font-family:'IBM Plex Mono',monospace;font-size:9px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">Rolling</button>
+      </div>
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Canary Traffic: <span id="dep-pct-val" style="color:var(--amber);">10%</span></label>
+      <input type="range" id="dep-pct" min="5" max="100" step="5" value="10" style="width:100%;margin:4px 0 12px;accent-color:var(--amber);">
+      <div id="dep-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.8;padding:10px;background:var(--bg3);border-radius:8px;">
+        <strong style="color:var(--accent);">Canary Deployment</strong><br>10% traffic ke versi baru.<br>Monitor metrik → gradually increase.<br>Rollback instant: hapus canary pods.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=420,H=220,strategy='canary',trafficPct=10;
+  function initDep(){cv=document.getElementById('deploy-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  window.deployStrategy=function(s){
+    strategy=s;
+    ['canary','bluegreen','rolling'].forEach(function(x){
+      var btn=document.getElementById('dep-btn-'+x);
+      btn.style.background=x===s?'var(--accent-glow)':'transparent';
+      btn.style.color=x===s?'var(--accent)':'var(--text3)';
+      btn.style.borderColor=x===s?'var(--accent)':'var(--border)';
+    });
+    drawDep();
+  };
+  function drawDep(){
+    if(!ctx)return;
+    trafficPct=parseInt(document.getElementById('dep-pct').value);
+    document.getElementById('dep-pct-val').textContent=trafficPct+'%';
+    var info=document.getElementById('dep-info');
+    if(strategy==='canary'){
+      info.innerHTML='<strong style="color:var(--accent);">Canary Deployment</strong><br>'+trafficPct+'% traffic ke versi baru.<br>Monitor metrik → gradually increase.<br>Rollback instant: hapus canary.';
+    } else if(strategy==='bluegreen'){
+      info.innerHTML='<strong style="color:var(--teal);">Blue-Green Deployment</strong><br>2 environment identik (blue=live, green=staging).<br>Switch traffic 100% sekaligus.<br>Rollback: switch back ke blue.';
+    } else {
+      info.innerHTML='<strong style="color:var(--amber);">Rolling Deployment</strong><br>Update pods satu per satu.<br>'+trafficPct+'% pod di-update tiap batch.<br>Zero downtime, gradual rollout.';
+    }
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(30,30,W-60,H-80);
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.strokeRect(30,30,W-60,H-80);
+    var numPods=6,podW=(W-100)/numPods,podH=60,podY=45;
+    var newPods=strategy==='bluegreen'?numPods:Math.round(numPods*trafficPct/100);
+    for(var i=0;i<numPods;i++){
+      var px=45+i*(podW+6);
+      var isNew=strategy==='bluegreen'?false:(i<newPods);
+      ctx.fillStyle=isNew?'rgba(74,222,128,0.25)':'rgba(124,109,250,0.2)';
+      ctx.strokeStyle=isNew?'rgba(74,222,128,0.6)':'rgba(124,109,250,0.5)';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(px,podY,podW,podH,6);ctx.fill();ctx.stroke();
+      ctx.fillStyle=isNew?'rgba(74,222,128,0.8)':'rgba(124,109,250,0.8)';
+      ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(isNew?'v2':'v1',px+podW/2,podY+podH/2+4);
+    }
+    // Traffic arrow for canary/bluegreen
+    if(strategy!=='rolling'){
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('Load Balancer',W/2,25);
+      ctx.fillText(strategy==='bluegreen'?'100% v2 setelah switch':trafficPct+'% → v2 | '+(100-trafficPct)+'% → v1',W/2,H-10);
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('Rolling update — '+trafficPct+'% per batch',W/2,25);
+    }
+  }
+  initDep();drawDep();
+  document.getElementById('dep-pct').addEventListener('input',drawDep);
+  window.addEventListener('resize',function(){initDep();drawDep();});
+})();
+</script>
+
 </div><!-- /mlops5c -->
 
 <!-- 5D -->
@@ -592,6 +672,72 @@ app = <span class="fn">FastAPI</span>()
 </div>
 
 <div class="divider"></div>
+<!-- ═══ Visualisasi Interaktif: Cloud GPU Cost Calculator ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">💰 Cloud GPU Cost Calculator — Bandingkan Biaya Training</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="gpu-canvas" width="380" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">GPU: <span id="gc-gpu-val" style="color:var(--accent);">A100 80GB</span></label>
+      <input type="range" id="gc-gpu" min="0" max="5" value="3" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Training Hours: <span id="gc-hrs-val" style="color:var(--teal);">24h</span></label>
+      <input type="range" id="gc-hrs" min="1" max="6" value="3" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Pricing: <span id="gc-price-val" style="color:var(--amber);">On-Demand</span></label>
+      <input type="range" id="gc-price" min="0" max="2" value="0" style="width:100%;margin:4px 0 12px;accent-color:var(--amber);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>Cost/jam: <strong id="gc-rate" style="color:var(--accent);">$3.06</strong></div>
+        <div>Total: <strong id="gc-total" style="color:var(--coral);font-size:14px;">$73.44</strong></div>
+        <div style="font-size:9px;color:var(--text3);">Spot bisa hemat 60-70%</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=380,H=200;
+  var gpus=[{name:'T4 16GB',rate:0.55,spot:0.17},{name:'L4 24GB',rate:0.80,spot:0.24},{name:'A10G 24GB',rate:1.62,spot:0.49},{name:'A100 80GB',rate:3.06,spot:0.92},{name:'H100 80GB',rate:4.80,spot:1.44},{name:'8×A100',rate:24.48,spot:7.34}];
+  var hrs=[1,4,12,24,72,168];
+  var prices=['On-Demand','Reserved (1yr)','Spot'];
+  var priceMult=[1,0.6,0.3];
+  function initGc(){cv=document.getElementById('gpu-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawGc(){
+    if(!ctx)return;
+    var gi=parseInt(document.getElementById('gc-gpu').value);
+    var hi=parseInt(document.getElementById('gc-hrs').value)-1;
+    var pi=parseInt(document.getElementById('gc-price').value);
+    var gpu=gpus[gi];var h=hrs[hi];
+    document.getElementById('gc-gpu-val').textContent=gpu.name;
+    document.getElementById('gc-hrs-val').textContent=h+'h';
+    document.getElementById('gc-price-val').textContent=prices[pi];
+    var rate=gpu.rate*priceMult[pi];
+    var total=rate*h;
+    document.getElementById('gc-rate').textContent='$'+rate.toFixed(2);
+    document.getElementById('gc-total').textContent='$'+total.toFixed(2);
+    ctx.clearRect(0,0,W,H);
+    // Bar chart comparing pricing modes
+    var barW=50,gap=24,startX=50;
+    ['On-Demand','Reserved','Spot'].forEach(function(mode,i){
+      var r=gpu.rate*priceMult[i];var t=r*h;
+      var maxTotal=gpu.rate*h;
+      var barH=(t/maxTotal)*(H-60);
+      var x=startX+i*(barW+gap);
+      var colors=['rgba(248,113,113,0.6)','rgba(245,158,11,0.6)','rgba(74,222,128,0.6)'];
+      ctx.fillStyle=colors[i];ctx.fillRect(x,H-30-barH,barW,barH);
+      ctx.fillStyle='#fff';ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('$'+t.toFixed(0),x+barW/2,H-34-barH);
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.fillText(mode,x+barW/2,H-12);
+    });
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(gpu.name+' × '+h+' hours',W/2,16);
+  }
+  initGc();drawGc();
+  ['gc-gpu','gc-hrs','gc-price'].forEach(function(id){document.getElementById(id).addEventListener('input',drawGc);});
+  window.addEventListener('resize',function(){initGc();drawGc();});
+})();
+</script>
+
 </div><!-- /mlops5d -->
 
 <!-- 5E -->
@@ -790,6 +936,69 @@ app = <span class="fn">FastAPI</span>()
     <button class="tnbtn primary" onclick="showLanding()">Kembali ke Semua Topik ↺</button>
   </div>
 </div>
+
+<!-- ═══ Visualisasi Interaktif: MLOps Maturity Self-Assessment ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🏆 MLOps Maturity Self-Assessment — Di Level Mana Tim Kamu?</div>
+<div class="viz-body" style="padding:0;">
+  <div style="padding:16px 20px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:12px;">✅ Centang yang sudah diterapkan di tim kamu:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;" id="mat-checklist"></div>
+    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;">
+      <div id="mat-meter" style="flex:1;height:12px;background:var(--bg3);border-radius:6px;overflow:hidden;"><div id="mat-fill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--teal),var(--amber),var(--coral));border-radius:6px;transition:width .4s;"></div></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;" id="mat-score">0%</div>
+    </div>
+    <div id="mat-level" style="margin-top:12px;padding:12px 16px;background:var(--bg3);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);line-height:1.8;">
+      <strong style="color:var(--coral);">Level 0 — Manual Process</strong><br>Training di notebook, deployment manual, tidak ada monitoring otomatis.
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var items=[
+    {id:'mat-repro',label:'Experiment tracking (MLflow/W&B)',level:1},
+    {id:'mat-dvc',label:'Data versioning (DVC)',level:1},
+    {id:'mat-registry',label:'Model registry terpusat',level:1},
+    {id:'mat-pipeline',label:'Pipeline training otomatis',level:2},
+    {id:'mat-serving',label:'Model serving dengan API',level:2},
+    {id:'mat-docker',label:'Containerization (Docker)',level:2},
+    {id:'mat-monitor',label:'Monitoring drift & metrics',level:3},
+    {id:'mat-alert',label:'Alerting otomatis (PagerDuty/Slack)',level:3},
+    {id:'mat-cicd',label:'CI/CD untuk ML pipeline',level:3},
+    {id:'mat-ab',label:'A/B testing & canary deployment',level:4},
+    {id:'mat-feature',label:'Feature store production',level:4},
+    {id:'mat-retrain',label:'Auto-retraining triggered by drift',level:4},
+  ];
+  var levels=[
+    {range:[0,20],name:'Level 0 — Manual Process',color:'var(--coral)',desc:'Training di notebook, deployment manual.<br>⚠️ Tidak scalable, sulit kolaborasi.'},
+    {range:[21,45],name:'Level 1 — Basic Automation',color:'var(--amber)',desc:'Experiment tracking + data versioning.<br>📊 Mulai reproducible, tapi masih banyak manual.'},
+    {range:[46,70],name:'Level 2 — Pipeline Automation',color:'var(--teal)',desc:'Training pipeline otomatis, CI/CD dasar.<br>🚀 Cocok untuk tim ML 3-5 orang.'},
+    {range:[71,90],name:'Level 3 — Full CI/CD + Monitoring',color:'var(--accent)',desc:'Drift monitoring, alerting, auto-retraining.<br>✅ Production-grade untuk sebagian besar use case.'},
+    {range:[91,100],name:'Level 4 — Autonomous MLOps',color:'var(--green)',desc:'Full auto-retraining, A/B testing, feature store.<br>🏆 Target perusahaan ML-mature (tim >10).'}
+  ];
+  function buildChecklist(){
+    var html='';
+    items.forEach(function(item){
+      html+='<label style="display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;border-radius:4px;" onmouseenter="this.style.background=\'var(--bg3)\';" onmouseleave="this.style.background=\'transparent\';"><input type="checkbox" id="'+item.id+'" onchange="updateMat()" style="accent-color:var(--accent);">'+item.label+'</label>';
+    });
+    document.getElementById('mat-checklist').innerHTML=html;
+  }
+  window.updateMat=function(){
+    var checked=0;
+    items.forEach(function(item){
+      if(document.getElementById(item.id).checked)checked++;
+    });
+    var pct=Math.round(checked/items.length*100);
+    document.getElementById('mat-fill').style.width=pct+'%';
+    document.getElementById('mat-score').textContent=pct+'%';
+    var lvl=levels.find(function(l){return pct>=l.range[0]&&pct<=l.range[1];})||levels[0];
+    document.getElementById('mat-level').innerHTML='<strong style="color:'+lvl.color+';">'+lvl.name+'</strong><br>'+lvl.desc+'<br><br><span style="font-size:9px;color:var(--text3);">'+checked+'/'+items.length+' praktik diterapkan</span>';
+  };
+  buildChecklist();
+  updateMat();
+})();
+</script>
 
 </div><!-- /mlops5e -->
 </section>

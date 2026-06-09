@@ -625,6 +625,73 @@ best_model = mlflow.sklearn.<span class="fn">load_model</span>(model_uri)
 <li><strong>[Eksplorasi]</strong> Setup MLflow Tracking Server dengan PostgreSQL sebagai backend store (<code>mlflow server --backend-store-uri postgresql://user:pass@localhost/mlflow</code>). Bandingkan pengalaman vs SQLite lokal — apa keuntungan PostgreSQL untuk tim yang lebih besar?</li>
 </ul></div>
 
+<!-- ═══ Visualisasi Interaktif: MLflow Run Comparator ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">📊 MLflow Run Comparator — Bandingkan Metric Antar Eksperimen</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="mlflow-canvas" width="400" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Geser slider untuk lihat tradeoff metric</div>
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">n_estimators: <span id="mlf-ne-val" style="color:var(--accent);">100</span></label>
+      <input type="range" id="mlf-ne" min="10" max="300" step="10" value="100" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">max_depth: <span id="mlf-md-val" style="color:var(--teal);">5</span></label>
+      <input type="range" id="mlf-md" min="1" max="20" value="5" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;" id="mlf-stats">
+        <div>Accuracy: <strong id="mlf-acc" style="color:var(--accent);">93.2%</strong></div>
+        <div>F1 Score: <strong id="mlf-f1" style="color:var(--teal);">91.5%</strong></div>
+        <div>Train Time: <strong id="mlf-time" style="color:var(--amber);">45s</strong></div>
+        <div style="margin-top:4px;font-size:9px;color:var(--text3);">Run: random-forest-v2</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=260;
+  function initMlf(){cv=document.getElementById('mlflow-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawMlf(){
+    if(!ctx)return;
+    var ne=parseInt(document.getElementById('mlf-ne').value);
+    var md=parseInt(document.getElementById('mlf-md').value);
+    document.getElementById('mlf-ne-val').textContent=ne;
+    document.getElementById('mlf-md-val').textContent=md;
+    var acc=0.85+Math.min(ne/800,0.1)+Math.min(md/100,0.03)-Math.max(ne-150,0)*0.0001;
+    var f1=acc-0.02+md*0.003;
+    var time=10+ne*0.3+md*0.5-Math.min(md*0.2,3);
+    document.getElementById('mlf-acc').textContent=(acc*100).toFixed(1)+'%';
+    document.getElementById('mlf-f1').textContent=(f1*100).toFixed(1)+'%';
+    document.getElementById('mlf-time').textContent=time.toFixed(0)+'s';
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('n_estimators →',W/2,H-8);
+    ctx.save();ctx.translate(12,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('Metric',-40,0);ctx.restore();
+    // Simulate multiple runs as background dots
+    var runs=[];
+    for(var i=0;i<20;i++){var rne=30+i*12;var rmd=3+(i%7);var racc=0.85+Math.min(rne/900,0.1)+Math.min(rmd/100,0.03);runs.push({x:40+(rne/300)*(W-60),y:H-40-(racc-0.85)*1700});}
+    runs.forEach(function(r){ctx.fillStyle='rgba(255,255,255,0.1)';ctx.beginPath();ctx.arc(r.x,r.y,3,0,Math.PI*2);ctx.fill();});
+    // Current run
+    var cx=40+(ne/300)*(W-60),cy=H-40-(acc-0.85)*1700;
+    ctx.fillStyle='rgba(124,109,250,0.3)';ctx.strokeStyle='var(--accent)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx,cy,7,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 10px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('YOU',cx+10,cy+4);
+    // Pareto frontier
+    ctx.strokeStyle='rgba(74,222,128,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(40,H-40-(0.86-0.85)*1700);ctx.lineTo(W-20,H-40-(0.94-0.85)*1700);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(74,222,128,0.6)';ctx.font='8px IBM Plex Mono,monospace';ctx.fillText('pareto optimal',W-90,H-12);
+  }
+  initMlf();drawMlf();
+  document.getElementById('mlf-ne').addEventListener('input',drawMlf);
+  document.getElementById('mlf-md').addEventListener('input',drawMlf);
+  window.addEventListener('resize',function(){initMlf();drawMlf();});
+})();
+</script>
+
 </div><!-- /mlops1c -->
 
 <div class="divider"></div>

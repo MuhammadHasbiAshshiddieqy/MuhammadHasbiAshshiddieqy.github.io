@@ -267,6 +267,92 @@ log = structlog.<span class="fn">get_logger</span>()
 <li><strong>[Eksplorasi]</strong> Bandingkan PSI vs KS-test vs Wasserstein distance untuk mendeteksi drift. Pada distribusi mana masing-masing metrik paling sensitif? Kapan false positive bisa terjadi?</li>
 </ul></div>
 
+<!-- ═══ Visualisasi Interaktif: Drift Detection Simulator ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">📈 Drift Detection Simulator — Geser Distribusi, Lihat PSI Naik</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="drift-canvas" width="420" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Mean Shift: <span id="dr-mean-val" style="color:var(--accent);">0.0σ</span></label>
+      <input type="range" id="dr-mean" min="0" max="30" value="0" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Std Change: <span id="dr-std-val" style="color:var(--teal);">1.0×</span></label>
+      <input type="range" id="dr-std" min="5" max="30" value="10" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Sample Size: <span id="dr-n-val" style="color:var(--amber);">1000</span></label>
+      <input type="range" id="dr-n" min="1" max="5" value="3" style="width:100%;margin:4px 0 12px;accent-color:var(--amber);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>PSI: <strong id="dr-psi" style="color:var(--accent);">0.02</strong></div>
+        <div>KS p-value: <strong id="dr-ks" style="color:var(--teal);">0.85</strong></div>
+        <div style="margin-top:2px;">Status: <strong id="dr-status" style="color:var(--green);">✅ Stable</strong></div>
+        <div style="font-size:8px;color:var(--text3);margin-top:4px;">PSI &lt;0.1 = stable | 0.1-0.2 = warning | &gt;0.2 = drift</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=420,H=240,nSizes=[100,500,1000,5000,10000];
+  function initDr(){cv=document.getElementById('drift-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function drawDr(){
+    if(!ctx)return;
+    var meanShift=parseInt(document.getElementById('dr-mean').value)/10;
+    var stdChange=parseInt(document.getElementById('dr-std').value)/10;
+    var n=nSizes[parseInt(document.getElementById('dr-n').value)-1];
+    document.getElementById('dr-mean-val').textContent=meanShift.toFixed(1)+'σ';
+    document.getElementById('dr-std-val').textContent=stdChange.toFixed(1)+'×';
+    document.getElementById('dr-n-val').textContent=n.toLocaleString();
+    // Simulate PSI and KS
+    var psi=(meanShift*meanShift*2.5+Math.abs(stdChange-1)*4)*0.6;
+    var ksP=Math.max(0.001,1-meanShift*0.25-Math.abs(stdChange-1)*1.2);
+    document.getElementById('dr-psi').textContent=psi.toFixed(3);
+    document.getElementById('dr-ks').textContent=ksP.toFixed(2);
+    var status=document.getElementById('dr-status');
+    if(psi>0.2){status.textContent='🔴 Drift Detected!';status.style.color='var(--coral)';}
+    else if(psi>0.1){status.textContent='🟡 Warning';status.style.color='var(--amber)';}
+    else {status.textContent='✅ Stable';status.style.color='var(--green)';}
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    for(var gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<H;gy+=30){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // Baseline distribution (grey)
+    ctx.fillStyle='rgba(255,255,255,0.1)';ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1.5;
+    for(var x=0;x<W;x++){
+      var baseY=Math.exp(-Math.pow((x-W/2)/40,2)/2)*180;
+      ctx.fillRect(x,H-30-baseY,1,baseY);
+    }
+    // Current distribution (accent)
+    var curMean=W/2+meanShift*40,curStd=40*stdChange;
+    ctx.fillStyle='rgba(124,109,250,0.25)';ctx.strokeStyle='var(--accent)';ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var x=0;x<W;x++){
+      var curY=Math.exp(-Math.pow((x-curMean)/curStd,2)/2)*180*40/curStd;
+      if(x===0)ctx.moveTo(x,H-30);else ctx.lineTo(x,H-30-curY);
+    }
+    ctx.lineTo(W,H-30);ctx.closePath();ctx.fill();ctx.stroke();
+    // Legend
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('━ Baseline (training)',W-150,16);
+    ctx.fillStyle='var(--accent)';ctx.fillText('━ Current (production)',W-150,30);
+    // PSI threshold lines
+    var psiBarX=W-60,psiBarW=20,psiBarH=H-60;
+    ctx.fillStyle='rgba(74,222,128,0.3)';ctx.fillRect(psiBarX,30,psiBarW,psiBarH*0.5);
+    ctx.fillStyle='rgba(245,158,11,0.3)';ctx.fillRect(psiBarX,30+psiBarH*0.5,psiBarW,psiBarH*0.5);
+    ctx.fillStyle='rgba(248,113,113,0.3)';ctx.fillRect(psiBarX,30+psiBarH,psiBarW,0);
+    var psiY=30+Math.min(psi/0.4*psiBarH,psiBarH);
+    ctx.fillStyle='#fff';ctx.fillRect(psiBarX-2,psiY-1,psiBarW+4,3);
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('PSI',psiBarX+psiBarW/2,20);
+    ctx.fillText('0.2',psiBarX+psiBarW/2,30+psiBarH*0.5+12);
+    ctx.fillText('0.1',psiBarX+psiBarW/2,30+psiBarH+8);
+    ctx.fillText('0',psiBarX+psiBarW/2,H-22);
+  }
+  initDr();drawDr();
+  ['dr-mean','dr-std','dr-n'].forEach(function(id){document.getElementById(id).addEventListener('input',drawDr);});
+  window.addEventListener('resize',function(){initDr();drawDr();});
+})();
+</script>
+
 </div><!-- /mlops4a -->
 
 <div class="divider"></div>
