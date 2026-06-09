@@ -328,8 +328,12 @@ Sentiment:"""</span>
 
   function initDec(){cv=document.getElementById('decode-canvas');if(!cv)return;
     var cw=cv.parentElement.clientWidth||cv.offsetWidth||380;
-    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(220/380));}
-    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+    var lw=cw>10?cw:380,lh=Math.round(lw*(220/380));
+    var dpr=window.devicePixelRatio||1;
+    cv.width=lw*dpr;cv.height=lh*dpr;
+    cv.style.width=lw+'px';cv.style.height=lh+'px';
+    ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    W=lw;H=lh;}
 
   function drawDec(){
     if(!ctx) return;
@@ -604,8 +608,12 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
   var cv, ctx, W, H;
   function initLora(){cv=document.getElementById('lora-canvas');if(!cv)return;
     var cw=cv.parentElement.clientWidth||cv.offsetWidth||340;
-    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(200/340));}
-    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+    var lw=cw>10?cw:340,lh=Math.round(lw*(200/340));
+    var dpr=window.devicePixelRatio||1;
+    cv.width=lw*dpr;cv.height=lh*dpr;
+    cv.style.width=lw+'px';cv.style.height=lh+'px';
+    ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    W=lw;H=lh;}
 
   function drawLora(){
     if(!ctx) return;

@@ -1,6 +1,18 @@
 // ── State kurikulum aktif ─────────────────────────────────────────────────────
 var activeCurriculum = null; // 'agentic-ai' | 'language-model'
 
+// ── Canvas HiDPI helper ───────────────────────────────────────────────────────
+function fixCanvasDPI(canvas, logicalW, logicalH) {
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = logicalW * dpr;
+  canvas.height = logicalH * dpr;
+  canvas.style.width = logicalW + 'px';
+  canvas.style.height = logicalH + 'px';
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx: ctx, W: logicalW, H: logicalH };
+}
+
 // ── Lazy-load (Agentic AI) ────────────────────────────────────────────────────
 var FASE_FILES = {
   'i0':'topics/agentic-ai/fase0.html', 'i1':'topics/agentic-ai/fase1.html', 'i2':'topics/agentic-ai/fase2.html',

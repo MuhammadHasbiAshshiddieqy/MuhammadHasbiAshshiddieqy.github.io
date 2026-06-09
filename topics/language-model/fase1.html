@@ -537,9 +537,13 @@ coords = pca.<span class="fn">fit_transform</span>(vectors)  <span class="cm"># 
 
   function initEmb(){
     canvas = document.getElementById('emb-canvas'); if(!canvas) return;
-    var cw = canvas.parentElement.clientWidth || canvas.offsetWidth || 360;
-    if(cw > 10){ canvas.width = cw; canvas.height = Math.round(cw * (320/360)); }
-    ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
+    var cw=canvas.parentElement.clientWidth||canvas.offsetWidth||360;
+    var lw=cw>10?cw:360, lh=Math.round(lw*(320/360));
+    var dpr=window.devicePixelRatio||1;
+    canvas.width=lw*dpr; canvas.height=lh*dpr;
+    canvas.style.width=lw+'px'; canvas.style.height=lh+'px';
+    ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    W=lw; H=lh;
   }
 
   window.embSelect = function(word){

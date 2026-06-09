@@ -170,8 +170,12 @@
   function initAttn(){
     canvas = document.getElementById('attn-canvas'); if(!canvas) return;
     var cw=canvas.parentElement.clientWidth||canvas.offsetWidth||380;
-    if(cw>10){canvas.width=cw;canvas.height=Math.round(cw*(280/380));}
-    ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
+    var lw=cw>10?cw:380, lh=Math.round(lw*(280/380));
+    var dpr=window.devicePixelRatio||1;
+    canvas.width=lw*dpr; canvas.height=lh*dpr;
+    canvas.style.width=lw+'px'; canvas.style.height=lh+'px';
+    ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    W=lw; H=lh;
     buildOutputTokens();
     drawAttn();
   }
@@ -537,8 +541,12 @@
   function initPE(){
     canvas = document.getElementById('pe-canvas'); if(!canvas) return;
     var cw=canvas.parentElement.clientWidth||canvas.offsetWidth||400;
-    if(cw>10){canvas.width=cw;canvas.height=Math.round(cw*(260/400));}
-    ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
+    var lw=cw>10?cw:400, lh=Math.round(lw*(260/400));
+    var dpr=window.devicePixelRatio||1;
+    canvas.width=lw*dpr; canvas.height=lh*dpr;
+    canvas.style.width=lw+'px'; canvas.style.height=lh+'px';
+    ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    W=lw; H=lh;
   }
 
   function drawPE(){

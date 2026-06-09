@@ -197,8 +197,12 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 
   function initSc(){cv=document.getElementById('scale-canvas');if(!cv)return;
     var cw=cv.parentElement.clientWidth||cv.offsetWidth||400;
-    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(280/400));}
-    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+    var lw=cw>10?cw:400,lh=Math.round(lw*(280/400));
+    var dpr=window.devicePixelRatio||1;
+    cv.width=lw*dpr;cv.height=lh*dpr;
+    cv.style.width=lw+'px';cv.style.height=lh+'px';
+    ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    W=lw;H=lh;}
 
   function chinchillaLoss(N,D){
     return 1.69 + 406.4/Math.pow(N,0.34) + 410.7/Math.pow(D,0.28);
@@ -388,11 +392,68 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
   var cv, ctx, W, H;
   var tokens = ['The','cat','sat','on','the','mat','and','slept','peacefully','.','dog','ran'];
   var expertColors = ['rgba(124,109,250,0.7)','rgba(45,212,191,0.7)','rgba(245,158,11,0.7)','rgba(248,113,113,0.7)','rgba(74,222,128,0.7)','rgba(167,139,250,0.7)','rgba(251,146,60,0.7)','rgba(96,165,250,0.7)','rgba(244,114,182,0.7)','rgba(148,163,184,0.7)','rgba(34,211,238,0.7)','rgba(163,230,53,0.7)','rgba(232,121,249,0.7)','rgba(250,204,21,0.7)','rgba(129,140,248,0.7)','rgba(52,211,153,0.7)'];
+  var selectedExpert = -1; // -1 = show all, >=0 = filter by expert
+  var expertPositions = []; // {y, index}
 
   function initMoe(){cv=document.getElementById('moe-canvas');if(!cv)return;
     var cw=cv.parentElement.clientWidth||cv.offsetWidth||420;
-    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(250/420));}
-    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+    var lw=cw>10?cw:420,lh=Math.round(lw*(250/420));
+    var dpr=window.devicePixelRatio||1;
+    cv.width=lw*dpr;cv.height=lh*dpr;
+    cv.style.width=lw+'px';cv.style.height=lh+'px';
+    ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    W=lw;H=lh;
+    // Click handler
+    cv.onclick = function(e){
+      var rect = cv.getBoundingClientRect();
+      var scaleX = W / rect.width;
+      var scaleY = H / rect.height;
+      var mx = (e.clientX - rect.left) * scaleX;
+      var my = (e.clientY - rect.top) * scaleY;
+      var clicked = -1;
+      expertPositions.forEach(function(ep){
+        var dx = mx - ep.x, dy = my - ep.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 22) clicked = ep.index;
+      });
+      selectedExpert = (clicked === selectedExpert) ? -1 : clicked;
+      drawMoe();
+      updateInfo();
+    };
+    cv.style.cursor = 'pointer';
+  }
+
+  // Global deselect helper for the info panel button
+  window.moeDeselect = function(){
+    selectedExpert = -1;
+    drawMoe();
+    updateInfo();
+  };
+
+  function updateInfo(){
+    var numExperts = parseInt(document.getElementById('moe-ne').value);
+    var topK = parseInt(document.getElementById('moe-k').value);
+    var loadPct = (topK/numExperts*100).toFixed(0);
+    var info = document.getElementById('moe-info');
+
+    if (selectedExpert >= 0) {
+      // Show tokens assigned to this expert
+      var assignedTokens = [];
+      tokens.slice(0,12).forEach(function(t,i){
+        var seed=(i*7+numExperts*3+topK*11)%numExperts;
+        var seed2=(i*13+numExperts*5+topK*7+1)%numExperts;
+        if(seed2===seed) seed2=(seed2+1)%numExperts;
+        var assignments=[seed];
+        if(topK>1) assignments.push(seed2);
+        if(topK>2) assignments.push((seed2+2)%numExperts);
+        if(topK>3) assignments.push((seed2+5)%numExperts);
+        if (assignments.indexOf(selectedExpert) >= 0) assignedTokens.push(t);
+      });
+      var expertNames = ['Syntax','Semantic','Position','Context','Entity','Relation','Negation','Modifier','Temporal','Causal','Quantifier','Comparator','Conditional','Coreference','Sentiment','Factual'];
+      info.innerHTML = '<div style="color:var(--accent);font-weight:600;">Expert '+(selectedExpert+1)+' — '+expertNames[selectedExpert%expertNames.length]+'</div><div style="margin-top:4px;">Menangani: <strong style="color:var(--text);">'+assignedTokens.join(', ')+'</strong></div><div style="margin-top:4px;font-size:9px;color:var(--text3);">Load: '+assignedTokens.length+'/'+Math.min(tokens.length,12)+' tokens</div><div style="margin-top:4px;"><button onclick="moeDeselect()" style="font-size:9px;padding:2px 10px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">← Tampilkan semua</button></div>';
+    } else {
+      info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+loadPct+'% per expert</div><div style="margin-top:4px;color:var(--text3);font-size:9px;">💡 Klik expert untuk lihat token mana yang di-rutekan ke dia</div><div style="color:var(--text2);">Active params: ~'+loadPct+'% dari total</div>';
+    }
+  }
 
   function drawMoe(){
     if(!ctx) return;
@@ -401,54 +462,78 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
     document.getElementById('moe-ne-val').textContent = numExperts;
     document.getElementById('moe-k-val').textContent = topK;
 
-    var info = document.getElementById('moe-info');
-    var loadPct = (topK/numExperts*100).toFixed(0);
-    info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+loadPct+'% per expert</div><div style="margin-top:4px;color:var(--text2);">Active params: ~'+loadPct+'% dari total</div>';
-
     ctx.clearRect(0,0,W,H);
-
-    // Token nodes (left side)
     var tokX=30, tokStartY=20, tokGap=(H-tokStartY-20)/Math.min(tokens.length,12);
     var expertX=W-60, expertStartY=20, expertGap=(H-expertStartY-20)/numExperts;
+    expertPositions = [];
 
-    // Token circles
+    // Precompute assignments
+    var tokenAssignments = [];
     tokens.slice(0,12).forEach(function(t,i){
-      var y=tokStartY+i*tokGap+tokGap/2;
-      // Random-ish expert assignment per frame based on token
       var seed=(i*7+numExperts*3+topK*11)%numExperts;
       var seed2=(i*13+numExperts*5+topK*7+1)%numExperts;
       if(seed2===seed) seed2=(seed2+1)%numExperts;
-
       var assignments=[seed];
       if(topK>1) assignments.push(seed2);
       if(topK>2) assignments.push((seed2+2)%numExperts);
       if(topK>3) assignments.push((seed2+5)%numExperts);
+      tokenAssignments.push(assignments);
+    });
 
-      ctx.fillStyle='rgba(255,255,255,0.08)';ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.arc(tokX,y,14,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
-      ctx.fillText(t,tokX,y+4);
+    // Draw expert nodes first (so tokens appear on top)
+    for(var i=0;i<numExperts;i++){
+      var ey=expertStartY+i*expertGap+expertGap/2;
+      expertPositions.push({x:expertX, y:ey, index:i});
+      var color=expertColors[i%expertColors.length];
+      var isSelected = (selectedExpert === i);
+      var isDimmed = (selectedExpert >= 0 && selectedExpert !== i);
 
-      // Lines to assigned experts
+      ctx.fillStyle=isSelected?color.replace('0.7','0.35'):isDimmed?color.replace('0.7','0.04'):color.replace('0.7','0.15');
+      ctx.strokeStyle=isSelected?color.replace('0.7','1'):isDimmed?'rgba(255,255,255,0.05)':color;
+      ctx.lineWidth=isSelected?3:1.5;
+      ctx.beginPath();ctx.arc(expertX,ey,isSelected?20:16,0,Math.PI*2);ctx.fill();ctx.stroke();
+      if(isSelected){
+        ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(expertX,ey,24,0,Math.PI*2);ctx.stroke();
+      }
+      ctx.fillStyle=isDimmed?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.8)';
+      ctx.font=(isSelected?'bold ':'')+'9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('E'+(i+1),expertX,ey+4);
+    }
+
+    // Draw connections
+    tokenAssignments.forEach(function(assignments, i){
+      var t = tokens[i];
+      var y=tokStartY+i*tokGap+tokGap/2;
+      var tokenIsRouted = (selectedExpert < 0) || (assignments.indexOf(selectedExpert) >= 0);
+
       assignments.forEach(function(e){
         var ey=expertStartY+e*expertGap+expertGap/2;
-        ctx.strokeStyle=expertColors[e%expertColors.length].replace('0.7','0.25');
-        ctx.lineWidth=1;
+        var isSelectedEdge = (selectedExpert === e);
+        var alpha = isSelectedEdge ? 0.6 : (selectedExpert >= 0 ? 0.03 : 0.25);
+        var lineW = isSelectedEdge ? 2 : 0.8;
+        ctx.strokeStyle=expertColors[e%expertColors.length].replace('0.7',String(alpha));
+        ctx.lineWidth=lineW;
         ctx.beginPath();ctx.moveTo(tokX+16,y);ctx.lineTo(expertX-16,ey);ctx.stroke();
       });
     });
 
-    // Expert nodes
-    for(var i=0;i<numExperts;i++){
-      var ey=expertStartY+i*expertGap+expertGap/2;
-      var color=expertColors[i%expertColors.length];
-      ctx.fillStyle=color.replace('0.7','0.15');ctx.strokeStyle=color;ctx.lineWidth=2;
-      ctx.beginPath();ctx.arc(expertX,ey,16,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
-      ctx.fillText('E'+(i+1),expertX,ey+4);
-    }
+    // Draw token nodes
+    tokenAssignments.forEach(function(assignments, i){
+      var t = tokens[i];
+      var y=tokStartY+i*tokGap+tokGap/2;
+      var tokenIsRouted = (selectedExpert < 0) || (assignments.indexOf(selectedExpert) >= 0);
 
-    // Router box in the middle
+      ctx.fillStyle=tokenIsRouted?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.02)';
+      ctx.strokeStyle=tokenIsRouted?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.05)';
+      ctx.lineWidth=tokenIsRouted?1.5:0.5;
+      ctx.beginPath();ctx.arc(tokX,y,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle=tokenIsRouted?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.15)';
+      ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(t,tokX,y+4);
+    });
+
+    // Router box
     ctx.fillStyle='rgba(124,109,250,0.05)';ctx.strokeStyle='rgba(124,109,250,0.2)';ctx.lineWidth=1;
     ctx.fillRect(W/2-35,10,70,H-40);ctx.strokeRect(W/2-35,10,70,H-40);
     ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
@@ -458,13 +543,15 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
     ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
     ctx.fillText('Input Tokens',tokX,H-8);
     ctx.fillText(numExperts+' Experts',expertX,H-8);
-    ctx.fillText('Only '+topK+' active per token',W/2,H-8);
+    if(selectedExpert<0) ctx.fillText('Only '+topK+' active per token',W/2,H-8);
+    else ctx.fillText('👆 Showing Expert '+(selectedExpert+1)+' only',W/2,H-8);
   }
 
   initMoe();
   drawMoe();
-  document.getElementById('moe-ne').addEventListener('input',drawMoe);
-  document.getElementById('moe-k').addEventListener('input',drawMoe);
+  updateInfo();
+  document.getElementById('moe-ne').addEventListener('input',function(){drawMoe();updateInfo();});
+  document.getElementById('moe-k').addEventListener('input',function(){drawMoe();updateInfo();});
   window.addEventListener('resize',function(){initMoe();drawMoe();});
 })();
 </script>
@@ -655,8 +742,12 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
 
   function initKv(){cv=document.getElementById('kv-canvas');if(!cv)return;
     var cw=cv.parentElement.clientWidth||cv.offsetWidth||300;
-    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(80/300));}
-    ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+    var lw=cw>10?cw:300,lh=Math.round(lw*(80/300));
+    var dpr=window.devicePixelRatio||1;
+    cv.width=lw*dpr;cv.height=lh*dpr;
+    cv.style.width=lw+'px';cv.style.height=lh+'px';
+    ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    W=lw;H=lh;}
 
   function drawKv(){
     var L=parseInt(document.getElementById('kv-l').value);

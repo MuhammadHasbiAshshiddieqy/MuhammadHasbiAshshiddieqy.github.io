@@ -131,6 +131,24 @@
   var currentAct = 'relu';
   var panels = [0,1,2,3];
 
+  // ── HiDPI canvas setup ──
+  (function(){
+    var canvases = [
+      {id:'nn-canvas-line', w:320, h:240},
+      {id:'nn-canvas-neuron', w:320, h:240},
+      {id:'nn-canvas-act', w:320, h:240},
+      {id:'nn-canvas-net', w:340, h:260}
+    ];
+    canvases.forEach(function(c){
+      var cv=document.getElementById(c.id); if(!cv) return;
+      var dpr=window.devicePixelRatio||1;
+      cv.width=c.w*dpr; cv.height=c.h*dpr;
+      cv.style.width=c.w+'px'; cv.style.height=c.h+'px';
+      cv.getContext('2d').scale(dpr,dpr);
+      cv._logicalW=c.w; cv._logicalH=c.h;
+    });
+  })();
+
   function rgb(r,g,b,a){return 'rgba('+r+','+g+','+b+','+(a||1)+')';}
   var C = {
     bg:    getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f0f13',
@@ -159,7 +177,7 @@
   // ── Panel 0: Garis ──
   function drawLine(){
     var cv = document.getElementById('nn-canvas-line'); if(!cv) return;
-    var ctx = cv.getContext('2d'), W=cv.width, H=cv.height;
+    var ctx = cv.getContext('2d'), W=cv._logicalW, H=cv._logicalH;
     var w = parseFloat(document.getElementById('nn-w').value);
     var b = parseFloat(document.getElementById('nn-b').value);
     document.getElementById('nn-w-val').textContent = w.toFixed(1);
@@ -199,7 +217,7 @@
   // ── Panel 1: Neuron ──
   function drawNeuron(){
     var cv=document.getElementById('nn-canvas-neuron'); if(!cv) return;
-    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+    var ctx=cv.getContext('2d'),W=cv._logicalW,H=cv._logicalH;
     var x1=parseFloat(document.getElementById('nn-x1').value);
     var x2=parseFloat(document.getElementById('nn-x2').value);
     var w1=0.8,w2=0.5,bias=0.2;
@@ -284,7 +302,7 @@
   }
   function drawAct(){
     var cv=document.getElementById('nn-canvas-act'); if(!cv) return;
-    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+    var ctx=cv.getContext('2d'),W=cv._logicalW,H=cv._logicalH;
     ctx.clearRect(0,0,W,H);
     // grid
     ctx.strokeStyle=C.grid;ctx.lineWidth=1;
@@ -334,7 +352,7 @@
   }
   function drawNet(){
     var cv=document.getElementById('nn-canvas-net'); if(!cv) return;
-    var ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+    var ctx=cv.getContext('2d'),W=cv._logicalW,H=cv._logicalH;
     var x1=parseFloat(document.getElementById('nn-net-x1-sl').value);
     var x2=parseFloat(document.getElementById('nn-net-x2-sl').value);
     document.getElementById('nn-net-x1').textContent=x1.toFixed(2);
@@ -411,9 +429,13 @@
   function resizeCanvas(cv, drawFn) {
     var w = cv.parentElement.clientWidth;
     if (w < 10) return;
-    var ratio = cv.height / cv.width;
-    cv.width = w;
-    cv.height = Math.round(w * ratio);
+    var ratio = cv._logicalH / cv._logicalW;
+    var lw = w, lh = Math.round(w * ratio);
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = lw * dpr; cv.height = lh * dpr;
+    cv.style.width = lw + 'px'; cv.style.height = lh + 'px';
+    cv.getContext('2d').scale(dpr, dpr);
+    cv._logicalW = lw; cv._logicalH = lh;
     drawFn();
   }
   if (window.ResizeObserver) {
