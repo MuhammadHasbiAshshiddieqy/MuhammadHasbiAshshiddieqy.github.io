@@ -1,0 +1,612 @@
+<section class="cs p2" id="lmfase2">
+<div class="fase-intro" id="lmfi2">
+<div class="sh">
+  <div class="sbadge p2">02</div>
+  <div>
+    <div class="stitle">Fase 2 — Neural Networks untuk Teks</div>
+    <div class="sdesc">Dari perceptron sederhana hingga LSTM yang mengingat konteks panjang. Fase ini membangun intuisi tentang bagaimana neural network "membaca" teks, mengapa gradient vanishing jadi masalah, dan bagaimana Seq2Seq membuka jalan menuju machine translation modern.</div>
+    <div class="smeta"><span class="mc">6 topik</span><span class="mc">Minggu 3–4</span><span class="mc">Deep Learning Dasar</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#lm2a">Fondasi Neural Network</a>
+  <a class="snavi" href="#lm2b">CNN untuk Teks</a>
+  <a class="snavi" href="#lm2c">RNN &amp; Sequence Modeling</a>
+  <a class="snavi" href="#lm2d">LSTM &amp; GRU</a>
+  <a class="snavi" href="#lm2e">Seq2Seq</a>
+  <a class="snavi" href="#lm2f">Regularisasi</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">6 topik · Minggu 3–4</div>
+    <div class="topic-nav-title">Mulai dari: 2.1 Fondasi Neural Network</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('lmfi1')">← Fase 1</button>
+    <button class="tnbtn primary" onclick="goTo(6)">Mulai Fase 2 →</button>
+  </div>
+</div>
+</div><!-- /lmfi2 -->
+
+<!-- 2A -->
+<div class="sub" id="lm2a">
+<div class="subtit"><span class="ac">2.1</span> Fondasi Neural Network <span class="subid">// bangunan dasar</span></div>
+<div class="prose">
+<p>Neural network adalah fungsi matematika yang dipelajari dari data. Memahami mekanisme dasarnya — perceptron, aktivasi, forward pass, dan backpropagation — bukan hanya formalitas akademik. Ketika model kamu tidak konvergen, atau ketika kamu perlu memilih optimizer dan learning rate yang tepat, intuisi tentang cara training bekerja akan sangat menentukan.</p>
+<p>Konsep kunci yang sering disalahpahami: neural network <em>tidak</em> "menemukan aturan" secara eksplisit. Ia mengoptimasi sekumpulan parameter numerik (bobot) sehingga fungsi yang dipetakan oleh jaringan tersebut memiliki output yang mendekati target pada data training. Seluruh "kecerdasan" tersimpan dalam ratusan juta angka floating-point — dan backpropagation adalah algoritma yang mengupdate angka-angka tersebut secara efisien.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Forward Pass — Dari Input ke Prediksi</div>
+<div class="viz-body">
+  <div class="aloop">
+    <div class="ln"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div><div class="lnn">Input x</div><div class="lnd">Teks → token IDs → embedding vectors [batch, seq_len, d_model]</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(45,212,191,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div><div><div class="lnn">Linear Transform</div><div class="lnd">z = W·x + b — weighted sum of inputs</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(245,158,11,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="lnn">Activation Function</div><div class="lnd">a = ReLU(z) atau σ(z) — tambahkan non-linearitas</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(74,222,128,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="lnn">Loss Computation</div><div class="lnd">L = CrossEntropy(output, target) — seberapa salah prediksi?</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(124,109,250,.3)"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></div><div><div class="lnn">Backpropagation</div><div class="lnd">∂L/∂W — chain rule, update W -= lr × gradient</div></div></div>
+    <div class="lret">↺ Ulangi untuk setiap batch hingga loss konvergen</div>
+  </div>
+</div>
+</div>
+
+<div class="prose">
+<h4>Activation functions yang sering digunakan di NLP</h4>
+<ul>
+<li><strong>ReLU (Rectified Linear Unit)</strong> — <code>max(0, x)</code>. Menghindari vanishing gradient, komputasi cepat. Masalah: "dying ReLU" jika neuron selalu negatif → gradiennya nol permanen.</li>
+<li><strong>GELU (Gaussian Error Linear Unit)</strong> — digunakan di BERT dan GPT. Smooth approximation dari ReLU, empirically lebih baik untuk transformer.</li>
+<li><strong>Sigmoid</strong> — <code>1/(1+e^-x)</code>, output 0–1. Cocok untuk output layer klasifikasi biner. Di hidden layer sudah jarang karena saturasi dan vanishing gradient.</li>
+<li><strong>Softmax</strong> — normalisasi vektor menjadi distribusi probabilitas (sum=1). Digunakan di output layer LM untuk mendistribusikan probabilitas di atas vocabulary.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">neural_net_basics.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+
+<span class="cm"># Simple feedforward network untuk klasifikasi teks</span>
+<span class="kw">class</span> <span class="fn">TextClassifier</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size: <span class="tp">int</span>, embed_dim: <span class="tp">int</span>, num_classes: <span class="tp">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="cm"># Embedding: vocab_size × embed_dim</span>
+        self.embedding = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="nm">0</span>)
+        self.network = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(embed_dim, <span class="nm">256</span>),
+            nn.<span class="fn">GELU</span>(),           <span class="cm"># smooth, modern activation</span>
+            nn.<span class="fn">Dropout</span>(<span class="nm">0.3</span>),   <span class="cm"># regularization</span>
+            nn.<span class="fn">Linear</span>(<span class="nm">256</span>, <span class="nm">64</span>),
+            nn.<span class="fn">GELU</span>(),
+            nn.<span class="fn">Linear</span>(<span class="nm">64</span>, num_classes)
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids: torch.<span class="fn">Tensor</span>) -> torch.<span class="fn">Tensor</span>:
+        <span class="cm"># token_ids: [batch, seq_len]</span>
+        embedded = self.<span class="fn">embedding</span>(token_ids)      <span class="cm"># [batch, seq_len, embed_dim]</span>
+        pooled = embedded.<span class="fn">mean</span>(dim=<span class="nm">1</span>)              <span class="cm"># [batch, embed_dim] — mean pooling</span>
+        logits = self.<span class="fn">network</span>(pooled)             <span class="cm"># [batch, num_classes]</span>
+        <span class="kw">return</span> logits
+
+<span class="cm"># Training loop minimal</span>
+model = <span class="fn">TextClassifier</span>(vocab_size=<span class="nm">10000</span>, embed_dim=<span class="nm">128</span>, num_classes=<span class="nm">5</span>)
+optimizer = optim.<span class="fn">AdamW</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">3e-4</span>, weight_decay=<span class="nm">0.01</span>)
+criterion = nn.<span class="fn">CrossEntropyLoss</span>()
+
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">10</span>):
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> batch_tokens, batch_labels <span class="kw">in</span> dataloader:
+        optimizer.<span class="fn">zero_grad</span>()
+        logits = <span class="fn">model</span>(batch_tokens)           <span class="cm"># forward pass</span>
+        loss = <span class="fn">criterion</span>(logits, batch_labels) <span class="cm"># compute loss</span>
+        loss.<span class="fn">backward</span>()                        <span class="cm"># backprop — compute gradients</span>
+        nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), max_norm=<span class="nm">1.0</span>)  <span class="cm"># gradient clipping</span>
+        optimizer.<span class="fn">step</span>()                       <span class="cm"># update weights</span>
+    <span class="fn">print</span>(<span class="st">f"Epoch {epoch}: loss={loss.item():.4f}"</span>)</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>AdamW, bukan Adam</strong>Untuk NLP tasks modern, selalu gunakan <code>AdamW</code> (Adam with decoupled weight decay), bukan <code>Adam</code>. Weight decay di AdamW diaplikasikan langsung ke weights, bukan ke gradients — ini lebih benar secara matematis dan menghasilkan generalisasi lebih baik. Juga: <code>zero_grad(set_to_none=True)</code> lebih efisien dari <code>zero_grad()</code>.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa tanpa activation function non-linear, neural network dengan 100 layer masih ekuivalen dengan network 1 layer? Apa yang "dilepas" oleh non-linearity?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>TextClassifier</code> di atas dan latih untuk sentiment classification (positif/negatif) menggunakan dataset IMDB dari <code>datasets</code> library HuggingFace. Bandingkan akurasi dengan TF-IDF + Logistic Regression.</li>
+<li><strong>[Eksplorasi]</strong> Ganti fungsi aktivasi dari GELU ke ReLU, Tanh, dan ELU. Apakah ada perbedaan kecepatan konvergensi dan akurasi final? Plot learning curve untuk ketiganya.</li>
+</ul></div>
+
+</div><!-- /lm2a -->
+
+<div class="divider"></div>
+
+<!-- 2B -->
+<div class="sub" id="lm2b">
+<div class="subtit"><span class="ac">2.2</span> CNN untuk Teks <span class="subid">// local patterns sebagai fitur</span></div>
+<div class="prose">
+<p>Convolutional Neural Network (CNN) dikenal karena computer vision, tapi CNN 1D sangat efektif untuk teks — terutama untuk klasifikasi. Intuisinya menarik: filter konvolusi dalam konteks teks berperan sebagai detektor n-gram yang dipelajari secara otomatis. Filter lebar 3 mendeteksi trigram features, filter lebar 4 mendeteksi 4-gram, dan seterusnya.</p>
+<p>Kekuatan utama CNN untuk teks: <strong>parallelism dan efisiensi</strong>. Tidak seperti RNN yang memproses token secara sekuensial, CNN memproses semua posisi secara bersamaan — training jauh lebih cepat. Untuk klasifikasi teks (sentimen, topik, spam detection), CNN seringkali match atau bahkan overtake RNN dengan training time yang jauh lebih singkat.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">text_cnn.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">TextCNN</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""TextCNN — Kim (2014): multiple filter sizes sebagai n-gram detectors."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="nm">128</span>, num_filters=<span class="nm">100</span>, num_classes=<span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embedding = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim)
+
+        <span class="cm"># Filter dengan berbagai ukuran — mendeteksi n-gram berbeda</span>
+        self.convs = nn.<span class="fn">ModuleList</span>([
+            nn.<span class="fn">Conv1d</span>(
+                in_channels=embed_dim,
+                out_channels=num_filters,
+                kernel_size=k  <span class="cm"># k=2: bigram, k=3: trigram, k=4: 4-gram</span>
+            )
+            <span class="kw">for</span> k <span class="kw">in</span> [<span class="nm">2</span>, <span class="nm">3</span>, <span class="nm">4</span>]
+        ])
+
+        self.dropout = nn.<span class="fn">Dropout</span>(<span class="nm">0.5</span>)
+        self.fc = nn.<span class="fn">Linear</span>(num_filters * <span class="nm">3</span>, num_classes)  <span class="cm"># 3 filter sizes</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="cm"># x: [batch, seq_len]</span>
+        embedded = self.<span class="fn">embedding</span>(x)          <span class="cm"># [batch, seq_len, embed_dim]</span>
+        embedded = embedded.<span class="fn">permute</span>(<span class="nm">0</span>, <span class="nm">2</span>, <span class="nm">1</span>) <span class="cm"># [batch, embed_dim, seq_len] — Conv1d format</span>
+
+        pooled_outputs = []
+        <span class="kw">for</span> conv <span class="kw">in</span> self.convs:
+            activated = torch.nn.functional.<span class="fn">relu</span>(<span class="fn">conv</span>(embedded))  <span class="cm"># [batch, filters, seq-k+1]</span>
+            pooled = activated.<span class="fn">max</span>(dim=<span class="nm">2</span>).<span class="fn">values</span>                   <span class="cm"># max-over-time pooling</span>
+            pooled_outputs.<span class="fn">append</span>(pooled)
+
+        <span class="cm"># Concatenate features dari semua filter sizes</span>
+        features = torch.<span class="fn">cat</span>(pooled_outputs, dim=<span class="nm">1</span>)  <span class="cm"># [batch, num_filters*3]</span>
+        features = self.<span class="fn">dropout</span>(features)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(features)                       <span class="cm"># [batch, num_classes]</span>
+
+<span class="cm"># Key insight: max-over-time pooling memilih feature terkuat dari setiap filter</span>
+<span class="cm"># — seolah bertanya "apakah trigram ini PERNAH muncul di dokumen ini?"</span>
+<span class="cm"># Output panjang dokumen tidak mempengaruhi ukuran representasi akhir.</span></pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Kapan pakai CNN vs RNN untuk teks</strong>Pilih CNN ketika: task adalah klasifikasi (bukan generation), kamu butuh training cepat, panjang dokumen bervariasi jauh. Pilih RNN/LSTM ketika: order token sangat penting, task membutuhkan understanding konteks sekuensial (time series, speech), atau kamu butuh generate teks token by token. Di 2024+, keduanya sebagian besar digantikan oleh Transformer — tapi untuk edge deployment atau resource-constrained environment, CNN masih relevan.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Max-Over-Time Pooling — Feature Extraction dari Filter</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);">
+    <div style="margin-bottom:12px;color:var(--text3);">Filter ukuran 3 (trigram detector) sliding di atas sequence:</div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;border-radius:6px;">the</span>
+      <span style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;border-radius:6px;">movie</span>
+      <span style="background:var(--accent-glow);border:1px solid var(--accent);padding:6px 10px;border-radius:6px;color:var(--accent);">was</span>
+      <span style="background:var(--accent-glow);border:1px solid var(--accent);padding:6px 10px;border-radius:6px;color:var(--accent);">really</span>
+      <span style="background:var(--accent-glow);border:1px solid var(--accent);padding:6px 10px;border-radius:6px;color:var(--accent);">great</span>
+      <span style="background:var(--bg3);border:1px solid var(--border2);padding:6px 10px;border-radius:6px;">!</span>
+    </div>
+    <div style="color:var(--text3);font-size:11px;">→ Filter menghasilkan skor untuk setiap posisi → Max pooling pilih skor tertinggi → "really great" trigram terdeteksi sebagai fitur positif</div>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan mengapa "max-over-time pooling" lebih cocok untuk text classification dibanding "average pooling". Dalam konteks apa average pooling bisa lebih baik?</li>
+<li><strong>[Kode]</strong> Train TextCNN pada SST-2 (Stanford Sentiment Treebank) dari HuggingFace datasets. Bandingkan training time dan accuracy dengan RNN sederhana yang diimplementasikan di topik berikutnya.</li>
+<li><strong>[Eksplorasi]</strong> Tambahkan filter ukuran 1 (unigram detector) ke TextCNN. Apakah akurasi meningkat? Visualisasikan bobot filter yang telah dilatih — dapatkah kamu mengidentifikasi kata-kata yang dideteksi oleh filter tertentu?</li>
+</ul></div>
+
+</div><!-- /lm2b -->
+
+<div class="divider"></div>
+
+<!-- 2C -->
+<div class="sub" id="lm2c">
+<div class="subtit"><span class="ac">2.3</span> RNN &amp; Sequence Modeling <span class="subid">// memori dalam urutan</span></div>
+<div class="prose">
+<p>Recurrent Neural Network (RNN) didesain untuk data sekuensial: hidden state dari langkah sebelumnya diumpankan ke langkah berikutnya, sehingga jaringan secara teori "mengingat" konteks masa lalu. Ini adalah lompatan konseptual besar dari feedforward network yang memperlakukan setiap input sebagai independen.</p>
+<p>Masalah terbesar RNN — yang memotivasi lahirnya LSTM, GRU, dan akhirnya Attention — adalah <strong>vanishing gradient</strong>. Saat training dengan backpropagation through time (BPTT), gradien harus dipropagasi melewati ratusan langkah. Karena gradien dikali dengan weight matrix di setiap langkah, jika weight matrix eigenvalue &lt; 1, gradien menyusut secara eksponensial dan dependensi jarak jauh tidak bisa dipelajari. Inilah alasan kenapa RNN dasar hanya efektif untuk konteks pendek.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">rnn_language_model.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">VanillaRNN</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""RNN manual untuk memahami mekanismenya."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size: <span class="tp">int</span>, hidden_size: <span class="tp">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.hidden_size = hidden_size
+        <span class="cm"># Weight untuk input dan hidden state</span>
+        self.W_xh = nn.<span class="fn">Linear</span>(input_size, hidden_size, bias=<span class="kw">False</span>)
+        self.W_hh = nn.<span class="fn">Linear</span>(hidden_size, hidden_size)  <span class="cm"># recurrent connection</span>
+        self.W_hy = nn.<span class="fn">Linear</span>(hidden_size, input_size)   <span class="cm"># output projection</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x: torch.<span class="fn">Tensor</span>, h: torch.<span class="fn">Tensor</span> = <span class="kw">None</span>):
+        <span class="cm"># x: [batch, seq_len, input_size]</span>
+        batch_size, seq_len, _ = x.<span class="fn">shape</span>
+        <span class="kw">if</span> h <span class="kw">is</span> <span class="kw">None</span>:
+            h = torch.<span class="fn">zeros</span>(batch_size, self.hidden_size)
+
+        outputs = []
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(seq_len):
+            <span class="cm"># Core RNN equation: h_t = tanh(W_xh·x_t + W_hh·h_{t-1})</span>
+            h = torch.<span class="fn">tanh</span>(self.<span class="fn">W_xh</span>(x[:, t, :]) + self.<span class="fn">W_hh</span>(h))
+            outputs.<span class="fn">append</span>(h)
+
+        outputs = torch.<span class="fn">stack</span>(outputs, dim=<span class="nm">1</span>)  <span class="cm"># [batch, seq_len, hidden]</span>
+        logits = self.<span class="fn">W_hy</span>(outputs)            <span class="cm"># predict next token di setiap posisi</span>
+        <span class="kw">return</span> logits, h  <span class="cm"># return final hidden state untuk carry-over</span>
+
+<span class="cm"># Dengan nn.RNN (PyTorch built-in, lebih efisien)</span>
+<span class="kw">class</span> <span class="fn">RNNLanguageModel</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="nm">256</span>, hidden_size=<span class="nm">512</span>, num_layers=<span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embedding = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim)
+        self.rnn = nn.<span class="fn">RNN</span>(
+            input_size=embed_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            dropout=<span class="nm">0.3</span>,          <span class="cm"># dropout antar layer RNN</span>
+            batch_first=<span class="kw">True</span>,
+        )
+        self.fc = nn.<span class="fn">Linear</span>(hidden_size, vocab_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids, hidden=<span class="kw">None</span>):
+        embedded = self.<span class="fn">embedding</span>(token_ids)     <span class="cm"># [batch, seq, embed]</span>
+        output, hidden = self.<span class="fn">rnn</span>(embedded, hidden)
+        logits = self.<span class="fn">fc</span>(output)                  <span class="cm"># [batch, seq, vocab_size]</span>
+        <span class="kw">return</span> logits, hidden</pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Vanishing Gradient — Mengapa RNN Sulit Belajar Konteks Panjang</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
+    <div style="color:var(--text3);margin-bottom:12px;">Gradient flow dari token ke-100 ke token ke-1 (BPTT):</div>
+    <div class="cbar-row"><div class="cbar-label">Gradient di t=100</div><div class="cbar-track"><div class="cbar-fill" style="--tw:95%;background:var(--green);"></div></div><div class="cbar-val">1.00</div></div>
+    <div class="cbar-row"><div class="cbar-label">Gradient di t=90</div><div class="cbar-track"><div class="cbar-fill" style="--tw:60%;background:var(--amber);"></div></div><div class="cbar-val">0.35</div></div>
+    <div class="cbar-row"><div class="cbar-label">Gradient di t=70</div><div class="cbar-track"><div class="cbar-fill" style="--tw:20%;background:var(--coral);"></div></div><div class="cbar-val">0.04</div></div>
+    <div class="cbar-row"><div class="cbar-label">Gradient di t=50</div><div class="cbar-track"><div class="cbar-fill" style="--tw:5%;background:var(--coral);"></div></div><div class="cbar-val">~0</div></div>
+    <div class="cbar-row"><div class="cbar-label">Gradient di t=1</div><div class="cbar-track"><div class="cbar-fill" style="--tw:1%;background:var(--coral);"></div></div><div class="cbar-val">≈0</div></div>
+    <p style="margin-top:14px;color:var(--text3);">↑ Informasi dari token awal tidak bisa memengaruhi weight update — model tidak belajar long-range dependency.</p>
+  </div>
+</div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Truncated BPTT</strong>Dalam praktik, BPTT dipotong setelah K langkah (biasanya 35–200) untuk efisiensi komputasi dan memori. Ini berarti model bahkan secara teori tidak bisa belajar dependensi yang lebih panjang dari K — vanishing gradient diperparah oleh truncation. LSTM dan GRU memitigasi vanishing gradient tapi tidak sepenuhnya menghilangkannya.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara vanishing gradient dan exploding gradient pada RNN. Bagaimana gradient clipping mengatasi salah satunya? Mengapa tidak bisa mengatasi keduanya sekaligus?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>RNNLanguageModel</code> dan train pada dataset puisi atau lagu. Generate teks karakter per karakter. Bandingkan kualitas teks yang dihasilkan dengan bigram model dari Fase 1.</li>
+<li><strong>[Eksplorasi]</strong> Plot norm gradien di setiap timestep selama training (gunakan hook <code>register_hook</code> di PyTorch). Observasi bagaimana gradient vanishing terjadi secara visual pada RNN vs LSTM (topik berikutnya).</li>
+</ul></div>
+
+</div><!-- /lm2c -->
+
+<div class="divider"></div>
+
+<!-- 2D -->
+<div class="sub" id="lm2d">
+<div class="subtit"><span class="ac">2.4</span> LSTM &amp; GRU <span class="subid">// gating sebagai solusi</span></div>
+<div class="prose">
+<p>Long Short-Term Memory (LSTM) dan Gated Recurrent Unit (GRU) lahir dari satu insight fundamental: masalah vanishing gradient bisa diatasi jika kita punya <strong>jalur gradien langsung</strong> (gradient highway) yang tidak terpengaruh perkalian berulang. Mekanisme gating adalah cara menciptakan jalur tersebut secara selektif: sebuah "pintu" yang bisa dibuka atau ditutup oleh jaringan sendiri berdasarkan konteks.</p>
+<p>Cell state LSTM adalah kunci arsitektur ini. Berbeda dari hidden state biasa, cell state berubah secara linear (bukan melalui fungsi non-linear saturating seperti tanh) — memungkinkan gradien mengalir lebih lancar sepanjang waktu. Gate-gate yang ada (input, forget, output) mengontrol informasi apa yang masuk, apa yang "dilupakan", dan apa yang menjadi output.</p>
+</div>
+
+<div class="prose">
+<h4>Anatomy LSTM — empat komponen</h4>
+<ul>
+<li><strong>Forget Gate</strong> (<code>f_t = σ(W_f·[h_{t-1}, x_t])</code>) — memutuskan berapa banyak cell state lama yang dipertahankan. Nilai mendekati 0 = "lupakan", mendekati 1 = "ingat".</li>
+<li><strong>Input Gate</strong> (<code>i_t = σ(W_i·[h_{t-1}, x_t])</code>) — memutuskan nilai baru mana yang ditambahkan ke cell state.</li>
+<li><strong>Cell Update</strong> (<code>C̃_t = tanh(W_C·[h_{t-1}, x_t])</code>) — kandidat nilai baru yang akan ditambahkan.</li>
+<li><strong>Output Gate</strong> (<code>o_t = σ(W_o·[h_{t-1}, x_t])</code>) — memutuskan bagian cell state mana yang menjadi hidden output.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">lstm_gru_comparison.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">LSTMModel</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="nm">256</span>, hidden_size=<span class="nm">512</span>, num_layers=<span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embedding = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim)
+        self.lstm = nn.<span class="fn">LSTM</span>(
+            input_size=embed_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            dropout=<span class="nm">0.3</span>,
+            batch_first=<span class="kw">True</span>,
+            bidirectional=<span class="kw">False</span>,  <span class="cm"># True untuk classification (bukan generation)</span>
+        )
+        self.fc = nn.<span class="fn">Linear</span>(hidden_size, vocab_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, hidden=<span class="kw">None</span>):
+        embedded = self.<span class="fn">embedding</span>(x)
+        <span class="cm"># LSTM returns (output, (h_n, c_n)) — beda dari RNN yang hanya (output, h_n)</span>
+        output, (h_n, c_n) = self.<span class="fn">lstm</span>(embedded, hidden)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(output), (h_n, c_n)
+
+<span class="kw">class</span> <span class="fn">GRUModel</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""GRU: arsitektur lebih sederhana dari LSTM, performa seringkali setara."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="nm">256</span>, hidden_size=<span class="nm">512</span>, num_layers=<span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embedding = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim)
+        self.gru = nn.<span class="fn">GRU</span>(embed_dim, hidden_size, num_layers, dropout=<span class="nm">0.3</span>, batch_first=<span class="kw">True</span>)
+        self.fc = nn.<span class="fn">Linear</span>(hidden_size, vocab_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, hidden=<span class="kw">None</span>):
+        embedded = self.<span class="fn">embedding</span>(x)
+        output, h_n = self.<span class="fn">gru</span>(embedded, hidden)  <span class="cm"># GRU tidak punya cell state</span>
+        <span class="kw">return</span> self.<span class="fn">fc</span>(output), h_n
+
+<span class="cm"># GRU vs LSTM comparison:</span>
+<span class="cm"># GRU: 2 gates (reset, update) vs LSTM: 3 gates + cell state</span>
+<span class="cm"># GRU: lebih sedikit parameter → lebih cepat dilatih</span>
+<span class="cm"># GRU: performa seringkali match LSTM untuk sequence pendek-sedang</span>
+<span class="cm"># LSTM: lebih baik untuk sequence sangat panjang karena cell state</span>
+
+<span class="cm"># Contoh: bidirectional LSTM untuk classification</span>
+<span class="kw">class</span> <span class="fn">BiLSTMClassifier</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="nm">128</span>, hidden=<span class="nm">256</span>, num_classes=<span class="nm">3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.emb = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim)
+        self.lstm = nn.<span class="fn">LSTM</span>(embed_dim, hidden, bidirectional=<span class="kw">True</span>, batch_first=<span class="kw">True</span>)
+        self.fc = nn.<span class="fn">Linear</span>(hidden * <span class="nm">2</span>, num_classes)  <span class="cm"># *2 karena bidirectional</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        embedded = self.<span class="fn">emb</span>(x)
+        output, (h_n, _) = self.<span class="fn">lstm</span>(embedded)
+        <span class="cm"># Concatenate forward & backward final hidden states</span>
+        h = torch.<span class="fn">cat</span>([h_n[-<span class="nm">2</span>], h_n[-<span class="nm">1</span>]], dim=<span class="nm">1</span>)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(h)</pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">LSTM vs GRU — Perbandingan Arsitektur</div>
+<div class="viz-body">
+  <div class="cmp">
+    <div class="cmpc good">
+      <div class="cmph">LSTM — lebih powerful</div>
+      <div class="cmpb"><pre>Parameter per unit: 4 × (input + hidden + 1)
+Gate: forget, input, output + cell state
+Memory: explicit cell state (long-term)
+Sequence: sangat panjang (1000+ token)
+Parameter count: lebih banyak → lebih lambat</pre></div>
+    </div>
+    <div class="cmpc good">
+      <div class="cmph">GRU — lebih efisien</div>
+      <div class="cmpb"><pre>Parameter per unit: 3 × (input + hidden + 1)
+Gate: reset, update (tidak ada cell state)
+Memory: implisit dalam hidden state
+Sequence: pendek-sedang (&lt;500 token)
+Parameter count: lebih sedikit → lebih cepat</pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Kapan masih pakai LSTM/GRU di 2024?</strong>Untuk sebagian besar NLP tasks skala besar, Transformer adalah pilihan yang jelas. Tapi LSTM/GRU masih relevan untuk: deployment di embedded systems dengan memory sangat terbatas, time series prediction dengan sequence sangat panjang (10K+ timestep dimana Transformer quadratic attention menjadi bottleneck), dan online learning dimana model harus memproses data streaming satu token per waktu.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan dengan kata-kata sederhana apa yang dilakukan forget gate LSTM. Berikan contoh konkret informasi yang akan "dilupakan" saat memproses dokumen panjang (misal: artikel berita multi-paragraf).</li>
+<li><strong>[Kode]</strong> Bandingkan RNN, GRU, dan LSTM pada task character-level generation: latih ketiganya pada teks Shakespeare, ukur perplexity dan kualitas teks yang dihasilkan. Berapa perbedaan training time-nya?</li>
+<li><strong>[Eksplorasi]</strong> Implementasikan bidirectional LSTM untuk NER (Named Entity Recognition) menggunakan dataset CoNLL-2003. Bandingkan hasil dengan unidirectional LSTM — mengapa bidirectional lebih baik untuk classification task ini?</li>
+</ul></div>
+
+</div><!-- /lm2d -->
+
+<div class="divider"></div>
+
+<!-- 2E -->
+<div class="sub" id="lm2e">
+<div class="subtit"><span class="ac">2.5</span> Seq2Seq &amp; Encoder-Decoder <span class="subid">// jembatan dua urutan</span></div>
+<div class="prose">
+<p>Arsitektur Seq2Seq (Sequence-to-Sequence) adalah breakthrough yang memungkinkan machine translation neural end-to-end. Ide dasarnya elegan: satu RNN (encoder) membaca input sequence dan mengkompresnya menjadi sebuah vektor tetap (context vector), lalu RNN kedua (decoder) menghasilkan output sequence dari context vector tersebut.</p>
+<p>Namun, context vector tunggal adalah bottleneck fundamental: seluruh informasi dari input sequence sepanjang apapun harus dikompres menjadi satu vektor berdimensi fixed. Keterbatasan inilah yang memotivasi lahirnya mekanisme attention — alih-alih memaksa encoder meringkas semuanya ke satu vektor, biarkan decoder "melihat" langsung ke seluruh output encoder dan memilih mana yang relevan di setiap langkah decoding.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">seq2seq.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">Encoder</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, src_vocab, embed_dim, hidden_size, num_layers=<span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embedding = nn.<span class="fn">Embedding</span>(src_vocab, embed_dim)
+        self.lstm = nn.<span class="fn">LSTM</span>(embed_dim, hidden_size, num_layers, batch_first=<span class="kw">True</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, src):
+        embedded = self.<span class="fn">embedding</span>(src)
+        outputs, (h_n, c_n) = self.<span class="fn">lstm</span>(embedded)
+        <span class="cm"># outputs: [batch, src_len, hidden] — semua hidden states</span>
+        <span class="cm"># h_n, c_n: final state — "summary" dari seluruh input</span>
+        <span class="kw">return</span> outputs, h_n, c_n
+
+<span class="kw">class</span> <span class="fn">Decoder</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, tgt_vocab, embed_dim, hidden_size, num_layers=<span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embedding = nn.<span class="fn">Embedding</span>(tgt_vocab, embed_dim)
+        self.lstm = nn.<span class="fn">LSTM</span>(embed_dim, hidden_size, num_layers, batch_first=<span class="kw">True</span>)
+        self.fc = nn.<span class="fn">Linear</span>(hidden_size, tgt_vocab)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, tgt_token, h, c):
+        <span class="cm"># tgt_token: [batch, 1] — satu token per langkah</span>
+        embedded = self.<span class="fn">embedding</span>(tgt_token)
+        output, (h, c) = self.<span class="fn">lstm</span>(embedded, (h, c))
+        prediction = self.<span class="fn">fc</span>(output.<span class="fn">squeeze</span>(<span class="nm">1</span>))  <span class="cm"># [batch, tgt_vocab]</span>
+        <span class="kw">return</span> prediction, h, c
+
+<span class="kw">class</span> <span class="fn">Seq2Seq</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, encoder, decoder):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.encoder = encoder
+        self.decoder = decoder
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, src, tgt, teacher_forcing_ratio=<span class="nm">0.5</span>):
+        <span class="cm"># teacher_forcing: kadang beri ground truth sebagai input decoder</span>
+        <span class="cm"># (bukan output prediksi) untuk training lebih stabil</span>
+        enc_outputs, h, c = self.<span class="fn">encoder</span>(src)
+
+        tgt_len = tgt.<span class="fn">shape</span>[<span class="nm">1</span>]
+        predictions = []
+        input_token = tgt[:, :<span class="nm">1</span>]  <span class="cm"># BOS token</span>
+
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">1</span>, tgt_len):
+            pred, h, c = self.<span class="fn">decoder</span>(input_token, h, c)
+            predictions.<span class="fn">append</span>(pred)
+            <span class="cm"># Teacher forcing: pakai ground truth atau prediksi sebelumnya?</span>
+            use_gt = torch.<span class="fn">rand</span>(<span class="nm">1</span>).<span class="fn">item</span>() < teacher_forcing_ratio
+            input_token = tgt[:, t:<span class="nm">t</span>+<span class="nm">1</span>] <span class="kw">if</span> use_gt <span class="kw">else</span> pred.<span class="fn">argmax</span>(<span class="nm">1</span>, keepdim=<span class="kw">True</span>)
+
+        <span class="kw">return</span> torch.<span class="fn">stack</span>(predictions, dim=<span class="nm">1</span>)  <span class="cm"># [batch, tgt_len-1, vocab]</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Context Vector Bottleneck — Masalah yang Memotivasi Attention</div>
+<div class="viz-body">
+  <div class="tok-flow">
+    <div class="tok-node">"The cat<br>sat on<br>the mat"<br><span style="color:var(--text3);font-size:10px">input (6 token)</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">LSTM<br>Encoder<br><span style="color:var(--text3);font-size:10px">process</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">Context<br>Vector<br><span style="font-size:10px">[512 dims]</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">LSTM<br>Decoder<br><span style="color:var(--text3);font-size:10px">generate</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">"Le chat<br>était sur<br>le tapis"<br><span style="color:var(--text3);font-size:10px">output (French)</span></div>
+  </div>
+  <div style="margin-top:16px;padding:10px 14px;background:var(--coral-dim);border-left:3px solid var(--coral);border-radius:4px;font-size:12px;color:var(--text2);">
+    Bottleneck: seluruh "The cat sat on the mat" harus dikompres ke 512 angka. Untuk kalimat panjang (50+ kata), informasi dari awal kalimat hilang. Attention (Fase 3) menyelesaikan ini.
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan trade-off teacher forcing ratio. Ratio 1.0 vs 0.0 masing-masing menyebabkan masalah apa saat training dan saat inference? Apa strategi scheduled sampling?</li>
+<li><strong>[Kode]</strong> Implementasikan Seq2Seq sederhana untuk task reverse sequence (input: [1,2,3,4,5] → output: [5,4,3,2,1]). Ini cukup simpel untuk dilatih cepat dan kamu bisa verifikasi kebenarannya.</li>
+<li><strong>[Eksplorasi]</strong> Baca section 2 dari paper "Neural Machine Translation by Jointly Learning to Align and Translate" (Bahdanau et al., 2014). Apa tepatnya yang dimaksud dengan "alignment" dan bagaimana paper ini mengaitkannya dengan attention?</li>
+</ul></div>
+
+</div><!-- /lm2e -->
+
+<div class="divider"></div>
+
+<!-- 2F -->
+<div class="sub" id="lm2f">
+<div class="subtit"><span class="ac">2.6</span> Regularisasi &amp; Training Tips <span class="subid">// agar model generalisasi</span></div>
+<div class="prose">
+<p>Model neural network yang besar hampir selalu overfit pada training data jika dilatih tanpa kontrol. Regularisasi adalah kumpulan teknik untuk memaksa model belajar pola yang benar-benar general — bukan memorize training data. Untuk NLP tasks, regularisasi yang tepat seringkali perbedaan antara model yang bagus di training tapi jelek di production vs model yang robust.</p>
+<p>Learning rate schedule adalah aspek training yang underrated tapi sangat krusial. Model yang dilatih dengan learning rate tetap hampir tidak pernah optimal — terlalu besar di akhir training (overshooting) atau terlalu kecil di awal (lambat konvergen). Warmup + decay adalah standar de facto untuk semua model NLP modern.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">training_best_practices.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch.optim.lr_scheduler <span class="kw">import</span> LambdaLR
+<span class="kw">import</span> math
+
+<span class="cm"># === Dropout — teknik regularisasi paling efektif untuk NLP ===</span>
+<span class="kw">class</span> <span class="fn">RobustLSTM</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="nm">256</span>, hidden=<span class="nm">512</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.emb = nn.<span class="fn">Embedding</span>(vocab_size, embed_dim)
+        self.emb_dropout = nn.<span class="fn">Dropout</span>(<span class="nm">0.2</span>)    <span class="cm"># dropout setelah embedding</span>
+        self.lstm = nn.<span class="fn">LSTM</span>(embed_dim, hidden, num_layers=<span class="nm">2</span>,
+                             dropout=<span class="nm">0.3</span>,     <span class="cm"># dropout antar LSTM layers</span>
+                             batch_first=<span class="kw">True</span>)
+        self.out_dropout = nn.<span class="fn">Dropout</span>(<span class="nm">0.3</span>)   <span class="cm"># dropout sebelum output layer</span>
+        self.fc = nn.<span class="fn">Linear</span>(hidden, vocab_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, hidden=<span class="kw">None</span>):
+        embedded = self.<span class="fn">emb_dropout</span>(self.<span class="fn">emb</span>(x))
+        output, hidden = self.<span class="fn">lstm</span>(embedded, hidden)
+        output = self.<span class="fn">out_dropout</span>(output)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(output), hidden
+
+<span class="cm"># === Warmup + Cosine Decay LR Schedule ===</span>
+<span class="kw">def</span> <span class="fn">get_cosine_schedule_with_warmup</span>(optimizer, warmup_steps: <span class="tp">int</span>, total_steps: <span class="tp">int</span>):
+    <span class="kw">def</span> <span class="fn">lr_lambda</span>(current_step: <span class="tp">int</span>):
+        <span class="kw">if</span> current_step < warmup_steps:
+            <span class="kw">return</span> current_step / <span class="fn">max</span>(<span class="nm">1</span>, warmup_steps)  <span class="cm"># linear warmup</span>
+        progress = (current_step - warmup_steps) / <span class="fn">max</span>(<span class="nm">1</span>, total_steps - warmup_steps)
+        <span class="kw">return</span> <span class="fn">max</span>(<span class="nm">0.0</span>, <span class="nm">0.5</span> * (<span class="nm">1.0</span> + math.<span class="fn">cos</span>(math.pi * progress)))  <span class="cm"># cosine decay</span>
+    <span class="kw">return</span> <span class="fn">LambdaLR</span>(optimizer, lr_lambda)
+
+<span class="cm"># === Gradient Clipping — mencegah exploding gradients ===</span>
+<span class="kw">def</span> <span class="fn">train_step</span>(model, batch, optimizer, scheduler, max_grad_norm=<span class="nm">1.0</span>):
+    model.<span class="fn">train</span>()
+    optimizer.<span class="fn">zero_grad</span>(set_to_none=<span class="kw">True</span>)  <span class="cm"># lebih efisien dari zero_grad()</span>
+    loss = <span class="fn">compute_loss</span>(model, batch)
+    loss.<span class="fn">backward</span>()
+
+    <span class="cm"># Clip gradients — critical untuk LSTM/RNN training</span>
+    grad_norm = nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), max_grad_norm)
+
+    optimizer.<span class="fn">step</span>()
+    scheduler.<span class="fn">step</span>()
+
+    <span class="kw">return</span> loss.<span class="fn">item</span>(), grad_norm.<span class="fn">item</span>()  <span class="cm"># monitor grad_norm — jika > 10 ada masalah</span>
+
+<span class="cm"># === Early Stopping — hentikan training saat val loss tidak membaik ===</span>
+<span class="kw">class</span> <span class="fn">EarlyStopping</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, patience: <span class="tp">int</span> = <span class="nm">5</span>, min_delta: <span class="tp">float</span> = <span class="nm">1e-4</span>):
+        self.patience = patience
+        self.counter = <span class="nm">0</span>
+        self.best_loss = <span class="kw">float</span>(<span class="st">"inf"</span>)
+
+    <span class="kw">def</span> <span class="fn">__call__</span>(self, val_loss: <span class="tp">float</span>) -> <span class="tp">bool</span>:
+        <span class="kw">if</span> val_loss < self.best_loss - self.min_delta:
+            self.best_loss = val_loss
+            self.counter = <span class="nm">0</span>
+        <span class="kw">else</span>:
+            self.counter += <span class="nm">1</span>
+        <span class="kw">return</span> self.counter >= self.patience  <span class="cm"># True = stop training</span></pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Layer Norm vs Batch Norm untuk NLP</strong>Batch Normalization tidak bekerja baik untuk NLP karena panjang sequence bervariasi dan batch size sering kecil. Layer Normalization (<code>nn.LayerNorm</code>) menormalisasi di atas feature dimension per sample — tidak bergantung pada batch size dan bekerja baik untuk sequence variable length. Semua Transformer modern menggunakan Layer Norm, bukan Batch Norm.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa dropout dimatikan saat inference (<code>model.eval()</code>)? Apa yang terjadi jika kamu lupa memanggil <code>model.eval()</code> saat evaluasi — apakah hasilnya lebih tinggi atau lebih rendah dari sebenarnya?</li>
+<li><strong>[Kode]</strong> Implementasikan training loop lengkap dengan warmup scheduler, early stopping, dan gradient clipping. Train LSTM pada Penn Treebank dataset dan plot learning rate, gradient norm, dan validation perplexity per epoch.</li>
+<li><strong>[Eksplorasi]</strong> Eksperimen dengan berbagai nilai dropout (0.0, 0.1, 0.3, 0.5, 0.7) dan bandingkan training vs validation perplexity. Pada nilai berapa terjadi underfitting dan overfitting? Temukan sweet spot.</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 2 selesai · 12/27 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 3 — Attention &amp; Transformer</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(10)">← 2.5 Seq2Seq</button>
+    <button class="tnbtn primary" onclick="goToPage('lmfi3')">Fase 3 →</button>
+  </div>
+</div>
+
+</div><!-- /lm2f -->
+
+</section><!-- /lmfase2 -->

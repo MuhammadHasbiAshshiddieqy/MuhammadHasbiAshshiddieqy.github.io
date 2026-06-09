@@ -1,0 +1,512 @@
+<section class="cs p3" id="lmfase3">
+<div class="fase-intro" id="lmfi3">
+<div class="sh">
+  <div class="sbadge p3">03</div>
+  <div>
+    <div class="stitle">Fase 3 — Attention &amp; Transformer</div>
+    <div class="sdesc">Mekanisme attention adalah revolusi yang mengubah NLP selamanya. Dari Bahdanau attention yang mengatasi bottleneck Seq2Seq, hingga arsitektur Transformer penuh yang menggantikan RNN secara total. Fase ini adalah inti dari semua LLM modern.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 5–6</span><span class="mc">Inti LLM</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#lm3a">Mekanisme Attention</a>
+  <a class="snavi" href="#lm3b">Self-Attention</a>
+  <a class="snavi" href="#lm3c">Multi-Head &amp; PE</a>
+  <a class="snavi" href="#lm3d">Transformer Lengkap</a>
+  <a class="snavi" href="#lm3e">Varian Transformer</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 5–6</div>
+    <div class="topic-nav-title">Mulai dari: 3.1 Mekanisme Attention</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('lmfi2')">← Fase 2</button>
+    <button class="tnbtn primary" onclick="goTo(12)">Mulai Fase 3 →</button>
+  </div>
+</div>
+</div><!-- /lmfi3 -->
+
+<!-- 3A -->
+<div class="sub" id="lm3a">
+<div class="subtit"><span class="ac">3.1</span> Mekanisme Attention <span class="subid">// dari bottleneck ke alignment</span></div>
+<div class="prose">
+<p>Attention mechanism lahir dari satu pertanyaan sederhana: alih-alih memaksa encoder merangkum seluruh input menjadi satu vektor, mengapa tidak biarkan decoder "melihat" semua output encoder dan memilih mana yang relevan di setiap langkah decoding? Intuisi ini, yang diperkenalkan oleh Bahdanau et al. (2014), secara dramatis meningkatkan kualitas machine translation dan menjadi fondasi semua model bahasa modern.</p>
+<p>Mekanisme attention secara esensial adalah <strong>weighted average</strong>: setiap hidden state encoder mendapat bobot (alignment score) berdasarkan relevansinya dengan hidden state decoder saat ini. Bobot-bobot ini dijumlahkan secara softmax sehingga total bobot = 1, menghasilkan sebuah context vector yang dikomputasi secara dinamis untuk setiap langkah decoding — berbeda dengan context vector statis di Seq2Seq klasik.</p>
+</div>
+
+<div class="prose">
+<h4>Dua jenis attention yang fundamental</h4>
+<ul>
+<li><strong>Additive Attention (Bahdanau)</strong> — alignment score dihitung dengan MLP kecil: <code>score(h_s, h_t) = v^T · tanh(W_1·h_s + W_2·h_t)</code>. Lebih fleksibel karena ada parameter yang dipelajari, tapi lebih lambat karena operasi sequential.</li>
+<li><strong>Multiplicative/Dot-Product Attention (Luong)</strong> — alignment score dihitung dengan dot product: <code>score(h_s, h_t) = h_s^T · h_t</code>. Lebih cepat secara komputasi (bisa diparalelkan sebagai matrix multiplication), menjadi basis dari Transformer's scaled dot-product attention.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">bahdanau_attention.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="fn">BahdanauAttention</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""Additive attention — query dari decoder, keys/values dari encoder outputs."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, hidden_size: <span class="tp">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.W1 = nn.<span class="fn">Linear</span>(hidden_size, hidden_size, bias=<span class="kw">False</span>)  <span class="cm"># transform encoder states</span>
+        self.W2 = nn.<span class="fn">Linear</span>(hidden_size, hidden_size, bias=<span class="kw">False</span>)  <span class="cm"># transform decoder state</span>
+        self.v = nn.<span class="fn">Linear</span>(hidden_size, <span class="nm">1</span>, bias=<span class="kw">False</span>)             <span class="cm"># project to scalar score</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, query, keys, values, mask=<span class="kw">None</span>):
+        <span class="st">"""
+        query:  [batch, hidden]         — decoder hidden state saat ini
+        keys:   [batch, src_len, hidden] — semua encoder hidden states
+        values: [batch, src_len, hidden] — sama dengan keys (biasanya)
+        """</span>
+        query = query.<span class="fn">unsqueeze</span>(<span class="nm">1</span>)  <span class="cm"># [batch, 1, hidden] untuk broadcasting</span>
+
+        <span class="cm"># Alignment scores: tanh(W1·keys + W2·query)</span>
+        energy = torch.<span class="fn">tanh</span>(self.<span class="fn">W1</span>(keys) + self.<span class="fn">W2</span>(query))  <span class="cm"># [batch, src_len, hidden]</span>
+        scores = self.<span class="fn">v</span>(energy).<span class="fn">squeeze</span>(-<span class="nm">1</span>)                   <span class="cm"># [batch, src_len]</span>
+
+        <span class="cm"># Masking: abaikan padding tokens</span>
+        <span class="kw">if</span> mask <span class="kw">is not</span> <span class="kw">None</span>:
+            scores = scores.<span class="fn">masked_fill</span>(mask == <span class="nm">0</span>, <span class="nm">-1e9</span>)
+
+        <span class="cm"># Softmax → attention weights (sum = 1)</span>
+        weights = F.<span class="fn">softmax</span>(scores, dim=-<span class="nm">1</span>)  <span class="cm"># [batch, src_len]</span>
+
+        <span class="cm"># Context vector: weighted sum of values</span>
+        context = torch.<span class="fn">bmm</span>(weights.<span class="fn">unsqueeze</span>(<span class="nm">1</span>), values)  <span class="cm"># [batch, 1, hidden]</span>
+        context = context.<span class="fn">squeeze</span>(<span class="nm">1</span>)                       <span class="cm"># [batch, hidden]</span>
+
+        <span class="kw">return</span> context, weights  <span class="cm"># weights bisa divisualisasikan sebagai alignment matrix!</span>
+
+<span class="cm"># Visualisasi attention weights — kamu bisa plot ini sebagai heatmap</span>
+<span class="cm"># Row = decoder timestep (output token)</span>
+<span class="cm"># Col = encoder timestep (input token)</span>
+<span class="cm"># Nilai tinggi = decoder "memperhatikan" input token tersebut saat generate output token ini</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Attention Alignment Matrix — "The cat sat" → "Le chat était"</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">
+    <div style="color:var(--text3);margin-bottom:12px;">Heatmap attention: baris = output token, kolom = input token. Nilai tinggi = diperhatikan.</div>
+    <div style="display:grid;grid-template-columns:80px repeat(5, 1fr);gap:3px;max-width:420px;">
+      <div></div>
+      <div style="text-align:center;padding:4px;color:var(--text3);font-size:10px;">the</div>
+      <div style="text-align:center;padding:4px;color:var(--text3);font-size:10px;">cat</div>
+      <div style="text-align:center;padding:4px;color:var(--text3);font-size:10px;">sat</div>
+      <div style="text-align:center;padding:4px;color:var(--text3);font-size:10px;">on</div>
+      <div style="text-align:center;padding:4px;color:var(--text3);font-size:10px;">mat</div>
+
+      <div style="text-align:right;padding:4px;color:var(--text3);font-size:10px;align-self:center;">Le</div>
+      <div style="background:rgba(124,109,250,0.8);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;">0.85</div>
+      <div style="background:rgba(124,109,250,0.1);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;">0.08</div>
+      <div style="background:rgba(124,109,250,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.03</div>
+      <div style="background:rgba(124,109,250,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.02</div>
+      <div style="background:rgba(124,109,250,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.02</div>
+
+      <div style="text-align:right;padding:4px;color:var(--text3);font-size:10px;align-self:center;">chat</div>
+      <div style="background:rgba(45,212,191,0.1);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;">0.07</div>
+      <div style="background:rgba(45,212,191,0.8);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;">0.88</div>
+      <div style="background:rgba(45,212,191,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.03</div>
+      <div style="background:rgba(45,212,191,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.01</div>
+      <div style="background:rgba(45,212,191,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.01</div>
+
+      <div style="text-align:right;padding:4px;color:var(--text3);font-size:10px;align-self:center;">était</div>
+      <div style="background:rgba(245,158,11,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.02</div>
+      <div style="background:rgba(245,158,11,0.1);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;">0.05</div>
+      <div style="background:rgba(245,158,11,0.8);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;">0.89</div>
+      <div style="background:rgba(245,158,11,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.02</div>
+      <div style="background:rgba(245,158,11,0.0);border-radius:4px;padding:6px 0;text-align:center;font-size:10px;color:var(--text3);">0.02</div>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:12px;">↑ Model belajar sendiri bahwa "Le" ↔ "the", "chat" ↔ "cat", "était" ↔ "sat" — tanpa aturan bahasa eksplisit.</p>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan mengapa attention weight bisa divisualisasikan sebagai "alignment matrix" untuk machine translation. Apa yang terjadi dengan alignment untuk bahasa yang word order-nya sangat berbeda (misal Inggris vs Jepang)?</li>
+<li><strong>[Kode]</strong> Tambahkan BahdanauAttention ke Seq2Seq dari topik 2.5. Visualisasikan attention weight sebagai heatmap menggunakan matplotlib untuk beberapa contoh kalimat terjemahan.</li>
+<li><strong>[Eksplorasi]</strong> Bandingkan additive attention (Bahdanau) vs dot-product attention pada task translation yang sama. Apakah ada perbedaan convergence speed atau kualitas akhir? Kapan setiap jenis lebih cocok?</li>
+</ul></div>
+
+</div><!-- /lm3a -->
+
+<div class="divider"></div>
+
+<!-- 3B -->
+<div class="sub" id="lm3b">
+<div class="subtit"><span class="ac">3.2</span> Self-Attention &amp; Scaled Dot-Product <span class="subid">// setiap token melihat semua token</span></div>
+<div class="prose">
+<p>Self-attention adalah variasi attention di mana query, key, dan value semuanya berasal dari <em>sequence yang sama</em>. Alih-alih decoder memperhatikan encoder (cross-attention), setiap token dalam sequence memperhatikan semua token lainnya — termasuk dirinya sendiri. Ini memungkinkan model menangkap dependensi jarak jauh dalam satu langkah komputasi, tanpa memerlukan RNN sequential.</p>
+<p>Konsep Query-Key-Value (QKV) adalah abstraksi yang sangat berguna: bayangkan kamu mencari dokumen di database. <strong>Query</strong> adalah pertanyaanmu, <strong>Key</strong> adalah indeks dokumen-dokumen yang tersedia, dan <strong>Value</strong> adalah konten aktual dokumen. Attention score = seberapa cocok query dengan setiap key. Output = rata-rata tertimbang dari values, berbobot sesuai attention scores.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">self_attention.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+<span class="kw">import</span> math
+
+<span class="kw">def</span> <span class="fn">scaled_dot_product_attention</span>(
+    Q: torch.Tensor,   <span class="cm"># [batch, heads, seq, d_k] — Queries</span>
+    K: torch.Tensor,   <span class="cm"># [batch, heads, seq, d_k] — Keys</span>
+    V: torch.Tensor,   <span class="cm"># [batch, heads, seq, d_v] — Values</span>
+    mask: torch.Tensor = <span class="kw">None</span>,
+) -> <span class="tp">tuple</span>[torch.Tensor, torch.Tensor]:
+    d_k = Q.<span class="fn">size</span>(-<span class="nm">1</span>)  <span class="cm"># dimensi key</span>
+
+    <span class="cm"># Step 1: Attention scores = Q · K^T / sqrt(d_k)</span>
+    <span class="cm"># Scaling dengan sqrt(d_k) mencegah dot products terlalu besar</span>
+    <span class="cm"># yang menyebabkan softmax menghasilkan gradient yang sangat kecil</span>
+    scores = torch.<span class="fn">matmul</span>(Q, K.<span class="fn">transpose</span>(-<span class="nm">2</span>, -<span class="nm">1</span>)) / math.<span class="fn">sqrt</span>(d_k)
+    <span class="cm"># scores: [batch, heads, seq_q, seq_k]</span>
+
+    <span class="cm"># Step 2: Masking (untuk causal LM: token tidak boleh lihat masa depan)</span>
+    <span class="kw">if</span> mask <span class="kw">is not</span> <span class="kw">None</span>:
+        scores = scores.<span class="fn">masked_fill</span>(mask == <span class="nm">0</span>, <span class="nm">-1e9</span>)  <span class="cm"># set ke -inf → softmax ≈ 0</span>
+
+    <span class="cm"># Step 3: Softmax → attention weights</span>
+    weights = F.<span class="fn">softmax</span>(scores, dim=-<span class="nm">1</span>)  <span class="cm"># [batch, heads, seq_q, seq_k]</span>
+
+    <span class="cm"># Step 4: Weighted sum of values</span>
+    output = torch.<span class="fn">matmul</span>(weights, V)  <span class="cm"># [batch, heads, seq_q, d_v]</span>
+
+    <span class="kw">return</span> output, weights
+
+<span class="kw">class</span> <span class="fn">SingleHeadSelfAttention</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model: <span class="tp">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.d_model = d_model
+        <span class="cm"># Learnable projections: input → Q, K, V</span>
+        self.W_q = nn.<span class="fn">Linear</span>(d_model, d_model, bias=<span class="kw">False</span>)
+        self.W_k = nn.<span class="fn">Linear</span>(d_model, d_model, bias=<span class="kw">False</span>)
+        self.W_v = nn.<span class="fn">Linear</span>(d_model, d_model, bias=<span class="kw">False</span>)
+        self.W_o = nn.<span class="fn">Linear</span>(d_model, d_model)  <span class="cm"># output projection</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, mask=<span class="kw">None</span>):
+        <span class="cm"># x: [batch, seq_len, d_model]</span>
+        Q = self.<span class="fn">W_q</span>(x)  <span class="cm"># [batch, seq, d_model]</span>
+        K = self.<span class="fn">W_k</span>(x)  <span class="cm"># semua dari x yang sama → self-attention</span>
+        V = self.<span class="fn">W_v</span>(x)
+
+        Q = Q.<span class="fn">unsqueeze</span>(<span class="nm">1</span>)  <span class="cm"># add head dim untuk compatibility</span>
+        K = K.<span class="fn">unsqueeze</span>(<span class="nm">1</span>)
+        V = V.<span class="fn">unsqueeze</span>(<span class="nm">1</span>)
+
+        attn_output, weights = <span class="fn">scaled_dot_product_attention</span>(Q, K, V, mask)
+        attn_output = attn_output.<span class="fn">squeeze</span>(<span class="nm">1</span>)  <span class="cm"># [batch, seq, d_model]</span>
+        <span class="kw">return</span> self.<span class="fn">W_o</span>(attn_output), weights</pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>O(n²) kompleksitas adalah bottleneck nyata</strong>Self-attention menghitung attention score antara setiap pasangan token: untuk sequence panjang n, ini O(n²) dalam waktu dan memori. Untuk n=1000 ini fine, tapi n=32.000 (GPT-4 extended) atau n=1.000.000 (Gemini Ultra) membutuhkan teknik khusus: FlashAttention (I/O-aware recomputation), Sparse Attention, Linear Attention, atau approximate methods. Ini adalah area riset aktif hingga 2025.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Self-Attention — Setiap Token Memperhatikan Token Lain</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);">
+    <div style="margin-bottom:10px;color:var(--text3);">Contoh: "The animal didn't cross the street because it was too tired"</div>
+    <div style="margin-bottom:8px;">Ketika memproses token <span style="color:var(--accent);">"it"</span>, self-attention memberikan bobot:</div>
+    <div class="cbar-row"><div class="cbar-label">animal</div><div class="cbar-track"><div class="cbar-fill" style="--tw:82%;background:var(--accent);"></div></div><div class="cbar-val">0.82</div></div>
+    <div class="cbar-row"><div class="cbar-label">tired</div><div class="cbar-track"><div class="cbar-fill" style="--tw:55%;background:var(--teal);"></div></div><div class="cbar-val">0.55</div></div>
+    <div class="cbar-row"><div class="cbar-label">cross</div><div class="cbar-track"><div class="cbar-fill" style="--tw:20%;background:var(--amber);"></div></div><div class="cbar-val">0.20</div></div>
+    <div class="cbar-row"><div class="cbar-label">street</div><div class="cbar-track"><div class="cbar-fill" style="--tw:10%;background:var(--text3);"></div></div><div class="cbar-val">0.10</div></div>
+    <p style="font-size:11px;color:var(--text3);margin-top:10px;">↑ Model belajar bahwa "it" merujuk ke "animal" — coreference resolution otomatis tanpa aturan eksplisit.</p>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Apa yang dimaksud dengan "causal masking" dalam decoder-only language model? Mengapa tanpa masking ini, model bisa "cheat" saat training?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>SingleHeadSelfAttention</code> di atas. Buat causal mask untuk sequence panjang 5 (segitiga lower triangular). Verifikasi bahwa output token ke-i hanya bergantung pada token 0 hingga i.</li>
+<li><strong>[Eksplorasi]</strong> Hitung FLOPs dan memory untuk self-attention dengan sequence length 128, 512, dan 2048. Verifikasi bahwa kompleksitasnya memang quadratic. Kapan ini menjadi bottleneck pada modern GPU?</li>
+</ul></div>
+
+</div><!-- /lm3b -->
+
+<div class="divider"></div>
+
+<!-- 3C -->
+<div class="sub" id="lm3c">
+<div class="subtit"><span class="ac">3.3</span> Multi-Head Attention &amp; Positional Encoding <span class="subid">// melihat dari banyak sudut</span></div>
+<div class="prose">
+<p>Single-head attention hanya bisa memperhatikan satu jenis hubungan antar token pada satu waktu. Multi-Head Attention (MHA) menjalankan beberapa attention heads secara paralel, masing-masing dengan projection matrix W_Q, W_K, W_V yang berbeda — memungkinkan model menangkap berbagai jenis hubungan secara simultan: satu head mungkin menangkap hubungan sintaktik, head lain menangkap koreferensi, head lain menangkap hubungan semantik.</p>
+<p>Positional Encoding mengatasi kelemahan fundamental self-attention: tidak punya built-in sense of order. Tanpa PE, "the cat sat" dan "sat cat the" menghasilkan output identik karena attention tidak peduli urutan — hanya siapa memperhatikan siapa. PE menyuntikkan informasi posisi ke dalam representasi token, memungkinkan model membedakan urutan.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">multi_head_attention.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+<span class="kw">import</span> math
+
+<span class="kw">class</span> <span class="fn">MultiHeadAttention</span>(nn.<span class="fn">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model: <span class="tp">int</span> = <span class="nm">512</span>, num_heads: <span class="tp">int</span> = <span class="nm">8</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="kw">assert</span> d_model % num_heads == <span class="nm">0</span>, <span class="st">"d_model harus habis dibagi num_heads"</span>
+
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_k = d_model // num_heads  <span class="cm"># dimensi per head</span>
+
+        <span class="cm"># Single projection matrix untuk semua heads (lebih efisien)</span>
+        self.W_q = nn.<span class="fn">Linear</span>(d_model, d_model, bias=<span class="kw">False</span>)
+        self.W_k = nn.<span class="fn">Linear</span>(d_model, d_model, bias=<span class="kw">False</span>)
+        self.W_v = nn.<span class="fn">Linear</span>(d_model, d_model, bias=<span class="kw">False</span>)
+        self.W_o = nn.<span class="fn">Linear</span>(d_model, d_model)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, query, key, value, mask=<span class="kw">None</span>):
+        batch_size = query.<span class="fn">size</span>(<span class="nm">0</span>)
+
+        <span class="cm"># Project dan split ke multiple heads</span>
+        <span class="kw">def</span> <span class="fn">split_heads</span>(x):
+            <span class="cm"># x: [batch, seq, d_model] → [batch, heads, seq, d_k]</span>
+            x = x.<span class="fn">view</span>(batch_size, -<span class="nm">1</span>, self.num_heads, self.d_k)
+            <span class="kw">return</span> x.<span class="fn">transpose</span>(<span class="nm">1</span>, <span class="nm">2</span>)
+
+        Q = <span class="fn">split_heads</span>(self.<span class="fn">W_q</span>(query))  <span class="cm"># [batch, heads, seq_q, d_k]</span>
+        K = <span class="fn">split_heads</span>(self.<span class="fn">W_k</span>(key))
+        V = <span class="fn">split_heads</span>(self.<span class="fn">W_v</span>(value))
+
+        <span class="cm"># Scaled dot-product attention (paralel untuk semua heads)</span>
+        scores = torch.<span class="fn">matmul</span>(Q, K.<span class="fn">transpose</span>(-<span class="nm">2</span>, -<span class="nm">1</span>)) / math.<span class="fn">sqrt</span>(self.d_k)
+        <span class="kw">if</span> mask <span class="kw">is not</span> <span class="kw">None</span>:
+            scores = scores.<span class="fn">masked_fill</span>(mask == <span class="nm">0</span>, -<span class="nm">1e9</span>)
+        weights = F.<span class="fn">softmax</span>(scores, dim=-<span class="nm">1</span>)
+        attn = torch.<span class="fn">matmul</span>(weights, V)  <span class="cm"># [batch, heads, seq, d_k]</span>
+
+        <span class="cm"># Concatenate heads → [batch, seq, d_model]</span>
+        attn = attn.<span class="fn">transpose</span>(<span class="nm">1</span>, <span class="nm">2</span>).<span class="fn">contiguous</span>()
+        attn = attn.<span class="fn">view</span>(batch_size, -<span class="nm">1</span>, self.d_model)
+
+        <span class="kw">return</span> self.<span class="fn">W_o</span>(attn)
+
+<span class="kw">class</span> <span class="fn">SinusoidalPositionalEncoding</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""Original Transformer PE — deterministik, tidak perlu dilatih."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model: <span class="tp">int</span>, max_len: <span class="tp">int</span> = <span class="nm">5000</span>, dropout: <span class="tp">float</span> = <span class="nm">0.1</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.dropout = nn.<span class="fn">Dropout</span>(dropout)
+
+        pe = torch.<span class="fn">zeros</span>(max_len, d_model)
+        position = torch.<span class="fn">arange</span>(<span class="nm">0</span>, max_len).<span class="fn">unsqueeze</span>(<span class="nm">1</span>).<span class="fn">float</span>()
+        div_term = torch.<span class="fn">exp</span>(
+            torch.<span class="fn">arange</span>(<span class="nm">0</span>, d_model, <span class="nm">2</span>).<span class="fn">float</span>() * (-math.<span class="fn">log</span>(<span class="nm">10000.0</span>) / d_model)
+        )
+        <span class="cm"># Sinusoidal: posisi genap = sin, posisi ganjil = cos</span>
+        pe[:, <span class="nm">0</span>::<span class="nm">2</span>] = torch.<span class="fn">sin</span>(position * div_term)
+        pe[:, <span class="nm">1</span>::<span class="nm">2</span>] = torch.<span class="fn">cos</span>(position * div_term)
+        self.<span class="fn">register_buffer</span>(<span class="st">"pe"</span>, pe.<span class="fn">unsqueeze</span>(<span class="nm">0</span>))  <span class="cm"># [1, max_len, d_model]</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="cm"># x: [batch, seq_len, d_model]</span>
+        x = x + self.pe[:, :x.<span class="fn">size</span>(<span class="nm">1</span>)]
+        <span class="kw">return</span> self.<span class="fn">dropout</span>(x)
+
+<span class="cm"># Modern alternative: RoPE (Rotary Position Embedding) — digunakan LLaMA, GPT-NeoX</span>
+<span class="cm"># RoPE encode posisi sebagai rotasi dalam ruang complex — extrapolate ke panjang yang lebih panjang</span></pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Sinusoidal PE vs Learned PE vs RoPE</strong>Sinusoidal PE dari paper asli Transformer: deterministik, bisa extrapolate ke sequence lebih panjang dari training. Learned PE: dilatih dari data, mungkin lebih baik untuk panjang yang dilihat saat training, tapi tidak bisa extrapolate. RoPE (Rotary): encoding relatif berbasis rotasi, generalizes lebih baik dan menjadi standard di LLM modern (LLaMA, Mistral, Qwen). ALiBi: alternatif berbasis position bias tanpa embedding eksplisit.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa d_model harus habis dibagi num_heads? Apa yang terjadi jika kamu punya 8 heads dengan d_model=768 (BERT base) — berapa d_k per head? Apa trade-off antara banyak heads kecil vs sedikit heads besar?</li>
+<li><strong>[Kode]</strong> Visualisasikan sinusoidal PE: plot heatmap pe[0, :, :] menggunakan seaborn. Perhatikan pola sinusoidal yang berbeda frekuensi di setiap dimensi. Mengapa perbedaan frekuensi ini memungkinkan model membedakan posisi?</li>
+<li><strong>[Eksplorasi]</strong> Ganti sinusoidal PE dengan RoPE menggunakan library <code>rotary-embedding-torch</code>. Train dua versi model sederhana dan bandingkan perplexity ketika ditest pada sequence yang lebih panjang dari training.</li>
+</ul></div>
+
+</div><!-- /lm3c -->
+
+<div class="divider"></div>
+
+<!-- 3D -->
+<div class="sub" id="lm3d">
+<div class="subtit"><span class="ac">3.4</span> Arsitektur Transformer Lengkap <span class="subid">// "Attention is All You Need"</span></div>
+<div class="prose">
+<p>Paper "Attention is All You Need" (Vaswani et al., 2017) mengusulkan arsitektur yang sepenuhnya menghilangkan rekurensi dan konvolusi — hanya menggunakan attention dan feedforward layers. Hasilnya lebih paralel (training lebih cepat), lebih powerful (menangkap dependensi jarak jauh lebih baik), dan menjadi template untuk semua LLM modern.</p>
+<p>Arsitektur full Transformer terdiri dari dua komponen utama: <strong>Encoder Stack</strong> yang membangun representasi input dengan full self-attention (setiap token bisa memperhatikan semua token lain), dan <strong>Decoder Stack</strong> yang menghasilkan output secara autoregresif dengan causal self-attention (hanya bisa memperhatikan token sebelumnya) ditambah cross-attention ke output encoder.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">transformer_block.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">TransformerEncoderLayer</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""Satu encoder block: MHA → Add&Norm → FFN → Add&Norm."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model: <span class="tp">int</span> = <span class="nm">512</span>, num_heads: <span class="tp">int</span> = <span class="nm">8</span>,
+                 d_ff: <span class="tp">int</span> = <span class="nm">2048</span>, dropout: <span class="tp">float</span> = <span class="nm">0.1</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="cm"># Multi-Head Self-Attention</span>
+        self.self_attn = <span class="fn">MultiHeadAttention</span>(d_model, num_heads)
+        self.norm1 = nn.<span class="fn">LayerNorm</span>(d_model)
+
+        <span class="cm"># Position-wise Feed-Forward Network (FFN)</span>
+        <span class="cm"># d_ff biasanya = 4 × d_model — expansion dan contraction</span>
+        self.ffn = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(d_model, d_ff),
+            nn.<span class="fn">GELU</span>(),
+            nn.<span class="fn">Dropout</span>(dropout),
+            nn.<span class="fn">Linear</span>(d_ff, d_model),
+        )
+        self.norm2 = nn.<span class="fn">LayerNorm</span>(d_model)
+        self.dropout = nn.<span class="fn">Dropout</span>(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, mask=<span class="kw">None</span>):
+        <span class="cm"># Pre-LN vs Post-LN: Pre-LN (modern, lebih stabil):</span>
+        <span class="cm"># x = x + dropout(MHA(LN(x)))  ← norm SEBELUM sublayer</span>
+        <span class="cm"># Post-LN (original Transformer): x = LN(x + dropout(MHA(x)))</span>
+
+        <span class="cm"># Multi-Head Self-Attention + Residual Connection</span>
+        attn_output = self.<span class="fn">self_attn</span>(self.<span class="fn">norm1</span>(x), self.<span class="fn">norm1</span>(x), self.<span class="fn">norm1</span>(x), mask)
+        x = x + self.<span class="fn">dropout</span>(attn_output)  <span class="cm"># Residual connection</span>
+
+        <span class="cm"># FFN + Residual Connection</span>
+        x = x + self.<span class="fn">dropout</span>(self.<span class="fn">ffn</span>(self.<span class="fn">norm2</span>(x)))
+
+        <span class="kw">return</span> x
+
+<span class="kw">class</span> <span class="fn">TransformerDecoderLayer</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""Decoder block: Masked MHA → Cross-Attention → FFN."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model=<span class="nm">512</span>, num_heads=<span class="nm">8</span>, d_ff=<span class="nm">2048</span>, dropout=<span class="nm">0.1</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.self_attn = <span class="fn">MultiHeadAttention</span>(d_model, num_heads)
+        self.cross_attn = <span class="fn">MultiHeadAttention</span>(d_model, num_heads)  <span class="cm"># attend to encoder</span>
+        self.ffn = nn.<span class="fn">Sequential</span>(nn.<span class="fn">Linear</span>(d_model, d_ff), nn.<span class="fn">GELU</span>(), nn.<span class="fn">Linear</span>(d_ff, d_model))
+        self.norm1 = nn.<span class="fn">LayerNorm</span>(d_model)
+        self.norm2 = nn.<span class="fn">LayerNorm</span>(d_model)
+        self.norm3 = nn.<span class="fn">LayerNorm</span>(d_model)
+        self.dropout = nn.<span class="fn">Dropout</span>(dropout)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, enc_output, src_mask=<span class="kw">None</span>, tgt_mask=<span class="kw">None</span>):
+        <span class="cm"># 1. Masked Self-Attention (causal — decoder token tidak lihat masa depan)</span>
+        x = x + self.<span class="fn">dropout</span>(self.<span class="fn">self_attn</span>(self.<span class="fn">norm1</span>(x), self.<span class="fn">norm1</span>(x), self.<span class="fn">norm1</span>(x), tgt_mask))
+
+        <span class="cm"># 2. Cross-Attention: query dari decoder, key/value dari encoder output</span>
+        x = x + self.<span class="fn">dropout</span>(self.<span class="fn">cross_attn</span>(self.<span class="fn">norm2</span>(x), enc_output, enc_output, src_mask))
+
+        <span class="cm"># 3. FFN</span>
+        x = x + self.<span class="fn">dropout</span>(self.<span class="fn">ffn</span>(self.<span class="fn">norm3</span>(x)))
+        <span class="kw">return</span> x</pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Arsitektur Transformer Penuh — Encoder-Decoder Stack</div>
+<div class="viz-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);margin-bottom:12px;text-transform:uppercase;">Encoder (N × layers)</div>
+      <div class="aloop" style="max-width:none;">
+        <div class="ln" style="border-color:rgba(45,212,191,.3);"><div class="lni" style="background:rgba(45,212,191,.15);font-size:11px;color:var(--teal);">1</div><div><div class="lnn">Input Embedding + PE</div><div class="lnd">token → vector + position</div></div></div>
+        <div class="lar"></div>
+        <div class="ln" style="border-color:rgba(45,212,191,.3);"><div class="lni" style="background:rgba(45,212,191,.15);font-size:11px;color:var(--teal);">2</div><div><div class="lnn">Multi-Head Self-Attention</div><div class="lnd">full bidirectional</div></div></div>
+        <div class="lar"></div>
+        <div class="ln" style="border-color:rgba(45,212,191,.3);"><div class="lni" style="background:rgba(45,212,191,.15);font-size:11px;color:var(--teal);">3</div><div><div class="lnn">Add &amp; LayerNorm</div><div class="lnd">residual + normalize</div></div></div>
+        <div class="lar"></div>
+        <div class="ln" style="border-color:rgba(45,212,191,.3);"><div class="lni" style="background:rgba(45,212,191,.15);font-size:11px;color:var(--teal);">4</div><div><div class="lnn">Feed-Forward Network</div><div class="lnd">d_model → 4×d_model → d_model</div></div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);margin-bottom:12px;text-transform:uppercase;">Decoder (N × layers)</div>
+      <div class="aloop" style="max-width:none;">
+        <div class="ln" style="border-color:rgba(245,158,11,.3);"><div class="lni" style="background:rgba(245,158,11,.15);font-size:11px;color:var(--amber);">1</div><div><div class="lnn">Output Embedding + PE</div><div class="lnd">causal (shifted right)</div></div></div>
+        <div class="lar"></div>
+        <div class="ln" style="border-color:rgba(245,158,11,.3);"><div class="lni" style="background:rgba(245,158,11,.15);font-size:11px;color:var(--amber);">2</div><div><div class="lnn">Masked Self-Attention</div><div class="lnd">causal — no future tokens</div></div></div>
+        <div class="lar"></div>
+        <div class="ln" style="border-color:rgba(245,158,11,.3);"><div class="lni" style="background:rgba(245,158,11,.15);font-size:11px;color:var(--amber);">3</div><div><div class="lnn">Cross-Attention</div><div class="lnd">Q=decoder, KV=encoder output</div></div></div>
+        <div class="lar"></div>
+        <div class="ln" style="border-color:rgba(245,158,11,.3);"><div class="lni" style="background:rgba(245,158,11,.15);font-size:11px;color:var(--amber);">4</div><div><div class="lnn">FFN → Linear → Softmax</div><div class="lnd">→ prob distribution atas vocab</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Residual connections adalah krusial</strong>Tanpa residual connections (skip connections), training Transformer yang dalam hampir mustahil karena vanishing gradient. Residual memastikan gradien mengalir langsung ke layer-layer awal. Ini juga menjelaskan mengapa Pre-LN (norma sebelum sublayer) lebih stabil dari Post-LN: gradien tidak perlu melewati normalization layer untuk kembali ke input.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara self-attention di encoder dan decoder. Mengapa decoder perlu dua jenis attention (masked self-attention + cross-attention)? Apa yang terjadi tanpa causal masking di decoder?</li>
+<li><strong>[Kode]</strong> Implementasikan Transformer kecil lengkap (2 encoder layers, 2 decoder layers, d_model=64) untuk task sederhana: reverse sequence. Verifikasi bahwa training konvergen dalam 1000 step.</li>
+<li><strong>[Eksplorasi]</strong> Baca paper original "Attention is All You Need" section 3–4. Identifikasi satu keputusan desain yang tampak arbitrary tapi ternyata ada justifikasinya di paper tersebut (hint: pilihan d_ff = 4×d_model, jumlah heads = 8).</li>
+</ul></div>
+
+</div><!-- /lm3d -->
+
+<div class="divider"></div>
+
+<!-- 3E -->
+<div class="sub" id="lm3e">
+<div class="subtit"><span class="ac">3.5</span> Varian Transformer <span class="subid">// encoder, decoder, dan encoder-decoder</span></div>
+<div class="prose">
+<p>Setelah paper "Attention is All You Need", komunitas riset dengan cepat menyadari bahwa berbagai task NLP bisa memanfaatkan bagian berbeda dari arsitektur Transformer. Tidak semua task butuh encoder-decoder penuh — dan pilihan arsitektur yang tepat memiliki implikasi besar terhadap cara model dilatih, cara digunakan, dan kapabilitas yang dimiliki.</p>
+<p>Tiga keluarga besar varian Transformer telah mendominasi NLP modern: encoder-only (BERT dan keluarganya) yang menyandikan teks secara bidirectional untuk understanding tasks, decoder-only (GPT dan keluarganya) yang menghasilkan teks secara autoregresif dan menjadi backbone LLM modern, serta encoder-decoder (T5, BART) yang mempertahankan kedua komponen untuk translation dan conditional generation.</p>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>Encoder-Only (BERT style)</h4><p><strong>Self-attention: bidirectional</strong> — setiap token bisa memperhatikan semua token lain. Dilatih dengan Masked Language Modeling (MLM): prediksi token yang di-mask. Kekuatan: representasi kontekstual sangat kaya untuk understanding. Lemah: tidak dirancang untuk text generation. Contoh: BERT, RoBERTa, DeBERTa, ELECTRA.</p></div>
+<div class="gc"><h4>Decoder-Only (GPT style)</h4><p><strong>Self-attention: causal (autoregressive)</strong> — hanya bisa lihat token sebelumnya. Dilatih dengan causal language modeling: prediksi token berikutnya. Kekuatan: text generation natural, in-context learning powerful, satu model untuk banyak task tanpa fine-tuning. Contoh: GPT series, LLaMA, Mistral, Gemini, Claude.</p></div>
+<div class="gc"><h4>Encoder-Decoder (T5 style)</h4><p><strong>Encoder: bidirectional, Decoder: causal + cross-attention.</strong> Dilatih dengan denoising objectives. Kekuatan: sangat baik untuk conditional generation (translation, summarization, Q&A) karena encoder membangun representasi input yang kaya. Contoh: T5, BART, mBART, Flan-T5.</p></div>
+<div class="gc"><h4>Kapan memilih mana?</h4><p>Classification, NER, extractive QA → Encoder-only. Text generation, chat, code → Decoder-only. Translation, summarization, structured generation → Encoder-decoder. Di 2024, decoder-only model besar sering mengalahkan encoder-decoder untuk semua task berkat scale dan RLHF.</p></div>
+</div>
+
+<div class="cmp">
+<div class="cmpc good">
+<div class="cmph">Encoder-Only: BERT — Masking Pattern</div>
+<div class="cmpb"><pre>Input:  "The cat [MASK] on the mat"
+Target: prediksi "sat" di posisi [MASK]
+
+Setiap token bisa attend ke semua:
+"The" ↔ "cat" ↔ [MASK] ↔ "on" ↔ "the" ↔ "mat"
+           ↑ full bidirectional attention
+Cocok untuk: understanding, classification</pre></div>
+</div>
+<div class="cmpc good">
+<div class="cmph">Decoder-Only: GPT — Causal Pattern</div>
+<div class="cmpb"><pre>Input:  "The cat sat on"
+Target: prediksi "the" (next token)
+
+Causal masking — hanya attend ke kiri:
+"The" → "cat" → "sat" → "on" → [predict]
+         ↑ tidak bisa lihat masa depan
+Cocok untuk: generation, completion, chat</pre></div>
+</div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Mengapa decoder-only mendominasi 2023–2025?</strong>Skalabilitas: decoder-only lebih mudah di-scale karena tidak ada asimetri encoder/decoder. Fleksibilitas: satu model untuk semua task via prompting, tanpa fine-tuning per task. In-context learning: LLM skala besar menunjukkan kemampuan few-shot yang kuat dari decoder-only training. RLHF juga lebih natural untuk decoder-only karena evaluasi berbasis generation.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan mengapa BERT tidak bisa digunakan untuk text generation secara langsung, sementara GPT bisa. Apa yang harus diubah dari arsitektur BERT agar bisa menghasilkan teks token by token?</li>
+<li><strong>[Kode]</strong> Gunakan HuggingFace <code>transformers</code> untuk load tiga model: BERT base, GPT-2 small, dan T5 small. Jalankan inference untuk task yang sama (classification) dengan approach berbeda untuk masing-masing. Bandingkan kode yang diperlukan.</li>
+<li><strong>[Eksplorasi]</strong> Cari paper "Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer" (T5, Raffel et al., 2019). Bagaimana T5 melakukan classification task menggunakan format teks-ke-teks? Apa keuntungan pendekatan ini?</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 3 selesai · 17/27 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 4 — Pre-training &amp; Fine-tuning</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(15)">← 3.4 Transformer</button>
+    <button class="tnbtn primary" onclick="goToPage('lmfi4')">Fase 4 →</button>
+  </div>
+</div>
+
+</div><!-- /lm3e -->
+
+</section><!-- /lmfase3 -->

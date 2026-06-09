@@ -1,0 +1,471 @@
+<section class="cs p4" id="lmfase4">
+<div class="fase-intro" id="lmfi4">
+<div class="sh">
+  <div class="sbadge p4">04</div>
+  <div>
+    <div class="stitle">Fase 4 — Pre-training &amp; Fine-tuning</div>
+    <div class="sdesc">Paradigma "pretrain once, fine-tune many" merevolusi NLP. Fase ini menjelaskan mengapa self-supervised pre-training sangat powerful, bagaimana BERT dan GPT berbeda dalam objektif training, dan teknik fine-tuning modern dari LoRA hingga RLHF yang membentuk LLM yang kita gunakan hari ini.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 7–8</span><span class="mc">Core LLM Training</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#lm4a">Paradigma Pre-training</a>
+  <a class="snavi" href="#lm4b">BERT &amp; Bidirectional</a>
+  <a class="snavi" href="#lm4c">GPT &amp; Autoregressive</a>
+  <a class="snavi" href="#lm4d">Fine-tuning Strategies</a>
+  <a class="snavi" href="#lm4e">RLHF &amp; Alignment</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 7–8</div>
+    <div class="topic-nav-title">Mulai dari: 4.1 Paradigma Pre-training</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('lmfi3')">← Fase 3</button>
+    <button class="tnbtn primary" onclick="goTo(17)">Mulai Fase 4 →</button>
+  </div>
+</div>
+</div><!-- /lmfi4 -->
+
+<!-- 4A -->
+<div class="sub" id="lm4a">
+<div class="subtit"><span class="ac">4.1</span> Paradigma Pre-training <span class="subid">// kenapa self-supervised learning revolusioner</span></div>
+<div class="prose">
+<p>Sebelum era pre-training, setiap NLP task membutuhkan model yang dilatih dari nol pada labeled data yang spesifik — mahal, lambat, dan tidak scalable. Pre-training membalikkan paradigma ini: latih satu model besar dengan self-supervised objective pada corpus teks yang sangat besar (tidak butuh label), lalu adapkan ke task spesifik dengan sedikit data berlabel. Hasilnya: performa yang jauh lebih baik dengan jauh lebih sedikit labeled data.</p>
+<p>Kunci keberhasilan pre-training adalah <strong>self-supervised learning</strong>: kita bisa membuat label dari teks itu sendiri tanpa anotasi manusia. Prediksi kata berikutnya (causal LM) atau prediksi kata yang di-mask (masked LM) — keduanya menghasilkan jumlah training signal yang tidak terbatas dari internet. Ini memungkinkan training pada data triliunan token, skala yang tidak mungkin dicapai dengan supervised learning tradisional.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Paradigma Lama vs Baru — Transfer Learning di NLP</div>
+<div class="viz-body">
+  <div class="cmp">
+    <div class="cmpc bad">
+      <div class="cmph">Paradigma Lama — Per-Task Training</div>
+      <div class="cmpb"><pre>Task A: Sentiment
+  → 50K labeled examples
+  → Train model A dari scratch
+  → Performa terbatas
+
+Task B: NER
+  → 100K labeled examples
+  → Train model B dari scratch
+  → Tidak bisa transfer ke Task A
+
+Biaya: N × (data labeling + training)</pre></div>
+    </div>
+    <div class="cmpc good">
+      <div class="cmph">Paradigma Baru — Pre-train + Fine-tune</div>
+      <div class="cmpb"><pre>Pre-training (1×):
+  → 100B+ token unlabeled text
+  → Pelajari general language understanding
+  → Simpan sebagai "foundation model"
+
+Fine-tuning (N×):
+  Task A: 5K examples → state-of-the-art
+  Task B: 2K examples → state-of-the-art
+  Task C: zero-shot → surprisingly good
+
+Biaya: 1× besar + N× kecil</pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="prose">
+<h4>Dua objektif pre-training yang membentuk LLM modern</h4>
+<ul>
+<li><strong>Causal Language Modeling (CLM)</strong> — prediksi token berikutnya dari konteks kiri. Cocok dengan decoder-only architecture. Tidak perlu masking — setiap token menggunakan semua token sebelumnya sebagai konteks. GPT, LLaMA, Claude semua menggunakan CLM.</li>
+<li><strong>Masked Language Modeling (MLM)</strong> — mask ~15% token secara acak, prediksi token yang di-mask dari konteks kedua arah. Cocok dengan encoder-only architecture. Menghasilkan representasi bidirectional yang kaya. BERT, RoBERTa menggunakan MLM.</li>
+<li><strong>Span Corruption (T5)</strong> — mask span token secara berurutan (bukan individual), decoder memprediksi span yang hilang. Lebih efisien dari MLM karena model hanya perlu menghasilkan token yang hilang, bukan merekonstruksi seluruh input.</li>
+</ul>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Kenapa pre-training bisa transfer ke task lain?</strong>Selama pre-training, model dipaksa untuk mengerti konteks, syntax, semantik, fakta dunia, dan reasoning — karena semua informasi ini berguna untuk memprediksi token. Representasi yang dibangun tidak task-specific, melainkan merupakan model umum tentang bagaimana bahasa bekerja. Fine-tuning hanya perlu mengarahkan representasi ini ke task spesifik.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">pretraining_objective.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+<span class="kw">import</span> random
+
+<span class="kw">def</span> <span class="fn">causal_lm_loss</span>(model, batch_tokens: torch.Tensor) -> torch.Tensor:
+    <span class="st">"""CLM: prediksi token t+1 dari token 0..t"""</span>
+    <span class="cm"># batch_tokens: [batch, seq_len]</span>
+    inputs = batch_tokens[:, :-<span class="nm">1</span>]   <span class="cm"># [batch, seq-1] — semua kecuali token terakhir</span>
+    targets = batch_tokens[:, <span class="nm">1</span>:]   <span class="cm"># [batch, seq-1] — semua kecuali token pertama</span>
+
+    logits = <span class="fn">model</span>(inputs)           <span class="cm"># [batch, seq-1, vocab_size]</span>
+    <span class="kw">return</span> F.<span class="fn">cross_entropy</span>(
+        logits.<span class="fn">reshape</span>(-<span class="nm">1</span>, logits.<span class="fn">size</span>(-<span class="nm">1</span>)),  <span class="cm"># [batch*(seq-1), vocab]</span>
+        targets.<span class="fn">reshape</span>(-<span class="nm">1</span>)                   <span class="cm"># [batch*(seq-1)]</span>
+    )
+
+<span class="kw">def</span> <span class="fn">create_mlm_batch</span>(tokens: torch.Tensor, mask_prob: <span class="tp">float</span> = <span class="nm">0.15</span>,
+                      mask_token_id: <span class="tp">int</span> = <span class="nm">103</span>, vocab_size: <span class="tp">int</span> = <span class="nm">30522</span>):
+    <span class="st">"""Buat masked version dari tokens untuk MLM pre-training (BERT style)."""</span>
+    labels = tokens.<span class="fn">clone</span>()
+    masked = tokens.<span class="fn">clone</span>()
+
+    <span class="cm"># Mask probability per token</span>
+    prob_matrix = torch.<span class="fn">full</span>(tokens.<span class="fn">shape</span>, mask_prob)
+    mask_indices = torch.<span class="fn">bernoulli</span>(prob_matrix).<span class="fn">bool</span>()
+
+    <span class="kw">for</span> idx <span class="kw">in</span> mask_indices.<span class="fn">nonzero</span>():
+        r = random.<span class="fn">random</span>()
+        <span class="kw">if</span> r < <span class="nm">0.8</span>:
+            <span class="cm"># 80%: ganti dengan [MASK] token</span>
+            masked[idx[<span class="nm">0</span>], idx[<span class="nm">1</span>]] = mask_token_id
+        <span class="kw">elif</span> r < <span class="nm">0.9</span>:
+            <span class="cm"># 10%: ganti dengan token random (mencegah model bergantung pada [MASK])</span>
+            masked[idx[<span class="nm">0</span>], idx[<span class="nm">1</span>]] = random.<span class="fn">randint</span>(<span class="nm">0</span>, vocab_size - <span class="nm">1</span>)
+        <span class="cm"># 10%: biarkan unchanged (tapi masih hitung loss)</span>
+
+    <span class="cm"># Hanya hitung loss pada posisi yang di-mask</span>
+    labels[~mask_indices] = -<span class="nm">100</span>  <span class="cm"># CrossEntropy mengabaikan -100</span>
+    <span class="kw">return</span> masked, labels</pre></div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan information yang dipelajari model dari CLM vs MLM. Mengapa CLM lebih cocok untuk generation tasks dan MLM lebih cocok untuk understanding tasks?</li>
+<li><strong>[Kode]</strong> Implementasikan fungsi <code>create_mlm_batch</code> di atas dan verifikasi distribusi masking: ~80% [MASK], ~10% random, ~10% unchanged. Hitung berapa persen token dalam batch yang perlu diprediksi model.</li>
+<li><strong>[Eksplorasi]</strong> Bandingkan performa BERT dan GPT-2 pada task klasifikasi sentimen: berapa labeled examples yang dibutuhkan masing-masing untuk mencapai akurasi 90%? Eksperimen dengan 100, 500, 1000, 5000 examples.</li>
+</ul></div>
+
+</div><!-- /lm4a -->
+
+<div class="divider"></div>
+
+<!-- 4B -->
+<div class="sub" id="lm4b">
+<div class="subtit"><span class="ac">4.2</span> BERT &amp; Bidirectional Models <span class="subid">// memahami konteks penuh</span></div>
+<div class="prose">
+<p>BERT (Bidirectional Encoder Representations from Transformers, Devlin et al., 2018) merevolusi NLP dengan satu insight sederhana: model bahasa yang baik harus memahami kata dalam konteks kedua arahnya, bukan hanya konteks kiri (seperti GPT) atau pemrosesan sekuensial (seperti LSTM). "Pengacara terbaik" berbeda maknanya dari "pengacara terbaik yang pernah dipecat" — BERT bisa menangkap nuansa ini karena melihat seluruh kalimat sekaligus.</p>
+<p>BERT menggunakan dua pre-training objectives: Masked Language Modeling (MLM) yang memaksa model membangun representasi bidirectional, dan Next Sentence Prediction (NSP) yang mengajarkan hubungan antar kalimat. Meskipun NSP kemudian terbukti kurang penting (RoBERTa menghapus NSP tanpa penurunan performa), MLM tetap menjadi signature BERT dan varian-variannya.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">bert_finetuning.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> transformers <span class="kw">import</span> BertTokenizer, BertForSequenceClassification
+<span class="kw">from</span> transformers <span class="kw">import</span> TrainingArguments, Trainer
+<span class="kw">from</span> datasets <span class="kw">import</span> load_dataset
+<span class="kw">import</span> torch
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># === Load pre-trained BERT + classification head ===</span>
+model_name = <span class="st">"bert-base-uncased"</span>
+tokenizer = <span class="fn">BertTokenizer</span>.<span class="fn">from_pretrained</span>(model_name)
+model = <span class="fn">BertForSequenceClassification</span>.<span class="fn">from_pretrained</span>(
+    model_name,
+    num_labels=<span class="nm">2</span>  <span class="cm"># positif / negatif</span>
+)
+
+<span class="cm"># === Tokenisasi dataset ===</span>
+dataset = <span class="fn">load_dataset</span>(<span class="st">"imdb"</span>)
+
+<span class="kw">def</span> <span class="fn">tokenize_function</span>(examples):
+    <span class="kw">return</span> <span class="fn">tokenizer</span>(
+        examples[<span class="st">"text"</span>],
+        truncation=<span class="kw">True</span>,
+        max_length=<span class="nm">512</span>,    <span class="cm"># BERT max context</span>
+        padding=<span class="st">"max_length"</span>
+    )
+
+tokenized = dataset.<span class="fn">map</span>(tokenize_function, batched=<span class="kw">True</span>)
+
+<span class="cm"># === Fine-tuning dengan HuggingFace Trainer ===</span>
+training_args = <span class="fn">TrainingArguments</span>(
+    output_dir=<span class="st">"./bert-sentiment"</span>,
+    num_train_epochs=<span class="nm">3</span>,
+    per_device_train_batch_size=<span class="nm">16</span>,
+    warmup_ratio=<span class="nm">0.1</span>,       <span class="cm"># 10% steps untuk warmup</span>
+    learning_rate=<span class="nm">2e-5</span>,      <span class="cm"># BERT fine-tuning: 1e-5 sampai 5e-5</span>
+    weight_decay=<span class="nm">0.01</span>,
+    evaluation_strategy=<span class="st">"epoch"</span>,
+    save_strategy=<span class="st">"epoch"</span>,
+    load_best_model_at_end=<span class="kw">True</span>,
+    fp16=<span class="kw">True</span>,               <span class="cm"># mixed precision — 2× lebih cepat di modern GPU</span>
+)
+
+trainer = <span class="fn">Trainer</span>(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized[<span class="st">"train"</span>],
+    eval_dataset=tokenized[<span class="st">"test"</span>],
+    compute_metrics=<span class="kw">lambda</span> p: {
+        <span class="st">"accuracy"</span>: (<span class="fn">np.argmax</span>(p.predictions, axis=<span class="nm">1</span>) == p.label_ids).<span class="fn">mean</span>()
+    }
+)
+
+trainer.<span class="fn">train</span>()
+
+<span class="cm"># === Manual inference ===</span>
+inputs = <span class="fn">tokenizer</span>(<span class="st">"This movie was absolutely fantastic!"</span>,
+                   return_tensors=<span class="st">"pt"</span>, truncation=<span class="kw">True</span>)
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    logits = <span class="fn">model</span>(**inputs).logits
+    pred = logits.<span class="fn">argmax</span>()
+    <span class="fn">print</span>(<span class="st">f"Sentiment: {'POSITIVE' if pred == 1 else 'NEGATIVE'}"</span>)</pre></div>
+</div>
+
+<div class="prose">
+<h4>BERT variants yang perlu diketahui</h4>
+<ul>
+<li><strong>RoBERTa</strong> — BERT yang dilatih lebih lama, dengan data lebih banyak, tanpa NSP, dan dynamic masking. Secara konsisten outperform BERT. Gunakan RoBERTa sebagai default jika kamu butuh encoder-only model.</li>
+<li><strong>DistilBERT</strong> — BERT yang di-distill menjadi 40% lebih kecil, 60% lebih cepat, dengan hanya 3% penurunan performa. Ideal untuk deployment dengan resource terbatas.</li>
+<li><strong>DeBERTa</strong> — BERT dengan disentangled attention (posisi dan konten dipisahkan). State-of-the-art untuk banyak understanding benchmarks hingga 2022.</li>
+<li><strong>ELECTRA</strong> — pendekatan berbeda: alih-alih MLM, gunakan replaced token detection (biner: apakah token ini yang asli atau diganti oleh generator kecil?). Lebih efisien dari BERT karena menghitung loss pada semua token, bukan hanya yang di-mask.</li>
+</ul>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Learning rate untuk fine-tuning BERT</strong>Gunakan learning rate kecil: 1e-5 hingga 5e-5. Learning rate yang terlalu besar menyebabkan "catastrophic forgetting" — model melupakan representasi yang dipelajari saat pre-training. Selalu gunakan warmup (5–10% dari total steps) untuk warming up optimizer state sebelum full learning rate. Layer-wise learning rate decay (LLRD) — layer atas belajar lebih cepat dari layer bawah — bisa meningkatkan performa fine-tuning secara konsisten.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa BERT tidak bisa digunakan untuk autoregressive text generation, tapi bisa untuk masked text infilling? Bagaimana kamu akan mendesain sebuah "BERT untuk generation" tanpa mengubah arsitektur, hanya mengubah objective?</li>
+<li><strong>[Kode]</strong> Fine-tune BERT base untuk Named Entity Recognition menggunakan CoNLL-2003 dataset dari HuggingFace. Hitung F1 score per entity type (PER, ORG, LOC). Bandingkan dengan BiLSTM-CRF dari Fase 2.</li>
+<li><strong>[Eksplorasi]</strong> Bandingkan performa BERT, RoBERTa, dan DistilBERT pada task yang sama dengan 1000 labeled examples. Plot accuracy vs inference speed. Untuk production system yang membutuhkan latency &lt; 50ms, mana yang akan kamu pilih?</li>
+</ul></div>
+
+</div><!-- /lm4b -->
+
+<div class="divider"></div>
+
+<!-- 4C -->
+<div class="sub" id="lm4c">
+<div class="subtit"><span class="ac">4.3</span> GPT &amp; Autoregressive Models <span class="subid">// in-context learning &amp; few-shot</span></div>
+<div class="prose">
+<p>GPT (Generative Pre-trained Transformer) mengambil jalur yang berbeda dari BERT: decoder-only architecture dengan causal language modeling. Setiap token hanya bisa memperhatikan token sebelumnya — ini membuatnya natural untuk text generation, tapi mungkin kurang optimal untuk understanding dibanding BERT's bidirectional attention. Atau begitulah anggapan awal, sebelum GPT-3 dan keluarganya membuktikan bahwa dengan skala yang cukup besar, model autoregresif bisa mengungguli BERT bahkan di understanding tasks.</p>
+<p>Salah satu emergent capability yang paling mengejutkan dari model autoregresif besar adalah <strong>in-context learning</strong>: kemampuan model untuk "belajar" dari contoh-contoh yang diberikan dalam prompt, tanpa update weight apapun. GPT-3 (Brown et al., 2020) menunjukkan bahwa dengan memberikan beberapa contoh input-output (few-shot), model bisa melakukan task baru dengan akurasi yang mengagumkan — sebuah bentuk learning yang tidak ada analoginya di ML tradisional.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">gpt_inference.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> transformers <span class="kw">import</span> GPT2LMHeadModel, GPT2Tokenizer, pipeline
+<span class="kw">import</span> torch
+
+<span class="cm"># === GPT-2 text generation ===</span>
+model = <span class="fn">GPT2LMHeadModel</span>.<span class="fn">from_pretrained</span>(<span class="st">"gpt2"</span>)
+tokenizer = <span class="fn">GPT2Tokenizer</span>.<span class="fn">from_pretrained</span>(<span class="st">"gpt2"</span>)
+
+prompt = <span class="st">"The future of artificial intelligence"</span>
+inputs = <span class="fn">tokenizer</span>(prompt, return_tensors=<span class="st">"pt"</span>)
+
+<span class="cm"># Berbagai decoding strategies</span>
+<span class="cm"># 1. Greedy decoding — deterministic, tapi sering repetitif</span>
+greedy = <span class="fn">model</span>.<span class="fn">generate</span>(**inputs, max_new_tokens=<span class="nm">50</span>)
+
+<span class="cm"># 2. Beam search — better quality, lebih lambat</span>
+beam = <span class="fn">model</span>.<span class="fn">generate</span>(**inputs, max_new_tokens=<span class="nm">50</span>, num_beams=<span class="nm">5</span>, early_stopping=<span class="kw">True</span>)
+
+<span class="cm"># 3. Sampling dengan temperature + top-k + top-p (nucleus sampling)</span>
+<span class="cm"># Ini adalah decoding standard untuk conversational LLM</span>
+sampled = <span class="fn">model</span>.<span class="fn">generate</span>(
+    **inputs,
+    max_new_tokens=<span class="nm">100</span>,
+    do_sample=<span class="kw">True</span>,
+    temperature=<span class="nm">0.8</span>,    <span class="cm"># &lt;1 = lebih fokus, &gt;1 = lebih random</span>
+    top_k=<span class="nm">50</span>,           <span class="cm"># hanya dari 50 token dengan prob tertinggi</span>
+    top_p=<span class="nm">0.92</span>,         <span class="cm"># nucleus: pilih dari token yang jumlah prob-nya &lt; 0.92</span>
+    repetition_penalty=<span class="nm">1.3</span>,  <span class="cm"># penalti untuk token yang sudah muncul</span>
+)
+
+<span class="kw">for</span> output, name <span class="kw">in</span> [(greedy, <span class="st">"Greedy"</span>), (beam, <span class="st">"Beam"</span>), (sampled, <span class="st">"Sampled"</span>)]:
+    text = tokenizer.<span class="fn">decode</span>(output[<span class="nm">0</span>], skip_special_tokens=<span class="kw">True</span>)
+    <span class="fn">print</span>(<span class="st">f"\n[{name}]:\n{text}"</span>)
+
+<span class="cm"># === Few-shot in-context learning ===</span>
+few_shot_prompt = <span class="st">"""Classify sentiment as POSITIVE or NEGATIVE:
+
+Review: "This restaurant has amazing food and great service!"
+Sentiment: POSITIVE
+
+Review: "The product broke after one day. Terrible quality."
+Sentiment: NEGATIVE
+
+Review: "I've been using this for 3 months and it works perfectly."
+Sentiment:"""</span>
+
+<span class="cm"># Model akan melanjutkan dengan "POSITIVE" karena few-shot examples</span>
+<span class="cm"># Tanpa fine-tuning! Ini adalah in-context learning.</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Zero-shot vs Few-shot vs Fine-tuning — Trade-offs</div>
+<div class="viz-body">
+  <div style="overflow-x:auto">
+  <table class="rt">
+  <thead><tr><th>Approach</th><th>Data berlabel</th><th>Compute</th><th>Akurasi</th><th>Latency</th><th>Cocok untuk</th></tr></thead>
+  <tbody>
+  <tr><td>Zero-shot</td><td>0 examples</td><td>Inference only</td><td>Moderate</td><td>Normal</td><td>Rapid prototyping, low-stakes</td></tr>
+  <tr><td>Few-shot (ICL)</td><td>1–20 examples</td><td>Inference only (longer prompt)</td><td>Good</td><td>Lebih lambat (prompt panjang)</td><td>Quick experiments</td></tr>
+  <tr><td>Fine-tuning</td><td>100–10K examples</td><td>Training + inference</td><td>Best</td><td>Normal (setelah training)</td><td>Production dengan task spesifik</td></tr>
+  </tbody>
+  </table>
+  </div>
+</div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>In-context learning bukan "learning" dalam arti ML tradisional</strong>Tidak ada weight update yang terjadi saat kamu memberikan few-shot examples ke LLM. Model tidak "belajar" dari contoh tersebut secara permanen — di request berikutnya tanpa contoh, model kembali ke perilaku awal. ICL adalah kemampuan emergent yang muncul dari scale, dan mekanisme di baliknya masih menjadi topik riset aktif.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara top-k sampling, top-p (nucleus) sampling, dan temperature scaling. Dalam kondisi apa kamu akan menggunakan temperature=0.1 dibanding temperature=1.5? Berikan contoh use case konkret.</li>
+<li><strong>[Kode]</strong> Buat few-shot prompt untuk task SQL generation: berikan 3 contoh (natural language → SQL query), lalu test apakah GPT-2 atau GPT model dari API bisa menghasilkan SQL yang benar untuk query baru. Eksperimen dengan jumlah contoh 1, 3, 5.</li>
+<li><strong>[Eksplorasi]</strong> Baca paper "Language Models are Few-Shot Learners" (GPT-3, Brown et al., 2020) section 2–3. Identifikasi pada model size berapa few-shot learning mulai signifikan lebih baik dari zero-shot. Ada pola "emergent capability" di grafik?</li>
+</ul></div>
+
+</div><!-- /lm4c -->
+
+<div class="divider"></div>
+
+<!-- 4D -->
+<div class="sub" id="lm4d">
+<div class="subtit"><span class="ac">4.4</span> Fine-tuning Strategies <span class="subid">// dari full fine-tuning hingga LoRA</span></div>
+<div class="prose">
+<p>Full fine-tuning — update semua parameter model untuk task spesifik — menghasilkan performa terbaik tapi sangat mahal: model 7B parameter membutuhkan sekitar 28GB GPU memory hanya untuk weights, belum termasuk gradients dan optimizer state. Ini mendorong lahirnya Parameter-Efficient Fine-tuning (PEFT): teknik yang mengupdate sebagian kecil parameter sambil mempertahankan sebagian besar model frozen, dengan performa yang mendekati full fine-tuning.</p>
+<p>LoRA (Low-Rank Adaptation) adalah teknik PEFT yang paling populer saat ini. Ide dasarnya: weight update yang terjadi saat fine-tuning sebenarnya memiliki rank yang rendah (low intrinsic dimensionality). Alih-alih mempelajari matrix update ΔW berukuran penuh, LoRA mempelajari dekomposisi rank-r: ΔW = A·B, di mana A ∈ ℝ^(d×r) dan B ∈ ℝ^(r×k) dengan r &lt;&lt; min(d, k). Hasilnya: hanya 0.1–1% parameter yang ditraining, tapi performa mendekati full fine-tuning.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">lora_finetuning.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> peft <span class="kw">import</span> LoraConfig, get_peft_model, TaskType, PeftModel
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+<span class="kw">from</span> trl <span class="kw">import</span> SFTTrainer
+<span class="kw">import</span> torch
+
+<span class="cm"># === Setup LoRA config ===</span>
+lora_config = <span class="fn">LoraConfig</span>(
+    r=<span class="nm">16</span>,               <span class="cm"># rank — lebih tinggi = lebih banyak params, lebih powerful</span>
+    lora_alpha=<span class="nm">32</span>,      <span class="cm"># scaling factor: alpha/r menentukan magnitude update</span>
+    target_modules=[    <span class="cm"># layer mana yang di-adapt — biasanya attention projections</span>
+        <span class="st">"q_proj"</span>, <span class="st">"v_proj"</span>,  <span class="cm"># minimal: query dan value</span>
+        <span class="st">"k_proj"</span>, <span class="st">"o_proj"</span>,  <span class="cm"># optional: key dan output</span>
+        <span class="st">"gate_proj"</span>, <span class="st">"up_proj"</span>, <span class="st">"down_proj"</span>  <span class="cm"># FFN layers (opsional)</span>
+    ],
+    lora_dropout=<span class="nm">0.1</span>,
+    bias=<span class="st">"none"</span>,
+    task_type=TaskType.<span class="nm">CAUSAL_LM</span>,
+)
+
+<span class="cm"># === Load model dan aplikasikan LoRA ===</span>
+base_model = <span class="fn">AutoModelForCausalLM</span>.<span class="fn">from_pretrained</span>(
+    <span class="st">"meta-llama/Llama-3.1-8B"</span>,
+    torch_dtype=torch.bfloat16,   <span class="cm"># bf16: 16-bit dengan range seperti fp32</span>
+    device_map=<span class="st">"auto"</span>,           <span class="cm"># otomatis distribusi ke GPU yang tersedia</span>
+)
+model = <span class="fn">get_peft_model</span>(base_model, lora_config)
+model.<span class="fn">print_trainable_parameters</span>()
+<span class="cm"># trainable params: 6,815,744 || all params: 8,036,614,144 || trainable%: 0.085%</span>
+
+<span class="cm"># === SFT (Supervised Fine-tuning) Training ===</span>
+training_args = <span class="fn">TrainingArguments</span>(
+    output_dir=<span class="st">"./lora-llama"</span>,
+    num_train_epochs=<span class="nm">3</span>,
+    per_device_train_batch_size=<span class="nm">4</span>,
+    gradient_accumulation_steps=<span class="nm">4</span>,  <span class="cm"># effective batch = 4*4 = 16</span>
+    learning_rate=<span class="nm">2e-4</span>,              <span class="cm"># LoRA: bisa lr lebih tinggi dari full FT</span>
+    bf16=<span class="kw">True</span>,
+    warmup_ratio=<span class="nm">0.05</span>,
+)
+
+trainer = <span class="fn">SFTTrainer</span>(
+    model=model,
+    args=training_args,
+    train_dataset=dataset,
+    dataset_text_field=<span class="st">"text"</span>,
+    max_seq_length=<span class="nm">2048</span>,
+)
+trainer.<span class="fn">train</span>()
+
+<span class="cm"># Simpan hanya LoRA weights (~30MB) bukan full model (~15GB)</span>
+model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"</span>)
+<span class="cm"># Load kembali: PeftModel.from_pretrained(base_model, "./lora-adapter")</span></pre></div>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>Full Fine-tuning</h4><p>Semua parameter diupdate. Performa terbaik. Membutuhkan GPU memory besar (model besar membutuhkan A100 80GB atau lebih). Hasilkan model terpisah per task. Cocok jika dataset besar (&gt;100K) dan compute tersedia.</p></div>
+<div class="gc"><h4>LoRA</h4><p>Hanya 0.1–1% parameter ditraining. GPU memory jauh lebih hemat. Bisa dijalankan di GPU consumer (RTX 3090). Performa mendekati full FT. Adapter bisa di-swap tanpa reload base model. Pilihan default untuk most use cases.</p></div>
+<div class="gc"><h4>QLoRA</h4><p>LoRA + quantization (int4). Base model di-quantize ke 4-bit, LoRA adapters tetap float16. Bisa fine-tune model 65B di single A100 80GB. Sedikit performa penalty dari quantization, tapi trade-off yang sangat baik.</p></div>
+<div class="gc"><h4>Prompt Tuning</h4><p>Hanya melatih soft prompt (virtual tokens) di awal input. Parameter minimal (ribuan, bukan jutaan). Performa baik untuk model besar, tapi buruk untuk model kecil. Cocok untuk very resource-constrained deployment.</p></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Memilih rank LoRA yang tepat</strong>Rank r mengontrol kapasitas adapter. Mulai dengan r=8 atau r=16 untuk tugas sederhana. Untuk task domain-specific yang kompleks, r=32 atau r=64. Lebih tinggi dari r=128 jarang memberikan improvement yang sebanding. Selalu mulai kecil dan naikkan jika validasi loss menunjukkan underfitting.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa LoRA berasumsi bahwa weight updates selama fine-tuning memiliki rank rendah? Apa bukti empiris dari paper asli LoRA (Hu et al., 2021) yang mendukung asumsi ini?</li>
+<li><strong>[Kode]</strong> Fine-tune model open-source kecil (misalnya TinyLlama 1.1B) menggunakan LoRA pada dataset instruksi sederhana (100 contoh). Bandingkan ukuran file adapter (.safetensors) vs model asli.</li>
+<li><strong>[Eksplorasi]</strong> Eksperimen dengan berbagai rank LoRA (r=4, 8, 16, 64) pada task yang sama. Plot validation loss vs jumlah trainable parameters. Temukan titik diminishing returns untuk dataset spesifik kamu.</li>
+</ul></div>
+
+</div><!-- /lm4d -->
+
+<div class="divider"></div>
+
+<!-- 4E -->
+<div class="sub" id="lm4e">
+<div class="subtit"><span class="ac">4.5</span> RLHF &amp; Alignment <span class="subid">// melatih model agar bermanfaat dan aman</span></div>
+<div class="prose">
+<p>Sebuah model yang sangat baik dalam memprediksi token berikutnya belum tentu berguna atau aman. Model yang dilatih hanya dengan causal LM akan dengan senang hati menghasilkan konten berbahaya, jawaban yang menyesatkan, atau teks yang tidak sesuai instruksi pengguna — karena itu semua mungkin muncul dalam data training. Alignment adalah proses membuat model berperilaku sesuai dengan nilai dan preferensi manusia.</p>
+<p>RLHF (Reinforcement Learning from Human Feedback) adalah teknik alignment yang pertama kali berhasil di skala besar, digunakan untuk melatih InstructGPT dan ChatGPT. Prosesnya tiga tahap: (1) Supervised Fine-Tuning (SFT) pada demonstrasi respons berkualitas tinggi, (2) melatih Reward Model yang memprediksi preferensi manusia dari pasangan respons yang diberi ranking, dan (3) mengoptimasi policy model menggunakan Proximal Policy Optimization (PPO) dengan reward model sebagai sinyal.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Pipeline RLHF — Tiga Tahap Training</div>
+<div class="viz-body">
+  <div class="aloop">
+    <div class="ln"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div><div class="lnn">Stage 1: Supervised Fine-Tuning (SFT)</div><div class="lnd">Fine-tune base LLM pada demonstrasi instruksi berkualitas tinggi yang ditulis labeler</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(245,158,11,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div><div class="lnn">Stage 2: Reward Model Training</div><div class="lnd">Labeler memberi ranking dua respons → train model yang memprediksi ranking ini</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(74,222,128,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="lnn">Stage 3: RL Fine-tuning dengan PPO</div><div class="lnd">Gunakan reward model sebagai "judge" — optimasi SFT model agar mendapat reward tinggi</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(74,222,128,.3)"><div class="lni" style="background:rgba(74,222,128,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="lnn">Aligned Model (InstructGPT, ChatGPT style)</div><div class="lnd">Lebih helpful, harmless, dan honest dari base LLM</div></div></div>
+  </div>
+</div>
+</div>
+
+<div class="prose">
+<h4>Alternatif modern untuk RLHF</h4>
+<ul>
+<li><strong>DPO (Direct Preference Optimization)</strong> — menghilangkan reward model eksplisit dan PPO. Langsung optimasi LLM dari preference pairs menggunakan supervised-style loss. Lebih stabil, lebih simpel, performa seringkali match atau overtake RLHF. Standar de facto 2024.</li>
+<li><strong>Constitutional AI (Anthropic)</strong> — model mengkritik responsnya sendiri berdasarkan serangkaian prinsip (konstitusi), lalu merevisinya. Mengurangi kebutuhan human labeling. Hasilkan model yang lebih consistent dengan prinsip yang ditetapkan.</li>
+<li><strong>RLAIF (RL from AI Feedback)</strong> — ganti human labeler dengan LLM yang lebih kuat sebagai penilai. Scalable tapi rawan bias dari model penilai.</li>
+<li><strong>Reward Model sebagai verifier</strong> — selain training, reward model digunakan saat inference untuk best-of-N sampling: generate N respons, pilih yang mendapat reward tertinggi. Simple tapi efektif.</li>
+</ul>
+</div>
+
+<div class="callout danger">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span>
+<div class="ctxt"><strong>Reward hacking dan alignment tax</strong>Model yang dioptimasi untuk reward model bisa mempelajari cara "mengeksploitasi" reward model — menghasilkan respons yang terlihat bagus di mata reward model tapi tidak benar-benar berkualitas (Goodhart's Law). RLHF juga memiliki "alignment tax": model aligned seringkali sedikit lebih lemah di benchmark faktual murni karena dioptimasi untuk helpfulness yang luas. Ini adalah area riset terbuka yang sangat aktif di 2024–2025.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan "alignment tax" dan mengapa itu terjadi. Apakah ada cara untuk mendapatkan model yang sepenuhnya aligned DAN sepenuhnya capable tanpa trade-off? Apa posisi Anthropic mengenai ini berdasarkan paper Constitutional AI?</li>
+<li><strong>[Kode]</strong> Implementasikan DPO loss function manual dari paper "Direct Preference Optimization" (Rafailov et al., 2023). Dataset yang dibutuhkan: triplet (prompt, chosen_response, rejected_response). Gunakan TRL library untuk implementasi production-ready.</li>
+<li><strong>[Eksplorasi]</strong> Baca paper "Training language models to follow instructions with human feedback" (InstructGPT, Ouyang et al., 2022). Identifikasi tiga tantangan utama dalam mengumpulkan human preference data yang berkualitas tinggi dan scalable.</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 4 selesai · 22/27 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 5 — Modern LLM</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(20)">← 4.4 Fine-tuning</button>
+    <button class="tnbtn primary" onclick="goToPage('lmfi5')">Fase 5 →</button>
+  </div>
+</div>
+
+</div><!-- /lm4e -->
+
+</section><!-- /lmfase4 -->

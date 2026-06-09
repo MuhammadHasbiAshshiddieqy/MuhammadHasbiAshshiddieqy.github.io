@@ -1,0 +1,860 @@
+<section class="cs p2" id="fase2">
+<div class="fase-intro" id="fi2">
+<div class="sh">
+  <div class="sbadge">02</div>
+  <div>
+    <div class="stitle">Fase 2 — Agent Architecture &amp; Harness</div>
+    <div class="sdesc">Di sini kamu belajar membangun semua komponen inti agent dari scratch: execution loop, memory systems, tool registry, context management, planning, dan structured output.</div>
+    <div class="smeta"><span class="mc">Minggu 3–4</span><span class="mc">Engineering heavy</span><span class="mc">Prerequisite: Fase 1</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#s2a">Harness &amp; Loop</a>
+  <a class="snavi" href="#s2b">Memory Systems</a>
+  <a class="snavi" href="#s2c">Tool Registry</a>
+  <a class="snavi" href="#s2d">Context Mgmt</a>
+  <a class="snavi" href="#s2e">Planning</a>
+  <a class="snavi" href="#s2f">Structured Output</a>
+  <a class="snavi" href="#s2g">RAG</a>
+  <a class="snavi" href="#s2h">Checkpointing</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">10 topik · Minggu 3–4</div>
+      <div class="topic-nav-title">Mulai dari: 2.1 Agent Harness &amp; Orchestration Loop</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('fi1')">← Fase 1</button>
+      <button class="tnbtn primary" onclick="goTo(10)">Mulai Fase 2 →</button>
+    </div>
+  </div>
+</div><!-- /fi2 -->
+
+<!-- 2A -->
+<div class="sub" id="s2a">
+<div class="subtit"><span class="ac">2.1</span> Agent Harness &amp; Orchestration Loop <span class="subid">// kode yang menghidupkan agent</span></div>
+<div class="prose">
+<p>Harness adalah kode non-LLM yang mengorkestrasi eksekusi agent. Ini bagian yang paling sering diabaikan tapi paling krusial. Harness yang buruk akan membuat bahkan model terbaik menjadi tidak reliable.</p>
+<p>Tanggung jawab harness: routing tool calls ke fungsi yang benar, menginjeksikan hasil ke context, mengelola message history, mendeteksi stopping condition, dan menangani errors.</p>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">production_agent_harness.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic
+<span class="kw">import</span> asyncio
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+<span class="kw">from</span> typing <span class="kw">import</span> <span class="tp">Callable, Any</span>
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">import</span> logging
+
+logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent"</span>)
+
+@dataclass
+<span class="kw">class</span> <span class="fn">AgentConfig</span>:
+    model: <span class="tp">str</span> = <span class="st">"claude-sonnet-4-6"</span>
+    max_tokens: <span class="tp">int</span> = <span class="nm">8192</span>
+    max_iterations: <span class="tp">int</span> = <span class="nm">50</span>
+    system_prompt: <span class="tp">str</span> = <span class="st">""</span>
+    temperature: <span class="tp">float</span> = <span class="nm">0.0</span>   <span class="cm"># Deterministic untuk agent</span>
+
+@dataclass
+<span class="kw">class</span> <span class="fn">AgentRun</span>:
+    start_time: datetime = field(default_factory=datetime.now)
+    iterations: <span class="tp">int</span> = <span class="nm">0</span>
+    tool_calls: <span class="tp">list</span> = field(default_factory=list)
+    input_tokens: <span class="tp">int</span> = <span class="nm">0</span>
+    output_tokens: <span class="tp">int</span> = <span class="nm">0</span>
+
+<span class="kw">class</span> <span class="fn">AgentHarness</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, config: <span class="tp">AgentConfig</span>):
+        self.config = config
+        self.client = anthropic.<span class="fn">Anthropic</span>()
+        self.tools: <span class="tp">dict</span>[<span class="tp">str</span>, <span class="tp">Callable</span>] = {}
+        self.tool_schemas: <span class="tp">list</span> = []
+
+    <span class="kw">def</span> <span class="fn">register_tool</span>(self, schema: <span class="tp">dict</span>, fn: <span class="tp">Callable</span>):
+        self.tools[schema[<span class="st">"name"</span>]] = fn
+        self.tool_schemas.<span class="fn">append</span>(schema)
+
+    <span class="kw">async def</span> <span class="fn">run</span>(self, user_input: <span class="tp">str</span>) -> <span class="tp">tuple</span>[<span class="tp">str</span>, <span class="tp">AgentRun</span>]:
+        messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: user_input}]
+        run = <span class="fn">AgentRun</span>()
+
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(self.config.max_iterations):
+            run.iterations += <span class="nm">1</span>
+            response = self.client.messages.<span class="fn">create</span>(
+                model=self.config.model,
+                max_tokens=self.config.max_tokens,
+                temperature=self.config.temperature,
+                system=self.config.system_prompt,
+                tools=self.tool_schemas <span class="kw">if</span> self.tool_schemas <span class="kw">else</span> [],
+                messages=messages
+            )
+            run.input_tokens += response.usage.input_tokens
+            run.output_tokens += response.usage.output_tokens
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content})
+
+            <span class="kw">if</span> response.stop_reason == <span class="st">"end_turn"</span>:
+                texts = [b <span class="kw">for</span> b <span class="kw">in</span> response.content <span class="kw">if</span> b.type == <span class="st">"text"</span>]
+                <span class="kw">return</span> texts[-<span class="nm">1</span>].text <span class="kw">if</span> texts <span class="kw">else</span> <span class="st">""</span>, run
+
+            <span class="cm"># Eksekusi semua tool calls secara concurrent</span>
+            tool_blocks = [b <span class="kw">for</span> b <span class="kw">in</span> response.content <span class="kw">if</span> b.type == <span class="st">"tool_use"</span>]
+            results = <span class="kw">await</span> asyncio.<span class="fn">gather</span>(
+                *[self.<span class="fn">_run_tool</span>(b) <span class="kw">for</span> b <span class="kw">in</span> tool_blocks],
+                return_exceptions=<span class="kw">True</span>
+            )
+            tool_results = []
+            <span class="kw">for</span> b, r <span class="kw">in</span> <span class="fn">zip</span>(tool_blocks, results):
+                run.tool_calls.<span class="fn">append</span>({<span class="st">"tool"</span>: b.name, <span class="st">"input"</span>: b.input})
+                content = <span class="st">f"Error: {r}"</span> <span class="kw">if</span> <span class="fn">isinstance</span>(r, <span class="tp">Exception</span>) <span class="kw">else</span> <span class="fn">str</span>(r)
+                tool_results.<span class="fn">append</span>({<span class="st">"type"</span>: <span class="st">"tool_result"</span>, <span class="st">"tool_use_id"</span>: b.id, <span class="st">"content"</span>: content})
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+
+        <span class="kw">return</span> <span class="st">"Max iterations reached"</span>, run
+
+    <span class="kw">async def</span> <span class="fn">_run_tool</span>(self, block) -> <span class="tp">Any</span>:
+        fn = self.tools.<span class="fn">get</span>(block.name)
+        <span class="kw">if not</span> fn: <span class="kw">raise</span> <span class="tp">ValueError</span>(<span class="st">f"Unknown tool: {block.name}"</span>)
+        <span class="kw">if</span> asyncio.<span class="fn">iscoroutinefunction</span>(fn): <span class="kw">return await</span> <span class="fn">fn</span>(**block.input)
+        <span class="kw">return await</span> asyncio.<span class="fn">get_event_loop</span>().<span class="fn">run_in_executor</span>(<span class="kw">None</span>, <span class="kw">lambda</span>: <span class="fn">fn</span>(**block.input))</pre></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Pattern ini adalah inti semua framework</strong>LangGraph, CrewAI, AutoGen — semuanya pada dasarnya variasi dari loop ini dengan tambahan state management dan abstraksi. Kalau kamu paham kode di atas, kamu paham fundamentalnya.</div></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/></svg></span><div class="ctxt"><strong>Harness ini Anthropic-specific — abstraksi jika ingin multi-model</strong>Kode di atas menggunakan konvensi Anthropic: <code>stop_reason == "tool_use"</code>, struktur <code>content[]</code> dengan blok bertipe, dan format <code>tool_result</code>. Provider lain punya konvensi berbeda — OpenAI menggunakan <code>finish_reason == "tool_calls"</code> dengan array <code>tool_calls[]</code> terpisah dari content. Jika harness-mu perlu mendukung beberapa provider, abstraksi layer "normalize response" sebelum loop utama — bukan mencampur logika provider di dalam loop.</div></div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></svg> Latihan</h3><ul>
+<li><strong>[Kode]</strong> Tambahkan logging sederhana ke <code>AgentHarness.run()</code>: print setiap kali tool dipanggil (nama tool dan argumennya). Jalankan dan amati urutan eksekusi.</li>
+<li><strong>[Eksperimen]</strong> Turunkan <code>max_iterations</code> ke 2 dan berikan task yang butuh lebih dari 2 tool calls. Apa yang terjadi? Bagaimana harness seharusnya menangani kondisi ini dengan graceful?</li>
+<li><strong>[Arsitektur]</strong> <code>AgentHarness</code> saat ini synchronous di level run(). Mengapa <code>async def run()</code> lebih baik untuk production? Dalam skenario apa sync bisa diterima?</li>
+</ul></div>
+</div><!-- /s2a -->
+
+<div class="divider"></div>
+
+<!-- 2B -->
+<div class="sub" id="s2b">
+<div class="subtit"><span class="ac">2.2</span> Memory Systems <span class="subid">// jenis-jenis "ingatan" agent</span></div>
+<div class="prose"><p>Agent yang sophisticated butuh lebih dari sekedar context window. Ada 5 jenis memory yang saling komplementer:</p></div>
+<div class="grid2">
+<div class="gc"><h4><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/></svg>In-Context Memory</h4><p>Informasi dalam context window aktif. <strong>Cepat, zero latency</strong>, tapi volatile (hilang setelah session) dan terbatas oleh context window size. Untuk most tasks, ini sudah cukup.</p></div>
+<div class="gc"><h4><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>External / Episodic Memory</h4><p>Riwayat conversations atau task runs yang disimpan di database (PostgreSQL, Redis). Di-retrieve saat relevan. Cocok untuk session continuity antar percakapan.</p></div>
+<div class="gc"><h4><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Semantic Memory</h4><p>Knowledge base yang bisa di-search. Biasanya diimplementasikan via vector retrieval (pgvector, Chroma, Qdrant), tapi bisa juga graph DB atau hybrid retrieval. Ideal untuk domain knowledge besar.</p></div>
+<div class="gc"><h4><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="m17 20.66-1-1.73"/><path d="M11 10.27 7 3.34"/><path d="m20.66 17-1.73-1"/><path d="m3.34 7 1.73 1"/><path d="M14 12h8"/><path d="M2 12h2"/></svg>Procedural Memory</h4><p>Tools dan skills yang bisa dipanggil — cara agent "ingat" cara melakukan sesuatu. Termasuk learned workflows, templates, dan best practices yang di-encode sebagai tools.</p></div>
+<div class="gc"><h4><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>User / Preference Memory</h4><p>Profil dan preferensi spesifik per user: bahasa yang disukai, konteks pekerjaan, kebiasaan, goals jangka panjang. Inilah yang dipakai OpenAI Memory dan Claude Memory — tidak cocok masuk episodic maupun semantic murni.</p></div>
+</div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Semantic Memory ≠ Vector Store</strong>Vector store adalah <em>implementasi</em> yang paling umum, bukan definisi semantic memory. Semantic memory bisa juga berupa graph database, BM25 keyword retrieval, atau hybrid retrieval. Pilih implementasi berdasarkan karakteristik data dan query pattern-mu.</div></div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">memory_manager.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+
+@dataclass
+<span class="kw">class</span> <span class="fn">MemoryEntry</span>:
+    content: <span class="tp">str</span>
+    importance: <span class="tp">float</span>  <span class="cm"># 0.0 - 1.0</span>
+    tags: <span class="tp">list</span>[<span class="tp">str</span>] = field(default_factory=list)
+
+<span class="kw">class</span> <span class="fn">AgentMemory</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, max_working: <span class="tp">int</span> = <span class="nm">20</span>):
+        self.working: <span class="tp">list</span>[<span class="fn">MemoryEntry</span>] = []
+        self.episodic: <span class="tp">list</span>[<span class="fn">MemoryEntry</span>] = []
+        self.max_working = max_working
+
+    <span class="kw">def</span> <span class="fn">add</span>(self, content: <span class="tp">str</span>, importance: <span class="tp">float</span> = <span class="nm">0.5</span>, tags: <span class="tp">list</span> = <span class="kw">None</span>):
+        self.working.<span class="fn">append</span>(<span class="fn">MemoryEntry</span>(content, importance, tags <span class="kw">or</span> []))
+        <span class="kw">if</span> <span class="fn">len</span>(self.working) > self.max_working:
+            <span class="cm"># Sort by importance, evict low-importance ke episodic</span>
+            self.working.<span class="fn">sort</span>(key=<span class="kw">lambda</span> x: x.importance, reverse=<span class="kw">True</span>)
+            evicted = self.working[self.max_working:]
+            self.working = self.working[:self.max_working]
+            self.episodic.<span class="fn">extend</span>(evicted)
+
+    <span class="kw">def</span> <span class="fn">to_context</span>(self) -> <span class="tp">str</span>:
+        <span class="kw">if not</span> self.working: <span class="kw">return</span> <span class="st">""</span>
+        items = [<span class="st">f"- {m.content}"</span> <span class="kw">for</span> m <span class="kw">in</span> self.working]
+        <span class="kw">return</span> <span class="st">"## Working Memory\n"</span> + <span class="st">"\n"</span>.<span class="fn">join</span>(items)
+
+    <span class="kw">def</span> <span class="fn">search_episodic</span>(self, keyword: <span class="tp">str</span>) -> <span class="tp">list</span>[<span class="fn">MemoryEntry</span>]:
+        <span class="cm"># Simple keyword match; ganti dengan vector search untuk production</span>
+        kw = keyword.<span class="fn">lower</span>()
+        <span class="kw">return</span> [m <span class="kw">for</span> m <span class="kw">in</span> self.episodic <span class="kw">if</span> kw <span class="kw">in</span> m.content.<span class="fn">lower</span>()]</pre></div></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Memory Systems — Kecepatan vs Kapasitas</div>
+<div class="viz-body">
+  <div class="quad-wrap">
+    <div class="quad-axis-y">← Kapasitas lebih kecil &nbsp;&nbsp; Kapasitas lebih besar →</div>
+    <div>
+      <div class="quad-grid">
+        <div class="quad-cell" style="border-bottom:1px solid var(--border);">
+          <div class="quad-cell-label">Lambat · Kapasitas Besar</div>
+          <div class="quad-cell-title">Semantic Memory</div>
+          <div class="quad-cell-desc">Vector store (pgvector, Pinecone). Jutaan dokumen, search by similarity. Latency: 50–200ms per query.</div>
+        </div>
+        <div class="quad-cell" style="border-bottom:1px solid var(--border);border-left:1px solid var(--border);">
+          <div class="quad-cell-label">Cepat · Kapasitas Besar</div>
+          <div class="quad-cell-title">Episodic Memory</div>
+          <div class="quad-cell-desc">Database (PostgreSQL, Redis). Riwayat sessions, structured queries. Latency: 5–50ms.</div>
+        </div>
+        <div class="quad-cell">
+          <div class="quad-cell-label">Lambat · Kapasitas Kecil</div>
+          <div class="quad-cell-title">Procedural Memory</div>
+          <div class="quad-cell-desc">Tools &amp; skills yang learned. Di-encode dalam tool schemas dan system prompt. Update butuh re-deploy.</div>
+        </div>
+        <div class="quad-cell" style="border-left:1px solid var(--border);background:var(--accent-glow);">
+          <div class="quad-cell-label" style="color:var(--accent);">Paling Cepat · Terbatas</div>
+          <div class="quad-cell-title">In-Context Memory</div>
+          <div class="quad-cell-desc">Context window aktif. Zero latency tapi volatile &amp; terbatas (128K–1M tokens). Prioritas utama.</div>
+        </div>
+      </div>
+      <div class="quad-axis-x">← Akses lebih lambat &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Akses lebih cepat →</div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /s2b -->
+
+<div class="divider"></div>
+
+<!-- 2C -->
+<div class="sub" id="s2c">
+<div class="subtit"><span class="ac">2.3</span> Tool Registry &amp; Schema Design <span class="subid">// membuat tools yang LLM mengerti</span></div>
+<div class="prose"><p>Kualitas tool schema langsung mempengaruhi kualitas agent. Deskripsi yang buruk = model salah pilih tool atau salah isi argumen. Deskripsi yang baik = model pakai tools dengan tepat hampir setiap saat.</p></div>
+<div class="cmp">
+<div class="cmpc bad"><div class="cmph">Schema yang Buruk</div>
+<div class="cmpb"><pre>{"name": "execute",
+ "description": "Execute code",
+ "input_schema": {
+   "type": "object",
+   "properties": {
+     "code": {"type": "string"}
+   },
+   "required": ["code"]
+ }}</pre></div></div>
+<div class="cmpc good"><div class="cmph">Schema yang Baik</div>
+<div class="cmpb"><pre>{"name": "run_python",
+ "description": "Execute Python code in
+ isolated sandbox. Returns stdout, stderr,
+ exit code. Timeout: 30s. No internet.
+ Use for: calculations, data processing.
+ NOT for: file ops (use read_file instead).",
+ "input_schema": {
+   "type": "object",
+   "properties": {
+     "code": {
+       "type": "string",
+       "description": "Valid Python 3.11 code"
+     },
+     "timeout": {
+       "type": "integer",
+       "description": "Max seconds (1-30)",
+       "default": 10
+     }
+   },
+   "required": ["code"]
+ }}</pre></div></div>
+</div>
+<div class="prose"><h4>5 prinsip desain tool yang baik</h4><ul>
+<li><strong>Single responsibility</strong> — satu tool, satu fungsi yang jelas. Hindari tool "do everything".</li>
+<li><strong>Deskripsi yang actionable</strong> — jelaskan kapan harus pakai, kapan tidak, apa yang di-return, dan limitasinya.</li>
+<li><strong>Argumen self-explanatory</strong> — nama parameter dan deskripsinya harus cukup jelas tanpa ambiguitas.</li>
+<li><strong>Batasi jumlah tools</strong> — lebih dari 20 tools membuat model kesulitan memilih. Groupkan tools terkait atau gunakan sub-agent.</li>
+<li><strong>Return error yang informatif</strong> — ketika tool gagal, return pesan yang membantu model decide apa langkah berikutnya.</li>
+</ul></div>
+</div><!-- /s2c -->
+
+<div class="divider"></div>
+
+<!-- 2D -->
+<div class="sub" id="s2d">
+<div class="subtit"><span class="ac">2.4</span> Context Management <span class="subid">// mencegah context overflow</span></div>
+<div class="prose"><p>Long-running agents akan mengisi context window dengan cepat — setiap tool call dan result menambah token. Tanpa context management yang baik, agent akan crash karena overflow atau menjadi sangat lambat dan mahal.</p></div>
+<div class="grid2">
+<div class="gc"><h4>Sliding Window</h4><p>Keep N messages terbaru saja. Sederhana dan efektif untuk conversational agents. Masalah: bisa kehilangan context penting dari early messages.</p></div>
+<div class="gc"><h4>Summarization</h4><p>Ketika context mendekati limit, gunakan LLM untuk summarize pesan lama menjadi ringkasan singkat. Lebih informatif dari sliding window tapi menambah satu LLM call.</p></div>
+<div class="gc"><h4>Selective Retention</h4><p>Score setiap message berdasarkan relevansi ke task saat ini, keep yang high-score. Kompleks tapi paling optimal untuk long-running agents.</p></div>
+<div class="gc"><h4>Hierarchical Context</h4><p>Pisahkan context menjadi layers: global (permanent), session (per-task), ephemeral (per-step). Setiap layer punya lifecycle berbeda.</p></div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">context_manager.py</span></div>
+<div class="cbb"><pre><span class="kw">class</span> <span class="fn">ContextManager</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, max_tokens: <span class="tp">int</span> = <span class="nm">150_000</span>, summarize_at: <span class="tp">float</span> = <span class="nm">0.7</span>):
+        self.max_tokens = max_tokens
+        self.summarize_at = summarize_at   <span class="cm"># Summarize ketika 70% penuh</span>
+        self.messages = []
+        self.summary = <span class="kw">None</span>
+
+    <span class="kw">def</span> <span class="fn">should_summarize</span>(self, current_tokens: <span class="tp">int</span>) -> <span class="tp">bool</span>:
+        <span class="kw">return</span> current_tokens > self.max_tokens * self.summarize_at
+
+    <span class="kw">async def</span> <span class="fn">compress</span>(self, client, model: <span class="tp">str</span>):
+        <span class="st">"""Compress message history menjadi summary singkat."""</span>
+        history_text = <span class="fn">"\n\n"</span>.<span class="fn">join</span>([
+            <span class="st">f"{m['role'].upper()}: {str(m['content'])[:500]}"</span>
+            <span class="kw">for</span> m <span class="kw">in</span> self.messages[:-<span class="nm">5</span>]  <span class="cm"># Keep 5 terbaru</span>
+        ])
+        r = client.messages.<span class="fn">create</span>(
+            model=model, max_tokens=<span class="nm">1000</span>,
+            messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>:
+                <span class="st">f"Summarize this agent conversation concisely, "</span>
+                <span class="st">f"preserving key facts, decisions, findings:\n\n{history_text}"</span>}]
+        )
+        self.summary = r.content[<span class="nm">0</span>].text
+        self.messages = self.messages[-<span class="nm">5</span>:]
+
+    <span class="kw">def</span> <span class="fn">get_system</span>(self, base: <span class="tp">str</span>) -> <span class="tp">str</span>:
+        <span class="kw">if</span> self.summary:
+            <span class="kw">return</span> <span class="st">f"{base}\n\n## Summary (older context)\n{self.summary}"</span>
+        <span class="kw">return</span> base</pre></div></div>
+</div><!-- /s2d -->
+
+<div class="divider"></div>
+
+<!-- 2E -->
+<div class="sub" id="s2e">
+<div class="subtit"><span class="ac">2.5</span> Planning &amp; Task Decomposition <span class="subid">// agent yang bisa berpikir jauh ke depan</span></div>
+<div class="prose"><p>Untuk tasks yang kompleks, agent perlu membuat rencana sebelum mulai eksekusi. Planning memungkinkan agent mengidentifikasi dependencies, memparalelisasi sub-tasks independen, dan recover lebih baik ketika ada kegagalan.</p></div>
+<div class="cc"><h3>Two-Phase Approach: Plan then Execute</h3>
+<p><strong>Phase 1 — Planning:</strong> Agent diminta untuk membuat rencana eksplisit sebelum mulai. Output berupa list of steps dengan dependencies. Manusia bisa review dan approve sebelum eksekusi.<br><br>
+<strong>Phase 2 — Execution:</strong> Agent eksekusi plan step by step, mengupdate plan jika ada yang gagal. Dengan plan yang eksplisit, debugging jauh lebih mudah.</p></div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">task_planner.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+
+<span class="kw">class</span> <span class="fn">Step</span>(BaseModel):
+    id: <span class="tp">str</span>
+    description: <span class="tp">str</span>
+    depends_on: <span class="tp">list</span>[<span class="tp">str</span>] = []   <span class="cm"># step IDs yang harus selesai dulu</span>
+    estimated_tools: <span class="tp">list</span>[<span class="tp">str</span>] = []
+    status: <span class="tp">str</span> = <span class="st">"pending"</span>       <span class="cm"># pending|running|done|failed</span>
+
+<span class="kw">class</span> <span class="fn">TaskPlan</span>(BaseModel):
+    goal: <span class="tp">str</span>
+    steps: <span class="tp">list</span>[<span class="fn">Step</span>]
+    reasoning: <span class="tp">str</span>
+
+<span class="kw">def</span> <span class="fn">get_ready_steps</span>(plan: <span class="fn">TaskPlan</span>) -> <span class="tp">list</span>[<span class="fn">Step</span>]:
+    <span class="st">"""Steps yang bisa dieksekusi sekarang (dependencies sudah done)."""</span>
+    done_ids = {s.id <span class="kw">for</span> s <span class="kw">in</span> plan.steps <span class="kw">if</span> s.status == <span class="st">"done"</span>}
+    <span class="kw">return</span> [s <span class="kw">for</span> s <span class="kw">in</span> plan.steps
+            <span class="kw">if</span> s.status == <span class="st">"pending"</span>
+            <span class="kw">and</span> <span class="fn">set</span>(s.depends_on).<span class="fn">issubset</span>(done_ids)]
+    <span class="cm"># Ready steps bisa dijalankan secara parallel!</span>
+
+<span class="kw">async def</span> <span class="fn">create_plan</span>(goal: <span class="tp">str</span>, available_tools: <span class="tp">list</span>, client) -> <span class="fn">TaskPlan</span>:
+    r = client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-sonnet-4-6"</span>, max_tokens=<span class="nm">2000</span>,
+        messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">f"""
+Create an execution plan for: {goal}
+Available tools: {available_tools}
+Return JSON matching TaskPlan schema.
+Identify which steps can run in parallel (no dependencies).
+"""</span>}]
+    )
+    <span class="kw">return</span> <span class="fn">TaskPlan</span>.<span class="fn">model_validate_json</span>(r.content[<span class="nm">0</span>].text)</pre></div></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Task Decomposition — Dari Goal ke Atomic Steps</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" style="max-height:300px;">
+  <defs>
+    <marker id="tdarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- Root goal -->
+  <rect x="215" y="14" width="250" height="36" rx="8" fill="rgba(124,109,250,0.12)" stroke="rgba(124,109,250,0.4)" stroke-width="1.5"/>
+  <text x="340" y="29" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--text)">🎯 Build REST API untuk Todo App</text>
+  <text x="340" y="43" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">goal: 1 task selesai dalam 6 jam</text>
+
+  <!-- Decomposition phase label -->
+  <text x="340" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">▼ DECOMPOSE ▼</text>
+
+  <!-- Level 1: Sub-goals -->
+  <rect x="18" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="92" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🗄️ Data Layer</text>
+  <text x="92" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">DB schema + ORM</text>
+
+  <rect x="186" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="260" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🌐 API Endpoints</text>
+  <text x="260" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">CRUD routes</text>
+
+  <rect x="354" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="428" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🔐 Auth</text>
+  <text x="428" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">JWT middleware</text>
+
+  <rect x="522" y="88" width="148" height="34" rx="7" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="596" y="103" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(45,212,191,0.9)">🧪 Tests</text>
+  <text x="596" y="116" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">integration + unit</text>
+
+  <!-- Lines from root to sub-goals -->
+  <line x1="280" y1="50" x2="92" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="330" y1="50" x2="260" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="380" y1="50" x2="428" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="430" y1="50" x2="596" y2="88" stroke="rgba(124,109,250,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+
+  <!-- Level 2: Atomic tasks (sample for API Endpoints) -->
+  <rect x="186" y="144" width="70" height="28" rx="5" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="221" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(74,222,128,0.9)">GET /</text>
+
+  <rect x="264" y="144" width="70" height="28" rx="5" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="299" y="162" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(74,222,128,0.9)">POST /</text>
+
+  <line x1="228" y1="122" x2="221" y2="144" stroke="rgba(74,222,128,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+  <line x1="292" y1="122" x2="299" y2="144" stroke="rgba(74,222,128,0.3)" stroke-width="1" marker-end="url(#tdarr)"/>
+
+  <!-- Dependency: Auth must be done before API -->
+  <line x1="428" y1="122" x2="340" y2="144" stroke="rgba(248,113,113,0.4)" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="375" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(248,113,113,0.7)">⛓️ depends on</text>
+  <text x="375" y="152" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(248,113,113,0.5)">(Auth harus selesai dulu)</text>
+
+  <!-- Parallel annotation -->
+  <rect x="186" y="188" width="148" height="20" rx="4" fill="none" stroke="rgba(74,222,128,0.2)" stroke-dasharray="2,2"/>
+  <text x="260" y="202" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="rgba(74,222,128,0.7)">⚡ bisa paralel (no deps)</text>
+
+  <!-- Legend -->
+  <rect x="18" y="200" width="10" height="10" rx="2" fill="rgba(124,109,250,0.3)"/>
+  <text x="34" y="209" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Goal</text>
+  <rect x="72" y="200" width="10" height="10" rx="2" fill="var(--bg3)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="88" y="209" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Sub-goal</text>
+  <rect x="148" y="200" width="10" height="10" rx="2" fill="rgba(74,222,128,0.15)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="164" y="209" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Step</text>
+
+  <!-- Bottom note -->
+  <text x="340" y="252" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Prinsip: decompose sampai setiap step bisa dieksekusi dalam 1–3 tool calls. Ready steps = bisa paralel.</text>
+</svg>
+</div>
+</div>
+
+</div><!-- /s2e -->
+
+<div class="divider"></div>
+
+<!-- 2F -->
+<div class="sub" id="s2f">
+<div class="subtit"><span class="ac">2.6</span> Structured Output &amp; Robust Parsing <span class="subid">// output yang bisa diandalkan</span></div>
+<div class="prose"><p>Agent sering perlu menghasilkan output terstruktur (JSON) yang kemudian diproses programmatically. Masalah: LLM kadang menghasilkan JSON yang malformed, ada markdown fence, atau missing fields. Kamu perlu parsing yang robust.</p></div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">robust_parser.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, ValidationError
+<span class="kw">import</span> json, re
+
+<span class="kw">class</span> <span class="fn">RobustParser</span>:
+    @staticmethod
+    <span class="kw">def</span> <span class="fn">extract_json</span>(text: <span class="tp">str</span>) -> <span class="tp">str</span>:
+        text = text.<span class="fn">strip</span>()
+        <span class="kw">try</span>: json.<span class="fn">loads</span>(text); <span class="kw">return</span> text
+        <span class="kw">except</span>: <span class="kw">pass</span>
+
+        <span class="cm"># Remove markdown code fences</span>
+        text = re.<span class="fn">sub</span>(<span class="st">r"```(?:json)?\n?"</span>, <span class="st">""</span>, text).<span class="fn">strip</span>()
+        <span class="kw">try</span>: json.<span class="fn">loads</span>(text); <span class="kw">return</span> text
+        <span class="kw">except</span>: <span class="kw">pass</span>
+
+        <span class="cm"># Find JSON object/array dalam text</span>
+        <span class="kw">for</span> pattern <span class="kw">in</span> [<span class="st">r"\{[\s\S]*\}"</span>, <span class="st">r"\[[\s\S]*\]"</span>]:
+            match = re.<span class="fn">search</span>(pattern, text)
+            <span class="kw">if</span> match:
+                <span class="kw">try</span>: json.<span class="fn">loads</span>(match.<span class="fn">group</span>()); <span class="kw">return</span> match.<span class="fn">group</span>()
+                <span class="kw">except</span>: <span class="kw">continue</span>
+        <span class="kw">raise</span> <span class="tp">ValueError</span>(<span class="st">f"No valid JSON in: {text[:200]}"</span>)
+
+    @classmethod
+    <span class="kw">def</span> <span class="fn">parse</span>(cls, model_cls, text: <span class="tp">str</span>, max_retries: <span class="tp">int</span> = <span class="nm">3</span>):
+        <span class="kw">for</span> attempt <span class="kw">in</span> <span class="fn">range</span>(max_retries):
+            <span class="kw">try</span>:
+                json_str = cls.<span class="fn">extract_json</span>(text)
+                <span class="kw">return</span> model_cls.<span class="fn">model_validate_json</span>(json_str)
+            <span class="kw">except</span> (<span class="tp">ValidationError</span>, <span class="tp">ValueError</span>):
+                <span class="kw">if</span> attempt == max_retries - <span class="nm">1</span>: <span class="kw">raise</span>
+                <span class="cm"># Optional: re-prompt model untuk fix formatting</span></pre></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Tip: gunakan tool use untuk structured output</strong>Daripada meminta model return JSON dalam text response, buat dummy tool dengan schema yang kamu inginkan. Model jauh lebih reliable mengisi tool arguments daripada generate valid JSON dalam prose.</div></div>
+</div><!-- /s2f -->
+
+<div class="divider"></div>
+
+<!-- 2G -->
+<div class="sub" id="s2g">
+<div class="subtit"><span class="ac">2.7</span> RAG &amp; Semantic Retrieval <span class="subid">// beri agent akses ke knowledge besar</span></div>
+<div class="prose">
+<p>RAG (Retrieval-Augmented Generation) adalah pola di mana agent mengambil informasi relevan dari knowledge base eksternal sebelum menjawab — bukan mengandalkan apa yang "diingat" model dari training. Ini solusi untuk dua masalah sekaligus: knowledge cutoff dan context window yang terbatas.</p>
+<p>Tanpa RAG, agent dengan codebase 500 file harus membaca semua file ke context — mustahil. Dengan RAG, agent hanya mengambil 5–10 file yang paling relevan dengan query saat itu.</p>
+</div>
+<div class="fsteps">
+  <div class="fstep"><div class="fsn">1</div><div class="fst">Chunking</div><div class="fsd">Pecah dokumen besar jadi chunk berukuran optimal (512–1024 token). Overlap antar chunk untuk menjaga konteks.</div></div>
+  <div class="fstep"><div class="fsn">2</div><div class="fst">Embedding</div><div class="fsd">Konversi setiap chunk jadi vector representasi semantik menggunakan embedding model (text-embedding-3-small, nomic-embed, dll).</div></div>
+  <div class="fstep"><div class="fsn">3</div><div class="fst">Indexing</div><div class="fsd">Simpan vectors di vector store (pgvector, Qdrant, Chroma). Tambahkan metadata: source, tanggal, section.</div></div>
+  <div class="fstep"><div class="fsn">4</div><div class="fst">Retrieval</div><div class="fsd">Saat query masuk, embed query → cari chunk paling similar (cosine similarity) → ambil top-k.</div></div>
+  <div class="fstep"><div class="fsn">5</div><div class="fst">Generation</div><div class="fsd">Inject chunk yang retrieved ke context agent sebagai "retrieved context", lalu biarkan model menjawab berdasarkan itu.</div></div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">rag_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> anthropic <span class="kw">import</span> Anthropic
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+client = <span class="fn">Anthropic</span>()
+
+<span class="kw">def</span> <span class="fn">embed</span>(text: <span class="tp">str</span>) -> <span class="tp">list</span>[<span class="tp">float</span>]:
+    <span class="cm"># Gunakan embedding model pilihanmu (OpenAI, Cohere, local, dll)</span>
+    <span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+    r = <span class="fn">OpenAI</span>().embeddings.<span class="fn">create</span>(input=text, model=<span class="st">"text-embedding-3-small"</span>)
+    <span class="kw">return</span> r.data[<span class="nm">0</span>].embedding
+
+<span class="kw">def</span> <span class="fn">cosine_similarity</span>(a, b) -> <span class="tp">float</span>:
+    <span class="kw">return</span> np.<span class="fn">dot</span>(a, b) / (np.<span class="fn">linalg</span>.<span class="fn">norm</span>(a) * np.<span class="fn">linalg</span>.<span class="fn">norm</span>(b))
+
+<span class="kw">class</span> <span class="fn">SimpleRAG</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.chunks: <span class="tp">list</span>[<span class="tp">dict</span>] = []   <span class="cm"># {"text": ..., "embedding": ..., "source": ...}</span>
+
+    <span class="kw">def</span> <span class="fn">index</span>(self, text: <span class="tp">str</span>, source: <span class="tp">str</span>, chunk_size: <span class="tp">int</span> = <span class="nm">800</span>, overlap: <span class="tp">int</span> = <span class="nm">100</span>):
+        words = text.<span class="fn">split</span>()
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">0</span>, <span class="fn">len</span>(words), chunk_size - overlap):
+            chunk = <span class="st">" "</span>.<span class="fn">join</span>(words[i:i + chunk_size])
+            <span class="kw">if not</span> chunk.<span class="fn">strip</span>(): <span class="kw">continue</span>
+            self.chunks.<span class="fn">append</span>({
+                <span class="st">"text"</span>: chunk,
+                <span class="st">"embedding"</span>: <span class="fn">embed</span>(chunk),
+                <span class="st">"source"</span>: source
+            })
+
+    <span class="kw">def</span> <span class="fn">retrieve</span>(self, query: <span class="tp">str</span>, top_k: <span class="tp">int</span> = <span class="nm">5</span>) -> <span class="tp">list</span>[<span class="tp">dict</span>]:
+        q_emb = <span class="fn">embed</span>(query)
+        scored = [
+            (<span class="fn">cosine_similarity</span>(q_emb, c[<span class="st">"embedding"</span>]), c)
+            <span class="kw">for</span> c <span class="kw">in</span> self.chunks
+        ]
+        scored.<span class="fn">sort</span>(key=<span class="kw">lambda</span> x: x[<span class="nm">0</span>], reverse=<span class="kw">True</span>)
+        <span class="kw">return</span> [c <span class="kw">for</span> _, c <span class="kw">in</span> scored[:top_k]]
+
+    <span class="kw">def</span> <span class="fn">answer</span>(self, query: <span class="tp">str</span>) -> <span class="tp">str</span>:
+        chunks = self.<span class="fn">retrieve</span>(query)
+        context = <span class="st">"\n\n---\n\n"</span>.<span class="fn">join</span>([
+            <span class="st">f"[Source: {c['source']}]\n{c['text']}"</span> <span class="kw">for</span> c <span class="kw">in</span> chunks
+        ])
+        response = client.messages.<span class="fn">create</span>(
+            model=<span class="st">"claude-sonnet-4-6"</span>,
+            max_tokens=<span class="nm">2048</span>,
+            system=<span class="st">"Answer based on the retrieved context. Cite sources. If context is insufficient, say so."</span>,
+            messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">f"Context:\n{context}\n\nQuestion: {query}"</span>}]
+        )
+        <span class="kw">return</span> response.content[<span class="nm">0</span>].text</pre></div></div>
+<div class="cc"><h3>Strategi retrieval yang lebih canggih</h3><ul>
+<li><strong>Hybrid search</strong> — kombinasikan vector search (semantic) dengan BM25/full-text search (keyword). Vector bagus untuk paraphrase, BM25 bagus untuk exact match nama fungsi atau error message. Hasil digabung dengan Reciprocal Rank Fusion (RRF).</li>
+<li><strong>Re-ranking</strong> — setelah top-k retrieval, gunakan cross-encoder model untuk re-rank berdasarkan relevansi yang lebih akurat. Biasanya ambil top-20 lalu re-rank jadi top-5.</li>
+<li><strong>Query expansion</strong> — minta LLM untuk generate variasi query sebelum retrieval, lalu gabungkan hasil. Efektif untuk query yang ambigu atau terlalu singkat.</li>
+<li><strong>Hierarchical chunking</strong> — simpan dokumen dalam dua level: summary per dokumen (untuk initial retrieval) dan chunks detail (untuk konteks penuh). Retrieve summary dulu, lalu drill down ke chunks yang relevan.</li>
+<li><strong>Index strategy untuk skala besar</strong> — saat jumlah chunk mencapai jutaan, full scan cosine similarity menjadi terlalu lambat. Gunakan approximate nearest neighbor index: <strong>HNSW</strong> (Hierarchical Navigable Small World) untuk latensi sangat rendah (&lt;10ms) tapi memory besar, atau <strong>IVFFlat</strong> untuk trade-off memory lebih hemat. PostgreSQL pgvector, Qdrant, dan Chroma semuanya mendukung keduanya — aktifkan sejak awal agar tidak perlu migrasi saat data tumbuh.</li>
+</ul></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Ukuran chunk yang tepat</strong>Chunk terlalu kecil kehilangan konteks. Chunk terlalu besar membuang token untuk konten yang tidak relevan. Mulai dengan 512–800 token, overlap 10–15%. Ukur dengan precision@k pada eval dataset kamu — ini berbeda per domain.</div></div>
+<div class="callout warn"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><div class="ctxt"><strong>Bottleneck RAG bukan di vector DB-nya</strong>Banyak engineer over-focus memilih vector database, padahal bottleneck terbesar RAG ada di: <strong>chunking strategy</strong> (apakah chunk mempertahankan konteks yang cukup?), <strong>document preprocessing</strong> (apakah PDF/HTML sudah di-parse dengan benar?), <strong>metadata filtering</strong> (apakah retrieval bisa disaring berdasarkan atribut relevan?), dan <strong>reranking</strong> (apakah top-k yang diambil benar-benar yang paling relevan?). Pilih vector DB yang cukup baik, lalu investasikan waktu di empat area ini.</div></div>
+
+<div class="viz-wrap">
+<div class="viz-title">RAG Pipeline — Dari Dokumen ke Jawaban</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" style="max-height:280px;">
+  <defs>
+    <marker id="ragarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.5)"/>
+    </marker>
+    <marker id="ragarr2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(74,222,128,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- OFFLINE: Indexing Phase -->
+  <text x="120" y="22" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">📥 INDEXING (offline)</text>
+
+  <rect x="15" y="36" width="80" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="55" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">📄 Docs</text>
+  <text x="55" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">PDF/HTML</text>
+
+  <line x1="95" y1="52" x2="127" y2="52" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <rect x="130" y="36" width="80" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="170" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">✂️ Chunk</text>
+  <text x="170" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">512-1024 tok</text>
+
+  <line x1="210" y1="52" x2="242" y2="52" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <rect x="245" y="36" width="80" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="285" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">🔢 Embed</text>
+  <text x="285" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">→ vectors</text>
+
+  <line x1="325" y1="52" x2="357" y2="52" stroke="rgba(124,109,250,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <rect x="360" y="36" width="90" height="32" rx="6" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)"/>
+  <text x="405" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--accent)">🗄️ Vector DB</text>
+  <text x="405" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">pgvector</text>
+
+  <!-- ONLINE: Query Phase -->
+  <text x="520" y="22" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">🔍 QUERY (online)</text>
+
+  <rect x="475" y="36" width="70" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="510" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">❓ Query</text>
+  <text x="510" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">user ask</text>
+
+  <line x1="545" y1="52" x2="577" y2="52" stroke="rgba(74,222,128,0.4)" stroke-width="1" marker-end="url(#ragarr2)"/>
+
+  <rect x="580" y="36" width="85" height="32" rx="6" fill="var(--bg3)" stroke="var(--border)"/>
+  <text x="622" y="49" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--text2)">🔢 Embed</text>
+  <text x="622" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">query vector</text>
+
+  <!-- Down arrow from Vector DB to retrieval -->
+  <line x1="405" y1="68" x2="405" y2="100" stroke="rgba(124,109,250,0.3)" stroke-width="1"/>
+  <line x1="622" y1="68" x2="405" y2="100" stroke="rgba(74,222,128,0.3)" stroke-width="1" marker-end="url(#ragarr2)"/>
+
+  <!-- Retrieval -->
+  <rect x="310" y="102" width="190" height="36" rx="6" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)"/>
+  <text x="405" y="117" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(245,158,11,0.9)">🎯 Similarity Search</text>
+  <text x="405" y="132" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">cosine → top-K chunks</text>
+
+  <line x1="405" y1="138" x2="405" y2="170" stroke="rgba(245,158,11,0.4)" stroke-width="1" marker-end="url(#ragarr)"/>
+
+  <!-- Inject + Generate -->
+  <rect x="265" y="174" width="280" height="42" rx="8" fill="rgba(74,222,128,0.08)" stroke="rgba(74,222,128,0.3)"/>
+  <text x="405" y="192" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="rgba(74,222,128,0.9)">📋 Inject Context + Generate</text>
+  <text x="405" y="208" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">chunks → LLM prompt → jawaban final</text>
+
+  <!-- Bottom note -->
+  <text x="405" y="245" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#5a5a6a">Bottleneck RAG: chunking strategy &amp; reranking — bukan pemilihan vector DB</text>
+</svg>
+</div>
+</div>
+
+</div><!-- /s2g -->
+
+<div class="divider"></div>
+
+<!-- 2H -->
+<div class="sub" id="s2h">
+<div class="subtit"><span class="ac">2.8</span> Agent Checkpointing &amp; Resume <span class="subid">// agent yang tidak takut crash</span></div>
+<div class="prose">
+<p>Agent yang berjalan lama — coding agent yang refactor ratusan file, research agent yang butuh 2 jam — sangat rentan terhadap kegagalan di tengah jalan: rate limit, network timeout, server restart, atau bahkan matikan laptop. Tanpa checkpointing, semua progress hilang dan harus mulai dari awal.</p>
+<p>Checkpointing menyimpan state agent secara periodik sehingga bisa di-resume dari titik terakhir, bukan dari awal.</p>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">agent_checkpoint.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> json, os
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, asdict
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+@dataclass
+<span class="kw">class</span> <span class="fn">AgentCheckpoint</span>:
+    run_id: <span class="tp">str</span>
+    iteration: <span class="tp">int</span>
+    messages: <span class="tp">list</span>
+    task: <span class="tp">str</span>
+    metadata: <span class="tp">dict</span>
+    saved_at: <span class="tp">str</span> = <span class="st">""</span>
+
+    <span class="kw">def</span> <span class="fn">save</span>(self, dir: <span class="tp">str</span> = <span class="st">".agent_checkpoints"</span>):
+        self.saved_at = datetime.<span class="fn">now</span>().<span class="fn">isoformat</span>()
+        Path(dir).<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)
+        path = <span class="st">f"{dir}/{self.run_id}.json"</span>
+        <span class="kw">with</span> <span class="fn">open</span>(path, <span class="st">"w"</span>) <span class="kw">as</span> f:
+            json.<span class="fn">dump</span>(<span class="fn">asdict</span>(self), f, indent=<span class="nm">2</span>)
+
+    @classmethod
+    <span class="kw">def</span> <span class="fn">load</span>(cls, run_id: <span class="tp">str</span>, dir: <span class="tp">str</span> = <span class="st">".agent_checkpoints"</span>):
+        path = <span class="st">f"{dir}/{run_id}.json"</span>
+        <span class="kw">if not</span> os.path.<span class="fn">exists</span>(path): <span class="kw">return None</span>
+        <span class="kw">with</span> <span class="fn">open</span>(path) <span class="kw">as</span> f:
+            <span class="kw">return</span> <span class="fn">cls</span>(**json.<span class="fn">load</span>(f))
+
+<span class="kw">class</span> <span class="fn">CheckpointedAgent</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, run_id: <span class="tp">str</span>, checkpoint_every: <span class="tp">int</span> = <span class="nm">5</span>):
+        self.run_id = run_id
+        self.checkpoint_every = checkpoint_every
+
+    <span class="kw">async def</span> <span class="fn">run</span>(self, task: <span class="tp">str</span>, resume: <span class="tp">bool</span> = <span class="kw">True</span>) -> <span class="tp">str</span>:
+        <span class="cm"># Coba resume dari checkpoint yang ada</span>
+        ckpt = <span class="fn">AgentCheckpoint</span>.<span class="fn">load</span>(self.run_id) <span class="kw">if</span> resume <span class="kw">else None</span>
+        <span class="kw">if</span> ckpt:
+            messages = ckpt.messages
+            start_iter = ckpt.iteration
+            <span class="fn">print</span>(<span class="st">f"Resuming from iteration {start_iter}"</span>)
+        <span class="kw">else</span>:
+            messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: task}]
+            start_iter = <span class="nm">0</span>
+
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(start_iter, <span class="nm">100</span>):
+            response = <span class="kw">await</span> self.<span class="fn">_call_llm</span>(messages)
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content})
+
+            <span class="kw">if</span> response.stop_reason == <span class="st">"end_turn"</span>:
+                <span class="cm"># Hapus checkpoint saat selesai</span>
+                Path(<span class="st">f".agent_checkpoints/{self.run_id}.json"</span>).<span class="fn">unlink</span>(missing_ok=<span class="kw">True</span>)
+                <span class="kw">return</span> response.content[<span class="nm">0</span>].text
+
+            <span class="cm"># Tool execution...</span>
+            tool_results = <span class="kw">await</span> self.<span class="fn">_execute_tools</span>(response)
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+
+            <span class="cm"># Simpan checkpoint setiap N iterasi</span>
+            <span class="kw">if</span> (i + <span class="nm">1</span>) % self.checkpoint_every == <span class="nm">0</span>:
+                <span class="fn">AgentCheckpoint</span>(
+                    run_id=self.run_id, iteration=i+<span class="nm">1</span>,
+                    messages=messages, task=task, metadata={}
+                ).<span class="fn">save</span>()</pre></div></div>
+<div class="grid2">
+<div class="gc"><h4>Apa yang perlu disimpan</h4><p>Full message history (termasuk tool calls dan results), nomor iterasi saat ini, task original, dan metadata tambahan (files yang sudah dimodifikasi, tests yang sudah dijalankan). Semakin lengkap state yang disimpan, semakin mulus resume-nya.</p></div>
+<div class="gc"><h4>Storage backend</h4><p>Untuk development: JSON file di disk sudah cukup. Untuk production: Redis (dengan TTL) atau PostgreSQL. Jangan simpan di memory saja — checkpoint harus survive process restart.</p></div>
+<div class="gc"><h4>Checkpoint frequency</h4><p>Setiap 3–10 iterasi adalah sweet spot. Terlalu sering: overhead I/O. Terlalu jarang: banyak iterasi yang terbuang saat crash. Untuk agent yang heavy (computer use, long coding tasks), checkpoint setiap 3 iterasi.</p></div>
+<div class="gc"><h4>Idempotent tools</h4><p>Saat resume, beberapa tool mungkin dipanggil ulang. Design tools agar idempotent: memanggil dua kali hasilnya sama (create_file → overwrite jika ada, bukan error). Hindari side effects yang tidak bisa diulang.</p></div>
+</div>
+</div><!-- /s2h -->
+
+<div class="divider"></div>
+
+<!-- 2I -->
+<div class="sub" id="s2i">
+<div class="subtit"><span class="ac">2.9</span> Streaming Response Handling <span class="subid">// jangan tunggu selesai — proses sambil jalan</span></div>
+<div class="prose">
+<p>Agent production tidak menunggu full response sebelum bertindak. Streaming memungkinkan harness memproses token saat datang — menyajikan output ke user lebih cepat, mendeteksi tool call lebih awal, dan menghemat latensi persepsi hingga 3–5×. Tapi streaming menghadirkan kompleksitas: partial JSON, mid-stream tool call, dan error handling yang berbeda.</p>
+</div>
+<div class="cc"><h3>Tiga tantangan streaming agent</h3><ul>
+<li><strong>Partial tool call JSON</strong> — tool call datang dalam chunks. Kamu tidak bisa parse JSON sampai chunk terakhir tiba. Harness harus buffer dan reconstruct</li>
+<li><strong>Multiple concurrent tool calls</strong> — model bisa emit beberapa tool call sekaligus dalam satu stream. Harness harus track setiap tool call secara independen</li>
+<li><strong>Stream interruption</strong> — koneksi bisa putus di tengah. Perlu retry strategy yang tidak menduplikasi side effects</li>
+</ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Streaming vs Non-Streaming — Latency Perception</div>
+<div class="viz-body">
+  <div style="font-size:12px;margin-bottom:16px;">
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Non-streaming (tunggu full response)</span><span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;">~8 detik TTFT</span></div>
+      <div style="height:28px;background:var(--bg3);border-radius:6px;overflow:hidden;border:1px solid var(--border);">
+        <div style="width:100%;height:100%;background:rgba(239,68,68,.25);display:flex;align-items:center;padding:0 10px;color:var(--text3);font-size:11px;">⏳ menunggu... menunggu... menunggu... → output muncul semua sekaligus</div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(74,222,128,.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Streaming (proses sambil jalan)</span><span style="color:var(--text3);font-family:'IBM Plex Mono',monospace;">~0.3 detik TTFT</span></div>
+      <div style="height:28px;background:var(--bg3);border-radius:6px;overflow:hidden;border:1px solid var(--border);display:flex;">
+        <div style="width:4%;height:100%;background:rgba(74,222,128,.5);"></div>
+        <div style="flex:1;height:100%;background:linear-gradient(90deg,rgba(74,222,128,.3),rgba(124,109,250,.2));display:flex;align-items:center;padding:0 10px;color:var(--text3);font-size:11px;">token pertama tiba → user sudah bisa baca, proses terus berjalan...</div>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">TTFT = Time To First Token — metrik latensi persepsi yang paling penting bagi user</div>
+</div>
+</div>
+
+<div class="dblock">
+<div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Streaming harness dengan Anthropic SDK</div></div>
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> anthropic
+
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="kw">def</span> <span class="fn">run_agent_streaming</span>(messages):
+    tool_calls = {}   <span class="cm"># buffer tool calls yang sedang datang</span>
+    text_buffer = <span class="st">""</span>
+
+    <span class="kw">with</span> client.messages.<span class="fn">stream</span>(
+        model=<span class="st">"claude-opus-4-8"</span>,
+        max_tokens=<span class="nm">4096</span>,
+        system=SYSTEM_PROMPT,
+        tools=TOOLS,
+        messages=messages
+    ) <span class="kw">as</span> stream:
+        <span class="kw">for</span> event <span class="kw">in</span> stream:
+            <span class="kw">if</span> event.type == <span class="st">"content_block_start"</span>:
+                <span class="kw">if</span> event.content_block.type == <span class="st">"tool_use"</span>:
+                    <span class="cm"># inisialisasi buffer untuk tool call ini</span>
+                    tool_calls[event.index] = {
+                        <span class="st">"id"</span>: event.content_block.id,
+                        <span class="st">"name"</span>: event.content_block.name,
+                        <span class="st">"input_json"</span>: <span class="st">""</span>
+                    }
+
+            <span class="kw">elif</span> event.type == <span class="st">"content_block_delta"</span>:
+                <span class="kw">if</span> event.delta.type == <span class="st">"text_delta"</span>:
+                    text_buffer += event.delta.text
+                    <span class="fn">print</span>(event.delta.text, end=<span class="st">""</span>, flush=<span class="kw">True</span>)  <span class="cm"># stream ke user</span>
+
+                <span class="kw">elif</span> event.delta.type == <span class="st">"input_json_delta"</span>:
+                    <span class="cm"># accumulate partial JSON</span>
+                    tool_calls[event.index][<span class="st">"input_json"</span>] += event.delta.partial_json
+
+            <span class="kw">elif</span> event.type == <span class="st">"message_stop"</span>:
+                <span class="cm"># semua tool calls sudah complete, parse dan eksekusi</span>
+                <span class="kw">for</span> idx, tc <span class="kw">in</span> tool_calls.<span class="fn">items</span>():
+                    <span class="kw">import</span> json
+                    tc[<span class="st">"input"</span>] = json.<span class="fn">loads</span>(tc[<span class="st">"input_json"</span>])
+                    result = <span class="fn">execute_tool</span>(tc[<span class="st">"name"</span>], tc[<span class="st">"input"</span>])
+                    <span class="cm"># append ke messages dan lanjut loop</span>
+    <span class="kw">return</span> tool_calls, text_buffer</pre></div></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Pattern penting</strong>Jangan eksekusi tool call sampai stream selesai (<code>message_stop</code>). Model kadang mengubah argumen tool call di tengah stream. Buffer dulu, eksekusi setelah complete.</div></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></span><div class="ctxt"><strong>Advanced: streaming JSON parser untuk partial execution</strong>Pendekatan buffer-then-parse di atas adalah yang paling aman dan cocok untuk sebagian besar use case. Namun di production tingkat lanjut — misalnya saat agent men-generate argumen JSON yang sangat panjang dan kamu ingin mulai merender UI atau memvalidasi sebagian argumen sebelum <code>message_stop</code> — engineers menggunakan <strong>streaming JSON parser</strong> seperti <code>jiter</code> (dipakai internal oleh Anthropic SDK) atau pendekatan state machine. Ini memungkinkan partial execution tapi jauh lebih kompleks. Mulai dengan buffer approach; tambah streaming parser hanya jika kamu benar-benar butuh sub-<code>message_stop</code> latency.</div></div>
+</div><!-- /s2i -->
+
+<div class="divider"></div>
+
+<!-- 2J -->
+<div class="sub" id="s2j">
+<div class="subtit"><span class="ac">2.10</span> Session &amp; Conversation Management <span class="subid">// agent yang ingat konteks antar sesi</span></div>
+<div class="prose">
+<p>Kebanyakan tutorial agent berhenti di single-session. Production agent perlu melanjutkan percakapan antar request HTTP, antar hari, bahkan antar device. Ini bukan sekadar "simpan history" — ini soal <em>state yang tepat</em>, isolasi antar user, dan efisiensi context yang ketat.</p>
+</div>
+<div class="cc"><h3>Komponen session management</h3><ul>
+<li><strong>Session ID</strong> — identifier unik per conversation thread. Selalu dari server-side (jangan percaya client-generated ID)</li>
+<li><strong>Message store</strong> — persistent storage untuk history pesan. Redis untuk hot sessions, PostgreSQL untuk long-term</li>
+<li><strong>Context window budget</strong> — tidak semua history bisa dimasukkan. Perlu strategi: window sliding, summarization, atau message pruning</li>
+<li><strong>Thread isolation</strong> — user A tidak boleh bisa akses session user B. Authorization di layer session, bukan hanya di layer API</li>
+</ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Session Lifecycle — dari Request ke Persisted State</div>
+<div class="viz-body">
+  <div class="aloop">
+    <div class="ln"><div class="lni" style="background:rgba(124,109,250,.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(124,109,250,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div><div class="lnn">HTTP Request masuk</div><div class="lnd">Header: X-Session-ID atau buat session baru</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(45,212,191,.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(45,212,191,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div><div class="lnn">Auth + Load Session</div><div class="lnd">Verifikasi user owns session_id → load history dari Redis</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(245,158,11,.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(245,158,11,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div><div><div class="lnn">Context Trimming</div><div class="lnd">Fit history ke context budget: summarize atau sliding window</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(124,109,250,.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(124,109,250,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="12" y1="15" x2="12" y2="17"/></svg></div><div><div class="lnn">Agent Run</div><div class="lnd">Jalankan agent dengan history yang sudah di-trim</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(74,222,128,.3)"><div class="lni" style="background:rgba(74,222,128,.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(74,222,128,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div><div><div class="lnn">Persist &amp; Respond</div><div class="lnd">Simpan pesan baru ke store → return response ke client</div></div></div>
+  </div>
+</div>
+</div>
+
+<div class="dblock">
+<div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Session manager sederhana</div></div>
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> redis, json, uuid
+<span class="kw">from</span> datetime <span class="kw">import</span> timedelta
+
+r = redis.<span class="fn">Redis</span>()
+SESSION_TTL = <span class="fn">timedelta</span>(hours=<span class="nm">24</span>)
+MAX_MESSAGES = <span class="nm">40</span>   <span class="cm"># sliding window</span>
+
+<span class="kw">class</span> <span class="fn">SessionManager</span>:
+    <span class="kw">def</span> <span class="fn">get_or_create</span>(<span class="kw">self</span>, session_id: <span class="tp">str</span>, user_id: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+        key = <span class="st">f"session:{session_id}"</span>
+        raw = r.<span class="fn">get</span>(key)
+        <span class="kw">if not</span> raw:
+            session = {<span class="st">"id"</span>: session_id, <span class="st">"user_id"</span>: user_id, <span class="st">"messages"</span>: []}
+        <span class="kw">else</span>:
+            session = json.<span class="fn">loads</span>(raw)
+            <span class="cm"># security: pastikan session milik user ini</span>
+            <span class="kw">if</span> session[<span class="st">"user_id"</span>] != user_id:
+                <span class="kw">raise</span> <span class="fn">PermissionError</span>(<span class="st">"Session tidak dimiliki user ini"</span>)
+        <span class="kw">return</span> session
+
+    <span class="kw">def</span> <span class="fn">append_and_save</span>(<span class="kw">self</span>, session: <span class="tp">dict</span>, role: <span class="tp">str</span>, content: <span class="tp">str</span>):
+        session[<span class="st">"messages"</span>].<span class="fn">append</span>({<span class="st">"role"</span>: role, <span class="st">"content"</span>: content})
+        <span class="cm"># sliding window: buang pesan lama kalau terlalu panjang</span>
+        <span class="kw">if</span> <span class="fn">len</span>(session[<span class="st">"messages"</span>]) > MAX_MESSAGES:
+            <span class="cm"># pertahankan system context di index 0 jika ada</span>
+            session[<span class="st">"messages"</span>] = session[<span class="st">"messages"</span>][-MAX_MESSAGES:]
+        key = <span class="st">f"session:{session['id']}"</span>
+        r.<span class="fn">setex</span>(key, SESSION_TTL, json.<span class="fn">dumps</span>(session))
+
+    <span class="kw">def</span> <span class="fn">get_messages_for_llm</span>(<span class="kw">self</span>, session: <span class="tp">dict</span>) -> <span class="tp">list</span>:
+        <span class="kw">return</span> session[<span class="st">"messages"</span>]  <span class="cm"># sudah di-trim saat append</span></pre></div></div></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>TTL adalah fitur, bukan bug</strong>Session yang kadaluarsa (TTL habis) adalah desain yang baik — user memulai percakapan baru dengan konteks bersih. Jangan buat session yang hidup selamanya tanpa alasan yang jelas.</div></div>
+</div><!-- /s2j -->
+
+</section><!-- /fase2 -->

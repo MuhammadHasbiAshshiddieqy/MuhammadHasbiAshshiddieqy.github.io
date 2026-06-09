@@ -1,0 +1,573 @@
+<section class="cs p5" id="lmfase5">
+<div class="fase-intro" id="lmfi5">
+<div class="sh">
+  <div class="sbadge p5">05</div>
+  <div>
+    <div class="stitle">Fase 5 — Modern LLM</div>
+    <div class="sdesc">Scaling laws yang memprediksi kemampuan model, Mixture of Experts yang membuat model lebih efisien, teknik inference optimization untuk production, hingga multimodal frontier dan panduan praktis memilih LLM yang tepat. Fase ini menjembatani teori dengan dunia nyata 2025.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 9–10</span><span class="mc">Cutting Edge</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#lm5a">Scaling Laws</a>
+  <a class="snavi" href="#lm5b">Mixture of Experts</a>
+  <a class="snavi" href="#lm5c">Inference Optimization</a>
+  <a class="snavi" href="#lm5d">Multimodal &amp; Beyond</a>
+  <a class="snavi" href="#lm5e">Memilih LLM</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 9–10</div>
+    <div class="topic-nav-title">Mulai dari: 5.1 Scaling Laws</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('lmfi4')">← Fase 4</button>
+    <button class="tnbtn primary" onclick="goTo(22)">Mulai Fase 5 →</button>
+  </div>
+</div>
+</div><!-- /lmfi5 -->
+
+<!-- 5A -->
+<div class="sub" id="lm5a">
+<div class="subtit"><span class="ac">5.1</span> Scaling Laws <span class="subid">// prediksi kemampuan dari compute</span></div>
+<div class="prose">
+<p>Scaling laws adalah salah satu penemuan paling mengejutkan dan praktis dalam riset LLM: performa model (diukur sebagai loss) mengikuti power law yang sangat predictable terhadap tiga variabel — jumlah parameter model (N), jumlah token training (D), dan compute yang tersedia (C). Artinya, sebelum melatih model besar yang mahal, kita bisa dengan akurat memprediksi berapa loss yang akan dicapai.</p>
+<p>Paper Chinchilla (Hoffmann et al., 2022) merevolusi pemahaman kita tentang compute-optimal training: untuk budget compute tertentu, kita tidak harus melatih model sebesar mungkin — kita harus menyeimbangkan ukuran model dengan jumlah data. Temuan Chinchilla: model optimal harus dilatih dengan sekitar 20 token per parameter. GPT-3 (175B params) seharusnya dilatih dengan 3.5T token, bukan 300B yang digunakan — model sebesar GPT-3 "underfit" karena kurang data.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Scaling Laws — Loss sebagai Power Law dari Compute</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">
+    <div style="color:var(--text3);margin-bottom:14px;">Loss ∝ C^(-0.05) — setiap 10× compute, loss turun sekitar 12%</div>
+    <div class="cbar-row"><div class="cbar-label">1 petaFLOP</div><div class="cbar-track"><div class="cbar-fill" style="--tw:95%;background:var(--coral);"></div></div><div class="cbar-val">Loss ~4.2</div></div>
+    <div class="cbar-row"><div class="cbar-label">100 petaFLOP</div><div class="cbar-track"><div class="cbar-fill" style="--tw:75%;background:var(--amber);"></div></div><div class="cbar-val">Loss ~3.7</div></div>
+    <div class="cbar-row"><div class="cbar-label">10K petaFLOP</div><div class="cbar-track"><div class="cbar-fill" style="--tw:55%;background:var(--teal);"></div></div><div class="cbar-val">Loss ~3.2</div></div>
+    <div class="cbar-row"><div class="cbar-label">1M petaFLOP</div><div class="cbar-track"><div class="cbar-fill" style="--tw:35%;background:var(--accent);"></div></div><div class="cbar-val">Loss ~2.7</div></div>
+    <div class="cbar-row"><div class="cbar-label">100M petaFLOP</div><div class="cbar-track"><div class="cbar-fill" style="--tw:20%;background:var(--green);"></div></div><div class="cbar-val">Loss ~2.3</div></div>
+    <p style="font-size:11px;color:var(--text3);margin-top:12px;">↑ Hubungan ini sangat smooth dan predictable — inilah yang memungkinkan labs untuk "plan" kemampuan model sebelum melatihnya.</p>
+  </div>
+</div>
+</div>
+
+<div class="prose">
+<h4>Tiga konsep penting dari scaling literature</h4>
+<ul>
+<li><strong>Compute-optimal training (Chinchilla)</strong> — N tokens ≈ 20 × N params adalah sweet spot. LLaMA 7B (LLaMA 2) dilatih dengan 2T token (285× dari Chinchilla-optimal) — justru overtraining, tapi hasilnya model yang lebih baik saat inference dengan biaya yang sama. Ini menunjukkan bahwa "optimal untuk training cost" berbeda dari "optimal untuk inference deployment".</li>
+<li><strong>Emergent abilities</strong> — kemampuan yang tidak ada di model kecil tiba-tiba muncul di model skala tertentu tanpa transisi gradual: few-shot arithmetic, chain-of-thought reasoning, multilingual understanding. Apakah ini benar-benar emergent atau hanya artifact dari metrik evaluasi yang kasar masih diperdebatkan.</li>
+<li><strong>Inference-optimal vs training-optimal</strong> — trade-off nyata: kamu bisa melatih model kecil lebih lama (lebih murah saat deployment) vs model besar lebih singkat (lebih murah saat training). Pilihan bergantung pada volume inference yang diharapkan.</li>
+</ul>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Scaling laws tidak mempredikti semua kemampuan</strong>Scaling laws sangat akurat untuk prediksi loss, tapi kurang akurat untuk kemampuan spesifik. Model dengan loss identik bisa berbeda drastis dalam coding ability, mathematical reasoning, atau instruction following. RLHF dan fine-tuning juga mengubah kemampuan model secara dramatis tanpa mengubah base loss — ini tidak tercakup dalam scaling law klasik.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">scaling_laws.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># Chinchilla scaling law: L(N, D) ≈ E + A/N^alpha + B/D^beta</span>
+<span class="cm"># E = irreducible entropy (~1.69 untuk teks Inggris)</span>
+<span class="cm"># A, B, alpha, beta = konstanta fit dari data empiris</span>
+
+E = <span class="nm">1.69</span>   <span class="cm"># irreducible loss</span>
+A = <span class="nm">406.4</span>
+B = <span class="nm">410.7</span>
+alpha = <span class="nm">0.34</span>
+beta = <span class="nm">0.28</span>
+
+<span class="kw">def</span> <span class="fn">chinchilla_loss</span>(N: <span class="tp">float</span>, D: <span class="tp">float</span>) -> <span class="tp">float</span>:
+    <span class="st">"""Prediksi loss untuk N params dan D tokens."""</span>
+    <span class="kw">return</span> E + A / N**alpha + B / D**beta
+
+<span class="kw">def</span> <span class="fn">optimal_allocation</span>(compute_budget: <span class="tp">float</span>, tokens_per_param: <span class="tp">float</span> = <span class="nm">20</span>):
+    <span class="st">"""Hitung optimal N dan D untuk budget compute C = 6ND (approx)."""</span>
+    <span class="cm"># C = 6 × N × D (rule of thumb: 6 FLOPs per token per parameter)</span>
+    <span class="cm"># Chinchilla: D/N ≈ 20 (train 20 tokens per parameter)</span>
+    N_optimal = <span class="nm">0</span>.<span class="nm">5</span> * (compute_budget / (<span class="nm">6</span> * tokens_per_param)) ** <span class="nm">0.5</span>
+    D_optimal = <span class="nm">20</span> * N_optimal
+    <span class="kw">return</span> N_optimal, D_optimal
+
+<span class="cm"># Contoh: untuk $1M GPU budget (~10^23 FLOPs)</span>
+N, D = <span class="fn">optimal_allocation</span>(<span class="nm">1e23</span>)
+<span class="fn">print</span>(<span class="st">f"Optimal model size: {N/1e9:.1f}B parameters"</span>)
+<span class="fn">print</span>(<span class="st">f"Optimal training tokens: {D/1e9:.0f}B tokens"</span>)
+predicted_loss = <span class="fn">chinchilla_loss</span>(N, D)
+<span class="fn">print</span>(<span class="st">f"Predicted loss: {predicted_loss:.3f}"</span>)
+
+<span class="cm"># Visualisasi loss landscape sebagai heatmap N vs D</span>
+N_range = np.<span class="fn">logspace</span>(<span class="nm">8</span>, <span class="nm">12</span>, <span class="nm">50</span>)  <span class="cm"># 100M to 1T params</span>
+D_range = np.<span class="fn">logspace</span>(<span class="nm">10</span>, <span class="nm">13</span>, <span class="nm">50</span>)  <span class="cm"># 10B to 10T tokens</span>
+N_grid, D_grid = np.<span class="fn">meshgrid</span>(N_range, D_range)
+loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> LLaMA 7B dilatih dengan 2 triliun token, jauh melebihi Chinchilla-optimal (~140B). Mengapa ini masuk akal secara bisnis jika tujuannya adalah deployment? Hitung compute yang dihemat jika kita mengunakan model 7B yang overtrained vs model 30B yang Chinchilla-optimal dengan performa akhir yang sama.</li>
+<li><strong>[Kode]</strong> Implementasikan fungsi <code>chinchilla_loss</code> dan buat plot isocurve: untuk setiap level loss yang sama, berapa kombinasi N dan D yang mencapainya? Tandai posisi GPT-3, Chinchilla, dan LLaMA 2 di plot ini.</li>
+<li><strong>[Eksplorasi]</strong> Baca paper "Emergent Abilities of Large Language Models" (Wei et al., 2022) dan paper tandingan "Are Emergent Abilities of Large Language Models a Mirage?" (Schaeffer et al., 2023). Apa argumen utama masing-masing pihak?</li>
+</ul></div>
+
+</div><!-- /lm5a -->
+
+<div class="divider"></div>
+
+<!-- 5B -->
+<div class="sub" id="lm5b">
+<div class="subtit"><span class="ac">5.2</span> Mixture of Experts <span class="subid">// skala tanpa compute proporsional</span></div>
+<div class="prose">
+<p>Dense model — model Transformer standar — mengaktifkan semua parameter untuk setiap token yang diproses. Mixture of Experts (MoE) menawarkan alternatif yang lebih efisien: alih-alih satu FFN besar yang digunakan untuk semua token, miliki N "expert" FFN yang spesialis, dan hanya aktifkan K expert (biasanya 2) untuk setiap token. Hasilnya: model dengan total parameter sangat besar (parameter counts yang diklaim biasanya mengacu pada total parameter) tapi compute per token jauh lebih rendah.</p>
+<p>Gemini 1.0 MoE, GPT-4 (spekulatif), Mixtral 8×7B, dan Grok adalah contoh nyata. Mixtral 8×7B memiliki total 47B parameter tapi hanya menggunakan ~13B parameter aktif per token — performa setara dengan model 65B dense tapi dengan biaya inference setara model 13B. Ini adalah trade-off yang sangat menarik untuk production deployment.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">mixture_of_experts.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="fn">Expert</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""Satu expert FFN — identik strukturnya, berbeda weightsnya."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model: <span class="tp">int</span>, d_ff: <span class="tp">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.fc1 = nn.<span class="fn">Linear</span>(d_model, d_ff)
+        self.fc2 = nn.<span class="fn">Linear</span>(d_ff, d_model)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> self.<span class="fn">fc2</span>(F.<span class="fn">silu</span>(self.<span class="fn">fc1</span>(x)))  <span class="cm"># SiLU/Swish activation</span>
+
+<span class="kw">class</span> <span class="fn">SparseMoE</span>(nn.<span class="fn">Module</span>):
+    <span class="st">"""Sparse Mixture of Experts layer — pengganti FFN dalam Transformer."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, d_model: <span class="tp">int</span>, d_ff: <span class="tp">int</span>,
+                 num_experts: <span class="tp">int</span> = <span class="nm">8</span>, top_k: <span class="tp">int</span> = <span class="nm">2</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.num_experts = num_experts
+        self.top_k = top_k
+
+        <span class="cm"># Router: memutuskan expert mana yang menangani token ini</span>
+        self.router = nn.<span class="fn">Linear</span>(d_model, num_experts, bias=<span class="kw">False</span>)
+
+        <span class="cm"># Pool of experts</span>
+        self.experts = nn.<span class="fn">ModuleList</span>([
+            <span class="fn">Expert</span>(d_model, d_ff) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_experts)
+        ])
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x: torch.Tensor) -> torch.Tensor:
+        <span class="cm"># x: [batch, seq_len, d_model]</span>
+        B, T, D = x.<span class="fn">shape</span>
+        x_flat = x.<span class="fn">view</span>(-<span class="nm">1</span>, D)  <span class="cm"># [B*T, d_model]</span>
+
+        <span class="cm"># Router logits → select top-k experts per token</span>
+        router_logits = self.<span class="fn">router</span>(x_flat)           <span class="cm"># [B*T, num_experts]</span>
+        router_weights = F.<span class="fn">softmax</span>(router_logits, dim=-<span class="nm">1</span>)
+        top_k_weights, top_k_indices = torch.<span class="fn">topk</span>(router_weights, self.top_k, dim=-<span class="nm">1</span>)
+        top_k_weights = top_k_weights / top_k_weights.<span class="fn">sum</span>(dim=-<span class="nm">1</span>, keepdim=<span class="kw">True</span>)  <span class="cm"># normalize</span>
+
+        <span class="cm"># Proses setiap token dengan top-k experts dan weighted sum hasilnya</span>
+        output = torch.<span class="fn">zeros_like</span>(x_flat)
+        <span class="kw">for</span> k <span class="kw">in</span> <span class="fn">range</span>(self.top_k):
+            expert_idx = top_k_indices[:, k]   <span class="cm"># [B*T] — expert index per token</span>
+            weight = top_k_weights[:, k:<span class="nm">k</span>+<span class="nm">1</span>]  <span class="cm"># [B*T, 1]</span>
+            <span class="kw">for</span> i, expert <span class="kw">in</span> <span class="fn">enumerate</span>(self.experts):
+                mask = (expert_idx == i)       <span class="cm"># token yang routing ke expert i</span>
+                <span class="kw">if</span> mask.<span class="fn">any</span>():
+                    output[mask] += weight[mask] * <span class="fn">expert</span>(x_flat[mask])
+
+        <span class="cm"># Auxiliary load balancing loss — mencegah semua token ke expert sama</span>
+        <span class="cm"># router_probs: rata-rata fraksi token per expert → harusnya uniform = 1/num_experts</span>
+        router_probs = router_weights.<span class="fn">mean</span>(dim=<span class="nm">0</span>)  <span class="cm"># [num_experts]</span>
+        load_balance_loss = self.num_experts * (router_probs ** <span class="nm">2</span>).<span class="fn">sum</span>()
+
+        <span class="kw">return</span> output.<span class="fn">view</span>(B, T, D), load_balance_loss</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Load balancing adalah critical untuk MoE</strong>Tanpa load balancing loss, router akan mengkolaps ke beberapa expert populer (expert collapse) — model effectively menggunakan 2 expert dari 8, kehilangan keunggulan MoE. Auxiliary loss memaksa distribusi token yang lebih merata. Di production, monitoring per-expert utilization adalah essential untuk mendeteksi masalah ini.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Dense vs Sparse MoE — Parameter vs Active Compute</div>
+<div class="viz-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:12px;text-transform:uppercase;">Total Parameter Count</div>
+      <div class="cbar-row"><div class="cbar-label">Dense 7B</div><div class="cbar-track"><div class="cbar-fill" style="--tw:14%;background:var(--amber);"></div></div><div class="cbar-val">7B</div></div>
+      <div class="cbar-row"><div class="cbar-label">Mixtral 8×7B</div><div class="cbar-track"><div class="cbar-fill" style="--tw:94%;background:var(--accent);"></div></div><div class="cbar-val">47B</div></div>
+      <div class="cbar-row"><div class="cbar-label">Dense 65B</div><div class="cbar-track"><div class="cbar-fill" style="--tw:100%;background:var(--coral);"></div></div><div class="cbar-val">65B</div></div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:12px;text-transform:uppercase;">Active Compute per Token</div>
+      <div class="cbar-row"><div class="cbar-label">Dense 7B</div><div class="cbar-track"><div class="cbar-fill" style="--tw:54%;background:var(--amber);"></div></div><div class="cbar-val">7B active</div></div>
+      <div class="cbar-row"><div class="cbar-label">Mixtral 8×7B</div><div class="cbar-track"><div class="cbar-fill" style="--tw:20%;background:var(--green);"></div></div><div class="cbar-val">~13B active</div></div>
+      <div class="cbar-row"><div class="cbar-label">Dense 65B</div><div class="cbar-track"><div class="cbar-fill" style="--tw:100%;background:var(--coral);"></div></div><div class="cbar-val">65B active</div></div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:16px;font-family:'IBM Plex Mono',monospace;">↑ Mixtral punya performa mendekati Dense 65B tapi inference cost mendekati Dense 13B. Trade-off utama: memory untuk load semua expert harus tersedia.</p>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa auxiliary load balancing loss diperlukan? Tanpanya, apa yang akan terjadi selama training? Berikan intuisi matematis mengapa router cenderung collapse ke expert populer tanpa regularisasi.</li>
+<li><strong>[Kode]</strong> Implementasikan <code>SparseMoE</code> di atas dan integrasikan ke dalam TransformerEncoderLayer dari Fase 3 (ganti FFN dengan MoE). Verifikasi bahwa setiap token menggunakan tepat 2 expert. Cek distribusi routing setelah training singkat.</li>
+<li><strong>[Eksplorasi]</strong> Load Mixtral 8×7B menggunakan Ollama atau HuggingFace dan benchmark inference throughput vs Llama 2 7B dan Llama 2 13B. Apakah claim "inference seperti 13B" sesuai dengan pengukuranmu?</li>
+</ul></div>
+
+</div><!-- /lm5b -->
+
+<div class="divider"></div>
+
+<!-- 5C -->
+<div class="sub" id="lm5c">
+<div class="subtit"><span class="ac">5.3</span> Inference Optimization <span class="subid">// dari riset ke production</span></div>
+<div class="prose">
+<p>LLM inference adalah bottleneck production yang unik: tidak seperti model ML lain yang compute-bound, LLM inference seringkali <em>memory bandwidth-bound</em> — bottleneck bukan komputasi FLOPs, melainkan seberapa cepat kita bisa memindahkan weight dari memory ke compute units. Teknik inference optimization modern berfokus pada mengurangi data movement, meningkatkan hardware utilization, dan mengurangi compute aktual tanpa mengorbankan kualitas output.</p>
+<p>KV Cache adalah optimasi paling fundamental: self-attention membutuhkan key dan value dari semua token sebelumnya. Tanpa caching, setiap token baru perlu recompute K dan V untuk semua token sebelumnya — O(n²) per step. Dengan KV cache, kita simpan K dan V yang sudah dihitung dan hanya hitung untuk token baru — O(n) per step. Di model besar dengan context window panjang, ukuran KV cache bisa melebihi ukuran model weight sendiri.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">inference_optimization.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+<span class="cm"># === 1. Quantization (INT8) — 2× memory saving ===</span>
+bnb_config_int8 = <span class="fn">BitsAndBytesConfig</span>(
+    load_in_8bit=<span class="kw">True</span>,
+    llm_int8_threshold=<span class="nm">6.0</span>,   <span class="cm"># outlier threshold — turunkan jika ada degradasi</span>
+)
+
+<span class="cm"># === 2. INT4 Quantization (QLoRA/GPTQ style) — 4× memory saving ===</span>
+bnb_config_int4 = <span class="fn">BitsAndBytesConfig</span>(
+    load_in_4bit=<span class="kw">True</span>,
+    bnb_4bit_quant_type=<span class="st">"nf4"</span>,      <span class="cm"># NF4: normal float 4 — better than standard int4</span>
+    bnb_4bit_use_double_quant=<span class="kw">True</span>,  <span class="cm"># quantize quantization constants juga</span>
+    bnb_4bit_compute_dtype=torch.bfloat16,
+)
+
+model = <span class="fn">AutoModelForCausalLM</span>.<span class="fn">from_pretrained</span>(
+    <span class="st">"meta-llama/Llama-3.1-8B-Instruct"</span>,
+    quantization_config=bnb_config_int4,
+    device_map=<span class="st">"auto"</span>,
+)
+<span class="cm"># Memory: ~8GB float16 → ~4GB int8 → ~2.5GB int4</span>
+
+<span class="cm"># === 3. KV Cache Memory Estimation ===</span>
+<span class="kw">def</span> <span class="fn">kv_cache_size_bytes</span>(
+    num_layers: <span class="tp">int</span>,
+    num_heads: <span class="tp">int</span>,
+    head_dim: <span class="tp">int</span>,
+    max_seq_len: <span class="tp">int</span>,
+    batch_size: <span class="tp">int</span>,
+    dtype_bytes: <span class="tp">int</span> = <span class="nm">2</span>  <span class="cm"># float16 = 2 bytes</span>
+) -> <span class="tp">float</span>:
+    <span class="st">"""Hitung ukuran KV cache dalam GB."""</span>
+    <span class="cm"># 2 × (K + V) × layers × heads × head_dim × seq × batch</span>
+    total = <span class="nm">2</span> * num_layers * num_heads * head_dim * max_seq_len * batch_size * dtype_bytes
+    <span class="kw">return</span> total / (<span class="nm">1024</span>**<span class="nm">3</span>)  <span class="cm"># convert ke GB</span>
+
+<span class="cm"># LLaMA 3.1 8B: 32 layers, 32 heads, 128 head_dim</span>
+kv_gb = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</span>, <span class="nm">32</span>, <span class="nm">128</span>, max_seq_len=<span class="nm">8192</span>, batch_size=<span class="nm">1</span>)
+<span class="fn">print</span>(<span class="st">f"KV cache (8K context, bs=1): {kv_gb:.2f} GB"</span>)  <span class="cm"># ~4 GB</span>
+kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</span>, <span class="nm">32</span>, <span class="nm">128</span>, max_seq_len=<span class="nm">131072</span>, batch_size=<span class="nm">1</span>)
+<span class="fn">print</span>(<span class="st">f"KV cache (128K context, bs=1): {kv_gb_128k:.2f} GB"</span>)  <span class="cm"># ~64 GB!</span>
+
+<span class="cm"># === 4. Speculative Decoding — 2-4× speedup tanpa quality loss ===</span>
+<span class="cm"># Idea: gunakan model kecil (draft) untuk generate N token, verifikasi dengan model besar</span>
+<span class="cm"># Draft tokens yang diapprove diterima, yang ditolak di-regenerate dengan model besar</span>
+<span class="cm"># Speedup karena: model besar bisa verifikasi N draft tokens dalam satu forward pass</span>
+
+<span class="kw">def</span> <span class="fn">speculative_decode_step</span>(draft_model, target_model, tokenizer, prompt, num_draft=<span class="nm">5</span>):
+    inputs = <span class="fn">tokenizer</span>(prompt, return_tensors=<span class="st">"pt"</span>)
+    draft_output = draft_model.<span class="fn">generate</span>(**inputs, max_new_tokens=num_draft, do_sample=<span class="kw">False</span>)
+    draft_tokens = draft_output[<span class="nm">0</span>][inputs[<span class="st">"input_ids"</span>].<span class="fn">shape</span>[<span class="nm">1</span>]:]
+
+    <span class="cm"># Verifikasi semua draft tokens dalam satu forward pass model besar</span>
+    full_input = torch.<span class="fn">cat</span>([inputs[<span class="st">"input_ids"</span>], draft_tokens.<span class="fn">unsqueeze</span>(<span class="nm">0</span>)], dim=-<span class="nm">1</span>)
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        target_logits = <span class="fn">target_model</span>(full_input).logits
+    <span class="kw">return</span> draft_tokens, target_logits</pre></div>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>Quantization</h4><p>INT8: ~2× memory reduction, &lt;1% quality loss. INT4: ~4× reduction, 1–3% loss. NF4 (bitsandbytes) dan GPTQ adalah praktis untuk consumer GPU. AWQ (Activation-aware Weight Quantization) menghasilkan kualitas lebih baik dari GPTQ dengan inference lebih cepat.</p></div>
+<div class="gc"><h4>KV Cache</h4><p>Built-in di semua major framework. Memory-intensive untuk context panjang. Optimasi: Grouped Query Attention (GQA, dipakai LLaMA 3) mengurangi jumlah KV heads tanpa much quality loss. Multi-Query Attention (MQA) lebih ekstrem. PagedAttention (vLLM) handles dynamic cache allocation.</p></div>
+<div class="gc"><h4>Speculative Decoding</h4><p>2–4× speedup menggunakan draft model kecil + verification model besar. Tidak ada quality loss (mathematically equivalent). Butuh draft model yang distribution-nya mirip target model. Google Medusa dan EAGLE adalah variasi yang lebih efisien.</p></div>
+<div class="gc"><h4>Continuous Batching</h4><p>Serve multiple requests in-flight tanpa padding overhead. vLLM dan TensorRT-LLM menggunakan ini untuk production throughput. 10–50× higher throughput vs naive batching. Essential untuk API deployment yang cost-effective.</p></div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan mengapa LLM inference seringkali memory bandwidth-bound bukan compute-bound. Berapa FLOPs yang diperlukan untuk satu forward pass vs berapa GB data yang harus dipindahkan? Apa implikasinya untuk hardware selection?</li>
+<li><strong>[Kode]</strong> Benchmark inference throughput (token/detik) untuk LLama 3.1 8B dalam tiga konfigurasi: float16, INT8, INT4. Gunakan GPU yang tersedia. Buat tabel perbandingan: throughput, memory usage, dan kualitas (berikan contoh output).</li>
+<li><strong>[Eksplorasi]</strong> Deploy model menggunakan vLLM: <code>python -m vllm.entrypoints.openai.api_server --model meta-llama/Llama-3.1-8B-Instruct</code>. Uji dengan 50 concurrent requests menggunakan asyncio. Bandingkan throughput dengan naive sequential inference.</li>
+</ul></div>
+
+</div><!-- /lm5c -->
+
+<div class="divider"></div>
+
+<!-- 5D -->
+<div class="sub" id="lm5d">
+<div class="subtit"><span class="ac">5.4</span> Multimodal &amp; Beyond <span class="subid">// melampaui teks</span></div>
+<div class="prose">
+<p>LLM modern tidak lagi terbatas pada teks. Kemampuan memahami dan menghasilkan berbagai modalitas — gambar, audio, video, kode, data tabular — telah menjadi frontier aktif dan salah satu differentiator terbesar antar model 2024–2025. Fondasi multimodal bukan hanya menambahkan "input gambar" ke LLM, melainkan membangun shared representasi space di mana konsep yang sama bisa diekspresikan dalam modalitas berbeda.</p>
+<p>CLIP (Contrastive Language-Image Pre-training, OpenAI 2021) adalah salah satu contribution terpenting: dengan melatih encoder gambar dan encoder teks secara contrastive pada pasangan gambar-caption dari internet, CLIP menghasilkan embedding space di mana gambar dan deskripsinya berada berdekatan. CLIP menjadi backbone visual encoder untuk hampir semua vision-language model yang mengikutinya.</p>
+</div>
+
+<div class="prose">
+<h4>Arsitektur vision-language model</h4>
+<ul>
+<li><strong>CLIP-style (contrastive)</strong> — encoder terpisah untuk gambar dan teks, dilatih dengan contrastive loss. Hasilkan shared embedding space. Sangat baik untuk retrieval dan zero-shot classification. Tidak menghasilkan teks secara langsung.</li>
+<li><strong>Generative (LLaVA, GPT-4V style)</strong> — visual encoder (biasanya CLIP ViT) + projection layer + LLM decoder. Gambar dikonversi menjadi "visual tokens" yang ditambahkan ke konteks LLM. Model bisa menjawab pertanyaan tentang gambar dan menjelaskan konten visual dalam teks.</li>
+<li><strong>Native multimodal (Gemini, Claude 3 style)</strong> — ditraining dari awal dengan data multimodal, bukan gabungan model. Lebih seamless dalam memahami dan menghasilkan konten lintas modalitas.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">vision_language.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">from</span> transformers <span class="kw">import</span> CLIPProcessor, CLIPModel
+<span class="kw">from</span> transformers <span class="kw">import</span> LlavaNextProcessor, LlavaNextForConditionalGeneration
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+<span class="kw">import</span> requests
+
+<span class="cm"># === CLIP: Zero-shot image classification ===</span>
+clip_model = <span class="fn">CLIPModel</span>.<span class="fn">from_pretrained</span>(<span class="st">"openai/clip-vit-base-patch32"</span>)
+clip_processor = <span class="fn">CLIPProcessor</span>.<span class="fn">from_pretrained</span>(<span class="st">"openai/clip-vit-base-patch32"</span>)
+
+image = Image.<span class="fn">open</span>(<span class="fn">requests</span>.<span class="fn">get</span>(<span class="st">"https://example.com/cat.jpg"</span>, stream=<span class="kw">True</span>).<span class="fn">raw</span>)
+labels = [<span class="st">"a photo of a cat"</span>, <span class="st">"a photo of a dog"</span>, <span class="st">"a photo of a car"</span>]
+
+inputs = <span class="fn">clip_processor</span>(text=labels, images=image, return_tensors=<span class="st">"pt"</span>, padding=<span class="kw">True</span>)
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    outputs = <span class="fn">clip_model</span>(**inputs)
+    logits_per_image = outputs.logits_per_image  <span class="cm"># [1, num_labels]</span>
+    probs = logits_per_image.<span class="fn">softmax</span>(dim=<span class="nm">1</span>)
+
+<span class="kw">for</span> label, prob <span class="kw">in</span> <span class="fn">zip</span>(labels, probs[<span class="nm">0</span>]):
+    <span class="fn">print</span>(<span class="st">f"{label}: {prob:.3f}"</span>)
+<span class="cm"># cat: 0.94, dog: 0.04, car: 0.02 — tanpa training khusus!</span>
+
+<span class="cm"># === LLaVA: Visual Question Answering ===</span>
+model = <span class="fn">LlavaNextForConditionalGeneration</span>.<span class="fn">from_pretrained</span>(
+    <span class="st">"llava-hf/llava-v1.6-mistral-7b-hf"</span>,
+    torch_dtype=torch.float16,
+    device_map=<span class="st">"auto"</span>
+)
+processor = <span class="fn">LlavaNextProcessor</span>.<span class="fn">from_pretrained</span>(<span class="st">"llava-hf/llava-v1.6-mistral-7b-hf"</span>)
+
+conversation = [
+    {
+        <span class="st">"role"</span>: <span class="st">"user"</span>,
+        <span class="st">"content"</span>: [
+            {<span class="st">"type"</span>: <span class="st">"image"</span>},
+            {<span class="st">"type"</span>: <span class="st">"text"</span>, <span class="st">"text"</span>: <span class="st">"What do you see in this image? Describe in detail."</span>}
+        ],
+    }
+]
+
+inputs = <span class="fn">processor</span>.<span class="fn">apply_chat_template</span>(conversation, add_generation_prompt=<span class="kw">True</span>)
+model_inputs = <span class="fn">processor</span>(text=inputs, images=image, return_tensors=<span class="st">"pt"</span>).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+
+output = model.<span class="fn">generate</span>(**model_inputs, max_new_tokens=<span class="nm">500</span>)
+<span class="fn">print</span>(<span class="fn">processor</span>.<span class="fn">decode</span>(output[<span class="nm">0</span>], skip_special_tokens=<span class="kw">True</span>))</pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Frontier Multimodal — Landscape 2025</div>
+<div class="viz-body">
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot">🖼️</div>
+      <div class="tl-body">
+        <div class="tl-week">Vision → Text</div>
+        <div class="tl-title">GPT-4V, Claude 3, Gemini</div>
+        <div class="tl-desc">Analisis gambar, dokumen, diagram. State of the art 2023–2024. API tersedia secara luas.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🎵</div>
+      <div class="tl-body">
+        <div class="tl-week">Audio → Text</div>
+        <div class="tl-title">Whisper, Gemini 1.5, Qwen-Audio</div>
+        <div class="tl-desc">Speech recognition, audio understanding, music description. Whisper open-source menjadi standard.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🎬</div>
+      <div class="tl-body">
+        <div class="tl-week">Video Understanding</div>
+        <div class="tl-title">Gemini 1.5, GPT-4o, LLaVA-NeXT</div>
+        <div class="tl-desc">Memahami konten video panjang. Challenge: spatial-temporal reasoning, efficient processing.</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🌐</div>
+      <div class="tl-body">
+        <div class="tl-week">Native Multimodal</div>
+        <div class="tl-title">Gemini 2.0, GPT-4o (omni), Claude 3.7</div>
+        <div class="tl-desc">Input dan output lintas modalitas tanpa seam. Real-time audio conversation. Frontier aktif 2025.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Multimodal untuk software engineer</strong>Paling praktis saat ini: document understanding (PDF, invoice, diagram) dan code screenshot analysis. Claude 3 / GPT-4V bisa membaca screenshot UI, mengekstrak tabel dari PDF, mendeskripsikan arsitektur diagram. Ini use case yang langsung produktif tanpa perlu training custom.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan trade-off antara "plug-in visual encoder ke LLM" (LLaVA approach) vs "train multimodal dari scratch" (Gemini approach). Untuk startup dengan sumber daya terbatas, mana yang lebih practical dan mengapa?</li>
+<li><strong>[Kode]</strong> Gunakan CLIP untuk semantic image search: embed 100 gambar dan sebuah query teks, temukan gambar yang paling relevan. Bandingkan dengan text-based search menggunakan alt-text atau filename.</li>
+<li><strong>[Eksplorasi]</strong> Uji GPT-4o atau Claude pada task multimodal yang menantang: berikan screenshot kode dengan bug dan minta model menjelaskan bug tersebut. Bandingkan dengan hanya memberikan teks kode tanpa screenshot. Apakah visual context membantu?</li>
+</ul></div>
+
+</div><!-- /lm5d -->
+
+<div class="divider"></div>
+
+<!-- 5E -->
+<div class="sub" id="lm5e">
+<div class="subtit"><span class="ac">5.5</span> Memilih &amp; Mengevaluasi LLM <span class="subid">// panduan praktis 2026</span></div>
+<div class="prose">
+<p>Dengan ratusan LLM tersedia — open source maupun proprietary — memilih model yang tepat untuk use case spesifik bisa terasa overwhelming. Benchmark publik membantu, tapi sering tidak merepresentasikan performa pada task spesifik kamu. Prinsip utama: <strong>benchmark publik adalah starting point, bukan endpoint</strong>. Selalu evaluasi pada data dan task yang actual kamu gunakan sebelum commit ke production.</p>
+<p>Lanskap LLM berubah sangat cepat — model yang state-of-the-art enam bulan lalu sering sudah dilampaui. Di Juni 2026, lini terkuat termasuk Claude Sonnet 4 dan Opus 4 (Anthropic), GPT-4o dan o-series (OpenAI), Gemini 2.5 series (Google), dan beberapa strong open-source models (LLaMA 3.3+, Qwen 3, Mistral Large). Namun patokan yang lebih abadi adalah dimensi evaluasi dan kriteria pemilihan — bukan nama model yang spesifik.</p>
+</div>
+
+<div class="prose">
+<h4>Dimensi evaluasi yang komprehensif</h4>
+<ul>
+<li><strong>Task performance</strong> — akurasi pada task spesifik kamu (bukan benchmark umum). Buat eval set dari data production nyata, minimal 100–500 contoh.</li>
+<li><strong>Latency &amp; throughput</strong> — P50, P95, P99 latency. Time-to-first-token (TTFT) untuk streaming. Throughput saat concurrent load. Ini sangat berbeda antar provider bahkan untuk model yang sama.</li>
+<li><strong>Cost per token</strong> — input vs output pricing. Untuk task dengan rasio output/input yang berbeda, model yang "murah" secara headline bisa lebih mahal secara actual workload.</li>
+<li><strong>Context window</strong> — seberapa panjang konteks yang bisa diproses. Penting untuk document processing, code generation, dan long-form analysis.</li>
+<li><strong>Reliability &amp; consistency</strong> — seberapa konsisten output untuk input yang sama? Penting untuk production systems yang butuh determinism.</li>
+<li><strong>Safety &amp; refusal behavior</strong> — seberapa sering model menolak request yang legitimate? Terlalu restrictive bisa jadi masalah sebesar terlalu permissive.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">llm_evaluation.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> asyncio
+<span class="kw">import</span> time
+<span class="kw">from</span> anthropic <span class="kw">import</span> Anthropic
+<span class="kw">from</span> openai <span class="kw">import</span> AsyncOpenAI
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> statistics <span class="kw">import</span> mean, stdev, quantiles
+
+<span class="nd">@dataclass</span>
+<span class="kw">class</span> <span class="fn">EvalResult</span>:
+    model: <span class="tp">str</span>
+    task: <span class="tp">str</span>
+    accuracy: <span class="tp">float</span>
+    avg_latency_ms: <span class="tp">float</span>
+    p95_latency_ms: <span class="tp">float</span>
+    cost_per_1k: <span class="tp">float</span>
+    avg_output_tokens: <span class="tp">float</span>
+
+<span class="kw">async def</span> <span class="fn">evaluate_model</span>(model_id: <span class="tp">str</span>, test_cases: <span class="tp">list</span>[<span class="tp">dict</span>]) -> <span class="fn">EvalResult</span>:
+    <span class="st">"""Evaluasi model pada test cases dengan metrik latency, cost, accuracy."""</span>
+    client = <span class="fn">AsyncOpenAI</span>()  <span class="cm"># atau Anthropic() — abstraksi client</span>
+    latencies = []
+    costs = []
+    correct = <span class="nm">0</span>
+
+    <span class="kw">for</span> tc <span class="kw">in</span> test_cases:
+        start = time.<span class="fn">perf_counter</span>()
+        response = <span class="kw">await</span> client.chat.completions.<span class="fn">create</span>(
+            model=model_id,
+            messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tc[<span class="st">"input"</span>]}],
+            max_tokens=<span class="nm">500</span>,
+            temperature=<span class="nm">0</span>,  <span class="cm"># deterministic untuk eval</span>
+        )
+        latency = (time.<span class="fn">perf_counter</span>() - start) * <span class="nm">1000</span>
+        latencies.<span class="fn">append</span>(latency)
+
+        output = response.choices[<span class="nm">0</span>].message.content
+        <span class="kw">if</span> tc[<span class="st">"checker"</span>](output):  <span class="cm"># task-specific checker function</span>
+            correct += <span class="nm">1</span>
+
+        <span class="cm"># Cost calculation (example: GPT-4o pricing)</span>
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
+        cost = (input_tokens * <span class="nm">0.005</span> + output_tokens * <span class="nm">0.015</span>) / <span class="nm">1000</span>
+        costs.<span class="fn">append</span>(cost)
+
+    p95 = <span class="fn">quantiles</span>(latencies, n=<span class="nm">20</span>)[<span class="nm">18</span>]  <span class="cm"># 95th percentile</span>
+    <span class="kw">return</span> <span class="fn">EvalResult</span>(
+        model=model_id,
+        task=<span class="st">"your_task"</span>,
+        accuracy=correct / <span class="fn">len</span>(test_cases),
+        avg_latency_ms=<span class="fn">mean</span>(latencies),
+        p95_latency_ms=p95,
+        cost_per_1k=<span class="fn">mean</span>(costs) * <span class="nm">1000</span>,
+        avg_output_tokens=<span class="fn">mean</span>([tc.usage.completion_tokens <span class="kw">for</span> tc <span class="kw">in</span> test_cases])
+    )
+
+<span class="cm"># Run evaluasi paralel untuk beberapa model</span>
+<span class="kw">async def</span> <span class="fn">compare_models</span>():
+    models = [<span class="st">"gpt-4o-mini"</span>, <span class="st">"gpt-4o"</span>, <span class="st">"claude-sonnet-4-6"</span>]
+    results = <span class="kw">await</span> asyncio.<span class="fn">gather</span>(*[
+        <span class="fn">evaluate_model</span>(m, test_cases) <span class="kw">for</span> m <span class="kw">in</span> models
+    ])
+    <span class="cm"># Sort by accuracy × (1/cost) untuk efficiency frontier</span>
+    <span class="kw">return</span> <span class="fn">sorted</span>(results, key=<span class="kw">lambda</span> r: r.accuracy / r.cost_per_1k, reverse=<span class="kw">True</span>)</pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Landscape Open vs Closed LLM — Framework Keputusan</div>
+<div class="viz-body">
+  <div style="overflow-x:auto">
+  <table class="rt">
+  <thead><tr><th>Kriteria</th><th>Closed API (Claude, GPT-4o)</th><th>Open Source (LLaMA, Qwen)</th></tr></thead>
+  <tbody>
+  <tr><td>Performa SOTA</td><td>Terdepan — model terbaru selalu closed</td><td>Seringkali 3–12 bulan di belakang</td></tr>
+  <tr><td>Cost at scale</td><td>Mahal untuk volume tinggi</td><td>Murah setelah sunk cost infra</td></tr>
+  <tr><td>Data privacy</td><td>Data keluar ke provider</td><td>Bisa self-host, data tetap lokal</td></tr>
+  <tr><td>Latency control</td><td>Tergantung provider</td><td>Full control atas hardware</td></tr>
+  <tr><td>Customization</td><td>Terbatas (fine-tuning melalui API)</td><td>Full fine-tuning, RLHF, ablation</td></tr>
+  <tr><td>Reliability</td><td>SLA dari provider (99.9%)</td><td>Tergantung infrastruktur sendiri</td></tr>
+  </tbody>
+  </table>
+  </div>
+</div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Decision framework untuk production</strong>Mulai dengan closed API (prototype cepat, tidak perlu infra). Pindah ke open source jika: (1) volume &gt;1M request/hari sehingga cost jadi signifikan, (2) ada regulatory requirement untuk data privacy, (3) kamu butuh customization mendalam. Hybrid juga valid: gunakan closed API untuk complex tasks dan open-source untuk simple tasks dalam satu system.</div>
+</div>
+
+<div class="cc"><h3>Benchmark landscape 2026 yang perlu dipantau</h3><ul>
+<li><strong>MMLU / MMLU-Pro</strong> — knowledge breadth. Berguna sebagai sanity check tapi sudah crowded, banyak model dioptimasi untuk ini.</li>
+<li><strong>HumanEval / SWE-bench</strong> — coding ability. SWE-bench khususnya realistic: fix GitHub issues nyata. Lebih dipercaya untuk engineering use cases.</li>
+<li><strong>MATH / AIME</strong> — mathematical reasoning. Kualitas tinggi, sulit dioverfit. Proxy bagus untuk reasoning ability.</li>
+<li><strong>GPQA (Graduate-Level)</strong> — expert-level knowledge. Sulit bagi manusia non-expert sekalipun. Lebih tahan terhadap contamination.</li>
+<li><strong>LMSys Chatbot Arena</strong> — human preference ranking melalui blind A/B testing. Paling correlated dengan real-world user satisfaction. Satu-satunya benchmark yang sulit di-game.</li>
+<li><strong>Internal eval set kamu</strong> — paling penting. 100–500 contoh dari production data nyata, dengan checker yang tepat untuk task kamu.</li>
+</ul></div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan Akhir Fase 5</h3><ul>
+<li><strong>[Konseptual]</strong> Sebuah startup ingin membangun fitur "summarize customer support tickets" untuk produk mereka. Buat decision tree: kapan mereka harus mulai dengan closed API, kapan berpindah ke open source, dan apa trigger points-nya? Sertakan cost model sederhana.</li>
+<li><strong>[Kode]</strong> Implementasikan evaluation harness <code>compare_models</code> di atas untuk membandingkan setidaknya dua model pada task yang kamu pilih. Buat laporan singkat dengan tradeoff accuracy, latency, dan cost.</li>
+<li><strong>[Eksplorasi]</strong> Pilih satu benchmark dari daftar di atas (rekomendasi: SWE-bench Lite). Jalankan 3 model berbeda (satu open, dua closed) dan bandingkan hasilnya. Apakah ranking di SWE-bench sesuai dengan pengalaman menggunakan model-model tersebut untuk coding tasks sehari-hari?</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Semua 27 topik selesai · Kurikulum lengkap</div>
+    <div class="topic-nav-title">Language Model Fundamentals — Selamat telah menyelesaikan semua fase!</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(25)">← 5.4 Multimodal</button>
+    <button class="tnbtn primary" onclick="goToPage('home')">Kembali ke Beranda</button>
+  </div>
+</div>
+
+</div><!-- /lm5e -->
+
+</section><!-- /lmfase5 -->
