@@ -1,0 +1,499 @@
+<section class="cs p5" id="fase5">
+<div class="fase-intro" id="fi5">
+<div class="sh">
+  <div class="sbadge">05</div>
+  <div>
+    <div class="stitle">Fase 5 — Build Production-Grade Agent</div>
+    <div class="sdesc">Saatnya menerapkan semua yang sudah dipelajari. Bedah arsitektur OpenClaw dan Claude Code, implementasi computer use, coding agent dari scratch, dan pilih framework yang tepat untuk production.</div>
+    <div class="smeta"><span class="mc">Minggu 11–16</span><span class="mc">Full system design</span><span class="mc">Prerequisite: Semua fase sebelumnya</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#s5a">Bedah OpenClaw</a>
+  <a class="snavi" href="#s5b">Computer Use</a>
+  <a class="snavi" href="#s5c">Coding Agent</a>
+  <a class="snavi" href="#s5d">Framework 2026</a>
+  <a class="snavi" href="#s5e">Skills Checklist</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">6 topik · Minggu 11–16</div>
+      <div class="topic-nav-title">Mulai dari: 5.1 Bedah Arsitektur OpenClaw</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('fi4')">← Fase 4</button>
+      <button class="tnbtn primary" onclick="goTo(38)">Mulai Fase 5 →</button>
+    </div>
+  </div>
+</div><!-- /fi5 -->
+
+<!-- 5A -->
+<div class="sub" id="s5a">
+<div class="subtit"><span class="ac">5.1</span> Bedah Arsitektur OpenClaw / Claude Code <span class="subid">// belajar dari yang terbaik</span></div>
+<div class="prose">
+<p>OpenClaw dan Claude Code adalah contoh production coding agent yang sophisticated. Mereka bukan sekedar "LLM + tools" — ada banyak engineering decisions matang yang membuat mereka reliable, aman, dan powerful di kondisi nyata.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Sandboxed Execution Environment</h4><p>Setiap shell command dieksekusi dalam environment terisolasi — container (Docker), subprocess dengan limited permissions (seccomp, Linux namespaces), atau VM. Agent tidak bisa merusak sistem host. Root cause: LLM bisa generate command berbahaya — sandbox adalah last line of defense.</p></div>
+<div class="gc"><h4><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Intelligent File Context</h4><p>Agent tidak baca semua file sekaligus. Dimulai dengan structure overview (find, ls, tree), selective read berdasarkan relevance. File besar di-truncate dengan metadata (total lines, encoding). Kunci: agent tahu apa yang ada tanpa overwhelm context window.</p></div>
+<div class="gc"><h4><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Diff-Based Editing (str_replace)</h4><p>Daripada rewrite file penuh, agent membuat minimal diffs via search-and-replace. Lebih efisien dari sisi token, mengurangi risiko unintended changes, dan memudahkan review. str_replace gagal jika string tidak ditemukan exact — ini intentional sebagai safety check.</p></div>
+<div class="gc"><h4><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg> Git Integration</h4><p>Agent bisa membuat commits, branches, dan stashes. Ini memberikan natural checkpoint dan rollback capability. Jika agent menyebabkan masalah, git reset mengembalikan state. Juga memungkinkan feature branch per task.</p></div>
+<div class="gc"><h4><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Test Runner Loop</h4><p>Setelah membuat perubahan, agent otomatis run tests dan iterate berdasarkan hasil. Loop: code change → run tests → analyze failures → fix → repeat. Ini self-verification yang sangat powerful — agent tidak berhenti sampai tests hijau.</p></div>
+<div class="gc"><h4><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Minimal Footprint Permission Model</h4><p>User secara eksplisit approve scope: direktori mana yang bisa diakses, command apa yang bisa dijalankan, apakah bisa akses internet, dll. Agent selalu request minimum permission yang dibutuhkan, bukan maximum yang mungkin diperlukan.</p></div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">coding_agent_core_tools.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> subprocess, os, pathlib
+
+<span class="kw">class</span> <span class="fn">BashTool</span>:
+    <span class="st">"""Safe bash execution dengan workspace scoping."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, workspace: <span class="tp">str</span>, allowed_cmds: <span class="tp">list</span>[<span class="tp">str</span>] = <span class="kw">None</span>):
+        self.workspace = os.path.<span class="fn">realpath</span>(workspace)
+        self.allowed_cmds = allowed_cmds  <span class="cm"># None = allow all (for dev)</span>
+
+    <span class="kw">def</span> <span class="fn">__call__</span>(self, command: <span class="tp">str</span>, timeout: <span class="tp">int</span> = <span class="nm">30</span>) -> <span class="tp">dict</span>:
+        <span class="kw">if</span> self.allowed_cmds:
+            cmd_base = command.<span class="fn">split</span>()[<span class="nm">0</span>]
+            <span class="kw">if</span> cmd_base <span class="kw">not in</span> self.allowed_cmds:
+                <span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">f"Command '{cmd_base}' not in allowlist"</span>}
+        <span class="kw">try</span>:
+            result = subprocess.<span class="fn">run</span>(
+                command, shell=<span class="kw">True</span>, capture_output=<span class="kw">True</span>, text=<span class="kw">True</span>,
+                timeout=timeout, cwd=self.workspace,
+                env={**os.environ, <span class="st">"HOME"</span>: self.workspace}
+            )
+            stdout = result.stdout[:<span class="nm">50000</span>]  <span class="cm"># Truncate panjang output</span>
+            <span class="kw">return</span> {
+                <span class="st">"stdout"</span>: stdout,
+                <span class="st">"stderr"</span>: result.stderr[:<span class="nm">5000</span>],
+                <span class="st">"returncode"</span>: result.returncode,
+                <span class="st">"truncated"</span>: <span class="fn">len</span>(result.stdout) > <span class="nm">50000</span>
+            }
+        <span class="kw">except</span> subprocess.<span class="tp">TimeoutExpired</span>:
+            <span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">f"Timed out after {timeout}s"</span>}
+
+<span class="kw">class</span> <span class="fn">StrReplaceTool</span>:
+    <span class="st">"""Minimal diff editing — safer than full file rewrite."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, workspace: <span class="tp">str</span>):
+        self.workspace = workspace
+
+    <span class="kw">def</span> <span class="fn">__call__</span>(self, path: <span class="tp">str</span>, old_str: <span class="tp">str</span>, new_str: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+        full_path = os.path.<span class="fn">join</span>(self.workspace, path.<span class="fn">lstrip</span>(<span class="st">"/"</span>))
+        <span class="kw">if not</span> os.path.<span class="fn">exists</span>(full_path):
+            <span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">f"File not found: {path}"</span>}
+        content = <span class="fn">open</span>(full_path).<span class="fn">read</span>()
+        count = content.<span class="fn">count</span>(old_str)
+        <span class="kw">if</span> count == <span class="nm">0</span>:
+            <span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">"old_str not found. Check exact whitespace and indentation."</span>}
+        <span class="kw">if</span> count > <span class="nm">1</span>:
+            <span class="kw">return</span> {<span class="st">"error"</span>: <span class="st">f"old_str found {count} times. Make it more specific."</span>}
+        <span class="fn">open</span>(full_path, <span class="st">"w"</span>).<span class="fn">write</span>(content.<span class="fn">replace</span>(old_str, new_str, <span class="nm">1</span>))
+        <span class="kw">return</span> {<span class="st">"success"</span>: <span class="kw">True</span>, <span class="st">"file"</span>: path}
+
+<span class="cm"># Core toolset untuk coding agent</span>
+CODING_TOOLS_SCHEMA = [
+    {<span class="st">"name"</span>: <span class="st">"bash"</span>, <span class="st">"description"</span>: <span class="st">"Run shell commands. For: file ops, git, tests, installs. Timeout: 30s. Scoped to workspace."</span>},
+    {<span class="st">"name"</span>: <span class="st">"read_file"</span>, <span class="st">"description"</span>: <span class="st">"Read file. Supports offset+limit for large files. Returns content + total lines."</span>},
+    {<span class="st">"name"</span>: <span class="st">"write_file"</span>, <span class="st">"description"</span>: <span class="st">"Write new file. Use for NEW files only. For edits to existing: use str_replace."</span>},
+    {<span class="st">"name"</span>: <span class="st">"str_replace"</span>, <span class="st">"description"</span>: <span class="st">"Replace exact string in file. Fails if string not found or found multiple times."</span>},
+    {<span class="st">"name"</span>: <span class="st">"glob"</span>, <span class="st">"description"</span>: <span class="st">"Find files by pattern. Use to understand structure before reading individual files."</span>},
+    {<span class="st">"name"</span>: <span class="st">"grep"</span>, <span class="st">"description"</span>: <span class="st">"Search text in files. Regex supported. Returns file:line:content matches."</span>},
+]</pre></div></div>
+</div><!-- /s5a -->
+
+<div class="divider"></div>
+
+<!-- 5B -->
+<div class="sub" id="s5b">
+<div class="subtit"><span class="ac">5.2</span> Computer Use Agent <span class="subid">// agent yang bisa melihat dan mengklik</span></div>
+<div class="prose">
+<p>Computer use agent dapat mengontrol komputer layaknya manusia: melihat screenshot, menggerakkan mouse, mengetik, dan berinteraksi dengan aplikasi apa pun. Ini membuka automasi yang tidak mungkin dengan tools berbasis API.</p>
+</div>
+<div class="cc"><h3>Screenshot-vision-action loop</h3>
+<p><strong>1. Screenshot</strong> — ambil screenshot layar saat ini, encode sebagai base64, kirim ke model bersama task description.<br><br>
+<strong>2. Vision Analysis</strong> — model menganalisis screenshot: apa yang terlihat, di mana elemen UI berada, apa yang perlu diklik atau diketik.<br><br>
+<strong>3. Action Generation</strong> — model menghasilkan action object: mouse_move, left_click, right_click, double_click, type, key, scroll.<br><br>
+<strong>4. Execution</strong> — harness mengeksekusi action menggunakan pyautogui, xdotool, atau platform-native APIs.<br><br>
+<strong>5. Repeat</strong> — ambil screenshot baru (state baru setelah action) dan ulangi loop sampai task selesai.</p></div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">computer_use_agent.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic, pyautogui, base64
+<span class="kw">from</span> io <span class="kw">import</span> BytesIO
+
+<span class="kw">class</span> <span class="fn">ComputerUseAgent</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, display: <span class="tp">tuple</span>[<span class="tp">int</span>, <span class="tp">int</span>] = (<span class="nm">1280</span>, <span class="nm">800</span>)):
+        self.client = anthropic.<span class="fn">Anthropic</span>()
+        self.display = display
+        pyautogui.PAUSE = <span class="nm">0.5</span>    <span class="cm"># Safety pause antara actions</span>
+        pyautogui.FAILSAFE = <span class="kw">True</span> <span class="cm"># Move ke corner untuk kill agent</span>
+
+    <span class="kw">def</span> <span class="fn">screenshot</span>(self) -> <span class="tp">str</span>:
+        img = pyautogui.<span class="fn">screenshot</span>()
+        img = img.<span class="fn">resize</span>(self.display)
+        buf = <span class="fn">BytesIO</span>()
+        img.<span class="fn">save</span>(buf, format=<span class="st">"PNG"</span>, optimize=<span class="kw">True</span>)
+        <span class="kw">return</span> base64.<span class="fn">b64encode</span>(buf.<span class="fn">getvalue</span>()).<span class="fn">decode</span>()
+
+    <span class="kw">def</span> <span class="fn">execute_action</span>(self, action: <span class="tp">dict</span>):
+        t = action[<span class="st">"type"</span>]
+        <span class="kw">if</span> t == <span class="st">"mouse_move"</span>:
+            pyautogui.<span class="fn">moveTo</span>(action[<span class="st">"x"</span>], action[<span class="st">"y"</span>], duration=<span class="nm">0.3</span>)
+        <span class="kw">elif</span> t == <span class="st">"left_click"</span>:
+            pyautogui.<span class="fn">click</span>(action[<span class="st">"x"</span>], action[<span class="st">"y"</span>])
+        <span class="kw">elif</span> t == <span class="st">"double_click"</span>:
+            pyautogui.<span class="fn">doubleClick</span>(action[<span class="st">"x"</span>], action[<span class="st">"y"</span>])
+        <span class="kw">elif</span> t == <span class="st">"right_click"</span>:
+            pyautogui.<span class="fn">rightClick</span>(action[<span class="st">"x"</span>], action[<span class="st">"y"</span>])
+        <span class="kw">elif</span> t == <span class="st">"type"</span>:
+            pyautogui.<span class="fn">typewrite</span>(action[<span class="st">"text"</span>], interval=<span class="nm">0.05</span>)
+        <span class="kw">elif</span> t == <span class="st">"key"</span>:
+            pyautogui.<span class="fn">hotkey</span>(*action[<span class="st">"key"</span>].<span class="fn">split</span>(<span class="st">"+"</span>))   <span class="cm"># e.g. "ctrl+c"</span>
+        <span class="kw">elif</span> t == <span class="st">"scroll"</span>:
+            pyautogui.<span class="fn">scroll</span>(action.<span class="fn">get</span>(<span class="st">"direction"</span>, <span class="nm">3</span>), x=action[<span class="st">"x"</span>], y=action[<span class="st">"y"</span>])
+        <span class="kw">elif</span> t == <span class="st">"screenshot"</span>:
+            <span class="kw">pass</span>   <span class="cm"># Handled at loop level</span>
+
+    <span class="kw">async def</span> <span class="fn">run</span>(self, task: <span class="tp">str</span>, max_steps: <span class="tp">int</span> = <span class="nm">50</span>) -> <span class="tp">str</span>:
+        messages = []
+        <span class="kw">for</span> step <span class="kw">in</span> <span class="fn">range</span>(max_steps):
+            <span class="cm"># Build message dengan screenshot saat ini</span>
+            content = [
+                {<span class="st">"type"</span>: <span class="st">"image"</span>, <span class="st">"source"</span>: {
+                    <span class="st">"type"</span>: <span class="st">"base64"</span>, <span class="st">"media_type"</span>: <span class="st">"image/png"</span>,
+                    <span class="st">"data"</span>: self.<span class="fn">screenshot</span>()}},
+                {<span class="st">"type"</span>: <span class="st">"text"</span>, <span class="st">"text"</span>: <span class="st">f"Task: {task}\nStep {step+1}/{max_steps}"</span>}
+            ]
+            messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: content}]
+
+            response = self.client.messages.<span class="fn">create</span>(
+                model=<span class="st">"claude-opus-4-6"</span>,
+                max_tokens=<span class="nm">1024</span>,
+                tools=[{
+                    <span class="st">"type"</span>: <span class="st">"computer_20241022"</span>,
+                    <span class="st">"name"</span>: <span class="st">"computer"</span>,
+                    <span class="st">"display_width_px"</span>: self.display[<span class="nm">0</span>],
+                    <span class="st">"display_height_px"</span>: self.display[<span class="nm">1</span>],
+                    <span class="st">"display_number"</span>: <span class="nm">1</span>
+                }],
+                messages=messages
+            )
+
+            <span class="kw">if</span> response.stop_reason == <span class="st">"end_turn"</span>:
+                texts = [b <span class="kw">for</span> b <span class="kw">in</span> response.content <span class="kw">if</span> b.type == <span class="st">"text"</span>]
+                <span class="kw">return</span> texts[<span class="nm">0</span>].text <span class="kw">if</span> texts <span class="kw">else</span> <span class="st">"Task completed"</span>
+
+            <span class="kw">for</span> block <span class="kw">in</span> response.content:
+                <span class="kw">if</span> block.type == <span class="st">"tool_use"</span>:
+                    self.<span class="fn">execute_action</span>(block.input)
+
+        <span class="kw">return</span> <span class="st">"Max steps reached"</span></pre></div></div>
+<div class="callout warn"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><div class="ctxt"><strong>Selalu gunakan VM atau container terisolasi</strong>Computer use agent bisa mengklik tombol yang salah, menghapus file, atau berinteraksi dengan hal yang tidak seharusnya. Jangan pernah jalankan di production machine atau machine yang berisi data sensitif tanpa VM isolation.</div></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span><div class="ctxt"><strong>Production: Docker + X11 forwarding atau headless browser</strong><code>pyautogui</code> cocok untuk pembelajaran dan prototyping di mesin lokal. Di production, computer use modern dieksekusi di dalam <strong>Docker container dengan X11 forwarding</strong> (virtual display via Xvfb) untuk isolasi mutlak dan latensi lebih rendah tanpa overhead VM penuh. Alternatif yang makin populer: gunakan <strong>headless browser</strong> (Playwright/Puppeteer) yang diinjeksi dengan visi — agent menerima screenshot dari browser, lalu mengeksekusi klik/ketik via Playwright API, bukan pyautogui. Pendekatan ini lebih deterministik, lebih mudah di-scale, dan tidak perlu display server.</div></div>
+</div><!-- /s5b -->
+
+<div class="divider"></div>
+
+<!-- 5C -->
+<div class="sub" id="s5c">
+<div class="subtit"><span class="ac">5.3</span> Coding Agent Architecture <span class="subid">// agent yang bisa koding seperti senior engineer</span></div>
+<div class="prose">
+<p>Coding agent yang baik bukan hanya "LLM yang bisa tulis kode" — ia memahami konteks codebase, membuat perubahan yang minimal dan tepat, menjalankan tests, dan iterate sampai selesai. Arsitekturnya punya beberapa fase yang distinct.</p>
+</div>
+<div class="fsteps">
+  <div class="fstep"><div class="fsn">1</div><div class="fst">Explore Phase</div><div class="fsd">Sebelum menulis kode, agent memahami codebase: structure, conventions, relevant files, existing patterns. Gunakan glob, grep, dan selective read.</div></div>
+  <div class="fstep"><div class="fsn">2</div><div class="fst">Plan Phase</div><div class="fsd">Buat rencana eksplisit: file mana yang perlu diubah, perubahan apa, dependencies yang perlu diinstall, tests yang perlu ditambah.</div></div>
+  <div class="fstep"><div class="fsn">3</div><div class="fst">Implement Phase</div><div class="fsd">Eksekusi plan menggunakan str_replace untuk edit minimal, write_file untuk file baru. Verifikasi setiap perubahan dengan read kembali.</div></div>
+  <div class="fstep"><div class="fsn">4</div><div class="fst">Verify Phase</div><div class="fsd">Run tests, linting, type checking. Jika gagal, analyze error dan kembali ke implement phase. Tidak berhenti sampai tests hijau.</div></div>
+  <div class="fstep"><div class="fsn">5</div><div class="fst">Cleanup Phase</div><div class="fsd">Remove debug code, update docs jika perlu, commit dengan pesan yang deskriptif. Review diff akhir.</div></div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">SYSTEM PROMPT</span><span class="cf">coding_agent_system_prompt.txt</span></div>
+<div class="cbb"><pre><span class="st">You are an expert software engineer assistant. Your job is to implement
+changes to a codebase based on the user's requirements.
+
+## Mandatory Workflow
+1. EXPLORE first: Use glob/grep/read_file to understand the codebase
+   structure before making any changes. Never modify files you haven't read.
+2. PLAN explicitly: Before coding, state what you'll change and why.
+   Consider dependencies, side effects, and tests.
+3. IMPLEMENT minimally: Use str_replace for edits (not full rewrites).
+   Make small, focused changes. One concern per tool call.
+4. VERIFY constantly: Run tests after every meaningful change.
+   If tests fail, analyze the error carefully before trying a fix.
+5. STOP when: all tests pass AND the implementation satisfies the requirements.
+
+## Engineering Rules
+- Read before editing — never guess at file contents
+- Follow existing code style, naming conventions, and patterns
+- Prefer str_replace over write_file for existing files
+- If stuck 3+ iterations on same error: step back and rethink approach
+- Never delete code without understanding what it does
+- Commit frequently with descriptive messages
+
+## Error Handling Philosophy
+When a test fails, analyze the FULL error message before attempting a fix.
+Common mistakes: incorrect import paths, wrong function signatures, missing
+dependencies, misunderstood existing API. Most fixes are small targeted changes,
+not full rewrites.</span></pre></div></div>
+</div><!-- /s5c -->
+
+<div class="divider"></div>
+
+<!-- 5D -->
+<div class="sub" id="s5d">
+<div class="subtit"><span class="ac">5.4</span> Framework Landscape 2026 <span class="subid">// pilih senjata yang tepat</span></div>
+<div class="prose"><p>Ekosistem agentic AI framework berevolusi sangat cepat. Berikut state of the art per 2026 — dengan perspektif jujur tentang kapan pakai apa:</p></div>
+<div style="overflow-x:auto"><table class="rt">
+<thead><tr><th>Framework</th><th>Kekuatan utama</th><th>Kelemahan</th><th>Cocok untuk</th><th>Maturity</th></tr></thead>
+<tbody>
+<tr><td>Bare-metal Python</td><td>Full control, no magic, predictable behavior, easiest to debug</td><td>Harus build semua sendiri dari scratch</td><td>Production agents dengan requirements spesifik, tim yang mau understand fully</td><td><span class="tag green">Stable</span></td></tr>
+<tr><td>LangGraph</td><td>Graph-based state machine, checkpointing, streaming, human-in-loop</td><td>Verbose, banyak boilerplate, learning curve</td><td>Complex multi-step workflows dengan explicit state transitions</td><td><span class="tag green">Stable</span></td></tr>
+<tr><td>Pydantic AI</td><td>Type-safe, clean API, async native, great DX, actively maintained</td><td>Ecosystem lebih kecil, relatif baru</td><td>Python backends yang butuh type safety dan clean codebase</td><td><span class="tag teal">Growing</span></td></tr>
+<tr><td>CrewAI</td><td>High-level abstractions, role-based agents, easy to get started</td><td>Less control, "magic" sulit di-debug saat ada masalah</td><td>Rapid prototyping multi-agent scenarios, non-technical teams</td><td><span class="tag teal">Growing</span></td></tr>
+<tr><td>AutoGen (Microsoft)</td><td>Conversation-based multi-agent, GUI builder tersedia</td><td>Opinionated, heavy dependencies, Microsoft-centric</td><td>Enterprise teams, agentic conversations antar LLM</td><td><span class="tag green">Stable</span></td></tr>
+<tr><td>Agno</td><td>Lightweight, fast startup, clean DX, multi-modal support</td><td>Ecosystem lebih kecil dari LangGraph</td><td>Simple to medium complexity agents, tim yang nilai simplicity</td><td><span class="tag teal">Growing</span></td></tr>
+<tr><td>Smolagents (HuggingFace)</td><td>Minimal codebase, code-as-action approach, open models</td><td>Less mature ecosystem, designed for HF models</td><td>Research, prototyping dengan open-source models</td><td><span class="tag amber">Emerging</span></td></tr>
+</tbody>
+</table></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rekomendasi konkret untuk 2026</strong>Mulai dengan <strong>bare-metal Python + Anthropic SDK</strong> untuk memahami fundamentals. Ketika mulai butuh state management kompleks: <strong>LangGraph</strong> atau <strong>Pydantic AI</strong>. Untuk rapid prototyping multi-agent: <strong>CrewAI</strong> atau <strong>Agno</strong>. Jangan lompat ke framework sebelum paham apa yang dia abstraksi — abstraksi yang tidak dipahami adalah sumber bug yang paling sulit di-debug.</div></div>
+<div class="cc"><h3>Kapan build sendiri vs pakai framework</h3><ul>
+<li><strong>Pakai framework</strong> ketika: butuh rapid prototyping, team sudah familiar, atau requirements-mu standard dan cocok dengan abstraksi yang ditawarkan.</li>
+<li><strong>Build sendiri</strong> ketika: butuh kontrol penuh, performance adalah prioritas utama, requirements sangat spesifik, atau kamu butuh understand setiap bagian untuk debugging production issues.</li>
+<li><strong>Hybrid approach</strong> (paling umum di production): pakai Anthropic SDK langsung untuk agent logic, tapi gunakan library khusus untuk observability (Langfuse), storage (pgvector), queue (Redis Streams), dan deployment (Docker + k8s).</li>
+</ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Framework Comparison — Radar Chart (skala 1–5)</div>
+<div class="viz-body">
+<svg viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg" style="max-height:360px;">
+  <defs>
+    <style>
+      .rl{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:1;}
+      .ax{stroke:rgba(255,255,255,0.1);stroke-width:1;}
+      .lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;fill:#5a5a6a;}
+    </style>
+  </defs>
+
+  <!-- Left radar: bare-metal vs langGraph -->
+  <g transform="translate(175,175)">
+    <!-- Grid rings -->
+    <polygon class="rl" points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40"/>
+    <polygon class="rl" points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30"/>
+    <polygon class="rl" points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20"/>
+    <polygon class="rl" points="0,-20 17,-10 17,10 0,20 -17,10 -17,-10"/>
+    <!-- Axes -->
+    <line class="ax" x1="0" y1="0" x2="0" y2="-80"/>
+    <line class="ax" x1="0" y1="0" x2="69" y2="-40"/>
+    <line class="ax" x1="0" y1="0" x2="69" y2="40"/>
+    <line class="ax" x1="0" y1="0" x2="0" y2="80"/>
+    <line class="ax" x1="0" y1="0" x2="-69" y2="40"/>
+    <line class="ax" x1="0" y1="0" x2="-69" y2="-40"/>
+    <!-- Labels -->
+    <text class="lbl" x="0" y="-86" text-anchor="middle">Control</text>
+    <text class="lbl" x="75" y="-44" text-anchor="start">Debug</text>
+    <text class="lbl" x="75" y="50" text-anchor="start">Speed</text>
+    <text class="lbl" x="0" y="92" text-anchor="middle">Ecosystem</text>
+    <text class="lbl" x="-75" y="50" text-anchor="end">Features</text>
+    <text class="lbl" x="-75" y="-44" text-anchor="end">DX</text>
+
+    <!-- Bare-metal: Control=5,Debug=5,Speed=5,Ecosystem=2,Features=1,DX=2 -->
+    <polygon points="0,-80 69,-40 69,40 0,32 -28,16 -28,-16"
+      fill="rgba(124,109,250,0.15)" stroke="rgba(124,109,250,0.7)" stroke-width="1.5"/>
+
+    <!-- LangGraph: Control=3,Debug=3,Speed=2,Ecosystem=4,Features=5,DX=2 -->
+    <polygon points="0,-48 42,-24 28,16 0,64 -69,40 -28,-16"
+      fill="rgba(45,212,191,0.1)" stroke="rgba(45,212,191,0.6)" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+    <!-- Legend -->
+    <rect x="-80" y="100" width="12" height="4" rx="1" fill="rgba(124,109,250,0.7)"/>
+    <text x="-64" y="107" class="lbl">Bare-metal</text>
+    <line x1="-80" y1="118" x2="-68" y2="118" stroke="rgba(45,212,191,0.6)" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="-64" y="121" class="lbl">LangGraph</text>
+  </g>
+
+  <!-- Right radar: PydanticAI vs CrewAI -->
+  <g transform="translate(500,175)">
+    <polygon class="rl" points="0,-80 69,-40 69,40 0,80 -69,40 -69,-40"/>
+    <polygon class="rl" points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30"/>
+    <polygon class="rl" points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20"/>
+    <polygon class="rl" points="0,-20 17,-10 17,10 0,20 -17,10 -17,-20"/>
+    <line class="ax" x1="0" y1="0" x2="0" y2="-80"/>
+    <line class="ax" x1="0" y1="0" x2="69" y2="-40"/>
+    <line class="ax" x1="0" y1="0" x2="69" y2="40"/>
+    <line class="ax" x1="0" y1="0" x2="0" y2="80"/>
+    <line class="ax" x1="0" y1="0" x2="-69" y2="40"/>
+    <line class="ax" x1="0" y1="0" x2="-69" y2="-40"/>
+    <text class="lbl" x="0" y="-86" text-anchor="middle">Control</text>
+    <text class="lbl" x="75" y="-44" text-anchor="start">Debug</text>
+    <text class="lbl" x="75" y="50" text-anchor="start">Speed</text>
+    <text class="lbl" x="0" y="92" text-anchor="middle">Ecosystem</text>
+    <text class="lbl" x="-75" y="50" text-anchor="end">Features</text>
+    <text class="lbl" x="-75" y="-44" text-anchor="end">DX</text>
+
+    <!-- PydanticAI: Control=4,Debug=4,Speed=4,Ecosystem=3,Features=4,DX=5 -->
+    <polygon points="0,-64 55,-32 55,32 0,48 -55,32 -69,-40"
+      fill="rgba(74,222,128,0.12)" stroke="rgba(74,222,128,0.7)" stroke-width="1.5"/>
+
+    <!-- CrewAI: Control=2,Debug=2,Speed=3,Ecosystem=4,Features=4,DX=5 -->
+    <polygon points="0,-32 28,-16 42,24 0,64 -55,32 -69,-40"
+      fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.6)" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+    <rect x="-80" y="100" width="12" height="4" rx="1" fill="rgba(74,222,128,0.7)"/>
+    <text x="-64" y="107" class="lbl">Pydantic AI</text>
+    <line x1="-80" y1="118" x2="-68" y2="118" stroke="rgba(245,158,11,0.6)" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="-64" y="121" class="lbl">CrewAI</text>
+  </g>
+
+  <text x="340" y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5a5a6a">
+    Bare-metal vs LangGraph &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pydantic AI vs CrewAI
+  </text>
+</svg>
+</div>
+</div>
+
+</div><!-- /s5d -->
+
+<div class="divider"></div>
+
+<!-- 5F -->
+<div class="sub" id="s5f">
+<div class="subtit"><span class="ac">5.5</span> Voice &amp; Multimodal Agent <span class="subid">// agent yang mendengar, melihat, dan berbicara</span></div>
+<div class="prose">
+<p>Generasi berikutnya agent bukan hanya teks — mereka menerima audio, gambar, video, dan merespons lewat suara secara real-time. Voice agent sudah production-ready di 2026 dengan latency sub-1-detik, membuka use case baru: customer service, aksesibilitas, dan interface yang lebih natural dari keyboard.</p>
+</div>
+<div class="cc"><h3>Tiga arsitektur multimodal agent</h3><ul>
+<li><strong>Cascaded (STT → LLM → TTS)</strong> — audio dikonversi ke teks (Whisper), diproses LLM, response dikonversi kembali ke audio (ElevenLabs/TTS). Latency ~2–4 detik. Mudah di-debug tapi terasa tidak natural</li>
+<li><strong>Native audio model</strong> — model menerima audio langsung dan output audio (GPT-4o Realtime, Gemini Live). Latency &lt;1 detik. Lebih natural tapi lebih mahal dan kurang kontrol</li>
+<li><strong>Vision + action agent</strong> — menerima screenshot/kamera, reasoning visual, eksekusi klik/ketik (Computer Use). Tidak butuh API khusus — cukup Claude dengan tool screenshot</li>
+</ul></div>
+
+<div class="viz-wrap">
+<div class="viz-title">Voice Agent Architecture — Cascaded vs Native</div>
+<div class="viz-body">
+  <div style="margin-bottom:20px;">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;">Cascaded Pipeline (lebih kontrol, latency lebih tinggi)</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;">
+      <div style="background:rgba(124,109,250,.1);border:1px solid rgba(124,109,250,.3);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(124,109,250,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span style="font-size:10px;color:var(--text3);">User Audio</span></div>
+      <div style="color:var(--text3);">→</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>STT<br><span style="font-size:10px;color:var(--text3);">Whisper</span></div>
+      <div style="color:var(--text3);">→</div>
+      <div style="background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.3);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(45,212,191,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>LLM<br><span style="font-size:10px;color:var(--text3);">Claude/GPT</span></div>
+      <div style="color:var(--text3);">→</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>TTS<br><span style="font-size:10px;color:var(--text3);">ElevenLabs</span></div>
+      <div style="color:var(--text3);">→</div>
+      <div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(74,222,128,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="15" y1="9" x2="21" y2="9"/><line x1="15" y1="12" x2="21" y2="12"/><line x1="15" y1="15" x2="21" y2="15"/></svg><span style="font-size:10px;color:var(--text3);">Response</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;">Total latency: ~2–4 detik</div>
+  </div>
+  <div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;">Native Audio (latency rendah, kurang kontrol)</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;">
+      <div style="background:rgba(124,109,250,.1);border:1px solid rgba(124,109,250,.3);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(124,109,250,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg><span style="font-size:10px;color:var(--text3);">User Audio</span></div>
+      <div style="color:var(--text3);">→</div>
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:8px 24px;text-align:center;display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(245,158,11,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Native Multimodal Model<br><span style="font-size:10px;color:var(--text3);">GPT-4o Realtime / Gemini Live</span></span></div>
+      <div style="color:var(--text3);">→</div>
+      <div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:6px;padding:8px 12px;text-align:center;min-width:80px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(74,222,128,1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 2px;display:block"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="15" y1="9" x2="21" y2="9"/><line x1="15" y1="12" x2="21" y2="12"/><line x1="15" y1="15" x2="21" y2="15"/></svg><span style="font-size:10px;color:var(--text3);">Audio Out</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;">Total latency: &lt;1 detik (streaming audio-to-audio)</div>
+  </div>
+</div>
+</div>
+
+<div class="dblock">
+<div class="dhd"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><div class="dt">Voice agent dengan cascaded pipeline (Python)</div></div>
+<div class="dbody"><div class="cbb"><pre><span class="kw">import</span> anthropic
+<span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+openai_client = <span class="fn">OpenAI</span>()
+anthropic_client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="kw">def</span> <span class="fn">run_voice_agent</span>(audio_bytes: <span class="tp">bytes</span>) -> <span class="tp">bytes</span>:
+    <span class="cm"># Step 1: Speech-to-text</span>
+    transcript = openai_client.audio.transcriptions.<span class="fn">create</span>(
+        model=<span class="st">"whisper-1"</span>,
+        file=(<span class="st">"audio.webm"</span>, audio_bytes, <span class="st">"audio/webm"</span>)
+    ).text
+
+    <span class="fn">print</span>(<span class="st">f"User berkata: {transcript}"</span>)
+
+    <span class="cm"># Step 2: LLM dengan tools (agent bisa call tools!)</span>
+    response = anthropic_client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-opus-4-8"</span>,
+        max_tokens=<span class="nm">512</span>,
+        system=<span class="st">"""Kamu adalah voice assistant yang helpful.
+Jawab singkat dan natural — ini akan diucapkan, bukan dibaca.
+Hindari bullet points, markdown, atau list yang panjang."""</span>,
+        tools=VOICE_TOOLS,  <span class="cm"># search, calendar, dll</span>
+        messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: transcript}]
+    )
+
+    text_response = <span class="fn">next</span>(
+        b.text <span class="kw">for</span> b <span class="kw">in</span> response.content <span class="kw">if</span> b.type == <span class="st">"text"</span>
+    )
+    <span class="fn">print</span>(<span class="st">f"Agent menjawab: {text_response}"</span>)
+
+    <span class="cm"># Step 3: Text-to-speech</span>
+    audio_response = openai_client.audio.speech.<span class="fn">create</span>(
+        model=<span class="st">"tts-1"</span>,
+        voice=<span class="st">"nova"</span>,
+        input=text_response,
+        response_format=<span class="st">"mp3"</span>
+    )
+
+    <span class="kw">return</span> audio_response.content</pre></div></div></div>
+
+<div class="cc"><h3>Tantangan unik voice agent</h3><ul>
+<li><strong>Interruption handling</strong> — user mungkin memotong agent di tengah berbicara. Sistem harus bisa stop playback dan mulai dengar lagi (VAD — Voice Activity Detection)</li>
+<li><strong>Response length calibration</strong> — system prompt harus secara eksplisit minta response singkat. LLM yang biasa menulis panjang akan membuat user bosan mendengar</li>
+<li><strong>Latency budget</strong> — STT ~300ms + LLM ~500ms + TTS ~400ms = ~1.2 detik minimum. Gunakan streaming di setiap layer untuk mengurangi latency persepsi</li>
+<li><strong>Multimodal context</strong> — kalau agent menerima gambar, pastikan model yang digunakan support vision (Claude claude-opus-4-8, GPT-4o). Gambar = token yang banyak, atur budget dengan ketat</li>
+</ul></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>2026: voice agent makin mudah</strong>LiveKit, Daily.co, dan Vapi.ai menyediakan infrastruktur WebRTC + VAD + STT/TTS siap pakai — kamu tinggal plug-in LLM-mu. Untuk prototype cepat, mulai dari sini sebelum bangun pipeline sendiri.</div></div>
+</div><!-- /s5f -->
+
+<div class="divider"></div>
+
+<!-- 5E (renumbered as 5.6) -->
+<div class="sub" id="s5e">
+<div class="subtit"><span class="ac">5.6</span> Checklist Keahlian Agent Engineer <span class="subid">// kapan kamu bisa disebut expert</span></div>
+<div class="prose"><p>Ini bukan checklist yang harus diselesaikan secara linear. Tapi kalau kamu bisa meng-check semua items ini dengan jujur, kamu memang sudah di level yang bisa disebut production agent engineer.</p></div>
+<div class="cc"><h3>Fondasi (Fase 1–2)</h3>
+<ul class="chk">
+<li>Bisa jelaskan bagaimana LLM memutuskan kapan call tool vs jawab langsung, dan apa pengaruh temperature terhadap keputusan ini</li>
+<li>Bisa implement agent harness minimal dari scratch dalam &lt;100 baris Python tanpa framework</li>
+<li>Paham perbedaan 4 jenis memory dan bisa pilih strategi yang tepat untuk use case spesifik</li>
+<li>Bisa tulis tool schema — deskripsi, argumen, return format — yang LLM hampir tidak pernah salah interpretasi</li>
+<li>Bisa implement context management untuk agent yang run lebih dari 1 jam tanpa crash karena overflow</li>
+<li>Paham cara kerja KV cache dan prompt caching, serta bisa mengaktifkan caching untuk hemat 60–90% cost di agent yang loop banyak</li>
+<li>Bisa hitung token budget secara proaktif sebelum setiap API call dan implement compression strategy sebelum context overflow</li>
+<li>Bisa tulis system prompt yang robust: ada mandatory workflow, tool rules, error behavior, dan negative examples</li>
+<li>Bisa implement RAG pipeline dari scratch: chunking, embedding, indexing, retrieval, dan inject hasil ke context agent</li>
+<li>Bisa build checkpointing system sehingga agent yang berjalan lama bisa resume dari titik terakhir saat crash</li>
+</ul></div>
+<div class="cc"><h3>Multi-Agent (Fase 3)</h3>
+<ul class="chk">
+<li>Bisa design orchestrator-subagent system dengan proper error propagation dari subagent ke orchestrator</li>
+<li>Bisa implement fan-out/fan-in parallelism dengan rate limiting yang tidak blow up API quota</li>
+<li>Bisa build dan deploy MCP server yang bisa dikonsumsi oleh Claude Desktop dan custom clients</li>
+<li>Tahu kapan multi-agent worth the complexity dan kapan single agent dengan planning yang baik sudah cukup</li>
+<li>Bisa implement trust boundary antar agent: typed contracts, confidence scoring, dan deteksi prompt injection dari subagent yang memproses external data</li>
+</ul></div>
+<div class="cc"><h3>Production Engineering (Fase 4)</h3>
+<ul class="chk">
+<li>Bisa trace dan debug agent yang failing di production dalam waktu &lt;30 menit menggunakan structured logs dan traces</li>
+<li>Paham semua attack vectors (prompt injection, tool abuse, data leakage) dan implement defense-in-depth</li>
+<li>Bisa evaluate agent performance secara kuantitatif dengan golden datasets dan LLM-as-judge — bukan hanya vibe check</li>
+<li>Bisa mengoptimasi agent untuk 2x–10x lebih murah tanpa degradasi kualitas yang signifikan</li>
+<li>Bisa build sandboxed execution environment yang aman untuk code execution di production</li>
+</ul></div>
+<div class="cc"><h3>Build Production Agent (Fase 5)</h3>
+<ul class="chk">
+<li>Bisa build coding agent yang bisa handle real-world repository, run tests, dan iterate sampai selesai</li>
+<li>Bisa implement computer use agent dengan proper vision-action loop dan safety guardrails</li>
+<li>Tahu trade-off setiap major agent framework dan bisa justify pilihan arsitektur ke tim atau stakeholder</li>
+<li>Sudah punya setidaknya satu production agent yang genuinely dipakai orang lain (bukan demo)</li>
+</ul></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Next step setelah menguasai semua ini</strong>Build sesuatu yang nyata untuk dirimu sendiri — coding assistant pribadi, research agent, atau automation tool untuk workflow sehari-hari. Real usage is the best teacher. Deploy ke GitHub Pages atau VPS, dan share ke komunitas — feedback nyata dari pengguna nyata adalah accelerator terbaik.</div></div>
+</div><!-- /s5e -->
+
+</section><!-- /fase5 -->

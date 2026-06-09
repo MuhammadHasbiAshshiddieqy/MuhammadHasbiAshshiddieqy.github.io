@@ -1,8 +1,35 @@
+// ── Lazy-load fase ───────────────────────────────────────────────────────────
+var FASE_FILES = {
+  'i0':'fase0.html', 'i1':'fase1.html', 'i2':'fase2.html',
+  'i3':'fase3.html', 'i4':'fase4.html', 'i5':'fase5.html'
+};
+// map fase id → container id
+var FASE_CONTAINERS = {
+  'i0':'fase0-container','i1':'fase1-container','i2':'fase2-container',
+  'i3':'fase3-container','i4':'fase4-container','i5':'fase5-container'
+};
+var loadedFases = {};   // fase id → Promise
+var pendingAction = null; // action to run after load
+
+function loadFase(faseId) {
+  if (loadedFases[faseId]) return loadedFases[faseId];
+  var container = document.getElementById(FASE_CONTAINERS[faseId]);
+  if (!container) return Promise.resolve();
+  loadedFases[faseId] = fetch(FASE_FILES[faseId])
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      container.innerHTML = html;
+      injectNavBars();
+    });
+  return loadedFases[faseId];
+}
+
 // ── Sidebar toggle (mobile) ──────────────────────────────────────────────────
 function toggleSB(){
   var s=document.getElementById('sidebar'),o=document.getElementById('overlay');
   s.classList.toggle('open');o.classList.toggle('open');
 }
+
 // Map accordion id → fase-intro page id
 var PHASE_INTRO_MAP = {'i0':'fi0','i1':'fi1','i2':'fi2','i3':'fi3','i4':'fi4','i5':'fi5'};
 
@@ -13,9 +40,10 @@ function sp(el,itemsId){
   if(!wasOpen){
     items.classList.add('open');
     el.classList.add('active');
-    // navigate to fase intro page
     var fiId = PHASE_INTRO_MAP[itemsId];
-    if (fiId) goToPage(fiId);
+    if (fiId) {
+      loadFase(itemsId).then(function(){ goToPage(fiId); });
+    }
   }
 }
 
@@ -88,80 +116,73 @@ var PHASE_NUMS = {'i0':'0','i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
 
 var currentIdx = 0;
 
-// Topik terakhir setiap fase → fase intro berikutnya  (indeks dalam TOPICS array)
-// Fase 0: idx 0 (s0a) → fi1 | Fase 1: idx 9 (s1i) → fi2 | Fase 2: idx 19 (s2j) → fi3
-// Fase 3: idx 26 (s3g) → fi4 | Fase 4: idx 37 (s4k) → fi5 | Fase 5: idx 43 (s5e) → end
 var PHASE_LAST  = {0:'fi1', 9:'fi2', 19:'fi3', 26:'fi4', 37:'fi5'};
-// Topik pertama setiap fase → fase intro sebelumnya / home
-// s0a(0)→home | s1a(1)→fi1 | s2a(10)→fi2 | s3a(20)→fi3 | s4a(27)→fi4 | s5a(38)→fi5
 var PHASE_FIRST = {0:'home', 1:'fi1', 10:'fi2', 20:'fi3', 27:'fi4', 38:'fi5'};
-// label halaman untuk info nav
 var PAGE_LABELS = {'home':'Beranda','fi0':'Fase 0 — Mulai Cepat','fi1':'Fase 1 — Fondasi','fi2':'Fase 2 — Architecture','fi3':'Fase 3 — Multi-Agent','fi4':'Fase 4 — Production','fi5':'Fase 5 — Build Agent'};
 
-// Inject nav bar ke setiap .sub
-TOPICS.forEach(function(id, idx) {
-  var el = document.getElementById(id);
-  if (!el) return;
-  var isVeryLast = idx === TOPICS.length - 1;
+// ── Inject nav bars (called after each fase load) ────────────────────────────
+function injectNavBars() {
+  TOPICS.forEach(function(id, idx) {
+    var el = document.getElementById(id);
+    if (!el || el.querySelector('.topic-nav')) return; // skip jika sudah ada
+    var isVeryLast = idx === TOPICS.length - 1;
 
-  // Determine next destination
-  var nextPageId = PHASE_LAST[idx];   // fase boundary → go to next fase intro
-  var prevPageId = PHASE_FIRST[idx];  // fase boundary → go to prev fase intro / home
+    var nextPageId = PHASE_LAST[idx];
+    var prevPageId = PHASE_FIRST[idx];
 
-  var nextLabel, nextBtn;
-  if (isVeryLast) {
-    nextLabel = 'Selesai!';
-    nextBtn = '<button class="tnbtn primary" onclick="goToPage(\'home\')">Kembali ke Beranda ↺</button>';
-  } else if (nextPageId) {
-    nextLabel = PAGE_LABELS[nextPageId];
-    nextBtn = '<button class="tnbtn primary" onclick="goToPage(\'' + nextPageId + '\')">Selanjutnya →</button>';
-  } else {
-    nextLabel = TOPIC_LABELS[TOPICS[idx+1]];
-    nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="' + idx + '">Selanjutnya →</button>';
-  }
+    var nextLabel, nextBtn;
+    if (isVeryLast) {
+      nextLabel = 'Selesai!';
+      nextBtn = '<button class="tnbtn primary" onclick="goToPage(\'home\')">Kembali ke Beranda ↺</button>';
+    } else if (nextPageId) {
+      nextLabel = PAGE_LABELS[nextPageId];
+      nextBtn = '<button class="tnbtn primary" onclick="goToPage(\'' + nextPageId + '\')">Selanjutnya →</button>';
+    } else {
+      nextLabel = TOPIC_LABELS[TOPICS[idx+1]];
+      nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="' + idx + '">Selanjutnya →</button>';
+    }
 
-  var prevBtn;
-  if (prevPageId) {
-    prevBtn = '<button class="tnbtn" onclick="goToPage(\'' + prevPageId + '\')">← Sebelumnya</button>';
-  } else if (idx > 0) {
-    prevBtn = '<button class="tnbtn prev-btn" data-idx="' + idx + '">← Sebelumnya</button>';
-  } else {
-    prevBtn = '<button class="tnbtn" disabled>← Sebelumnya</button>';
-  }
+    var prevBtn;
+    if (prevPageId) {
+      prevBtn = '<button class="tnbtn" onclick="goToPage(\'' + prevPageId + '\')">← Sebelumnya</button>';
+    } else if (idx > 0) {
+      prevBtn = '<button class="tnbtn prev-btn" data-idx="' + idx + '">← Sebelumnya</button>';
+    } else {
+      prevBtn = '<button class="tnbtn" disabled>← Sebelumnya</button>';
+    }
 
-  var nav = document.createElement('div');
-  nav.className = 'topic-nav';
-  nav.innerHTML =
-    '<div class="topic-nav-info">'
-    + '<div class="topic-nav-counter">Topik ' + (idx+1) + ' / ' + TOPICS.length + '</div>'
-    + '<div class="topic-nav-title">' + nextLabel + '</div>'
-    + '</div>'
-    + '<div class="topic-nav-btns">'
-    + prevBtn
-    + nextBtn
-    + '</div>';
-  el.appendChild(nav);
-});
+    var nav = document.createElement('div');
+    nav.className = 'topic-nav';
+    nav.innerHTML =
+      '<div class="topic-nav-info">'
+      + '<div class="topic-nav-counter">Topik ' + (idx+1) + ' / ' + TOPICS.length + '</div>'
+      + '<div class="topic-nav-title">' + nextLabel + '</div>'
+      + '</div>'
+      + '<div class="topic-nav-btns">'
+      + prevBtn
+      + nextBtn
+      + '</div>';
+    el.appendChild(nav);
+  });
+}
 
 // ID semua "halaman" selain TOPICS (home + fase intro)
 var PAGES = ['home','glossary','fi0','fi1','fi2','fi3','fi4','fi5'];
-
-var PAGE_HOME_IDS = ['home','glossary'];  // elemen yang pakai page-home--active
+var PAGE_HOME_IDS = ['home','glossary'];
 
 function hideAll() {
-  // hide semua halaman berbasis page-home
   PAGE_HOME_IDS.forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.classList.remove('page-home--active');
   });
-  // hide all fase intros
   PAGES.forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.classList.remove('fase-intro--active');
   });
-  // hide all topics
-  TOPICS.forEach(function(id){ document.getElementById(id).classList.remove('sub--active'); });
-  // hide all .cs section wrappers
+  TOPICS.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('sub--active');
+  });
   document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
 }
 
@@ -170,10 +191,8 @@ function goToPage(pageId) {
   var el = document.getElementById(pageId);
   if (!el) return;
   if (PAGE_HOME_IDS.indexOf(pageId) !== -1) {
-    // halaman tipe home (beranda, glosarium)
     el.classList.add('page-home--active');
   } else {
-    // fase intro
     el.classList.add('fase-intro--active');
     var parentSection = el.closest('.cs');
     if (parentSection) parentSection.style.display = 'block';
@@ -186,44 +205,42 @@ function goToPage(pageId) {
 function goTo(idx) {
   if (idx < 0 || idx >= TOPICS.length) return;
   var nextId = TOPICS[idx];
+  var faseId = PHASE_MAP[nextId];
 
-  hideAll();
-  document.getElementById(nextId).classList.add('sub--active');
-  currentIdx = idx;
+  loadFase(faseId).then(function(){
+    hideAll();
+    var el = document.getElementById(nextId);
+    if (!el) return;
+    el.classList.add('sub--active');
+    currentIdx = idx;
 
-  // show parent .cs section
-  var parentSection = document.getElementById(nextId).closest('.cs');
-  if (parentSection) parentSection.style.display = 'block';
+    var parentSection = el.closest('.cs');
+    if (parentSection) parentSection.style.display = 'block';
 
-  // scroll to top of main
-  document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
-  window.scrollTo({top:0,behavior:'smooth'});
+    document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
+    window.scrollTo({top:0,behavior:'smooth'});
 
-  // update URL hash
-  history.replaceState(null,'','#'+nextId);
+    history.replaceState(null,'','#'+nextId);
 
-  // sync sidebar active state
-  document.querySelectorAll('.sit').forEach(function(a){
-    a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
-  });
+    document.querySelectorAll('.sit').forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
+    });
 
-  // open correct phase accordion
-  var grpId = PHASE_MAP[nextId];
-  if (grpId) {
-    document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
-    document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
-    var grp = document.getElementById(grpId);
-    if (grp) { grp.classList.add('open'); grp.previousElementSibling.classList.add('active'); }
-    var pv = document.getElementById('pv');
-    if (pv) pv.textContent = PHASE_NUMS[grpId]||'1';
-  }
+    if (faseId) {
+      document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
+      document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
+      var grp = document.getElementById(faseId);
+      if (grp) { grp.classList.add('open'); grp.previousElementSibling.classList.add('active'); }
+      var pv = document.getElementById('pv');
+      if (pv) pv.textContent = PHASE_NUMS[faseId]||'1';
+    }
 
-  // animate bars in active topic
-  document.getElementById(nextId).querySelectorAll('.cbar-fill').forEach(function(bar){
-    var tw = bar.style.getPropertyValue('--tw') || bar.getAttribute('data-tw');
-    if (!bar.getAttribute('data-tw')) bar.setAttribute('data-tw', bar.style.width||tw);
-    bar.style.width='0';
-    setTimeout(function(){ bar.style.transition='width 1.2s cubic-bezier(.4,0,.2,1)'; bar.style.width=bar.getAttribute('data-tw')||tw; },80);
+    el.querySelectorAll('.cbar-fill').forEach(function(bar){
+      var tw = bar.style.getPropertyValue('--tw') || bar.getAttribute('data-tw');
+      if (!bar.getAttribute('data-tw')) bar.setAttribute('data-tw', bar.style.width||tw);
+      bar.style.width='0';
+      setTimeout(function(){ bar.style.transition='width 1.2s cubic-bezier(.4,0,.2,1)'; bar.style.width=bar.getAttribute('data-tw')||tw; },80);
+    });
   });
 }
 
@@ -242,7 +259,6 @@ document.querySelectorAll('.sit').forEach(function(a){
     var id = a.getAttribute('href').replace('#','');
     var idx = TOPICS.indexOf(id);
     if (idx >= 0) goTo(idx);
-    // mobile: close sidebar
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('open');
   });
@@ -252,26 +268,24 @@ document.querySelectorAll('.sit').forEach(function(a){
 (function(){
   var hash = location.hash.replace('#','');
 
-  // Hide everything first
   document.querySelectorAll('.cs').forEach(function(s){ s.style.display='none'; });
 
   if (!hash || hash === 'home') {
     goToPage('home');
   } else if (PAGES.indexOf(hash) >= 0) {
-    goToPage(hash);
+    // fase intro: perlu load fase dulu
+    var faseId = null;
+    Object.keys(PHASE_INTRO_MAP).forEach(function(k){
+      if (PHASE_INTRO_MAP[k] === hash) faseId = k;
+    });
+    if (faseId) {
+      loadFase(faseId).then(function(){ goToPage(hash); });
+    } else {
+      goToPage(hash);
+    }
   } else {
     var startIdx = TOPICS.indexOf(hash);
     if (startIdx < 0) startIdx = 0;
     goTo(startIdx);
-
-    // Fade-in animation for elements in active topic
-    var activeEl = document.getElementById(TOPICS[startIdx]);
-    if (activeEl) {
-      activeEl.querySelectorAll('.cc,.cb,.callout,.grid2,.fsteps,.cmp,.rt,.dblock').forEach(function(el,i){
-        el.style.cssText='opacity:0;transform:translateY(12px);transition:opacity 0.4s ease '+(i*30)+'ms,transform 0.4s ease '+(i*30)+'ms';
-        setTimeout(function(){ el.style.opacity='1'; el.style.transform='translateY(0)'; },50+i*30);
-      });
-    }
   }
 })();
-

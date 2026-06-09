@@ -1,0 +1,169 @@
+<section class="cs p0" id="fase0">
+<div class="fase-intro" id="fi0">
+<div class="sh">
+  <div class="sbadge">00</div>
+  <div>
+    <div class="stitle">Mulai Cepat — Agent Pertama dalam 5 Menit</div>
+    <div class="sdesc">Sebelum masuk ke teori, langsung rasakan bagaimana agent bekerja. Satu file Python, satu API key, lima menit. Kamu akan punya agent yang fungsional sebelum memahami semua detailnya.</div>
+    <div class="smeta"><span class="mc">5 Menit</span><span class="mc">Hands-on</span><span class="mc">Python dasar</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#s0a">First Agent</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">1 topik · 5 menit</div>
+      <div class="topic-nav-title">Mulai dari: 0.1 Agent Pertama dalam 5 Menit</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('home')">← Beranda</button>
+      <button class="tnbtn primary" onclick="goTo(0)">Mulai →</button>
+    </div>
+  </div>
+</div><!-- /fi0 -->
+
+<!-- 0A -->
+<div class="sub" id="s0a">
+<div class="subtit"><span class="ac">0.1</span> Agent Pertama dalam 5 Menit <span class="subid">// langsung jalankan, pahami belakangan</span></div>
+<div class="prose">
+<p>Cara terbaik memahami agent adalah dengan menjalankannya dulu. Di sini kamu akan build agent minimal yang bisa memanggil tool — lengkap, bisa dijalankan, dan hanya butuh beberapa menit setup.</p>
+<p>Kamu butuh: Python 3.10+, Anthropic API key (dari <code>console.anthropic.com</code>), dan koneksi internet.</p>
+</div>
+
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Prerequisites — apa yang perlu kamu siapkan</strong><ul style="margin:8px 0 0;padding-left:16px;"><li><strong>Python 3.10+</strong> — cek dengan <code>python --version</code></li><li><strong>Anthropic API key</strong> — daftar di console.anthropic.com, buat API key baru</li><li><strong>Estimasi biaya</strong> — contoh di halaman ini menghabiskan sekitar $0.001–0.005 per run (sangat murah). Haiku adalah model termurah untuk percobaan</li><li><strong>Pengetahuan Python</strong> — familiar dengan fungsi, dict, dan loop sudah cukup</li></ul></div></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">bash</span><span class="cf">setup</span></div>
+<div class="cbb"><pre><span class="cm"># 1. Install dependency (satu-satunya yang dibutuhkan)</span>
+pip install anthropic
+
+<span class="cm"># 2. Set API key sebagai environment variable</span>
+<span class="cm"># Linux/Mac:</span>
+<span class="kw">export</span> ANTHROPIC_API_KEY=<span class="st">"sk-ant-..."</span>
+
+<span class="cm"># Windows (Command Prompt):</span>
+<span class="cm"># set ANTHROPIC_API_KEY=sk-ant-...</span>
+
+<span class="cm"># Windows (PowerShell):</span>
+<span class="cm"># $env:ANTHROPIC_API_KEY = "sk-ant-..."</span></pre></div></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">first_agent.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic
+<span class="kw">import</span> json
+<span class="kw">import</span> datetime
+
+<span class="cm"># ── Tools yang tersedia untuk agent ─────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">get_current_time</span>() -> <span class="tp">str</span>:
+    <span class="kw">return</span> datetime.datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="st">"%Y-%m-%d %H:%M:%S"</span>)
+
+<span class="kw">def</span> <span class="fn">calculate</span>(expression: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    <span class="kw">try</span>:
+        result = <span class="fn">eval</span>(expression, {<span class="st">"__builtins__"</span>: {}})  <span class="cm"># sandbox sederhana</span>
+        <span class="kw">return</span> <span class="fn">str</span>(result)
+    <span class="kw">except Exception as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="st">"Error: {e}"</span>
+
+<span class="cm"># ── Tool schemas — format yang dipahami model ────────────────────────────</span>
+TOOLS = [
+    {
+        <span class="st">"name"</span>: <span class="st">"get_current_time"</span>,
+        <span class="st">"description"</span>: <span class="st">"Mendapatkan waktu saat ini"</span>,
+        <span class="st">"input_schema"</span>: {<span class="st">"type"</span>: <span class="st">"object"</span>, <span class="st">"properties"</span>: {}, <span class="st">"required"</span>: []}
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"calculate"</span>,
+        <span class="st">"description"</span>: <span class="st">"Menghitung ekspresi matematika. Contoh: '2 + 2', '100 * 0.1'"</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"expression"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"ekspresi matematika"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"expression"</span>]
+        }
+    }
+]
+
+<span class="cm"># ── Registry: nama tool → fungsi Python ─────────────────────────────────</span>
+TOOL_REGISTRY = {
+    <span class="st">"get_current_time"</span>: <span class="fn">get_current_time</span>,
+    <span class="st">"calculate"</span>: <span class="fn">calculate</span>,
+}
+
+<span class="cm"># ── Agent loop ───────────────────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">run_agent</span>(user_input: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    client = anthropic.<span class="fn">Anthropic</span>()  <span class="cm"># baca ANTHROPIC_API_KEY otomatis</span>
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: user_input}]
+
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">10</span>):  <span class="cm"># max 10 iterasi, hindari infinite loop</span>
+        response = client.messages.<span class="fn">create</span>(
+            model=<span class="st">"claude-haiku-4-5-20251001"</span>,  <span class="cm"># model termurah</span>
+            max_tokens=<span class="nm">1024</span>,
+            tools=TOOLS,
+            messages=messages
+        )
+
+        <span class="kw">if</span> response.stop_reason == <span class="st">"end_turn"</span>:
+            <span class="cm"># Model selesai — ambil text terakhir</span>
+            <span class="kw">for</span> block <span class="kw">in</span> reversed(response.content):
+                <span class="kw">if</span> <span class="fn">hasattr</span>(block, <span class="st">"text"</span>):
+                    <span class="kw">return</span> block.text
+            <span class="kw">return</span> <span class="st">"(selesai tanpa teks)"</span>
+
+        <span class="kw">if</span> response.stop_reason == <span class="st">"tool_use"</span>:
+            <span class="cm"># Tambahkan response model ke history</span>
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content})
+
+            <span class="cm"># Eksekusi setiap tool yang diminta</span>
+            tool_results = []
+            <span class="kw">for</span> block <span class="kw">in</span> response.content:
+                <span class="kw">if</span> block.type == <span class="st">"tool_use"</span>:
+                    fn = TOOL_REGISTRY.<span class="fn">get</span>(block.name)
+                    result = <span class="fn">fn</span>(**block.input) <span class="kw">if</span> fn <span class="kw">else</span> <span class="st">"Tool tidak ditemukan"</span>
+                    tool_results.<span class="fn">append</span>({
+                        <span class="st">"type"</span>: <span class="st">"tool_result"</span>,
+                        <span class="st">"tool_use_id"</span>: block.id,
+                        <span class="st">"content"</span>: result
+                    })
+
+            <span class="cm"># Inject hasil tool ke context untuk iterasi berikutnya</span>
+            messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+            <span class="kw">continue</span>
+
+        <span class="kw">break</span>  <span class="cm"># stop_reason lain (max_tokens, dll)</span>
+
+    <span class="kw">return</span> <span class="st">"Agent berhenti tanpa jawaban final"</span>
+
+<span class="cm"># ── Jalankan ─────────────────────────────────────────────────────────────</span>
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    jawaban = <span class="fn">run_agent</span>(<span class="st">"Jam berapa sekarang? Dan berapa 15% dari 847?"</span>)
+    <span class="fn">print</span>(jawaban)</pre></div></div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Coba sendiri dulu sebelum lanjut</strong>Simpan file di atas, jalankan dengan <code>python first_agent.py</code>. Perhatikan output-nya — agent akan memanggil kedua tools dan merangkai jawaban. Coba ubah pertanyaan di baris terakhir dan lihat bagaimana agent bereaksi berbeda.</div></div>
+
+<div class="cc"><h3>Apa yang terjadi di balik layar?</h3><ul>
+<li><strong>Iterasi 1</strong>: Model menerima pesan user → memutuskan perlu memanggil <code>get_current_time</code> dan <code>calculate</code> → <code>stop_reason == "tool_use"</code></li>
+<li><strong>Harness</strong>: Eksekusi kedua fungsi Python, inject hasilnya ke <code>messages</code> sebagai <code>tool_result</code></li>
+<li><strong>Iterasi 2</strong>: Model membaca hasil tools → merangkai jawaban akhir → <code>stop_reason == "end_turn"</code></li>
+<li><strong>Itulah agent loop</strong>: model → tool call → result → model. Loop ini bisa jalan puluhan iterasi untuk task yang kompleks</li>
+</ul></div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">text</span><span class="cf">requirements.txt</span></div>
+<div class="cbb"><pre><span class="cm"># Untuk first_agent.py — hanya butuh satu package</span>
+anthropic>=0.40.0
+
+<span class="cm"># Untuk project yang lebih besar (Fase 2+):</span>
+<span class="cm"># anthropic>=0.40.0</span>
+<span class="cm"># pydantic>=2.0</span>
+<span class="cm"># python-dotenv>=1.0  # untuk load .env file</span>
+<span class="cm"># redis>=5.0          # untuk memory/caching</span>
+<span class="cm"># httpx>=0.27         # async HTTP calls</span>
+<span class="cm"># chromadb>=0.5       # vector database untuk RAG</span>
+<span class="cm"># langfuse>=2.0       # observability</span></pre></div></div>
+
+<div class="callout warn"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><div class="ctxt"><strong>eval() di contoh ini tidak aman untuk production</strong>Fungsi <code>calculate()</code> menggunakan <code>eval()</code> dengan sandbox minimal. Ini cukup untuk demo lokal tapi jangan digunakan di server production — gunakan library math khusus atau parser ekspresi yang proper.</div></div>
+</div><!-- /s0a -->
+
+</section><!-- /fase0 -->
