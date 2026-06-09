@@ -482,7 +482,7 @@ function enterCurriculum(id, label) {
   renderSidebar(id);
   document.getElementById('header-sub').textContent = label;
   var ham = document.querySelector('.ham');
-  if (ham) ham.style.display = '';
+  if (ham) ham.style.display = 'flex';
 }
 
 (function(){
