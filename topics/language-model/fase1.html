@@ -121,6 +121,120 @@ words = [<span class="st">"running"</span>, <span class="st">"better"</span>, <s
         <span class="fn">print</span>(<span class="st">f"{token.dep_:10} → '{token.text}' (head: '{token.head.text}')"</span>)</pre></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: Tokenization Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🔍 Tokenization Explorer — Ketik Teks, Lihat Token</div>
+<div class="viz-body" style="padding:0;overflow:hidden;">
+<div style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;">
+  <button id="tok-tab-0" onclick="tokTab(0)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:var(--accent-glow);color:var(--accent);cursor:pointer;">① Whitespace</button>
+  <button id="tok-tab-1" onclick="tokTab(1)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">② BPE (subword)</button>
+  <button id="tok-tab-2" onclick="tokTab(2)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;background:transparent;color:var(--text3);cursor:pointer;">③ WordPiece</button>
+</div>
+<div id="tok-panel" style="padding:20px 24px;">
+  <div style="margin-bottom:14px;">
+    <input type="text" id="tok-input" value="Understanding language models is fascinating!" placeholder="Ketik teks di sini..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;">
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">Token count: <strong id="tok-count" style="color:var(--accent);">0</strong> &nbsp;|&nbsp; Vocab size: <strong id="tok-vocab" style="color:var(--teal);">0</strong></div>
+  <div id="tok-tokens" style="display:flex;flex-wrap:wrap;gap:6px;min-height:50px;align-items:flex-start;"></div>
+  <div style="margin-top:16px;padding:10px 14px;background:var(--bg3);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.7;font-family:'IBM Plex Mono',monospace;">
+    <div id="tok-explanation">Setiap kata dipisahkan berdasarkan spasi. Token = kata utuh.</div>
+  </div>
+</div>
+</div>
+</div>
+<script>
+(function(){
+  var tokMode = 0;
+  window.tokTab = function(idx){
+    tokMode = idx;
+    ['tok-tab-0','tok-tab-1','tok-tab-2'].forEach(function(id,i){
+      var btn=document.getElementById(id);
+      btn.style.background = i===idx?'var(--accent-glow)':'transparent';
+      btn.style.color = i===idx?'var(--accent)':'var(--text3)';
+    });
+    tokUpdate();
+  };
+
+  var bpeVocab = ['▁Under','standing','▁language','▁models','▁is','▁fas','cinating','!','▁the','▁cat','▁sat','▁on','▁mat','▁dog','▁ran','▁in','▁park','▁un','der','stand','ing','▁model','s','▁fasc','inating','▁learn','▁deep','▁neural','▁network','▁trans','former','▁attention'];
+  var wpVocab = ['under','##stand','##ing','language','models','is','fascinating','!','the','cat','sat','on','mat','dog','ran','in','park','un','##der','model','##s','fasc','##inating','learn','deep','neural','network','trans','##former','attention'];
+
+  function tokUpdate(){
+    var text = document.getElementById('tok-input').value.trim();
+    if(!text){ document.getElementById('tok-tokens').innerHTML='<span style="color:var(--text3);font-size:12px;">Ketik sesuatu...</span>'; document.getElementById('tok-count').textContent='0'; document.getElementById('tok-vocab').textContent='0'; return; }
+
+    var tokens=[], explanation='', colors=['rgba(124,109,250,0.2)','rgba(45,212,191,0.2)','rgba(245,158,11,0.2)','rgba(248,113,113,0.2)','rgba(74,222,128,0.2)','rgba(167,139,250,0.2)','rgba(251,146,60,0.2)','rgba(96,165,250,0.2)'];
+
+    if(tokMode===0){
+      // Whitespace tokenization
+      tokens = text.split(/\s+/);
+      explanation = '<strong style="color:var(--accent);">Whitespace Tokenization</strong> — paling sederhana: setiap kata = 1 token. Masalah: "running" ≠ "run" + "ning"; tidak menangani OOV (out-of-vocabulary).';
+    } else if(tokMode===1){
+      // BPE simulation
+      var words = text.split(/\s+/);
+      tokens=[];
+      words.forEach(function(w){
+        var found = bpeVocab.filter(function(v){return v.replace('▁','')===w;});
+        if(found.length>0){ tokens.push(found[0]); }
+        else {
+          // Try to break down
+          var matched=false;
+          for(var i=0;i<bpeVocab.length;i++){
+            var v=bpeVocab[i].replace('▁','');
+            if(w.startsWith(v) && v.length>=3){
+              tokens.push(bpeVocab[i]);
+              var rest = w.substring(v.length);
+              if(rest.length>0) tokens.push('##'+rest);
+              matched=true; break;
+            }
+          }
+          if(!matched) tokens.push('▁'+w);
+        }
+      });
+      explanation = '<strong style="color:var(--teal);">BPE (Byte-Pair Encoding)</strong> — mulai dari karakter, iteratif merge pasangan paling sering. Kata langka dipecah jadi subword. "fascinating" → "▁fas" + "cinating". Dipakai GPT-2/3/4, LLaMA.';
+    } else {
+      // WordPiece simulation
+      var words2 = text.split(/\s+/);
+      tokens=[];
+      words2.forEach(function(w,i){
+        var found = wpVocab.filter(function(v){return v===w;});
+        if(found.length>0){ tokens.push(w); }
+        else {
+          var matched=false;
+          for(var j=0;j<wpVocab.length;j++){
+            if(w.startsWith(wpVocab[j]) && wpVocab[j].length>=3 && !wpVocab[j].startsWith('##')){
+              tokens.push(wpVocab[j]);
+              var rest = w.substring(wpVocab[j].length);
+              if(rest.length>0) tokens.push('##'+rest);
+              matched=true; break;
+            }
+          }
+          if(!matched) tokens.push(w);
+        }
+      });
+      explanation = '<strong style="color:var(--amber);">WordPiece</strong> — mirip BPE, tapi merge berdasarkan likelihood, bukan frekuensi. Awalan "##" menandakan token lanjutan. "understanding" → "under" + "##stand" + "##ing". Dipakai BERT, DistilBERT.';
+    }
+
+    document.getElementById('tok-count').textContent = tokens.length;
+    var unique = {}; tokens.forEach(function(t){unique[t]=true;});
+    document.getElementById('tok-vocab').textContent = Object.keys(unique).length;
+    document.getElementById('tok-explanation').innerHTML = explanation;
+
+    var html='';
+    tokens.forEach(function(t,i){
+      var c = colors[i % colors.length];
+      html += '<span style="background:'+c+';border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:6px 10px;font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:var(--text);position:relative;">'+
+        '<span style="position:absolute;top:-8px;right:-4px;font-size:8px;color:var(--text3);">'+(i+1)+'</span>'+t.replace(/▁/g,'␣').replace(/##/g,'')+'</span>';
+    });
+    document.getElementById('tok-tokens').innerHTML = html;
+  }
+
+  document.getElementById('tok-input').addEventListener('input', tokUpdate);
+  tokUpdate();
+})();
+</script>
+
 <div class="cc"><h3>Perbandingan: NLP Klasik vs Modern</h3><ul>
 <li><strong>Klasik</strong> — pipeline modular, rule-based/statistical, butuh feature engineering manual, tidak transfer well lintas domain, deterministic dan interpretable</li>
 <li><strong>Modern (neural)</strong> — end-to-end learned, transfer learning, butuh data besar, black box, tapi jauh lebih akurat dan generalizable</li>
@@ -196,6 +310,74 @@ sim = <span class="fn">cosine_similarity</span>(tfidf_matrix)
 <span class="fn">print</span>(<span class="st">f"\nSimilarity doc1 vs doc2: {sim[0,1]:.3f}"</span>)  <span class="cm"># tinggi — sama-sama "sat on the"</span>
 <span class="fn">print</span>(<span class="st">f"Similarity doc1 vs doc3: {sim[0,2]:.3f}"</span>)  <span class="cm"># rendah — vocabulary berbeda</span></pre></div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: TF-IDF Weight Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">⚖️ TF-IDF Weight Explorer — Mengapa "the" Berbobot Rendah?</div>
+<div class="viz-body">
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:6px;">Geser untuk lihat bagaimana TF × IDF bekerja</div>
+      <label style="font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Term Frequency (TF) = <span id="tfidf-tf-val" style="color:var(--accent);">3</span></label>
+      <input type="range" id="tfidf-tf" min="1" max="20" value="3" style="width:100%;margin:4px 0 14px;accent-color:var(--accent);">
+      <label style="font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Document Frequency (DF) = <span id="tfidf-df-val" style="color:var(--teal);">2</span></label>
+      <input type="range" id="tfidf-df" min="1" max="100" value="2" style="width:100%;margin:4px 0 14px;accent-color:var(--teal);">
+      <label style="font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Total Documents (N) = <span id="tfidf-n-val" style="color:var(--amber);">100</span></label>
+      <input type="range" id="tfidf-n" min="10" max="1000" step="10" value="100" style="width:100%;margin:4px 0 0;accent-color:var(--amber);">
+    </div>
+    <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:8px;justify-content:center;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text);text-align:center;" id="tfidf-formula">TF-IDF = 3 × log(100/2) = 5.10</div>
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:4px;">Kata Langka</div>
+          <div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;transition:all .3s;" id="tfidf-bubble">5.10</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px;">TF-IDF</div>
+        </div>
+        <div style="font-size:20px;color:var(--text3);">vs</div>
+        <div style="text-align:center;">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:4px;">Stop Word</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(248,113,113,.1);border:2px solid rgba(248,113,113,.3);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:11px;color:var(--coral);" id="tfidf-stop">0.0</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px;">TF-IDF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  function updateTFIDF(){
+    var tf = parseInt(document.getElementById('tfidf-tf').value);
+    var df = parseInt(document.getElementById('tfidf-df').value);
+    var N = parseInt(document.getElementById('tfidf-n').value);
+    document.getElementById('tfidf-tf-val').textContent = tf;
+    document.getElementById('tfidf-df-val').textContent = df;
+    document.getElementById('tfidf-n-val').textContent = N;
+    var idf = Math.log(N/df);
+    var tfidf = tf * idf;
+    document.getElementById('tfidf-formula').textContent = 'TF-IDF = '+tf+' × log('+N+'/'+df+') = '+tfidf.toFixed(2);
+    var bubble = document.getElementById('tfidf-bubble');
+    var intensity = Math.min(1, tfidf/10);
+    bubble.style.background = 'rgba(124,109,250,'+(0.08+intensity*0.5)+')';
+    bubble.style.border = '2px solid rgba(124,109,250,'+(0.3+intensity*0.7)+')';
+    bubble.style.color = intensity>0.8?'#fff':'var(--accent)';
+    bubble.style.width = (40+intensity*40)+'px';
+    bubble.style.height = (40+intensity*40)+'px';
+    bubble.textContent = tfidf.toFixed(1);
+    // Stop word: TF tinggi, DF tinggi
+    var stopTF = 18, stopDF = 90;
+    var stopIDF = Math.log(N/stopDF);
+    var stopTFIDF = stopTF * stopIDF;
+    document.getElementById('tfidf-stop').textContent = stopTFIDF.toFixed(1);
+  }
+  document.getElementById('tfidf-tf').addEventListener('input', updateTFIDF);
+  document.getElementById('tfidf-df').addEventListener('input', updateTFIDF);
+  document.getElementById('tfidf-n').addEventListener('input', updateTFIDF);
+  updateTFIDF();
+})();
+</script>
 
 <div class="viz-wrap">
 <div class="viz-title">Dimensi & Sparsity — Perbandingan Representasi</div>
@@ -293,6 +475,156 @@ vectors = np.<span class="fn">array</span>([wv[w] <span class="kw">for</span> w 
 pca = <span class="fn">PCA</span>(n_components=<span class="nm">2</span>)
 coords = pca.<span class="fn">fit_transform</span>(vectors)  <span class="cm"># 2D coords untuk plotting</span></pre></div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: 2D Embedding Space Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🌌 Embedding Space Explorer — Geser untuk Lihat Relasi Semantik</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;padding:16px 20px;">
+    <canvas id="emb-canvas" width="360" height="320" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:12px;">Pilih kata untuk melihat vektor analoginya:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;">
+        <button onclick="embSelect('king')" id="emb-btn-king" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">king</button>
+        <button onclick="embSelect('queen')" id="emb-btn-queen" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">queen</button>
+        <button onclick="embSelect('man')" id="emb-btn-man" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">man</button>
+        <button onclick="embSelect('woman')" id="emb-btn-woman" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">woman</button>
+        <button onclick="embSelect('cat')" id="emb-btn-cat" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">cat</button>
+        <button onclick="embSelect('dog')" id="emb-btn-dog" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">dog</button>
+        <button onclick="embSelect('python')" id="emb-btn-python" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">python</button>
+        <button onclick="embSelect('java')" id="emb-btn-java" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">java</button>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.8;" id="emb-info">
+        <div>← Klik kata untuk lihat posisinya</div>
+        <div style="margin-top:4px;">🔵 = Animals &nbsp; 🟢 = Tech</div>
+        <div>🟣 = Royalty &nbsp; 🟠 = Gender pair</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var embPoints = {
+    king:   {x:200,y:80, cluster:'royalty', pair:'queen', color:'rgba(245,158,11,0.85)'},
+    queen:  {x:230,y:120,cluster:'royalty', pair:'king',  color:'rgba(245,158,11,0.75)'},
+    prince: {x:180,y:130,cluster:'royalty', pair:null,    color:'rgba(245,158,11,0.55)'},
+    man:    {x:90,y:170, cluster:'gender',  pair:'woman', color:'rgba(124,109,250,0.8)'},
+    woman:  {x:110,y:210,cluster:'gender',  pair:'man',   color:'rgba(124,109,250,0.8)'},
+    boy:    {x:70,y:180, cluster:'gender',  pair:'girl',  color:'rgba(124,109,250,0.5)'},
+    girl:   {x:85,y:220, cluster:'gender',  pair:'boy',   color:'rgba(124,109,250,0.5)'},
+    cat:    {x:290,y:60, cluster:'animal',  pair:'dog',   color:'rgba(45,212,191,0.8)'},
+    dog:    {x:320,y:80, cluster:'animal',  pair:'cat',   color:'rgba(45,212,191,0.75)'},
+    bird:   {x:280,y:95, cluster:'animal',  pair:null,    color:'rgba(45,212,191,0.55)'},
+    fish:   {x:310,y:110,cluster:'animal',  pair:null,    color:'rgba(45,212,191,0.5)'},
+    python: {x:260,y:240,cluster:'tech',    pair:'java',  color:'rgba(74,222,128,0.8)'},
+    java:   {x:290,y:260,cluster:'tech',    pair:'python',color:'rgba(74,222,128,0.7)'},
+    code:   {x:250,y:270,cluster:'tech',    pair:null,    color:'rgba(74,222,128,0.5)'},
+    server: {x:310,y:250,cluster:'tech',    pair:null,    color:'rgba(74,222,128,0.45)'},
+  };
+  var embClusterColors = {
+    royalty: 'rgba(245,158,11,0.08)',
+    gender:  'rgba(124,109,250,0.06)',
+    animal:  'rgba(45,212,191,0.07)',
+    tech:    'rgba(74,222,128,0.07)',
+  };
+  var embClusterCenters = {royalty:{x:205,y:110},gender:{x:91,y:195},animal:{x:300,y:86},tech:{x:278,y:256}};
+  var embClusterSizes = {royalty:{w:70,h:65},gender:{w:55,h:65},animal:{w:55,h:60},tech:{w:75,h:45}};
+  var selectedWord = 'king';
+  var canvas, ctx, W, H;
+
+  function initEmb(){
+    canvas = document.getElementById('emb-canvas'); if(!canvas) return;
+    ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
+  }
+
+  window.embSelect = function(word){
+    selectedWord = word;
+    Object.keys(embPoints).forEach(function(k){
+      var btn = document.getElementById('emb-btn-'+k);
+      if(!btn) return;
+      if(k===word){ btn.style.background='var(--accent-glow)'; btn.style.color='var(--accent)'; btn.style.borderColor='var(--accent)'; }
+      else { btn.style.background='transparent'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
+    });
+    drawEmb();
+    // Update info
+    var p = embPoints[word];
+    var info = document.getElementById('emb-info');
+    info.innerHTML = '<div><strong style="color:var(--text);">'+word+'</strong> — cluster: '+p.cluster+'</div>';
+    if(p.pair){ info.innerHTML += '<div style="margin-top:4px;">Analog pair: <span style="color:var(--accent);">'+word+'</span> ↔ <span style="color:var(--teal);">'+p.pair+'</span></div>';
+      var pp = embPoints[p.pair];
+      var dx = pp.x-p.x, dy = pp.y-p.y;
+      info.innerHTML += '<div style="margin-top:2px;color:var(--text3);">Offset vector: ('+dx+', '+dy+')</div>';
+    }
+    info.innerHTML += '<div style="margin-top:6px;color:var(--text3);">Jarak ≈ semantic similarity</div>';
+  };
+
+  function drawEmb(){
+    if(!ctx) return;
+    ctx.clearRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+    for(var gx=0;gx<W;gx+=30){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<H;gy+=30){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // Cluster ellipses
+    Object.keys(embClusterCenters).forEach(function(k){
+      var c=embClusterCenters[k], s=embClusterSizes[k];
+      ctx.fillStyle=embClusterColors[k];
+      ctx.beginPath();ctx.ellipse(c.x,c.y,s.w,s.h,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.ellipse(c.x,c.y,s.w,s.h,0,0,Math.PI*2);ctx.stroke();
+    });
+    // Lines between pairs
+    Object.keys(embPoints).forEach(function(k){
+      var p=embPoints[k];
+      if(p.pair && embPoints[p.pair]){
+        var pp=embPoints[p.pair];
+        ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(pp.x,pp.y);ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+    // Highlight selected word's connections
+    var sel = embPoints[selectedWord];
+    if(sel && sel.pair && embPoints[sel.pair]){
+      var spp = embPoints[sel.pair];
+      ctx.strokeStyle='rgba(124,109,250,0.4)';ctx.lineWidth=2;ctx.setLineDash([2,2]);
+      ctx.beginPath();ctx.moveTo(sel.x,sel.y);ctx.lineTo(spp.x,spp.y);ctx.stroke();
+      ctx.setLineDash([]);
+      // Arrow midpoint
+      var mx=(sel.x+spp.x)/2, my=(sel.y+spp.y)/2;
+      ctx.fillStyle='rgba(124,109,250,0.5)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('analogy',mx,my-6);
+    }
+    // Draw all points
+    Object.keys(embPoints).forEach(function(k){
+      var p=embPoints[k];
+      var isSel = k===selectedWord;
+      var r = isSel?9:6;
+      ctx.fillStyle=p.color;
+      ctx.strokeStyle=isSel?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.15)';
+      ctx.lineWidth=isSel?2.5:1;
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+      if(isSel){
+        ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(p.x,p.y,r+4,0,Math.PI*2);ctx.stroke();
+      }
+      ctx.fillStyle=isSel?'#fff':'rgba(255,255,255,0.7)';
+      ctx.font=(isSel?'bold ':'')+'9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(k,p.x,p.y+r+14);
+    });
+    // Legend
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('t-SNE projection (simulated)',10,H-10);
+  }
+
+  initEmb();
+  embSelect('king');
+  window.addEventListener('resize',function(){initEmb();drawEmb();});
+})();
+</script>
 
 <div class="viz-wrap">
 <div class="viz-title">Ruang Semantik Word Embeddings — Hubungan Analogis</div>

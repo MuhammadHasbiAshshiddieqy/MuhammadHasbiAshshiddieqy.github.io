@@ -294,6 +294,112 @@ Sentiment:"""</span>
 <span class="cm"># Tanpa fine-tuning! Ini adalah in-context learning.</span></pre></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: Decoding Strategy Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🎲 Decoding Strategy Explorer — Temperature, Top-K, Top-P</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="decode-canvas" width="380" height="220" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Temperature = <span id="dec-t-val" style="color:var(--accent);">0.8</span></label>
+      <input type="range" id="dec-t" min="0.1" max="2" step="0.1" value="0.8" style="width:100%;margin:4px 0 10px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Top-K = <span id="dec-k-val" style="color:var(--teal);">50</span></label>
+      <input type="range" id="dec-k" min="1" max="100" value="50" style="width:100%;margin:4px 0 10px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Top-P (nucleus) = <span id="dec-p-val" style="color:var(--amber);">0.92</span></label>
+      <input type="range" id="dec-p" min="0.5" max="1" step="0.02" value="0.92" style="width:100%;margin:4px 0 0;accent-color:var(--amber);">
+      <div style="font-size:9px;color:var(--text3);margin-top:10px;font-family:'IBM Plex Mono',monospace;">
+        <div>T &lt; 1 → lebih deterministik</div>
+        <div>T &gt; 1 → lebih random/kreatif</div>
+        <div>Top-K: hanya K token teratas</div>
+        <div>Top-P: token hingga ∑p ≤ P</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+  var vocab = ['the','a','model','language','learning','deep','neural','network','data','training','inference','generate','text','token','word','embedding','attention','transformer','GPT','BERT','LLM','AI','machine','algorithm','system','process','input','output','result'];
+  // Simulated logits (pre-softmax scores for next token prediction)
+  var baseLogits = vocab.map(function(w,i){return Math.exp(-i*0.3)+Math.random()*0.5;});
+
+  function initDec(){cv=document.getElementById('decode-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+
+  function drawDec(){
+    if(!ctx) return;
+    var T = parseFloat(document.getElementById('dec-t').value);
+    var K = parseInt(document.getElementById('dec-k').value);
+    var P = parseFloat(document.getElementById('dec-p').value);
+    document.getElementById('dec-t-val').textContent = T.toFixed(1);
+    document.getElementById('dec-k-val').textContent = K;
+    document.getElementById('dec-p-val').textContent = P.toFixed(2);
+
+    // Apply temperature: divide logits by T
+    var scaledLogits = baseLogits.map(function(l){return l/T;});
+    // Softmax
+    var maxL = Math.max.apply(null, scaledLogits);
+    var expSum=0; var exps = scaledLogits.map(function(l){var e=Math.exp(l-maxL);expSum+=e;return e;});
+    var probs = exps.map(function(e){return e/expSum;});
+
+    // Sort by probability
+    var indexed = probs.map(function(p,i){return {word:vocab[i],prob:p,idx:i};});
+    indexed.sort(function(a,b){return b.prob-a.prob;});
+
+    // Apply Top-K
+    var topKSet = {}; indexed.slice(0,K).forEach(function(x){topKSet[x.idx]=true;});
+
+    // Apply Top-P
+    var cumsum=0; var topPSet={};
+    for(var i=0;i<indexed.length;i++){cumsum+=indexed[i].prob;topPSet[indexed[i].idx]=true;if(cumsum>=P)break;}
+
+    ctx.clearRect(0,0,W,H);
+    var barH=12, gap=3, maxBarW=W-160, startX=130, startY=16;
+    var maxProb = indexed[0].prob;
+
+    for(var i=0;i<Math.min(indexed.length,18);i++){
+      var item=indexed[i];
+      var y=startY+i*(barH+gap);
+      var barW=(item.prob/maxProb)*maxBarW;
+      var inK=topKSet[item.idx], inP=topPSet[item.idx];
+      var alpha=inK&&inP?0.9:inK?0.5:inP?0.4:0.15;
+      var color=inK&&inP?'rgba(124,109,250,'+alpha+')':inK?'rgba(45,212,191,'+alpha+')':inP?'rgba(245,158,11,'+alpha+')':'rgba(255,255,255,'+alpha+')';
+
+      ctx.fillStyle=color;
+      ctx.fillRect(startX,y,barW,barH);
+      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
+      ctx.strokeRect(startX,y,maxBarW,barH);
+
+      ctx.fillStyle=inK&&inP?'#fff':'rgba(255,255,255,0.6)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='right';
+      ctx.fillText(item.word,startX-8,y+barH-3);
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.textAlign='left';
+      ctx.fillText((item.prob*100).toFixed(1)+'%',startX+barW+4,y+barH-3);
+    }
+
+    // Legend
+    ctx.fillStyle='rgba(124,109,250,0.7)';ctx.fillRect(10,startY,12,6);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Top-K + Top-P',26,startY+7);
+    ctx.fillStyle='rgba(45,212,191,0.7)';ctx.fillRect(10,startY+14,12,6);
+    ctx.fillText('Top-K only',26,startY+21);
+    ctx.fillStyle='rgba(245,158,11,0.7)';ctx.fillRect(10,startY+28,12,6);
+    ctx.fillText('Top-P only',26,startY+35);
+
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Sampling from distribution — brighter = higher chance of being selected',W/2,H-8);
+  }
+
+  initDec();
+  drawDec();
+  document.getElementById('dec-t').addEventListener('input',drawDec);
+  document.getElementById('dec-k').addEventListener('input',drawDec);
+  document.getElementById('dec-p').addEventListener('input',drawDec);
+  window.addEventListener('resize',function(){initDec();drawDec();});
+})();
+</script>
+
 <div class="viz-wrap">
 <div class="viz-title">Zero-shot vs Few-shot vs Fine-tuning — Trade-offs</div>
 <div class="viz-body">
@@ -463,6 +569,116 @@ model.<span class="fn">save_pretrained</span>(<span class="st">"./lora-adapter"<
 </svg>
 </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: LoRA Rank Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🔬 LoRA Rank Explorer — Geser Rank, Lihat Efisiensi</div>
+<div class="viz-body">
+  <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:6px;">Dimensi matriks: d_model × d_model</div>
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">d_model = <span id="lora-d-val" style="color:var(--accent);">4096</span></label>
+      <input type="range" id="lora-d" min="512" max="8192" step="512" value="4096" style="width:100%;margin:4px 0 10px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">LoRA rank r = <span id="lora-r-val" style="color:var(--teal);">16</span></label>
+      <input type="range" id="lora-r" min="1" max="128" value="16" style="width:100%;margin:4px 0 16px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:2;color:var(--text2);">
+        <div>Full params: <strong id="lora-full-p" style="color:var(--coral);">16.8M</strong></div>
+        <div>LoRA trainable: <strong id="lora-train-p" style="color:var(--green);">131K</strong></div>
+        <div>Ratio: <strong id="lora-ratio" style="color:var(--accent);">0.78%</strong></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:240px;">
+      <canvas id="lora-canvas" width="340" height="200" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);max-width:100%;"></canvas>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);text-align:center;margin-top:4px;">ΔW = B<sub>d×r</sub> · A<sub>r×d</sub> &nbsp;|&nbsp; Full rank = d</div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+  function initLora(){cv=document.getElementById('lora-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+
+  function drawLora(){
+    if(!ctx) return;
+    var d = parseInt(document.getElementById('lora-d').value);
+    var r = parseInt(document.getElementById('lora-r').value);
+    document.getElementById('lora-d-val').textContent = d;
+    document.getElementById('lora-r-val').textContent = r;
+    var fullP = d*d;
+    var loraP = 2*d*r;
+    var ratio = (loraP/fullP*100);
+    document.getElementById('lora-full-p').textContent = (fullP/1e6).toFixed(1)+'M';
+    document.getElementById('lora-train-p').textContent = loraP>=1e6?(loraP/1e6).toFixed(2)+'M':(loraP/1e3).toFixed(0)+'K';
+    document.getElementById('lora-ratio').textContent = ratio.toFixed(2)+'%';
+
+    ctx.clearRect(0,0,W,H);
+    // Full matrix (faded)
+    var fullW=Math.min(120,d/40), fullH=Math.min(120,d/40);
+    var sx=40, sy=H/2-fullH/2;
+    ctx.fillStyle='rgba(248,113,113,0.08)';ctx.strokeStyle='rgba(248,113,113,0.3)';ctx.lineWidth=1;
+    ctx.fillRect(sx,sy,fullW,fullH);ctx.strokeRect(sx,sy,fullW,fullH);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('W',sx+fullW/2,sy+fullH/2+4);
+    ctx.fillText(d+'×'+d,sx+fullW/2,sy-6);
+
+    // Equal sign
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='16px sans-serif';
+    ctx.fillText('=',sx+fullW+16,sy+fullH/2+6);
+
+    // Frozen W
+    var px2=sx+fullW+36;
+    ctx.fillStyle='rgba(248,113,113,0.06)';ctx.strokeStyle='rgba(248,113,113,0.2)';
+    ctx.fillRect(px2,sy,fullW,fullH);ctx.strokeRect(px2,sy,fullW,fullH);
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('W',px2+fullW/2,sy+fullH/2+4);
+    ctx.fillText('frozen',px2+fullW/2,sy-6);
+
+    // Plus sign
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='14px sans-serif';
+    ctx.fillText('+',px2+fullW+14,sy+fullH/2+5);
+
+    // LoRA decomposition
+    var px3=px2+fullW+34;
+    var bW=fullW*0.6, bH=fullH, aW=fullW, aH=fullH*(r/d)*0.9+8;
+    // B matrix (tall, thin if r is small)
+    ctx.fillStyle='rgba(74,222,128,0.1)';ctx.strokeStyle='rgba(74,222,128,0.5)';ctx.lineWidth=2;
+    var bActualW = bW*(r/d)*2+8;
+    ctx.fillRect(px3,sy,bActualW,bH);ctx.strokeRect(px3,sy,bActualW,bH);
+    ctx.fillStyle='rgba(74,222,128,0.8)';ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('B',px3+bActualW/2,sy+bH/2+4);
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px IBM Plex Mono,monospace';
+    ctx.fillText(d+'×'+r,px3+bActualW/2,sy-6);
+
+    // × sign
+    var px4=px3+bActualW+16;
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='12px sans-serif';
+    ctx.fillText('×',px4,sy+bH/2+4);
+
+    // A matrix (wide, short if r is small)
+    var px5=px4+16;
+    var aActualH = aH*(r/d)*2+12;
+    ctx.fillStyle='rgba(124,109,250,0.1)';ctx.strokeStyle='rgba(124,109,250,0.5)';ctx.lineWidth=2;
+    ctx.fillRect(px5,sy+bH-aActualH,aW,aActualH);ctx.strokeRect(px5,sy+bH-aActualH,aW,aActualH);
+    ctx.fillStyle='rgba(124,109,250,0.8)';ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('A',px5+aW/2,sy+bH-aActualH/2);
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='8px IBM Plex Mono,monospace';
+    ctx.fillText(r+'×'+d,px5+aW/2,sy+bH+20);
+
+    // Bottom note
+    ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('r ≪ d → B·A jauh lebih kecil dari W penuh',W/2,H-8);
+  }
+
+  initLora();
+  drawLora();
+  document.getElementById('lora-d').addEventListener('input',drawLora);
+  document.getElementById('lora-r').addEventListener('input',drawLora);
+  window.addEventListener('resize',function(){initLora();drawLora();});
+})();
+</script>
 
 </div><!-- /lm4d -->
 

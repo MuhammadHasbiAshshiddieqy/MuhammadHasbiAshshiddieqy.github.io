@@ -127,6 +127,139 @@
 </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: Interactive Attention Heatmap -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🎯 Interactive Attention Explorer — Hover untuk Lihat Koneksi</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="attn-canvas" width="380" height="280" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:12px;">
+        <div style="margin-bottom:6px;">Input: <strong style="color:var(--accent);">"The cat sat on the mat"</strong></div>
+        <div style="color:var(--text3);">Output: <strong style="color:var(--teal);">"Le chat était sur le tapis"</strong></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">
+        Hover token output untuk lihat attention-nya ke input:
+      </div>
+      <div id="attn-output-tokens" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;"></div>
+      <div id="attn-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;">
+        ← Hover output token
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var srcTokens = ['The','cat','sat','on','the','mat'];
+  var tgtTokens = ['Le','chat','était','sur','le','tapis'];
+  // Simulated attention weights [tgt][src]
+  var attnWeights = [
+    [0.85,0.08,0.03,0.02,0.01,0.01],  // Le → The
+    [0.07,0.88,0.03,0.01,0.01,0.00],  // chat → cat
+    [0.02,0.05,0.89,0.02,0.01,0.01],  // était → sat
+    [0.01,0.02,0.02,0.91,0.03,0.01],  // sur → on
+    [0.03,0.01,0.01,0.04,0.89,0.02],  // le → the
+    [0.01,0.01,0.02,0.03,0.05,0.88],  // tapis → mat
+  ];
+  var hoveredTgt = 0;
+  var canvas, ctx, W, H;
+
+  function initAttn(){
+    canvas = document.getElementById('attn-canvas'); if(!canvas) return;
+    ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
+    buildOutputTokens();
+    drawAttn();
+  }
+
+  function buildOutputTokens(){
+    var html='';
+    tgtTokens.forEach(function(t,i){
+      html += '<span onmouseenter="attnHover('+i+')" onmouseleave="attnHover(-1)" id="attn-ot-'+i+'" style="cursor:pointer;padding:5px 10px;border-radius:6px;font-family:\'IBM Plex Mono\',monospace;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all .15s;">'+t+'</span>';
+    });
+    document.getElementById('attn-output-tokens').innerHTML = html;
+  }
+
+  window.attnHover = function(idx){
+    hoveredTgt = idx;
+    tgtTokens.forEach(function(t,i){
+      var el = document.getElementById('attn-ot-'+i);
+      if(!el) return;
+      if(i===idx){
+        el.style.background='var(--accent-glow)';el.style.color='var(--accent)';el.style.borderColor='var(--accent)';
+      } else {
+        el.style.background='transparent';el.style.color='var(--text3)';el.style.borderColor='var(--border)';
+      }
+    });
+    if(idx>=0){
+      var info='<div><strong style="color:var(--accent);">"'+tgtTokens[idx]+'"</strong> memperhatikan:</div>';
+      var sorted = srcTokens.map(function(s,i){return {word:s,weight:attnWeights[idx][i]};}).sort(function(a,b){return b.weight-a.weight;});
+      sorted.forEach(function(s){
+        var alpha = s.weight;
+        var color = alpha>0.7?'var(--accent)':alpha>0.3?'var(--teal)':'var(--text3)';
+        info += '<div style="margin-left:8px;">'+s.word+': <strong style="color:'+color+';">'+(s.weight*100).toFixed(0)+'%</strong></div>';
+      });
+      document.getElementById('attn-info').innerHTML = info;
+    } else {
+      document.getElementById('attn-info').innerHTML = '← Hover output token';
+    }
+    drawAttn();
+  };
+
+  function drawAttn(){
+    if(!ctx) return;
+    ctx.clearRect(0,0,W,H);
+    var leftMargin = 80, topMargin = 30, cellW = 40, cellH = 32, gap = 3;
+
+    // Source tokens (columns)
+    srcTokens.forEach(function(t,i){
+      var x = leftMargin + i*(cellW+gap) + cellW/2;
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(t, x, topMargin-6);
+    });
+    // Target tokens (rows)
+    tgtTokens.forEach(function(t,i){
+      var y = topMargin + cellH/2 + i*(cellH+gap) + 4;
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.textAlign='right';
+      ctx.fillText(t, leftMargin-10, y);
+    });
+    // Grid
+    tgtTokens.forEach(function(ti,i){
+      srcTokens.forEach(function(sj,j){
+        var x = leftMargin + j*(cellW+gap);
+        var y = topMargin + i*(cellH+gap);
+        var w = attnWeights[i][j];
+        var isHighlighted = (hoveredTgt === i);
+        var alpha = isHighlighted ? w : w*0.3;
+        var r=Math.round(alpha*124), g=Math.round(alpha*109), b=Math.round(alpha*250);
+        ctx.fillStyle = 'rgba(124,109,250,'+(alpha*0.9+0.05)+')';
+        ctx.fillRect(x, y, cellW, cellH);
+        ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
+        ctx.strokeRect(x, y, cellW, cellH);
+        ctx.fillStyle=w>0.5?'#fff':'rgba(255,255,255,'+(0.3+w*0.7)+')';
+        ctx.font=(isHighlighted&&w>0.5?'bold ':'')+'9px IBM Plex Mono,monospace';ctx.textAlign='center';
+        ctx.fillText((w*100).toFixed(0), x+cellW/2, y+cellH/2+4);
+      });
+    });
+    // Highlight row
+    if(hoveredTgt>=0){
+      var hy = topMargin + hoveredTgt*(cellH+gap);
+      ctx.strokeStyle='rgba(124,109,250,0.6)';ctx.lineWidth=2;
+      ctx.strokeRect(leftMargin-1, hy-1, srcTokens.length*(cellW+gap)+2, cellH+2);
+    }
+    // Label
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Row = output token  |  Col = input token',10,H-8);
+  }
+
+  initAttn();
+  attnHover(0);
+  window.addEventListener('resize',function(){initAttn();drawAttn();});
+})();
+</script>
+
 <div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
 <li><strong>[Konseptual]</strong> Jelaskan mengapa attention weight bisa divisualisasikan sebagai "alignment matrix" untuk machine translation. Apa yang terjadi dengan alignment untuk bahasa yang word order-nya sangat berbeda (misal Inggris vs Jepang)?</li>
 <li><strong>[Kode]</strong> Tambahkan BahdanauAttention ke Seq2Seq dari topik 2.5. Visualisasikan attention weight sebagai heatmap menggunakan matplotlib untuk beberapa contoh kalimat terjemahan.</li>
@@ -369,6 +502,105 @@
   </div>
 </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: Positional Encoding Wave Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🌊 Positional Encoding Wave Explorer — Sin & Cos per Dimensi</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="pe-canvas" width="400" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:12px;">
+        PE(pos, 2i) = sin(pos / 10000<sup>2i/d</sup>)<br>
+        PE(pos, 2i+1) = cos(pos / 10000<sup>2i/d</sup>)
+      </div>
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Pilih dimensi: <span id="pe-dim-val" style="color:var(--accent);">0 (high freq)</span></label>
+      <input type="range" id="pe-dim" min="0" max="11" value="0" style="width:100%;margin:4px 0 12px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Max posisi: <span id="pe-pos-val" style="color:var(--teal);">50</span></label>
+      <input type="range" id="pe-pos" min="20" max="200" value="50" style="width:100%;margin:4px 0 0;accent-color:var(--teal);">
+      <div style="font-size:10px;color:var(--text3);line-height:1.7;margin-top:12px;font-family:'IBM Plex Mono',monospace;" id="pe-explanation">
+        <strong style="color:var(--accent);">Dimensi 0-1 (high freq):</strong><br>
+        Berganti cepat — encode posisi lokal.<br>
+        Token bertetangga punya PE sangat berbeda.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var canvas, ctx, W, H;
+  function initPE(){
+    canvas = document.getElementById('pe-canvas'); if(!canvas) return;
+    ctx = canvas.getContext('2d'); W=canvas.width; H=canvas.height;
+  }
+
+  function drawPE(){
+    if(!ctx) return;
+    var dimIdx = parseInt(document.getElementById('pe-dim').value);
+    var maxPos = parseInt(document.getElementById('pe-pos').value);
+    var d_model = 64; // simulated model dimension
+    document.getElementById('pe-dim-val').textContent = dimIdx+' ('+(dimIdx<4?'high freq':dimIdx<8?'mid freq':'low freq')+')';
+    document.getElementById('pe-pos-val').textContent = maxPos;
+
+    // Explanation
+    var explanations = [
+      '<strong style="color:var(--accent);">Dimensi 0-1 (very high freq):</strong><br>Frekuensi tertinggi. Berganti setiap posisi.<br>Token bertetangga punya PE sangat berbeda.<br>Mengkodekan urutan lokal yang presisi.',
+      '<strong style="color:var(--accent);">Dimensi 2-3 (high freq):</strong><br>Masih berganti cepat. Membantu model<br>membedakan posisi dalam window pendek.<br>Penting untuk syntactic attention.',
+      '<strong style="color:var(--teal);">Dimensi 4-7 (mid freq):</strong><br>Frekuensi sedang. Berganti setiap beberapa<br>posisi. Menangkap struktur frasa — di mana<br>subject, verb, object berada.',
+      '<strong style="color:var(--amber);">Dimensi 8-11 (low freq):</strong><br>Frekuensi rendah. Hampir konstan dalam<br>window pendek. Mengkodekan posisi global —<br>apakah ini awal, tengah, atau akhir sequence?',
+    ];
+    var expIdx = dimIdx<2?0:dimIdx<4?1:dimIdx<8?2:3;
+    document.getElementById('pe-explanation').innerHTML = explanations[expIdx];
+
+    ctx.clearRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+    for(var gy=0;gy<H;gy+=30){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // Center line
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+    // Axis labels
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillText('+1',W-20,H/2-8);ctx.fillText('-1',W-20,H/2+18);
+    ctx.fillText('pos→',W-30,H/2+30);
+
+    // Draw all dimension waves faintly
+    for(var d=0;d<12;d++){
+      var divTerm = Math.pow(10000, 2*d/d_model);
+      var alpha = d===dimIdx?1:0.08;
+      var lineW = d===dimIdx?2.5:0.5;
+      var isEven = d%2===0;
+      var color = isEven?'rgba(124,109,250,'+alpha+')':'rgba(45,212,191,'+alpha+')';
+      ctx.strokeStyle=color;ctx.lineWidth=lineW;
+      ctx.beginPath();
+      for(var pos=0;pos<maxPos;pos++){
+        var val = isEven?Math.sin(pos/divTerm):Math.cos(pos/divTerm);
+        var px = 40 + (pos/maxPos)*(W-60);
+        var py = H/2 - val*(H/2-20);
+        if(pos===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+    }
+    // Legend
+    ctx.fillStyle='rgba(124,109,250,0.8)';ctx.fillRect(10,8,14,3);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.fillText('sin (even dim)',28,14);
+    ctx.fillStyle='rgba(45,212,191,0.8)';ctx.fillRect(10,18,14,3);
+    ctx.fillText('cos (odd dim)',28,24);
+    // Highlight current dim
+    ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillText('dim '+dimIdx, 10, H-10);
+  }
+
+  initPE();
+  drawPE();
+  document.getElementById('pe-dim').addEventListener('input', drawPE);
+  document.getElementById('pe-pos').addEventListener('input', drawPE);
+  window.addEventListener('resize',function(){initPE();drawPE();});
+})();
+</script>
 
 <div class="viz-wrap">
 <div class="viz-title">Multi-Head Attention — Setiap Head Belajar Pola Berbeda</div>

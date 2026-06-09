@@ -164,6 +164,119 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: Scaling Law Interactive Explorer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">📈 Scaling Law Interactive Explorer — Geser untuk Prediksi Loss</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="scale-canvas" width="400" height="280" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Parameters (N): <span id="sc-n-val" style="color:var(--accent);">10B</span></label>
+      <input type="range" id="sc-n" min="1" max="7" value="4" style="width:100%;margin:4px 0 12px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Training Tokens (D): <span id="sc-d-val" style="color:var(--teal);">500B</span></label>
+      <input type="range" id="sc-d" min="1" max="7" value="4" style="width:100%;margin:4px 0 16px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:2.2;color:var(--text2);background:var(--bg3);padding:12px;border-radius:8px;">
+        <div>Predicted Loss: <strong id="sc-loss" style="color:var(--coral);font-size:14px;">2.85</strong></div>
+        <div style="font-size:10px;color:var(--text3);">D/N ratio: <span id="sc-ratio">20.0</span></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;">Status: <span id="sc-status" style="color:var(--green);">✅ Chinchilla-optimal</span></div>
+        <div style="font-size:9px;color:var(--text3);margin-top:6px;">Loss = 1.69 + 406.4/N<sup>0.34</sup> + 410.7/D<sup>0.28</sup></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+  var N_labels = ['100M','500M','1B','5B','10B','50B','100B','500B'];
+  var D_labels = ['10B','50B','100B','500B','1T','5T','10T','50T'];
+  var N_values = [1e8,5e8,1e9,5e9,1e10,5e10,1e11,5e11];
+  var D_values = [1e10,5e10,1e11,5e11,1e12,5e12,1e13,5e13];
+
+  function initSc(){cv=document.getElementById('scale-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+
+  function chinchillaLoss(N,D){
+    return 1.69 + 406.4/Math.pow(N,0.34) + 410.7/Math.pow(D,0.28);
+  }
+
+  function drawSc(){
+    if(!ctx) return;
+    var nIdx = parseInt(document.getElementById('sc-n').value);
+    var dIdx = parseInt(document.getElementById('sc-d').value);
+    var N = N_values[nIdx], D = D_values[dIdx];
+    document.getElementById('sc-n-val').textContent = N_labels[nIdx];
+    document.getElementById('sc-d-val').textContent = D_labels[dIdx];
+
+    var loss = chinchillaLoss(N,D);
+    var ratio = D/N;
+    document.getElementById('sc-loss').textContent = loss.toFixed(2);
+    document.getElementById('sc-ratio').textContent = ratio.toFixed(1);
+    var statusEl = document.getElementById('sc-status');
+    if(ratio>18&&ratio<22){statusEl.textContent='✅ Chinchilla-optimal';statusEl.style.color='var(--green)';}
+    else if(ratio>22){statusEl.textContent='⚠️ Over-trained (efficient inference)';statusEl.style.color='var(--amber)';}
+    else {statusEl.textContent='⚠️ Under-trained (model too big for data)';statusEl.style.color='var(--coral)';}
+
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+    for(var gx=40;gx<W;gx+=35){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H-30);ctx.stroke();}
+    for(var gy=0;gy<H-30;gy+=30){ctx.beginPath();ctx.moveTo(40,gy);ctx.lineTo(W-10,gy);ctx.stroke();}
+
+    var margin=50, r=H-50;
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(margin,r);ctx.lineTo(W-20,r);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(margin,r);ctx.lineTo(margin,20);ctx.stroke();
+
+    // Chinchilla line
+    ctx.strokeStyle='rgba(74,222,128,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(margin,r-10);ctx.lineTo(W-20,30);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(74,222,128,0.5)';ctx.font='8px IBM Plex Mono,monospace';
+    ctx.fillText('Chinchilla-optimal',W-130,35);
+
+    // Model positions
+    var models = [
+      {name:'GPT-3 175B',logN:Math.log10(1.75e11),logD:Math.log10(3e11),color:'rgba(248,113,113,0.8)'},
+      {name:'Chinchilla 70B',logN:Math.log10(7e10),logD:Math.log10(1.4e12),color:'rgba(74,222,128,0.8)'},
+      {name:'LLaMA 7B',logN:Math.log10(7e9),logD:Math.log10(2e12),color:'rgba(245,158,11,0.8)'},
+      {name:'LLaMA 13B',logN:Math.log10(1.3e10),logD:Math.log10(2e12),color:'rgba(245,158,11,0.7)'},
+    ];
+
+    var minLogN=8,maxLogN=11.7,minLogD=10,maxLogD=13.7;
+    models.forEach(function(m){
+      var px = margin + ((m.logN-minLogN)/(maxLogN-minLogN))*(W-margin-20);
+      var py = r - ((m.logD-minLogD)/(maxLogD-minLogD))*(r-40);
+      ctx.fillStyle=m.color;
+      ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=m.color.replace('0.8','0.9').replace('0.7','0.85');
+      ctx.font='7px IBM Plex Mono,monospace';
+      ctx.fillText(m.name,px+6,py+3);
+    });
+
+    // Current point
+    var logN2=Math.log10(N), logD2=Math.log10(D);
+    var px2=margin+((logN2-minLogN)/(maxLogN-minLogN))*(W-margin-20);
+    var py2=r-((logD2-minLogD)/(maxLogD-minLogD))*(r-40);
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(px2,py2,7,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 9px IBM Plex Mono,monospace';
+    ctx.fillText('YOU',px2+10,py2-6);
+
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Parameters (N) →',W/2,H-10);
+    ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);
+    ctx.fillText('Tokens (D) →',0,0);ctx.restore();
+  }
+
+  initSc();
+  drawSc();
+  document.getElementById('sc-n').addEventListener('input',drawSc);
+  document.getElementById('sc-d').addEventListener('input',drawSc);
+  window.addEventListener('resize',function(){initSc();drawSc();});
+})();
+</script>
+
 </div><!-- /lm5a -->
 
 <div class="divider"></div>
@@ -241,6 +354,114 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
 <div class="ctxt"><strong>Load balancing adalah critical untuk MoE</strong>Tanpa load balancing loss, router akan mengkolaps ke beberapa expert populer (expert collapse) — model effectively menggunakan 2 expert dari 8, kehilangan keunggulan MoE. Auxiliary loss memaksa distribusi token yang lebih merata. Di production, monitoring per-expert utilization adalah essential untuk mendeteksi masalah ini.</div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: MoE Router Visualizer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">🧭 MoE Router Visualizer — Token Mana ke Expert Mana?</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="moe-canvas" width="420" height="250" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">
+        Input tokens mengalir melalui router → dipetakan ke top-2 experts
+      </div>
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Jumlah Experts: <span id="moe-ne-val" style="color:var(--accent);">8</span></label>
+      <input type="range" id="moe-ne" min="4" max="16" step="2" value="8" style="width:100%;margin:4px 0 12px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Top-K: <span id="moe-k-val" style="color:var(--teal);">2</span></label>
+      <input type="range" id="moe-k" min="1" max="4" value="2" style="width:100%;margin:4px 0 16px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.8;" id="moe-info">
+        <div>8 experts × 2 aktif per token</div>
+        <div>Load per expert: ~25% each</div>
+        <div style="margin-top:4px;color:var(--text2);">Active params: ~25% total</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+  var tokens = ['The','cat','sat','on','the','mat','and','slept','peacefully','.','dog','ran'];
+  var expertColors = ['rgba(124,109,250,0.7)','rgba(45,212,191,0.7)','rgba(245,158,11,0.7)','rgba(248,113,113,0.7)','rgba(74,222,128,0.7)','rgba(167,139,250,0.7)','rgba(251,146,60,0.7)','rgba(96,165,250,0.7)','rgba(244,114,182,0.7)','rgba(148,163,184,0.7)','rgba(34,211,238,0.7)','rgba(163,230,53,0.7)','rgba(232,121,249,0.7)','rgba(250,204,21,0.7)','rgba(129,140,248,0.7)','rgba(52,211,153,0.7)'];
+
+  function initMoe(){cv=document.getElementById('moe-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+
+  function drawMoe(){
+    if(!ctx) return;
+    var numExperts = parseInt(document.getElementById('moe-ne').value);
+    var topK = parseInt(document.getElementById('moe-k').value);
+    document.getElementById('moe-ne-val').textContent = numExperts;
+    document.getElementById('moe-k-val').textContent = topK;
+
+    var info = document.getElementById('moe-info');
+    var loadPct = (topK/numExperts*100).toFixed(0);
+    info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+loadPct+'% per expert</div><div style="margin-top:4px;color:var(--text2);">Active params: ~'+loadPct+'% dari total</div>';
+
+    ctx.clearRect(0,0,W,H);
+
+    // Token nodes (left side)
+    var tokX=30, tokStartY=20, tokGap=(H-tokStartY-20)/Math.min(tokens.length,12);
+    var expertX=W-60, expertStartY=20, expertGap=(H-expertStartY-20)/numExperts;
+
+    // Token circles
+    tokens.slice(0,12).forEach(function(t,i){
+      var y=tokStartY+i*tokGap+tokGap/2;
+      // Random-ish expert assignment per frame based on token
+      var seed=(i*7+numExperts*3+topK*11)%numExperts;
+      var seed2=(i*13+numExperts*5+topK*7+1)%numExperts;
+      if(seed2===seed) seed2=(seed2+1)%numExperts;
+
+      var assignments=[seed];
+      if(topK>1) assignments.push(seed2);
+      if(topK>2) assignments.push((seed2+2)%numExperts);
+      if(topK>3) assignments.push((seed2+5)%numExperts);
+
+      ctx.fillStyle='rgba(255,255,255,0.08)';ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(tokX,y,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(t,tokX,y+4);
+
+      // Lines to assigned experts
+      assignments.forEach(function(e){
+        var ey=expertStartY+e*expertGap+expertGap/2;
+        ctx.strokeStyle=expertColors[e%expertColors.length].replace('0.7','0.25');
+        ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(tokX+16,y);ctx.lineTo(expertX-16,ey);ctx.stroke();
+      });
+    });
+
+    // Expert nodes
+    for(var i=0;i<numExperts;i++){
+      var ey=expertStartY+i*expertGap+expertGap/2;
+      var color=expertColors[i%expertColors.length];
+      ctx.fillStyle=color.replace('0.7','0.15');ctx.strokeStyle=color;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(expertX,ey,16,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('E'+(i+1),expertX,ey+4);
+    }
+
+    // Router box in the middle
+    ctx.fillStyle='rgba(124,109,250,0.05)';ctx.strokeStyle='rgba(124,109,250,0.2)';ctx.lineWidth=1;
+    ctx.fillRect(W/2-35,10,70,H-40);ctx.strokeRect(W/2-35,10,70,H-40);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Router',W/2,16);ctx.fillText('Top-'+topK, W/2, H/2+4);
+
+    // Labels
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Input Tokens',tokX,H-8);
+    ctx.fillText(numExperts+' Experts',expertX,H-8);
+    ctx.fillText('Only '+topK+' active per token',W/2,H-8);
+  }
+
+  initMoe();
+  drawMoe();
+  document.getElementById('moe-ne').addEventListener('input',drawMoe);
+  document.getElementById('moe-k').addEventListener('input',drawMoe);
+  window.addEventListener('resize',function(){initMoe();drawMoe();});
+})();
+</script>
 
 <div class="viz-wrap">
 <div class="viz-title">Dense vs Sparse MoE — Parameter vs Active Compute</div>
@@ -384,6 +605,114 @@ kv_gb_128k = <span class="fn">kv_cache_size_bytes</span>(<span class="nm">32</sp
   </div>
 </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 🖐️ Visualisasi Interaktif: KV Cache Memory Calculator -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">💾 KV Cache Memory Calculator — Atur Parameter, Lihat Memory</div>
+<div class="viz-body">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+    <div style="flex:1;min-width:200px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Layers: <span id="kv-l-val" style="color:var(--accent);">32</span></label>
+      <input type="range" id="kv-l" min="4" max="96" step="4" value="32" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Heads: <span id="kv-h-val" style="color:var(--teal);">32</span></label>
+      <input type="range" id="kv-h" min="4" max="64" step="4" value="32" style="width:100%;margin:4px 0 8px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Head Dim: <span id="kv-d-val" style="color:var(--amber);">128</span></label>
+      <input type="range" id="kv-d" min="64" max="256" step="16" value="128" style="width:100%;margin:4px 0 8px;accent-color:var(--amber);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Seq Length: <span id="kv-s-val" style="color:var(--coral);">4096</span></label>
+      <input type="range" id="kv-s" min="1" max="6" value="4" style="width:100%;margin:4px 0 12px;accent-color:var(--coral);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Batch Size: <span id="kv-bs-val" style="color:var(--green);">1</span></label>
+      <input type="range" id="kv-bs" min="1" max="32" value="1" style="width:100%;margin:4px 0 0;accent-color:var(--green);">
+    </div>
+    <div style="flex:1;min-width:200px;text-align:center;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px;">KV Cache Size</div>
+      <div style="font-size:36px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--accent);" id="kv-size">4.0 GB</div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:12px;">Formula: 2 × L × H × D × S × B × 2 bytes</div>
+      <div style="width:100%;height:20px;background:var(--bg3);border-radius:10px;overflow:hidden;">
+        <div id="kv-bar" style="height:100%;background:linear-gradient(90deg,var(--green),var(--teal),var(--amber),var(--coral));border-radius:10px;transition:width .3s;width:25%;"></div>
+      </div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px;">Relative to 24GB GPU memory</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px;">
+        <span id="kv-warning" style="color:var(--green);">✅ Fits comfortably in consumer GPU</span>
+      </div>
+      <canvas id="kv-canvas" width="300" height="80" style="margin-top:12px;max-width:100%;"></canvas>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var seqLabels = ['512','1024','2048','4096','8192','16384','32768'];
+  var seqValues = [512,1024,2048,4096,8192,16384,32768];
+  var cv, ctx, W, H;
+
+  function initKv(){cv=document.getElementById('kv-canvas');if(!cv)return;ctx=cv.getContext('2d');W=cv.width;H=cv.height;}
+
+  function drawKv(){
+    var L=parseInt(document.getElementById('kv-l').value);
+    var Hd=parseInt(document.getElementById('kv-h').value);
+    var D=parseInt(document.getElementById('kv-d').value);
+    var sIdx=parseInt(document.getElementById('kv-s').value);
+    var S=seqValues[sIdx];
+    var BS=parseInt(document.getElementById('kv-bs').value);
+
+    document.getElementById('kv-l-val').textContent=L;
+    document.getElementById('kv-h-val').textContent=Hd;
+    document.getElementById('kv-d-val').textContent=D;
+    document.getElementById('kv-s-val').textContent=seqLabels[sIdx];
+    document.getElementById('kv-bs-val').textContent=BS;
+
+    // KV Cache = 2 * layers * heads * head_dim * seq_len * batch * dtype_bytes
+    var kvBytes = 2 * L * Hd * D * S * BS * 2;
+    var kvGB = kvBytes/(1024*1024*1024);
+    document.getElementById('kv-size').textContent = kvGB>=1?kvGB.toFixed(1)+' GB':(kvGB*1024).toFixed(0)+' MB';
+
+    // Bar
+    var gpuMem=24; // 24GB GPU
+    var pct = Math.min(100,kvGB/gpuMem*100);
+    document.getElementById('kv-bar').style.width = pct+'%';
+
+    var warn=document.getElementById('kv-warning');
+    if(kvGB<8){warn.textContent='✅ Fits comfortably in consumer GPU';warn.style.color='var(--green)';}
+    else if(kvGB<20){warn.textContent='⚠️ Significant memory — consider quantization';warn.style.color='var(--amber)';}
+    else if(kvGB<40){warn.textContent='🔴 May exceed GPU memory — use GQA/MQA or offloading';warn.style.color='var(--coral)';}
+    else {warn.textContent='💀 Needs multi-GPU or extreme optimization';warn.style.color='var(--coral)';}
+
+    // Canvas: model weight vs KV cache comparison
+    if(!ctx) return;
+    ctx.clearRect(0,0,W,H);
+    var modelGB = (L*Hd*D*D*2)/(1024*1024*1024)*0.25; // rough estimate
+    var maxW=W-140;
+    var modelW=Math.min(maxW,modelGB/40*maxW);
+    var kvW=Math.min(maxW,kvGB/40*maxW);
+
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='right';
+    ctx.fillText('Model Weights',120,18);
+    ctx.fillStyle='rgba(45,212,191,0.3)';ctx.fillRect(125,8,modelW,16);
+    ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(modelGB.toFixed(1)+'GB',125+modelW+4,20);
+
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.textAlign='right';
+    ctx.fillText('KV Cache',120,42);
+    ctx.fillStyle='rgba(248,113,113,0.4)';ctx.fillRect(125,32,kvW,16);
+    ctx.fillStyle='rgba(255,255,255,0.6)';ctx.textAlign='left';
+    ctx.fillText(kvGB.toFixed(1)+'GB',125+kvW+4,44);
+
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('KV Cache bisa melebihi model weight saat context panjang!',W/2,H-5);
+  }
+
+  initKv();
+  drawKv();
+  document.getElementById('kv-l').addEventListener('input',drawKv);
+  document.getElementById('kv-h').addEventListener('input',drawKv);
+  document.getElementById('kv-d').addEventListener('input',drawKv);
+  document.getElementById('kv-s').addEventListener('input',drawKv);
+  document.getElementById('kv-bs').addEventListener('input',drawKv);
+  window.addEventListener('resize',function(){initKv();drawKv();});
+})();
+</script>
 
 </div><!-- /lm5c -->
 
