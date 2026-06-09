@@ -383,176 +383,215 @@ loss_grid = <span class="fn">chinchilla_loss</span>(N_grid, D_grid)</pre></div>
         <div>Load per expert: ~25% each</div>
         <div style="margin-top:4px;color:var(--text2);">Active params: ~25% total</div>
       </div>
+      <div style="margin-top:10px;" id="moe-expert-buttons">
+        <!-- Populated by script -->
+        <span style="font-size:9px;color:var(--text3);">Loading...</span>
+      </div>
     </div>
   </div>
 </div>
 </div>
 <script>
 (function(){
-  var cv, ctx, W, H;
   var tokens = ['The','cat','sat','on','the','mat','and','slept','peacefully','.','dog','ran'];
-  var expertColors = ['rgba(124,109,250,0.7)','rgba(45,212,191,0.7)','rgba(245,158,11,0.7)','rgba(248,113,113,0.7)','rgba(74,222,128,0.7)','rgba(167,139,250,0.7)','rgba(251,146,60,0.7)','rgba(96,165,250,0.7)','rgba(244,114,182,0.7)','rgba(148,163,184,0.7)','rgba(34,211,238,0.7)','rgba(163,230,53,0.7)','rgba(232,121,249,0.7)','rgba(250,204,21,0.7)','rgba(129,140,248,0.7)','rgba(52,211,153,0.7)'];
-  var selectedExpert = -1; // -1 = show all, >=0 = filter by expert
-  var expertPositions = []; // {y, index}
+  var expertColors = ['#7c6dfa','#2dd4bf','#f59e0b','#f87171','#4ade80','#a78bfa','#fb923c','#60a5fa','#f472b6','#94a3b8','#22d3ee','#a3e635','#e879f9','#facc15','#818cf8','#34d399'];
+  var selectedExpert = -1, cv, ctx, W, H, expertPositions = [];
 
-  function initMoe(){cv=document.getElementById('moe-canvas');if(!cv)return;
-    var cw=cv.parentElement.clientWidth||cv.offsetWidth||420;
-    var lw=cw>10?cw:420,lh=Math.round(lw*(250/420));
-    var dpr=window.devicePixelRatio||1;
-    cv.width=lw*dpr;cv.height=lh*dpr;
-    cv.style.width=lw+'px';cv.style.height=lh+'px';
-    ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
-    W=lw;H=lh;
-    // Click handler
-    cv.onclick = function(e){
-      var rect = cv.getBoundingClientRect();
-      var scaleX = W / rect.width;
-      var scaleY = H / rect.height;
-      var mx = (e.clientX - rect.left) * scaleX;
-      var my = (e.clientY - rect.top) * scaleY;
-      var clicked = -1;
-      expertPositions.forEach(function(ep){
-        var dx = mx - ep.x, dy = my - ep.y;
-        if (Math.sqrt(dx*dx + dy*dy) < 22) clicked = ep.index;
-      });
-      selectedExpert = (clicked === selectedExpert) ? -1 : clicked;
-      drawMoe();
-      updateInfo();
-    };
+  function initMoe(){
+    cv = document.getElementById('moe-canvas');
+    if (!cv) return setTimeout(initMoe, 50);
+    W = 420; H = 250;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width  = W * dpr;
+    cv.height = H * dpr;
+    cv.style.width  = W + 'px';
+    cv.style.height = H + 'px';
+    ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset + scale
     cv.style.cursor = 'pointer';
-  }
-
-  // Global deselect helper for the info panel button
-  window.moeDeselect = function(){
-    selectedExpert = -1;
+    cv.addEventListener('click', onCanvasClick);
+    buildExpertButtons();
     drawMoe();
     updateInfo();
+  }
+
+  function onCanvasClick(e){
+    var rect = cv.getBoundingClientRect();
+    var mx = (e.clientX - rect.left) * (W / rect.width);
+    var my = (e.clientY - rect.top)  * (H / rect.height);
+    var clicked = -1;
+    for (var i = 0; i < expertPositions.length; i++) {
+      var ep = expertPositions[i];
+      if (Math.hypot(mx - ep.x, my - ep.y) < 22) { clicked = ep.index; break; }
+    }
+    selectedExpert = (clicked === selectedExpert) ? -1 : clicked;
+    drawMoe(); updateInfo(); updateButtons();
+  }
+
+  window.moeSelect = function(idx){
+    selectedExpert = (idx === selectedExpert) ? -1 : idx;
+    drawMoe(); updateInfo(); updateButtons();
   };
 
-  function updateInfo(){
-    var numExperts = parseInt(document.getElementById('moe-ne').value);
-    var topK = parseInt(document.getElementById('moe-k').value);
-    var loadPct = (topK/numExperts*100).toFixed(0);
-    var info = document.getElementById('moe-info');
+  var expertNames = ['Syntax','Semantic','Position','Context','Entity','Relation','Negation','Modifier','Temporal','Causal','Quantifier','Comparator','Conditional','Coreference','Sentiment','Factual'];
 
+  function buildExpertButtons(){
+    var container = document.getElementById('moe-expert-buttons');
+    if (!container) return;
+    var numExperts = parseInt(document.getElementById('moe-ne').value) || 8;
+    var html = '';
+    for (var i = 0; i < numExperts; i++) {
+      html += '<button onclick="moeSelect('+i+')" id="moe-btn-'+i+'" style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;padding:4px 10px;margin:2px;border-radius:6px;border:1.5px solid '+expertColors[i%expertColors.length]+';background:transparent;color:var(--text3);cursor:pointer;transition:all .2s;">E'+(i+1)+'</button>';
+    }
+    html += '<button onclick="moeSelect(-1)" id="moe-btn-all" style="font-family:\'IBM Plex Mono\',monospace;font-size:9px;padding:4px 10px;margin:2px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">All</button>';
+    container.innerHTML = html;
+    updateButtons();
+  }
+
+  function updateButtons(){
+    for (var i = 0; i < 16; i++) {
+      var btn = document.getElementById('moe-btn-'+i);
+      if (!btn) continue;
+      if (i === selectedExpert) {
+        btn.style.background = expertColors[i%expertColors.length].replace(')','');
+        btn.style.background += ',0.25)';
+        btn.style.color = '#fff';
+        btn.style.borderColor = expertColors[i%expertColors.length];
+      } else if (selectedExpert >= 0) {
+        btn.style.background = 'transparent';
+        btn.style.color = 'rgba(255,255,255,0.15)';
+        btn.style.borderColor = 'rgba(255,255,255,0.05)';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.color = 'var(--text3)';
+        btn.style.borderColor = expertColors[i%expertColors.length];
+      }
+    }
+    var allBtn = document.getElementById('moe-btn-all');
+    if (allBtn) {
+      allBtn.style.background = selectedExpert < 0 ? 'var(--accent-glow)' : 'transparent';
+      allBtn.style.color = selectedExpert < 0 ? 'var(--accent)' : 'var(--text3)';
+    }
+  }
+
+  function getAssignments(i, numExperts, topK){
+    var seed  = (i*7  + numExperts*3 + topK*11) % numExperts;
+    var seed2 = (i*13 + numExperts*5 + topK*7 + 1) % numExperts;
+    if (seed2 === seed) seed2 = (seed2 + 1) % numExperts;
+    var a = [seed];
+    if (topK > 1) a.push(seed2);
+    if (topK > 2) a.push((seed2 + 2) % numExperts);
+    if (topK > 3) a.push((seed2 + 5) % numExperts);
+    return a;
+  }
+
+  function updateInfo(){
+    var numExperts = parseInt(document.getElementById('moe-ne').value) || 8;
+    var topK = parseInt(document.getElementById('moe-k').value) || 2;
+    var info = document.getElementById('moe-info');
+    if (!info) return;
     if (selectedExpert >= 0) {
-      // Show tokens assigned to this expert
-      var assignedTokens = [];
-      tokens.slice(0,12).forEach(function(t,i){
-        var seed=(i*7+numExperts*3+topK*11)%numExperts;
-        var seed2=(i*13+numExperts*5+topK*7+1)%numExperts;
-        if(seed2===seed) seed2=(seed2+1)%numExperts;
-        var assignments=[seed];
-        if(topK>1) assignments.push(seed2);
-        if(topK>2) assignments.push((seed2+2)%numExperts);
-        if(topK>3) assignments.push((seed2+5)%numExperts);
-        if (assignments.indexOf(selectedExpert) >= 0) assignedTokens.push(t);
-      });
-      var expertNames = ['Syntax','Semantic','Position','Context','Entity','Relation','Negation','Modifier','Temporal','Causal','Quantifier','Comparator','Conditional','Coreference','Sentiment','Factual'];
-      info.innerHTML = '<div style="color:var(--accent);font-weight:600;">Expert '+(selectedExpert+1)+' — '+expertNames[selectedExpert%expertNames.length]+'</div><div style="margin-top:4px;">Menangani: <strong style="color:var(--text);">'+assignedTokens.join(', ')+'</strong></div><div style="margin-top:4px;font-size:9px;color:var(--text3);">Load: '+assignedTokens.length+'/'+Math.min(tokens.length,12)+' tokens</div><div style="margin-top:4px;"><button onclick="moeDeselect()" style="font-size:9px;padding:2px 10px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">← Tampilkan semua</button></div>';
+      var assigned = [];
+      for (var i = 0; i < Math.min(tokens.length, 12); i++) {
+        var a = getAssignments(i, numExperts, topK);
+        if (a.indexOf(selectedExpert) >= 0) assigned.push(tokens[i]);
+      }
+      info.innerHTML = '<div style="color:var(--accent);font-weight:600;">🎯 Expert '+(selectedExpert+1)+' — '+expertNames[selectedExpert%expertNames.length]+'</div><div style="margin-top:4px;">Token: <strong style="color:var(--text);">'+(assigned.length?assigned.join(', '):'(tidak ada)')+'</strong></div><div style="margin-top:2px;font-size:9px;color:var(--text3);">Load: '+assigned.length+'/'+Math.min(tokens.length,12)+' token</div>';
     } else {
-      info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+loadPct+'% per expert</div><div style="margin-top:4px;color:var(--text3);font-size:9px;">💡 Klik expert untuk lihat token mana yang di-rutekan ke dia</div><div style="color:var(--text2);">Active params: ~'+loadPct+'% dari total</div>';
+      var pct = (topK/numExperts*100).toFixed(0);
+      info.innerHTML = '<div>'+numExperts+' experts × '+topK+' aktif per token</div><div>Rata-rata load: ~'+pct+'% per expert</div><div style="margin-top:4px;color:var(--text3);font-size:9px;">💡 Klik expert (canvas atau tombol) untuk filter</div><div style="color:var(--text2);">Active params: ~'+pct+'% dari total</div>';
     }
   }
 
   function drawMoe(){
-    if(!ctx) return;
-    var numExperts = parseInt(document.getElementById('moe-ne').value);
-    var topK = parseInt(document.getElementById('moe-k').value);
+    if (!ctx || !cv) return;
+    var numExperts = parseInt(document.getElementById('moe-ne').value) || 8;
+    var topK = parseInt(document.getElementById('moe-k').value) || 2;
     document.getElementById('moe-ne-val').textContent = numExperts;
     document.getElementById('moe-k-val').textContent = topK;
 
-    ctx.clearRect(0,0,W,H);
-    var tokX=30, tokStartY=20, tokGap=(H-tokStartY-20)/Math.min(tokens.length,12);
-    var expertX=W-60, expertStartY=20, expertGap=(H-expertStartY-20)/numExperts;
+    ctx.clearRect(0, 0, W, H);
+    var tokX = 30, margin = 20;
+    var tokGap = (H - margin*2) / Math.min(tokens.length, 12);
+    var expertX = W - 60;
+    var expertGap = (H - margin*2) / numExperts;
     expertPositions = [];
 
-    // Precompute assignments
+    // Precompute
     var tokenAssignments = [];
-    tokens.slice(0,12).forEach(function(t,i){
-      var seed=(i*7+numExperts*3+topK*11)%numExperts;
-      var seed2=(i*13+numExperts*5+topK*7+1)%numExperts;
-      if(seed2===seed) seed2=(seed2+1)%numExperts;
-      var assignments=[seed];
-      if(topK>1) assignments.push(seed2);
-      if(topK>2) assignments.push((seed2+2)%numExperts);
-      if(topK>3) assignments.push((seed2+5)%numExperts);
-      tokenAssignments.push(assignments);
-    });
-
-    // Draw expert nodes first (so tokens appear on top)
-    for(var i=0;i<numExperts;i++){
-      var ey=expertStartY+i*expertGap+expertGap/2;
-      expertPositions.push({x:expertX, y:ey, index:i});
-      var color=expertColors[i%expertColors.length];
-      var isSelected = (selectedExpert === i);
-      var isDimmed = (selectedExpert >= 0 && selectedExpert !== i);
-
-      ctx.fillStyle=isSelected?color.replace('0.7','0.35'):isDimmed?color.replace('0.7','0.04'):color.replace('0.7','0.15');
-      ctx.strokeStyle=isSelected?color.replace('0.7','1'):isDimmed?'rgba(255,255,255,0.05)':color;
-      ctx.lineWidth=isSelected?3:1.5;
-      ctx.beginPath();ctx.arc(expertX,ey,isSelected?20:16,0,Math.PI*2);ctx.fill();ctx.stroke();
-      if(isSelected){
-        ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1;
-        ctx.beginPath();ctx.arc(expertX,ey,24,0,Math.PI*2);ctx.stroke();
-      }
-      ctx.fillStyle=isDimmed?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.8)';
-      ctx.font=(isSelected?'bold ':'')+'9px IBM Plex Mono,monospace';ctx.textAlign='center';
-      ctx.fillText('E'+(i+1),expertX,ey+4);
+    for (var i = 0; i < Math.min(tokens.length, 12); i++) {
+      tokenAssignments.push(getAssignments(i, numExperts, topK));
     }
 
-    // Draw connections
-    tokenAssignments.forEach(function(assignments, i){
-      var t = tokens[i];
-      var y=tokStartY+i*tokGap+tokGap/2;
-      var tokenIsRouted = (selectedExpert < 0) || (assignments.indexOf(selectedExpert) >= 0);
+    // ── Expert nodes ──
+    for (var i = 0; i < numExperts; i++) {
+      var ey = margin + i*expertGap + expertGap/2;
+      expertPositions.push({x: expertX, y: ey, index: i});
+      var c = expertColors[i % expertColors.length];
+      var sel = (selectedExpert === i);
+      var dim = (selectedExpert >= 0 && !sel);
 
-      assignments.forEach(function(e){
-        var ey=expertStartY+e*expertGap+expertGap/2;
-        var isSelectedEdge = (selectedExpert === e);
-        var alpha = isSelectedEdge ? 0.6 : (selectedExpert >= 0 ? 0.03 : 0.25);
-        var lineW = isSelectedEdge ? 2 : 0.8;
-        ctx.strokeStyle=expertColors[e%expertColors.length].replace('0.7',String(alpha));
-        ctx.lineWidth=lineW;
-        ctx.beginPath();ctx.moveTo(tokX+16,y);ctx.lineTo(expertX-16,ey);ctx.stroke();
-      });
-    });
+      ctx.fillStyle   = sel ? c+'40' : dim ? 'rgba(255,255,255,0.02)' : c+'20';
+      ctx.strokeStyle = sel ? c : dim ? 'rgba(255,255,255,0.04)' : c+'99';
+      ctx.lineWidth   = sel ? 3 : 1.5;
+      ctx.beginPath(); ctx.arc(expertX, ey, sel?20:16, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      if (sel) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.setLineDash([3,3]); ctx.arc(expertX, ey, 25, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.fillStyle = dim ? 'rgba(255,255,255,0.15)' : '#fff';
+      ctx.font = (sel ? 'bold ' : '') + '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('E'+(i+1), expertX, ey+4);
+    }
 
-    // Draw token nodes
-    tokenAssignments.forEach(function(assignments, i){
-      var t = tokens[i];
-      var y=tokStartY+i*tokGap+tokGap/2;
-      var tokenIsRouted = (selectedExpert < 0) || (assignments.indexOf(selectedExpert) >= 0);
+    // ── Connections ──
+    for (var i = 0; i < tokenAssignments.length; i++) {
+      var y = margin + i*tokGap + tokGap/2;
+      var a = tokenAssignments[i];
+      for (var j = 0; j < a.length; j++) {
+        var e = a[j];
+        var ey = margin + e*expertGap + expertGap/2;
+        var isSel = (selectedExpert === e);
+        var alpha = isSel ? 0.7 : (selectedExpert >= 0 ? 0.03 : 0.3);
+        ctx.strokeStyle = expertColors[e % expertColors.length] + (isSel ? 'b3' : selectedExpert>=0 ? '08' : '4d');
+        ctx.lineWidth = isSel ? 2.5 : 0.8;
+        ctx.beginPath(); ctx.moveTo(tokX+16, y); ctx.lineTo(expertX-16, ey); ctx.stroke();
+      }
+    }
 
-      ctx.fillStyle=tokenIsRouted?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.02)';
-      ctx.strokeStyle=tokenIsRouted?'rgba(255,255,255,0.25)':'rgba(255,255,255,0.05)';
-      ctx.lineWidth=tokenIsRouted?1.5:0.5;
-      ctx.beginPath();ctx.arc(tokX,y,14,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.fillStyle=tokenIsRouted?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.15)';
-      ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
-      ctx.fillText(t,tokX,y+4);
-    });
+    // ── Token nodes ──
+    for (var i = 0; i < tokenAssignments.length; i++) {
+      var y = margin + i*tokGap + tokGap/2;
+      var routed = (selectedExpert < 0) || (tokenAssignments[i].indexOf(selectedExpert) >= 0);
+      ctx.fillStyle   = routed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.02)';
+      ctx.strokeStyle = routed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.04)';
+      ctx.lineWidth   = routed ? 1.5 : 0.5;
+      ctx.beginPath(); ctx.arc(tokX, y, 14, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = routed ? '#fff' : 'rgba(255,255,255,0.12)';
+      ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText(tokens[i], tokX, y+4);
+    }
 
-    // Router box
-    ctx.fillStyle='rgba(124,109,250,0.05)';ctx.strokeStyle='rgba(124,109,250,0.2)';ctx.lineWidth=1;
-    ctx.fillRect(W/2-35,10,70,H-40);ctx.strokeRect(W/2-35,10,70,H-40);
-    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
-    ctx.fillText('Router',W/2,16);ctx.fillText('Top-'+topK, W/2, H/2+4);
+    // ── Router box ──
+    ctx.fillStyle = 'rgba(124,109,250,0.05)'; ctx.strokeStyle = 'rgba(124,109,250,0.15)'; ctx.lineWidth = 1;
+    var rx = W/2 - 35, rw = 70, rh = H - margin*2;
+    ctx.fillRect(rx, margin, rw, rh); ctx.strokeRect(rx, margin, rw, rh);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '8px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Router', W/2, margin + 14);
+    ctx.fillText('Top-'+topK, W/2, margin + rh/2 + 4);
 
     // Labels
-    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
-    ctx.fillText('Input Tokens',tokX,H-8);
-    ctx.fillText(numExperts+' Experts',expertX,H-8);
-    if(selectedExpert<0) ctx.fillText('Only '+topK+' active per token',W/2,H-8);
-    else ctx.fillText('👆 Showing Expert '+(selectedExpert+1)+' only',W/2,H-8);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.font = '8px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Input Tokens', tokX, H-8);
+    ctx.fillText(numExperts+' Experts', expertX, H-8);
+    ctx.fillText(selectedExpert<0 ? topK+' aktif/token' : 'Expert '+(selectedExpert+1), W/2, H-8);
   }
 
+  // ── Start ──
   initMoe();
-  drawMoe();
-  updateInfo();
-  document.getElementById('moe-ne').addEventListener('input',function(){drawMoe();updateInfo();});
-  document.getElementById('moe-k').addEventListener('input',function(){drawMoe();updateInfo();});
-  window.addEventListener('resize',function(){initMoe();drawMoe();});
+  document.getElementById('moe-ne').addEventListener('input', function(){drawMoe();updateInfo();buildExpertButtons();});
+  document.getElementById('moe-k').addEventListener('input', function(){drawMoe();updateInfo();buildExpertButtons();});
+  window.addEventListener('resize', function(){initMoe();});
 })();
 </script>
 

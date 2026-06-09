@@ -131,24 +131,6 @@
   var currentAct = 'relu';
   var panels = [0,1,2,3];
 
-  // ── HiDPI canvas setup ──
-  (function(){
-    var canvases = [
-      {id:'nn-canvas-line', w:320, h:240},
-      {id:'nn-canvas-neuron', w:320, h:240},
-      {id:'nn-canvas-act', w:320, h:240},
-      {id:'nn-canvas-net', w:340, h:260}
-    ];
-    canvases.forEach(function(c){
-      var cv=document.getElementById(c.id); if(!cv) return;
-      var dpr=window.devicePixelRatio||1;
-      cv.width=c.w*dpr; cv.height=c.h*dpr;
-      cv.style.width=c.w+'px'; cv.style.height=c.h+'px';
-      cv.getContext('2d').scale(dpr,dpr);
-      cv._logicalW=c.w; cv._logicalH=c.h;
-    });
-  })();
-
   function rgb(r,g,b,a){return 'rgba('+r+','+g+','+b+','+(a||1)+')';}
   var C = {
     bg:    getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f0f13',
@@ -159,6 +141,38 @@
     amber: '#f59e0b',
     text:  'rgba(255,255,255,0.5)',
   };
+
+  // ── HiDPI: setup 4 canvases ──
+  var canvasDefs = [
+    {id:'nn-canvas-line',   W:320, H:240},
+    {id:'nn-canvas-neuron', W:320, H:240},
+    {id:'nn-canvas-act',    W:320, H:240},
+    {id:'nn-canvas-net',    W:340, H:260},
+  ];
+  var logicalDims = {}; // id → {W, H}
+
+  function applyDPI(cv, logicalW, logicalH){
+    var dpr = window.devicePixelRatio || 1;
+    cv.width  = logicalW * dpr;
+    cv.height = logicalH * dpr;
+    cv.style.width  = logicalW + 'px';
+    cv.style.height = logicalH + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // reset + scale — TIDAK menumpuk
+    cv._logicalW = logicalW;
+    cv._logicalH = logicalH;
+  }
+
+  canvasDefs.forEach(function(d){
+    var cv = document.getElementById(d.id);
+    if (!cv) return;
+    applyDPI(cv, d.W, d.H);
+    logicalDims[d.id] = {W: d.W, H: d.H};
+  });
+
+  // Helper: dapatkan logical W,H untuk canvas
+  function getLW(cv){ return cv._logicalW || 320; }
+  function getLH(cv){ return cv._logicalH || 240; }
 
   // ── Tab switcher ──
   window.nnTab = function(idx) {
@@ -425,17 +439,13 @@
   document.getElementById('nn-net-x2-sl').addEventListener('input',drawNet);
   drawNet();
 
-  // ── ResizeObserver: redraw canvas saat ukuran container berubah ──
+  // ── ResizeObserver ──
   function resizeCanvas(cv, drawFn) {
     var w = cv.parentElement.clientWidth;
     if (w < 10) return;
-    var ratio = cv._logicalH / cv._logicalW;
+    var ratio = getLH(cv) / getLW(cv);
     var lw = w, lh = Math.round(w * ratio);
-    var dpr = window.devicePixelRatio || 1;
-    cv.width = lw * dpr; cv.height = lh * dpr;
-    cv.style.width = lw + 'px'; cv.style.height = lh + 'px';
-    cv.getContext('2d').scale(dpr, dpr);
-    cv._logicalW = lw; cv._logicalH = lh;
+    applyDPI(cv, lw, lh);
     drawFn();
   }
   if (window.ResizeObserver) {
