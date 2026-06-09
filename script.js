@@ -280,7 +280,7 @@ function renderSidebar(curriculum) {
     a.addEventListener('click', function(e){
       e.preventDefault();
       var id = a.getAttribute('href').replace('#','');
-      var allTopics = activeCurriculum === 'language-model' ? LM_TOPICS : TOPICS;
+      var allTopics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : TOPICS;
       var idx = allTopics.indexOf(id);
       if (idx >= 0) goTo(idx);
       document.getElementById('sidebar').classList.remove('open');
@@ -424,12 +424,12 @@ function injectNavBars() {
       nextLabel = pageLabels[nextPageId] || nextPageId;
       nextBtn = '<button class="tnbtn primary" onclick="goToPage(\''+nextPageId+'\')">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     } else {
-      nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
+      nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : activeCurriculum === 'mlops' ? MLOPS_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
       nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="'+idx+'">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     }
 
     var prevBtn;
-    if (prevPageId === 'home' || prevPageId === 'lmhome') {
+    if (prevPageId === 'home' || prevPageId === 'lmhome' || prevPageId === 'mlopshome') {
       prevBtn = '<button class="tnbtn" onclick="showLanding()">← '+(t('sidebar.back')||'Semua Topik')+'</button>';
     } else if (prevPageId) {
       prevBtn = '<button class="tnbtn" onclick="goToPage(\''+prevPageId+'\')">'+(t('nav.prev')||'← Sebelumnya')+'</button>';
