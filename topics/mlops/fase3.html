@@ -1,0 +1,1367 @@
+<section class="cs p3" id="mlopsfase3">
+<div class="fase-intro" id="mlopsfi3">
+<div class="sh">
+  <div class="sbadge p3">03</div>
+  <div>
+    <div class="stitle">Fase 3 — Infrastructure &amp; Containerization</div>
+    <div class="sdesc">Model yang hebat tidak berguna jika tidak bisa di-deploy, di-scale, dan dikelola secara konsisten. Fase ini membangun fondasi infrastruktur MLOps modern: mulai dari packaging model ke dalam Docker container yang reproducible, mengorkestrasikan workload di Kubernetes, mendistribusikan training dengan Ray, menyimpan fitur secara konsisten di Feature Store, hingga memanfaatkan managed cloud ML platform.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 5–6</span><span class="mc">Core Infrastructure</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#mlops3a">Docker untuk ML</a>
+  <a class="snavi" href="#mlops3b">Kubernetes untuk ML</a>
+  <a class="snavi" href="#mlops3c">Ray Distributed</a>
+  <a class="snavi" href="#mlops3d">Feature Store</a>
+  <a class="snavi" href="#mlops3e">Cloud ML Platforms</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 5–6</div>
+    <div class="topic-nav-title">Mulai dari: 3.1 Docker untuk ML</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi2')">← Fase 2</button>
+    <button class="tnbtn primary" onclick="goTo(12)">Mulai Fase 3 →</button>
+  </div>
+</div>
+</div><!-- /mlopsfi3 -->
+
+<!-- 3A -->
+<div class="sub" id="mlops3a">
+<div class="subtit"><span class="ac">3.1</span> Docker untuk ML <span class="subid">// reproducible environments untuk model</span></div>
+<div class="prose">
+<p>Salah satu masalah paling frustasi dalam MLOps adalah environment hell: "works on my machine" tapi crash di server karena versi CUDA berbeda, dependency konflik, atau library yang tidak terinstall. Docker menyelesaikan masalah ini dengan meng-containerize seluruh environment — OS dependencies, Python packages, CUDA toolkit, hingga model weights — ke dalam sebuah image yang berjalan identik di mana saja.</p>
+<p>Tapi Docker untuk ML bukan sekadar <code>COPY . .</code> lalu selesai. ML images punya tantangan unik: ukuran image yang bisa mencapai puluhan gigabyte (CUDA + PyTorch + model weights), kebutuhan GPU yang memerlukan nvidia-docker runtime, dan build time yang lama jika tidak di-cache dengan benar. Memahami <strong>multi-stage builds</strong>, layer caching strategy, dan GPU passthrough adalah skill fundamental yang akan menghemat jam kerja setiap minggu.</p>
+</div>
+
+<div class="prose">
+<h4>Empat prinsip Docker untuk ML yang sering dilanggar</h4>
+<ul>
+<li><strong>Pin semua versi</strong> — <code>pytorch==2.3.0</code>, bukan <code>pytorch</code>. Sebuah minor version bump PyTorch bisa break model yang sudah di-deploy. Gunakan <code>pip freeze > requirements.txt</code> SETELAH testing, bukan sebelumnya.</li>
+<li><strong>Copy requirements sebelum kode</strong> — Layer Docker di-cache. Jika kamu copy kode dulu baru install requirements, setiap perubahan satu baris kode akan re-install semua packages. Urutkan: COPY requirements.txt → RUN pip install → COPY kode.</li>
+<li><strong>Pisahkan build env dari runtime env (multi-stage)</strong> — Build tools (gcc, cmake) tidak perlu ada di production image. Multi-stage builds bisa memangkas ukuran image 60–80%.</li>
+<li><strong>Jangan run sebagai root</strong> — Security best practice: buat non-root user, terutama untuk model serving. Banyak security scanner akan flag image yang run sebagai root.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Dockerfile</span><span class="cf">Dockerfile.ml</span></div>
+<div class="cbb"><pre><span class="cm"># ═══════════════════════════════════════════════════════════════</span>
+<span class="cm"># Stage 1: Builder — install semua build dependencies</span>
+<span class="cm"># ═══════════════════════════════════════════════════════════════</span>
+<span class="kw">FROM</span> nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04 <span class="kw">AS</span> builder
+
+<span class="cm"># Hindari interactive prompts saat apt-get</span>
+<span class="kw">ENV</span> DEBIAN_FRONTEND=noninteractive
+
+<span class="kw">RUN</span> apt-get update &amp;&amp; apt-get install -y \
+    python3.11 python3.11-dev python3-pip \
+    build-essential git curl \
+    &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+<span class="cm"># Upgrade pip terlebih dahulu</span>
+<span class="kw">RUN</span> python3.11 -m pip install --upgrade pip
+
+<span class="cm"># PENTING: copy requirements SEBELUM kode agar layer ter-cache</span>
+<span class="cm"># Perubahan kode tidak akan trigger re-install packages</span>
+<span class="kw">WORKDIR</span> /build
+<span class="kw">COPY</span> requirements.txt .
+
+<span class="cm"># Install ke prefix terpisah — akan di-copy ke stage final</span>
+<span class="kw">RUN</span> pip install --prefix=/install -r requirements.txt \
+    <span class="cm"># --no-deps untuk avoid version conflicts saat copy partial env</span>
+    &amp;&amp; pip install --prefix=/install torch==2.3.0+cu121 \
+        --extra-index-url https://download.pytorch.org/whl/cu121
+
+<span class="cm"># ═══════════════════════════════════════════════════════════════</span>
+<span class="cm"># Stage 2: Runtime — image final yang ringan, tanpa build tools</span>
+<span class="cm"># ═══════════════════════════════════════════════════════════════</span>
+<span class="kw">FROM</span> nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+<span class="kw">ENV</span> DEBIAN_FRONTEND=noninteractive
+<span class="kw">ENV</span> PYTHONPATH=/install/lib/python3.11/site-packages
+<span class="kw">ENV</span> PYTHONUNBUFFERED=1
+<span class="cm"># nvidia-docker: expose GPU device files ke container</span>
+<span class="kw">ENV</span> NVIDIA_VISIBLE_DEVICES=all
+<span class="kw">ENV</span> NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+<span class="kw">RUN</span> apt-get update &amp;&amp; apt-get install -y \
+    python3.11 libgomp1 libglib2.0-0 \
+    &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+<span class="cm"># Copy hanya installed packages dari builder — bukan build tools</span>
+<span class="kw">COPY</span> --from=builder /install /install
+
+<span class="cm"># Best practice: run sebagai non-root user</span>
+<span class="kw">RUN</span> useradd -m -u 1000 mluser
+<span class="kw">USER</span> mluser
+<span class="kw">WORKDIR</span> /app
+
+<span class="cm"># Copy kode aplikasi (layer ini paling sering berubah — taruh paling akhir)</span>
+<span class="kw">COPY</span> --chown=mluser:mluser src/ ./src/
+<span class="kw">COPY</span> --chown=mluser:mluser configs/ ./configs/
+
+<span class="cm"># Model weights — pertimbangkan mount sebagai volume, bukan COPY</span>
+<span class="cm"># untuk menghindari image yang terlalu besar</span>
+<span class="cm"># COPY --chown=mluser:mluser models/ ./models/</span>
+
+<span class="kw">EXPOSE</span> 8080
+<span class="kw">HEALTHCHECK</span> --interval=30s --timeout=10s --start-period=60s \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+<span class="kw">CMD</span> ["python3.11", "-m", "src.serve", "--host", "0.0.0.0", "--port", "8080"]</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">gpu_verify.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> subprocess
+<span class="kw">import</span> torch
+
+<span class="kw">def</span> <span class="fn">verify_gpu_setup</span>():
+    <span class="st">"""Verifikasi GPU tersedia di dalam container."""</span>
+    <span class="cm"># Cek CUDA dari PyTorch</span>
+    cuda_available = torch.cuda.<span class="fn">is_available</span>()
+    device_count = torch.cuda.<span class="fn">device_count</span>()
+    <span class="kw">print</span>(<span class="st">f"CUDA available: <span class="kw">{cuda_available}</span>"</span>)
+    <span class="kw">print</span>(<span class="st">f"GPU count: <span class="kw">{device_count}</span>"</span>)
+
+    <span class="kw">if</span> cuda_available:
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(device_count):
+            props = torch.cuda.<span class="fn">get_device_properties</span>(i)
+            vram_gb = props.total_memory / (<span class="nm">1024</span>**<span class="nm">3</span>)
+            <span class="kw">print</span>(<span class="st">f"GPU {i}: {props.name} — {vram_gb:.1f} GB VRAM"</span>)
+
+        <span class="cm"># Test sederhana: alokasi tensor di GPU</span>
+        x = torch.<span class="fn">randn</span>(<span class="nm">1000</span>, <span class="nm">1000</span>, device=<span class="st">"cuda"</span>)
+        y = x @ x.T  <span class="cm"># matrix multiply</span>
+        <span class="kw">print</span>(<span class="st">f"GPU compute test OK: {y.shape}"</span>)
+
+    <span class="cm"># Cek nvidia-smi dari luar PyTorch</span>
+    result = subprocess.<span class="fn">run</span>(
+        [<span class="st">"nvidia-smi"</span>, <span class="st">"--query-gpu=name,memory.total,driver_version"</span>,
+         <span class="st">"--format=csv,noheader"</span>],
+        capture_output=<span class="kw">True</span>, text=<span class="kw">True</span>
+    )
+    <span class="kw">if</span> result.returncode == <span class="nm">0</span>:
+        <span class="kw">print</span>(<span class="st">f"nvidia-smi: {result.stdout.strip()}"</span>)
+
+<span class="cm"># Build image:</span>
+<span class="cm"># docker build -f Dockerfile.ml -t my-ml-app:latest .</span>
+<span class="cm"># </span>
+<span class="cm"># Run dengan GPU support (nvidia-docker):</span>
+<span class="cm"># docker run --gpus all --rm my-ml-app:latest python3.11 gpu_verify.py</span>
+<span class="cm">#</span>
+<span class="cm"># Atau mount model weights dari luar (lebih disarankan):</span>
+<span class="cm"># docker run --gpus all -v /data/models:/app/models my-ml-app:latest ...</span>
+
+<span class="fn">verify_gpu_setup</span>()</pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>nvidia-docker vs Docker GPU native support</strong>Sebelum Docker 19.03, kamu butuh nvidia-docker2 wrapper terpisah. Sejak Docker 19.03+, GPU support sudah built-in via <code>--gpus</code> flag, asalkan NVIDIA Container Toolkit sudah terinstall di host (<code>nvidia-ctk runtime configure --runtime=docker</code>). Di Kubernetes, gunakan NVIDIA Device Plugin. Pastikan versi CUDA di image kompatibel dengan NVIDIA driver di host — driver bisa lebih baru dari CUDA image, tapi tidak sebaliknya.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Visualisasi Interaktif: Docker Layer Cache Analyzer -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">Docker Layer Cache Simulator — Lihat Dampak Urutan COPY</div>
+<div class="viz-body" style="padding:0;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="docker-canvas" width="420" height="300"></canvas>
+    <div class="viz-canvas-controls">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:10px;">
+        Simulasikan perubahan file untuk melihat layer mana yang ter-rebuild:
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+        <button id="dc-btn-code" onclick="dockerSim('code')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Ubah <strong>kode Python</strong> (src/model.py)</button>
+        <button id="dc-btn-req" onclick="dockerSim('req')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Ubah <strong>requirements.txt</strong></button>
+        <button id="dc-btn-base" onclick="dockerSim('base')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Ubah <strong>base image</strong> (CUDA version)</button>
+        <button id="dc-btn-reset" onclick="dockerSim('reset')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid rgba(124,109,250,.3);background:rgba(124,109,250,.08);color:var(--accent);border-radius:5px;cursor:pointer;text-align:left;">Reset (semua cached)</button>
+      </div>
+      <div id="dc-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;">
+        Klik salah satu tombol untuk mensimulasikan perubahan.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var layers = [
+    { label: 'FROM cuda:12.1', desc: 'Base image pull', time: 45, size: '4.2GB' },
+    { label: 'apt-get install', desc: 'System packages', time: 18, size: '+320MB' },
+    { label: 'COPY requirements.txt', desc: 'Copy deps file', time: 0.1, size: '+2KB' },
+    { label: 'pip install -r ...', desc: 'Python packages', time: 120, size: '+3.8GB' },
+    { label: 'COPY src/', desc: 'App source code', time: 0.3, size: '+45MB' },
+    { label: 'CMD [...] ', desc: 'Entrypoint', time: 0, size: '' },
+  ];
+  var states = ['cached','cached','cached','cached','cached','cached'];
+  var canvas, ctx, W, H;
+
+  function initDC(){
+    canvas = document.getElementById('docker-canvas'); if(!canvas) return;
+    var cw=canvas.parentElement.clientWidth||420;
+    var lw=cw>10?cw:420, lh=Math.round(lw*(300/420));
+    var dpr=window.devicePixelRatio||1;
+    canvas.width=lw*dpr; canvas.height=lh*dpr;
+    canvas.style.width=lw+'px'; canvas.style.height=lh+'px';
+    ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    W=lw; H=lh;
+  }
+
+  function drawDC(){
+    if(!ctx) return;
+    ctx.clearRect(0,0,W,H);
+    var lh=40, gap=4, top=16, left=10, right=W-10;
+    var totalRebuild=0;
+
+    layers.forEach(function(layer, i){
+      var y = top + i*(lh+gap);
+      var isCached = states[i]==='cached';
+      var isRebuild = states[i]==='rebuild';
+
+      var bg = isCached ? 'rgba(45,212,191,0.08)' : 'rgba(245,158,11,0.15)';
+      var borderCol = isCached ? 'rgba(45,212,191,0.3)' : 'rgba(245,158,11,0.5)';
+      ctx.fillStyle=bg;
+      ctx.strokeStyle=borderCol;ctx.lineWidth=1;
+      roundRect(ctx,left,y,right-left,lh,6);
+      ctx.fill();ctx.stroke();
+
+      ctx.fillStyle=isCached?'rgba(45,212,191,0.9)':'rgba(245,158,11,0.9)';
+      ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='left';
+      ctx.fillText(isCached?'CACHED':'REBUILD',left+8,y+13);
+
+      ctx.fillStyle='rgba(255,255,255,0.75)';
+      ctx.font='bold 10px IBM Plex Mono,monospace';
+      ctx.fillText(layer.label, left+70, y+13);
+
+      ctx.fillStyle='rgba(255,255,255,0.35)';
+      ctx.font='9px IBM Plex Mono,monospace';
+      ctx.fillText(layer.desc, left+70, y+27);
+
+      if(layer.size){
+        ctx.fillStyle=isCached?'rgba(45,212,191,0.6)':'rgba(245,158,11,0.7)';
+        ctx.textAlign='right';
+        ctx.fillText(layer.size, right-8, y+13);
+      }
+      if(isRebuild) totalRebuild += layer.time;
+
+      if(isRebuild){
+        ctx.fillStyle='rgba(245,158,11,0.5)';
+        ctx.textAlign='right';
+        ctx.font='9px IBM Plex Mono,monospace';
+        if(layer.time>0) ctx.fillText('~'+layer.time+'s', right-8, y+27);
+      }
+    });
+
+    ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Total rebuild time estimate: ~'+totalRebuild.toFixed(0)+'s',left,H-6);
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+    ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);
+    ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);
+    ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);
+    ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+  }
+
+  window.dockerSim = function(type){
+    var info='';
+    if(type==='reset'){
+      states=['cached','cached','cached','cached','cached','cached'];
+      info='Semua layer dalam cache. Tidak ada rebuild.';
+    } else if(type==='code'){
+      states=['cached','cached','cached','cached','rebuild','rebuild'];
+      info='Hanya <strong style="color:var(--teal);">COPY src/</strong> dan CMD yang rebuild (~0.3s).\nLayer pip install tetap cached karena requirements.txt tidak berubah.\n→ Inilah mengapa copy requirements SEBELUM kode sangat penting!';
+    } else if(type==='req'){
+      states=['cached','cached','rebuild','rebuild','rebuild','rebuild'];
+      info='requirements.txt berubah → pip install harus dijalankan ulang (~120s).\nSemua layer setelahnya juga ikut rebuild.\n→ Pin versi dengan tepat untuk menghindari perubahan tidak perlu.';
+    } else if(type==='base'){
+      states=['rebuild','rebuild','rebuild','rebuild','rebuild','rebuild'];
+      info='Base image berubah → SEMUA layer harus rebuild (~185s+).\nPerubahan versi CUDA major biasanya tidak bisa dihindari.\n→ Minimalkan frekuensi update base image di production.';
+    }
+    document.getElementById('dc-info').innerHTML = '<div style="line-height:1.7;">'+info+'</div>';
+    drawDC();
+  };
+
+  initDC();
+  dockerSim('reset');
+  window.addEventListener('resize',function(){initDC();dockerSim('reset');});
+})();
+</script>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Model weights: COPY vs Volume Mount vs Registry</strong>Jangan COPY model weights ke dalam Docker image jika ukurannya besar. Image 30GB tidak praktis untuk push/pull. Strategi yang lebih baik: (1) mount sebagai volume dari network storage (EFS, NFS, Cloud Storage FUSE), (2) download saat container startup dari object storage (S3, GCS) menggunakan entrypoint script, atau (3) gunakan dedicated model registry (MLflow, W&amp;B Artifacts) dan pull saat startup. Ini juga memisahkan siklus hidup model dan aplikasi.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Hands-on]</strong> Build dua versi Docker image untuk model inference sederhana: satu single-stage dan satu multi-stage. Bandingkan ukuran final (<code>docker images</code>). Berapa persen penghematan yang bisa dicapai?</li>
+<li><strong>[Debugging]</strong> Simulasikan environment hell: install PyTorch versi berbeda di dua Docker container (2.1.0 dan 2.3.0). Load model yang di-save dari satu versi ke versi lainnya. Dokumentasikan error yang muncul dan solusinya.</li>
+<li><strong>[Eksplorasi]</strong> Jalankan <code>docker run --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi</code> di mesin dengan GPU. Eksperimen dengan <code>--gpus device=0</code> vs <code>--gpus all</code> untuk resource isolation. Bagaimana ini relevan untuk multi-tenant serving?</li>
+</ul></div>
+
+</div><!-- /mlops3a -->
+
+<div class="divider"></div>
+
+<!-- 3B -->
+<div class="sub" id="mlops3b">
+<div class="subtit"><span class="ac">3.2</span> Kubernetes untuk ML <span class="subid">// orkestrasi workload di skala</span></div>
+<div class="prose">
+<p>Docker menyelesaikan masalah packaging, tapi tidak menjawab pertanyaan: bagaimana menjalankan puluhan container model secara bersamaan, memastikan satu yang crash langsung digantikan, mendistribusikan traffic secara merata, dan mengelola resource GPU yang mahal secara efisien? Kubernetes (K8s) adalah jawabannya — sebuah container orchestration platform yang menjadi standar industri untuk menjalankan ML workload di production.</p>
+<p>Untuk ML engineer, memahami tiga abstraksi K8s yang paling penting adalah: <strong>Pod</strong> (unit terkecil — satu atau beberapa container yang berjalan bersama), <strong>Deployment</strong> (deklarasi bagaimana Pod harus berjalan — berapa replika, image apa, resource apa), dan <strong>Service</strong> (abstraksi jaringan yang memungkinkan Pod lain atau user luar mengakses Pod kamu, meski Pod-nya restart dan IP-nya berubah). GPU scheduling di K8s membutuhkan NVIDIA Device Plugin dan resource request yang tepat.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">YAML</span><span class="cf">model-deployment.yaml</span></div>
+<div class="cbb"><pre><span class="cm"># Deployment: deklarasi state yang diinginkan untuk model serving</span>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentiment-model-v2
+  labels:
+    app: sentiment-model
+    version: v2
+    team: ml-platform
+spec:
+  <span class="cm"># Jumlah replika — K8s memastikan selalu ada 3 pod berjalan</span>
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sentiment-model
+  strategy:
+    <span class="cm"># RollingUpdate: update bertahap tanpa downtime</span>
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        <span class="cm"># boleh ada 1 pod extra saat update</span>
+      maxUnavailable: 0  <span class="cm"># tidak boleh ada pod yang down saat update</span>
+  template:
+    metadata:
+      labels:
+        app: sentiment-model
+        version: v2
+    spec:
+      <span class="cm"># Tolerasi untuk node GPU (jika ada taint)</span>
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: model-server
+        image: registry.company.com/sentiment-model:v2.1.3
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        <span class="cm"># Resource requests/limits — KRITIS untuk GPU scheduling</span>
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+            nvidia.com/gpu: "1"  <span class="cm"># request 1 GPU</span>
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+            nvidia.com/gpu: "1"  <span class="cm"># limit harus sama dengan request untuk GPU</span>
+        <span class="cm"># Environment variables</span>
+        env:
+        - name: MODEL_PATH
+          value: "/models/sentiment-v2"
+        - name: MAX_BATCH_SIZE
+          value: "32"
+        - name: CUDA_VISIBLE_DEVICES
+          value: "0"
+        <span class="cm"># Secrets dari K8s Secrets — JANGAN hardcode credentials</span>
+        - name: MODEL_REGISTRY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ml-secrets
+              key: registry-token
+        <span class="cm"># Health checks — K8s restart pod jika ini gagal</span>
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60  <span class="cm"># tunggu model loading</span>
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        <span class="cm"># Volume mount untuk model weights dari shared storage</span>
+        volumeMounts:
+        - name: model-storage
+          mountPath: /models
+          readOnly: true
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-weights-pvc
+---
+<span class="cm"># Service: stable endpoint untuk mengakses pods</span>
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentiment-model-svc
+spec:
+  selector:
+    app: sentiment-model
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+  type: ClusterIP  <span class="cm"># internal; gunakan LoadBalancer atau Ingress untuk external</span></pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">YAML</span><span class="cf">hpa.yaml</span></div>
+<div class="cbb"><pre><span class="cm"># HorizontalPodAutoscaler — scale pods berdasarkan metric</span>
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sentiment-model-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sentiment-model-v2
+  minReplicas: 2   <span class="cm"># minimal 2 untuk high availability</span>
+  maxReplicas: 10  <span class="cm"># batas atas — sesuaikan dengan budget GPU</span>
+  metrics:
+  <span class="cm"># Scale berdasarkan CPU utilization</span>
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70  <span class="cm"># scale up jika CPU rata-rata > 70%</span>
+  <span class="cm"># Custom metric: requests per second (butuh Prometheus adapter)</span>
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "50"  <span class="cm"># scale jika tiap pod handle > 50 req/s</span>
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60    <span class="cm"># tunggu 60s sebelum scale up lagi</span>
+      policies:
+      - type: Pods
+        value: 2                         <span class="cm"># tambah max 2 pod sekaligus</span>
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300   <span class="cm"># tunggu 5 menit sebelum scale down</span>
+      policies:
+      - type: Pods
+        value: 1                         <span class="cm"># kurangi max 1 pod sekaligus</span>
+        periodSeconds: 120</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>GPU scheduling di K8s: mengapa limit == request</strong>Untuk GPU, K8s mengharuskan <code>limits.nvidia.com/gpu == requests.nvidia.com/gpu</code>. Ini karena GPU adalah non-shareable resource — berbeda dengan CPU yang bisa di-throttle. Jika kamu request 1 GPU, kamu mendapat exclusive access ke GPU tersebut. Solusi untuk time-sharing GPU: NVIDIA MPS (Multi-Process Service) atau NVIDIA MIG (Multi-Instance GPU) untuk A100/H100 yang memungkinkan satu GPU fisik dipecah menjadi beberapa GPU logis.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Visualisasi Interaktif: Kubernetes HPA Autoscaling Simulator -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">Kubernetes HPA Autoscaling Simulator — Lihat Pod Scaling Real-time</div>
+<div class="viz-body" style="padding:0;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="k8s-canvas" width="420" height="260"></canvas>
+    <div class="viz-canvas-controls">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:10px;">
+        Simulasi traffic spike dan lihat HPA bereaksi:
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+        <button onclick="k8sSim('normal')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Normal traffic (30 req/s)</button>
+        <button onclick="k8sSim('spike')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Traffic spike (200 req/s)</button>
+        <button onclick="k8sSim('sustained')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Sustained high (120 req/s)</button>
+        <button onclick="k8sSim('drop')" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 10px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;cursor:pointer;text-align:left;">Traffic drop (5 req/s)</button>
+      </div>
+      <div id="k8s-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:60px;">
+        Pilih skenario traffic untuk melihat respons HPA.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var canvas, ctx, W, H;
+  var currentPods = 2;
+  var targetPods = 2;
+  var reqPerSec = 30;
+  var animFrame = null;
+  var podAnim = 0; // 0-1 animation progress
+
+  function initK8s(){
+    canvas = document.getElementById('k8s-canvas'); if(!canvas) return;
+    var cw=canvas.parentElement.clientWidth||420;
+    var lw=cw>10?cw:420, lh=Math.round(lw*(260/420));
+    var dpr=window.devicePixelRatio||1;
+    canvas.width=lw*dpr; canvas.height=lh*dpr;
+    canvas.style.width=lw+'px'; canvas.style.height=lh+'px';
+    ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    W=lw; H=lh;
+  }
+
+  function getCpuUtil(pods, rps){
+    // setiap pod handle ~50 req/s di 100% CPU
+    return Math.min(100, Math.round((rps / (pods * 50)) * 100));
+  }
+
+  function calcTargetPods(rps){
+    // HPA: scale up jika CPU > 70%, scale down jika < 40%
+    var needed = Math.ceil(rps / (50 * 0.7));
+    return Math.max(2, Math.min(10, needed));
+  }
+
+  function drawK8s(animPct){
+    if(!ctx) return;
+    ctx.clearRect(0,0,W,H);
+
+    var cpuUtil = getCpuUtil(currentPods, reqPerSec);
+    var cpuColor = cpuUtil > 80 ? 'rgba(245,158,11,0.9)' : cpuUtil > 60 ? 'rgba(45,212,191,0.8)' : 'rgba(124,109,250,0.8)';
+
+    // Title
+    ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='bold 10px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Deployment: sentiment-model-v2', 10, 18);
+
+    // Metrics bar area
+    ctx.fillStyle='rgba(255,255,255,0.35)';ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillText('Traffic: '+reqPerSec+' req/s', 10, 38);
+    ctx.fillText('CPU util per pod: '+cpuUtil+'%', 10, 52);
+    ctx.fillText('Pods: '+currentPods+' → target: '+targetPods, 10, 66);
+
+    // CPU bar
+    ctx.fillStyle='rgba(255,255,255,0.08)';
+    ctx.fillRect(160,42,W-180,10);
+    ctx.fillStyle=cpuColor;
+    ctx.fillRect(160,42,(W-180)*(cpuUtil/100),10);
+
+    // HPA threshold lines
+    ctx.strokeStyle='rgba(245,158,11,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    var threshX = 160 + (W-180)*0.7;
+    ctx.beginPath();ctx.moveTo(threshX,36);ctx.lineTo(threshX,56);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(245,158,11,0.5)';ctx.font='8px IBM Plex Mono,monospace';
+    ctx.fillText('70% threshold', threshX+2, 36);
+
+    // Pods visualization
+    var podW=36, podH=44, podGap=8;
+    var totalW = Math.max(targetPods, currentPods) * (podW+podGap);
+    var startX = (W - totalW)/2;
+    var podY = 88;
+
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('PODS', W/2, podY-6);
+
+    for(var i=0; i<Math.max(targetPods, currentPods); i++){
+      var px = startX + i*(podW+podGap);
+      var py = podY;
+      var isRunning = i < currentPods;
+      var isPending = i >= currentPods && i < targetPods;
+      var isTerminating = i >= targetPods && i < currentPods;
+
+      var alpha = isRunning ? 1 : isPending ? (0.3 + animPct*0.5) : 0.2;
+      var borderCol = isRunning ? 'rgba(45,212,191,0.6)' : isPending ? 'rgba(124,109,250,0.5)' : 'rgba(245,158,11,0.3)';
+      var bgCol = isRunning ? 'rgba(45,212,191,0.1)' : isPending ? 'rgba(124,109,250,0.06)' : 'rgba(245,158,11,0.05)';
+
+      ctx.fillStyle=bgCol;ctx.strokeStyle=borderCol;ctx.lineWidth=1.5;
+      roundRectK8s(ctx,px,py,podW,podH,5);
+      ctx.fill();ctx.stroke();
+
+      // Pod icon
+      ctx.fillStyle= isRunning?'rgba(45,212,191,'+(0.6+alpha*0.3)+')' : isPending?'rgba(124,109,250,0.5)':'rgba(245,158,11,0.3)';
+      ctx.font='16px sans-serif';ctx.textAlign='center';
+      ctx.fillText(isRunning?'⬡':isPending?'⊕':'⬡', px+podW/2, py+22);
+
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='center';
+      var label = isRunning?'Running':isPending?'Pending':'Term';
+      ctx.fillText(label, px+podW/2, py+36);
+    }
+
+    // Status
+    var statusMsg = '';
+    var statusColor = 'rgba(255,255,255,0.5)';
+    if(targetPods > currentPods){
+      statusMsg = '↑ HPA: scale up +' + (targetPods-currentPods) + ' pod(s)';
+      statusColor = 'rgba(124,109,250,0.9)';
+    } else if(targetPods < currentPods){
+      statusMsg = '↓ HPA: scale down -' + (currentPods-targetPods) + ' pod(s) (stabilization window)';
+      statusColor = 'rgba(245,158,11,0.8)';
+    } else {
+      statusMsg = '✓ Stable — ' + currentPods + ' pods running';
+      statusColor = 'rgba(45,212,191,0.8)';
+    }
+    ctx.fillStyle=statusColor;ctx.font='bold 10px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(statusMsg, W/2, H-12);
+  }
+
+  function roundRectK8s(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+    ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);
+    ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);
+    ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);
+    ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+  }
+
+  function animatePods(){
+    if(animFrame) cancelAnimationFrame(animFrame);
+    var start=null;
+    var fromPods=currentPods;
+    function step(ts){
+      if(!start) start=ts;
+      var pct=Math.min(1,(ts-start)/1200);
+      var eased = 1-Math.pow(1-pct,3);
+      if(targetPods>fromPods){
+        currentPods=Math.round(fromPods+(targetPods-fromPods)*eased);
+      } else if(targetPods<fromPods){
+        // scale down is slower due to stabilization window
+        var slowPct=Math.min(1,(ts-start)/3000);
+        currentPods=Math.round(fromPods+(targetPods-fromPods)*(1-Math.pow(1-slowPct,2)));
+      }
+      drawK8s(eased);
+      if(pct<1) animFrame=requestAnimationFrame(step);
+      else { currentPods=targetPods; drawK8s(1); }
+    }
+    animFrame=requestAnimationFrame(step);
+  }
+
+  window.k8sSim = function(type){
+    var info='';
+    if(type==='normal'){
+      reqPerSec=30; targetPods=calcTargetPods(30);
+      info='30 req/s → CPU ~'+getCpuUtil(targetPods,30)+'% per pod\nHPA menentukan '+targetPods+' pod cukup (target CPU 70%).\nStable, tidak ada scaling action.';
+    } else if(type==='spike'){
+      reqPerSec=200; targetPods=calcTargetPods(200);
+      info='200 req/s → traffic spike!\nHPA mendeteksi CPU overload dan scale up ke '+targetPods+' pods.\nScale up cepat (60s stabilization window) untuk jaga availability.';
+    } else if(type==='sustained'){
+      reqPerSec=120; targetPods=calcTargetPods(120);
+      info='120 req/s sustained → butuh '+targetPods+' pods.\nHPA scale up bertahap, +2 pod sekaligus.\nCPU target ~'+getCpuUtil(targetPods,120)+'% per pod setelah scale.';
+    } else if(type==='drop'){
+      reqPerSec=5; targetPods=calcTargetPods(5);
+      info='Traffic drop ke 5 req/s.\nHPA akan scale down ke min replicas ('+targetPods+' pod).\nScale DOWN lebih lambat (300s stabilization window) untuk menghindari flapping.';
+    }
+    document.getElementById('k8s-info').innerHTML='<div style="line-height:1.7;">'+info+'</div>';
+    animatePods();
+  };
+
+  initK8s();
+  drawK8s(1);
+  window.addEventListener('resize',function(){initK8s();drawK8s(1);});
+})();
+</script>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Hands-on]</strong> Buat local K8s cluster menggunakan minikube atau kind. Deploy model serving sederhana (bisa mock endpoint) sebagai Deployment dengan 2 replicas dan Service. Verifikasi traffic load-balanced dengan <code>kubectl logs</code>.</li>
+<li><strong>[Debugging]</strong> Sengaja buat Deployment dengan resource request GPU yang melebihi kapasitas node (misal request 4 GPU tapi node punya 2). Amati status Pod (<code>kubectl describe pod</code>). Apa yang terjadi dan bagaimana cara fix-nya?</li>
+<li><strong>[Eksplorasi]</strong> Setup HPA dengan metric custom menggunakan Prometheus + Prometheus Adapter. Definisikan metric <code>inference_queue_depth</code> dan konfigurasi HPA untuk scale berdasarkan queue depth, bukan CPU. Mengapa ini lebih relevan untuk ML serving?</li>
+</ul></div>
+
+</div><!-- /mlops3b -->
+
+<div class="divider"></div>
+
+<!-- 3C -->
+<div class="sub" id="mlops3c">
+<div class="subtit"><span class="ac">3.3</span> Ray untuk Distributed ML <span class="subid">// scale training dan serving ke banyak node</span></div>
+<div class="prose">
+<p>Ketika dataset atau model kamu terlalu besar untuk satu mesin, kamu butuh distributed computing. Ray adalah framework Python untuk distributed computing yang dirancang khusus untuk ML — bukan hanya data processing seperti Spark. Ray mengabstraksikan kompleksitas distribusi: kamu menulis kode Python biasa, Ray yang mengurus task scheduling, memory management, dan fault tolerance di cluster.</p>
+<p>Ekosistem Ray mencakup empat komponen yang saling melengkapi: <strong>Ray Core</strong> (primitif distributed computing: remote functions dan actors), <strong>Ray Train</strong> (distributed training untuk PyTorch, TensorFlow, XGBoost), <strong>Ray Tune</strong> (distributed hyperparameter search), dan <strong>Ray Serve</strong> (scalable model serving). Keunggulan Ray dibanding alternatif: Pythonic, low overhead untuk task granularity yang kecil, dan integrasi deep dengan ML frameworks.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">ray_core_basics.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> ray
+<span class="kw">import</span> time
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Inisialisasi Ray — connect ke cluster atau start local cluster</span>
+<span class="cm"># ray.init(address='auto')  # connect ke cluster yang sudah ada</span>
+ray.<span class="fn">init</span>()  <span class="cm"># local cluster untuk development</span>
+
+<span class="cm"># ─── RAY CORE: Remote Functions ───────────────────────────────</span>
+<span class="cm"># @ray.remote mengubah function biasa menjadi distributable task</span>
+<span class="cm"># Return value-nya adalah ObjectRef — semacam "promise" ke hasil</span>
+@ray.<span class="fn">remote</span>
+<span class="kw">def</span> <span class="fn">evaluate_model</span>(model_weights: np.ndarray, batch: np.ndarray) -> <span class="tp">dict</span>:
+    <span class="st">"""Jalankan inference di remote worker — tanpa blocking main thread."""</span>
+    <span class="cm"># Simulasi inference time</span>
+    time.<span class="fn">sleep</span>(<span class="nm">0.1</span>)
+    predictions = np.<span class="fn">dot</span>(batch, model_weights)
+    <span class="kw">return</span> {<span class="st">"predictions"</span>: predictions.<span class="fn">tolist</span>(), <span class="st">"batch_size"</span>: len(batch)}
+
+<span class="cm"># Sequential: 10 batches × 0.1s = ~1 detik</span>
+weights = np.<span class="fn">random</span>.<span class="fn">randn</span>(<span class="nm">128</span>, <span class="nm">10</span>)
+batches = [np.<span class="fn">random</span>.<span class="fn">randn</span>(<span class="nm">32</span>, <span class="nm">128</span>) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">10</span>)]
+
+<span class="cm"># Parallel dengan Ray: semua batch dijalankan concurrently</span>
+<span class="cm"># ray.put() upload data ke Ray object store sekali — tidak di-copy per task</span>
+weights_ref = ray.<span class="fn">put</span>(weights)
+
+futures = [<span class="fn">evaluate_model</span>.<span class="fn">remote</span>(weights_ref, b) <span class="kw">for</span> b <span class="kw">in</span> batches]
+results = ray.<span class="fn">get</span>(futures)  <span class="cm"># blocking — tunggu semua selesai</span>
+<span class="kw">print</span>(<span class="st">f"Processed {sum(r['batch_size'] for r in results)} samples"</span>)
+
+<span class="cm"># ─── RAY ACTORS: Stateful Distributed Object ──────────────────</span>
+<span class="cm"># Actor = class yang dijalankan di remote worker, menyimpan state</span>
+@ray.<span class="fn">remote</span>(num_gpus=<span class="nm">1</span>)  <span class="cm"># request 1 GPU untuk actor ini</span>
+<span class="kw">class</span> <span class="fn">ModelServer</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, model_path: <span class="tp">str</span>):
+        <span class="kw">import</span> torch
+        self.model = torch.<span class="fn">load</span>(model_path, map_location=<span class="st">"cuda"</span>)
+        self.model.<span class="fn">eval</span>()
+        self.request_count = <span class="nm">0</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, inputs):
+        <span class="kw">import</span> torch
+        self.request_count += <span class="nm">1</span>
+        <span class="kw">with</span> torch.no_grad():
+            <span class="kw">return</span> self.model(<span class="fn">torch.tensor</span>(inputs).<span class="fn">cuda</span>()).<span class="fn">cpu</span>().<span class="fn">numpy</span>()
+
+    <span class="kw">def</span> <span class="fn">get_stats</span>(self):
+        <span class="kw">return</span> {<span class="st">"request_count"</span>: self.request_count}
+
+<span class="cm"># Buat 3 server actor (3 GPU) — persistent, tidak terminate setelah task</span>
+<span class="cm">## servers = [ModelServer.remote("model.pt") for _ in range(3)]</span>
+<span class="cm">## futures = [s.predict.remote(batch) for s, batch in zip(servers, batches)]</span></pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">ray_train_distributed.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> ray
+<span class="kw">from</span> ray <span class="kw">import</span> train
+<span class="kw">from</span> ray.train.torch <span class="kw">import</span> TorchTrainer
+<span class="kw">from</span> ray.train <span class="kw">import</span> ScalingConfig, RunConfig, CheckpointConfig
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">def</span> <span class="fn">train_func</span>(config: <span class="tp">dict</span>):
+    <span class="st">"""Function ini dijalankan di SETIAP worker secara paralel."""</span>
+    <span class="cm"># Prepare model — Ray Train otomatis wrap dengan DDP</span>
+    model = nn.<span class="fn">Linear</span>(<span class="nm">128</span>, config[<span class="st">"num_classes"</span>])
+    model = train.<span class="fn">torch</span>.<span class="fn">prepare_model</span>(model)  <span class="cm"># wrap DDP otomatis</span>
+
+    optimizer = torch.optim.<span class="fn">Adam</span>(model.<span class="fn">parameters</span>(), lr=config[<span class="st">"lr"</span>])
+    criterion = nn.<span class="fn">CrossEntropyLoss</span>()
+
+    <span class="cm"># Prepare dataloader — otomatis di-shard per worker</span>
+    dataset = train.<span class="fn">get_dataset_shard</span>(<span class="st">"train"</span>)
+    loader = dataset.<span class="fn">iter_torch_batches</span>(
+        batch_size=config[<span class="st">"batch_size"</span>], dtypes={<span class="st">"x"</span>: torch.float32, <span class="st">"y"</span>: torch.long}
+    )
+
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(config[<span class="st">"epochs"</span>]):
+        total_loss = <span class="nm">0.0</span>
+        <span class="kw">for</span> batch <span class="kw">in</span> loader:
+            optimizer.<span class="fn">zero_grad</span>()
+            outputs = model(batch[<span class="st">"x"</span>])
+            loss = <span class="fn">criterion</span>(outputs, batch[<span class="st">"y"</span>])
+            loss.<span class="fn">backward</span>()
+            optimizer.<span class="fn">step</span>()
+            total_loss += loss.<span class="fn">item</span>()
+
+        <span class="cm"># Report metrics ke Ray Train — untuk monitoring dan early stopping</span>
+        train.<span class="fn">report</span>({
+            <span class="st">"loss"</span>: total_loss,
+            <span class="st">"epoch"</span>: epoch,
+        }, checkpoint=train.<span class="fn">Checkpoint</span>.<span class="fn">from_dict</span>({<span class="st">"model"</span>: model.<span class="fn">state_dict</span>()}))
+
+<span class="cm"># Konfigurasi training terdistribusi</span>
+trainer = <span class="fn">TorchTrainer</span>(
+    train_loop_per_worker=train_func,
+    train_loop_config={
+        <span class="st">"lr"</span>: <span class="nm">1e-3</span>,
+        <span class="st">"epochs"</span>: <span class="nm">10</span>,
+        <span class="st">"batch_size"</span>: <span class="nm">64</span>,
+        <span class="st">"num_classes"</span>: <span class="nm">10</span>,
+    },
+    scaling_config=<span class="fn">ScalingConfig</span>(
+        num_workers=<span class="nm">4</span>,              <span class="cm"># 4 GPU workers</span>
+        use_gpu=<span class="kw">True</span>,
+        resources_per_worker={<span class="st">"GPU"</span>: <span class="nm">1</span>, <span class="st">"CPU"</span>: <span class="nm">4</span>},
+    ),
+    run_config=<span class="fn">RunConfig</span>(
+        name=<span class="st">"distributed-training-run"</span>,
+        checkpoint_config=<span class="fn">CheckpointConfig</span>(
+            num_to_keep=<span class="nm">3</span>,  <span class="cm"># simpan 3 checkpoint terbaik</span>
+            checkpoint_score_attribute=<span class="st">"loss"</span>,
+            checkpoint_score_order=<span class="st">"min"</span>,
+        )
+    )
+)
+
+result = trainer.<span class="fn">fit</span>()
+<span class="kw">print</span>(<span class="st">f"Best checkpoint: {result.best_checkpoints}"</span>)
+
+<span class="cm"># ─── RAY TUNE: Distributed Hyperparameter Search ─────────────</span>
+<span class="kw">from</span> ray <span class="kw">import</span> tune
+<span class="kw">from</span> ray.tune.schedulers <span class="kw">import</span> ASHAScheduler
+
+tuner = tune.<span class="fn">Tuner</span>(
+    trainable=<span class="fn">TorchTrainer</span>(train_loop_per_worker=train_func,
+        scaling_config=<span class="fn">ScalingConfig</span>(num_workers=<span class="nm">2</span>, use_gpu=<span class="kw">True</span>)),
+    param_space={
+        <span class="st">"train_loop_config"</span>: {
+            <span class="st">"lr"</span>: tune.<span class="fn">loguniform</span>(<span class="nm">1e-5</span>, <span class="nm">1e-2</span>),   <span class="cm"># log-uniform search</span>
+            <span class="st">"batch_size"</span>: tune.<span class="fn">choice</span>([<span class="nm">32</span>, <span class="nm">64</span>, <span class="nm">128</span>]),
+            <span class="st">"epochs"</span>: <span class="nm">20</span>,
+            <span class="st">"num_classes"</span>: <span class="nm">10</span>,
+        }
+    },
+    tune_config=tune.<span class="fn">TuneConfig</span>(
+        num_samples=<span class="nm">20</span>,   <span class="cm"># 20 trial configurations</span>
+        scheduler=<span class="fn">ASHAScheduler</span>(   <span class="cm"># early stop bad trials</span>
+            metric=<span class="st">"loss"</span>, mode=<span class="st">"min"</span>, max_t=<span class="nm">20</span>, grace_period=<span class="nm">3</span>),
+    )
+)</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x12="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Ray vs Spark untuk ML: pilih dengan tepat</strong>Spark unggul untuk batch data processing skala besar (ETL, feature engineering pada data tabular). Ray unggul untuk ML workloads: Python-native, low latency task scheduling (mikrodetik vs detik untuk Spark), mendukung GPU natively, dan bisa menjalankan stateful actors (cocok untuk model servers). Untuk pipeline end-to-end, banyak tim menggunakan Spark untuk preprocessing data lalu Ray untuk training dan serving.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Ray Cluster Architecture — Head Node, Worker Nodes, dan Object Store</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">
+    <div style="display:grid;grid-template-columns:1fr;gap:12px;max-width:520px;">
+      <div style="background:var(--bg3);border:1px solid rgba(124,109,250,.3);border-radius:8px;padding:12px;">
+        <div style="color:var(--accent);font-weight:600;margin-bottom:8px;">Head Node (1x)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;">
+          <div style="background:rgba(124,109,250,.1);border-radius:4px;padding:6px;">GCS (Global Control Store)<br><span style="color:var(--text3);">metadata cluster</span></div>
+          <div style="background:rgba(124,109,250,.1);border-radius:4px;padding:6px;">Raylet (Scheduler)<br><span style="color:var(--text3);">distribusi task</span></div>
+          <div style="background:rgba(124,109,250,.1);border-radius:4px;padding:6px;">Dashboard<br><span style="color:var(--text3);">monitoring UI</span></div>
+          <div style="background:rgba(124,109,250,.1);border-radius:4px;padding:6px;">Object Store<br><span style="color:var(--text3);">shared memory</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div style="background:var(--bg3);border:1px solid rgba(45,212,191,.3);border-radius:8px;padding:10px;">
+          <div style="color:var(--teal);font-weight:600;font-size:10px;margin-bottom:6px;">Worker Node 1</div>
+          <div style="font-size:9px;color:var(--text3);">4× CPU workers<br>1× GPU worker<br>Object Store<br>Raylet</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid rgba(45,212,191,.3);border-radius:8px;padding:10px;">
+          <div style="color:var(--teal);font-weight:600;font-size:10px;margin-bottom:6px;">Worker Node 2</div>
+          <div style="font-size:9px;color:var(--text3);">4× CPU workers<br>1× GPU worker<br>Object Store<br>Raylet</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid rgba(45,212,191,.3);border-radius:8px;padding:10px;">
+          <div style="color:var(--teal);font-weight:600;font-size:10px;margin-bottom:6px;">Worker Node N</div>
+          <div style="font-size:9px;color:var(--text3);">4× CPU workers<br>2× GPU worker<br>Object Store<br>Raylet</div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:10px;color:var(--text3);margin-top:10px;">↑ Ray Object Store menggunakan shared memory (Apache Plasma) — zero-copy data sharing antar workers di node yang sama. Data besar seperti model weights hanya di-serialize sekali.</p>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Hands-on]</strong> Jalankan Ray cluster lokal dengan <code>ray start --head</code>. Implementasikan parallel evaluation: evaluasi 100 random hyperparameter configs secara paralel menggunakan <code>@ray.remote</code>. Bandingkan waktu vs sequential loop.</li>
+<li><strong>[Distributed Training]</strong> Gunakan Ray Train untuk melatih model klasifikasi sederhana di 2 workers. Verifikasi bahwa gradient sync benar: kedua workers harus konvergen ke loss yang sama setelah beberapa epoch.</li>
+<li><strong>[Eksplorasi]</strong> Bandingkan ASHA scheduler vs Bayesian optimization (Optuna/BoHB) di Ray Tune untuk hyperparameter search pada dataset kecil. Berapa banyak trial yang dibutuhkan masing-masing untuk menemukan konfigurasi yang sama baiknya?</li>
+</ul></div>
+
+</div><!-- /mlops3c -->
+
+<div class="divider"></div>
+
+<!-- 3D -->
+<div class="sub" id="mlops3d">
+<div class="subtit"><span class="ac">3.4</span> Feature Store <span class="subid">// satu sumber kebenaran untuk fitur ML</span></div>
+<div class="prose">
+<p>Bayangkan dua tim ML di perusahaan yang sama, keduanya membangun model fraud detection. Tim A mendefinisikan fitur "rata-rata transaksi 7 hari" dengan cara tertentu, Tim B mendefinisikannya sedikit berbeda. Model di production menggunakan definisi yang berbeda dari yang digunakan saat training. Inilah tiga masalah utama yang Feature Store dirancang untuk diselesaikan: <strong>duplikasi komputasi fitur</strong>, <strong>training-serving skew</strong>, dan <strong>inkonsistensi definisi fitur antar tim</strong>.</p>
+<p>Feature Store memiliki dua komponen utama: <strong>Offline Store</strong> (historical feature data untuk training — biasanya berbasis columnar storage seperti Parquet atau BigQuery) dan <strong>Online Store</strong> (low-latency feature lookup untuk serving — biasanya Redis atau DynamoDB). Konsep yang paling sering disalahpahami adalah <strong>point-in-time correctness</strong>: saat melatih model dengan data historis, fitur untuk setiap label harus diambil dari waktu label tersebut terjadi, bukan dari "sekarang" — karena feature values berubah seiring waktu.</p>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Training-serving skew: silent killer model performance</strong>Training-serving skew terjadi ketika fitur yang digunakan saat training dihitung secara berbeda dari yang digunakan saat inference. Contoh: training menggunakan <code>customer.avg_spend_7d</code> dihitung dari data warehouse (lambat, batch), tapi serving menggunakan API endpoint yang ternyata menghitung dengan jendela waktu yang berbeda atau menggunakan timezone yang tidak konsisten. Model di A/B test bisa tampak bagus, tapi degradasi performance akibat skew sering baru ketahuan setelah berbulan-bulan.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">feast_setup.py</span></div>
+<div class="cbb"><pre><span class="cm"># Feast: open-source feature store</span>
+<span class="cm"># pip install feast[redis]</span>
+
+<span class="kw">from</span> datetime <span class="kw">import</span> timedelta
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> feast <span class="kw">import</span> (
+    Entity, FeatureView, Field, FeatureStore,
+    FileSource, RedisOnlineStoreConfig
+)
+<span class="kw">from</span> feast.types <span class="kw">import</span> Float32, Int64, String
+
+<span class="cm"># ─── 1. Definisi Entity (kunci lookup) ────────────────────────</span>
+customer = <span class="fn">Entity</span>(
+    name=<span class="st">"customer_id"</span>,
+    join_keys=[<span class="st">"customer_id"</span>],
+    description=<span class="st">"Unique customer identifier"</span>
+)
+
+<span class="cm"># ─── 2. Feature Source (data mentah) ──────────────────────────</span>
+<span class="cm"># Bisa berupa Parquet, BigQuery, Snowflake, Kafka (streaming)</span>
+customer_stats_source = <span class="fn">FileSource</span>(
+    path=<span class="st">"data/customer_stats.parquet"</span>,
+    timestamp_field=<span class="st">"event_timestamp"</span>,  <span class="cm"># WAJIB untuk point-in-time</span>
+    created_timestamp_column=<span class="st">"created_at"</span>,
+)
+
+<span class="cm"># ─── 3. Feature View (definisi fitur + TTL) ───────────────────</span>
+customer_features_view = <span class="fn">FeatureView</span>(
+    name=<span class="st">"customer_features"</span>,
+    entities=[customer],
+    ttl=<span class="fn">timedelta</span>(days=<span class="nm">30</span>),  <span class="cm"># fitur expire setelah 30 hari di online store</span>
+    schema=[
+        <span class="fn">Field</span>(name=<span class="st">"avg_transaction_7d"</span>,  dtype=Float32),
+        <span class="fn">Field</span>(name=<span class="st">"total_transactions_30d"</span>, dtype=Int64),
+        <span class="fn">Field</span>(name=<span class="st">"days_since_last_login"</span>, dtype=Int64),
+        <span class="fn">Field</span>(name=<span class="st">"preferred_category"</span>,    dtype=String),
+    ],
+    source=customer_stats_source,
+    tags={<span class="st">"team"</span>: <span class="st">"ml-platform"</span>, <span class="st">"domain"</span>: <span class="st">"customer"</span>},
+)
+
+<span class="cm"># ─── 4. Materialisasi ke Online Store ─────────────────────────</span>
+store = <span class="fn">FeatureStore</span>(repo_path=<span class="st">"."</span>)
+
+<span class="cm"># Materialize: copy data dari offline ke online store (Redis)</span>
+<span class="cm"># Biasanya dijalankan sebagai scheduled job (setiap jam / hari)</span>
+store.<span class="fn">materialize_incremental</span>(end_date=pd.<span class="fn">Timestamp</span>.<span class="fn">now</span>())
+
+<span class="cm"># ─── 5. Online Serving (low-latency, <10ms) ────────────────────</span>
+<span class="kw">def</span> <span class="fn">get_features_for_serving</span>(customer_ids: list) -> pd.<span class="fn">DataFrame</span>:
+    <span class="st">"""Ambil fitur terkini untuk inference — langsung dari Redis."""</span>
+    feature_vector = store.<span class="fn">get_online_features</span>(
+        features=[
+            <span class="st">"customer_features:avg_transaction_7d"</span>,
+            <span class="st">"customer_features:total_transactions_30d"</span>,
+            <span class="st">"customer_features:days_since_last_login"</span>,
+        ],
+        entity_rows=[{<span class="st">"customer_id"</span>: cid} <span class="kw">for</span> cid <span class="kw">in</span> customer_ids],
+    )
+    <span class="kw">return</span> feature_vector.<span class="fn">to_df</span>()</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">feast_training.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> feast <span class="kw">import</span> FeatureStore
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+store = <span class="fn">FeatureStore</span>(repo_path=<span class="st">"."</span>)
+
+<span class="cm"># ─── Point-in-Time Correct Training Data Retrieval ────────────</span>
+<span class="cm"># Ini adalah fitur kritis Feature Store yang paling sering disalahpahami.</span>
+<span class="cm"># Untuk setiap label (event_timestamp), Feast mengambil fitur</span>
+<span class="cm"># dari waktu SEBELUM label tersebut terjadi — menghindari data leakage.</span>
+
+<span class="cm"># entity_df: dataframe berisi entity key + timestamp tiap training example</span>
+entity_df = pd.<span class="fn">DataFrame</span>({
+    <span class="st">"customer_id"</span>: [<span class="nm">1001</span>, <span class="nm">1002</span>, <span class="nm">1003</span>, <span class="nm">1001</span>],
+    <span class="cm"># Tiap event punya timestamp berbeda — Feast ambil fitur pada saat itu</span>
+    <span class="st">"event_timestamp"</span>: pd.<span class="fn">to_datetime</span>([
+        <span class="st">"2024-01-15 10:00:00"</span>,
+        <span class="st">"2024-01-15 14:30:00"</span>,
+        <span class="st">"2024-01-16 09:00:00"</span>,
+        <span class="st">"2024-02-01 11:00:00"</span>,  <span class="cm"># customer_id 1001 lagi — ambil fitur yg berbeda</span>
+    ]),
+    <span class="st">"label"</span>: [<span class="nm">0</span>, <span class="nm">1</span>, <span class="nm">0</span>, <span class="nm">1</span>],  <span class="cm"># fraud label</span>
+})
+
+<span class="cm"># historical_features: join entity_df dengan offline store</span>
+<span class="cm"># Feast otomatis menangani point-in-time correctness!</span>
+training_df = store.<span class="fn">get_historical_features</span>(
+    entity_df=entity_df,
+    features=[
+        <span class="st">"customer_features:avg_transaction_7d"</span>,
+        <span class="st">"customer_features:total_transactions_30d"</span>,
+        <span class="st">"customer_features:preferred_category"</span>,
+    ],
+).<span class="fn">to_df</span>()
+
+<span class="kw">print</span>(training_df.<span class="fn">head</span>())
+<span class="cm"># customer_id | event_timestamp | avg_transaction_7d | label</span>
+<span class="cm"># 1001        | 2024-01-15      | 85.2               | 0      ← fitur pd Jan 15</span>
+<span class="cm"># 1001        | 2024-02-01      | 120.7              | 1      ← fitur berbeda pd Feb 1</span>
+<span class="cm"># ↑ Feast otomatis ambil nilai berbeda untuk entity yang sama di waktu berbeda</span>
+
+<span class="cm"># Feature freshness check — penting untuk monitoring</span>
+<span class="kw">def</span> <span class="fn">check_feature_freshness</span>(store, feature_view_name: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+    <span class="st">"""Cek seberapa lama data di online store."""</span>
+    last_updated = store.<span class="fn">get_feature_view</span>(feature_view_name).<span class="fn">last_updated_timestamp</span>
+    freshness_minutes = (pd.<span class="fn">Timestamp</span>.<span class="fn">now</span>() - last_updated).<span class="fn">total_seconds</span>() / <span class="nm">60</span>
+    <span class="kw">return</span> {
+        <span class="st">"feature_view"</span>: feature_view_name,
+        <span class="st">"last_updated"</span>: last_updated,
+        <span class="st">"freshness_minutes"</span>: freshness_minutes,
+        <span class="st">"is_stale"</span>: freshness_minutes > <span class="nm">60</span>,  <span class="cm"># alert jika > 1 jam</span>
+    }</pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Point-in-Time Correctness — Mengapa Urutan Waktu Sangat Penting</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">
+    <div style="color:var(--text3);margin-bottom:12px;">Skenario: prediksi churn. Feature <code>avg_spend_7d</code> untuk customer_id 1001</div>
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:start;max-width:500px;">
+      <div style="color:var(--text3);font-size:10px;padding-top:4px;">Timeline</div>
+      <div style="position:relative;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;">
+        <div style="position:absolute;left:0;top:-4px;bottom:-4px;width:100%;border-radius:4px;background:linear-gradient(90deg, rgba(124,109,250,.2), rgba(45,212,191,.2));"></div>
+      </div>
+      <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;">Jan 1</div>
+      <div style="background:rgba(124,109,250,.12);border-left:2px solid var(--accent);border-radius:4px;padding:6px 8px;font-size:10px;">Feature tersimpan: <strong style="color:var(--accent);">avg_spend_7d = 85.2</strong></div>
+      <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;">Jan 15 ← label</div>
+      <div style="background:rgba(45,212,191,.1);border-left:2px solid var(--teal);border-radius:4px;padding:6px 8px;font-size:10px;">
+        <strong>Training event:</strong> "customer churned" (label = 1)<br>
+        <span style="color:var(--teal);">Feast ambil fitur dari Jan 1 (sebelum Jan 15) → 85.2 ✓</span>
+      </div>
+      <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;">Feb 1</div>
+      <div style="background:rgba(245,158,11,.1);border-left:2px solid var(--amber);border-radius:4px;padding:6px 8px;font-size:10px;">Feature diupdate: avg_spend_7d = 210.5 (customer beli banyak)</div>
+      <div style="color:var(--text3);font-size:9px;text-align:right;padding-right:8px;color:rgba(248,113,113,.8);">❌ WRONG</div>
+      <div style="background:rgba(248,113,113,.1);border-left:2px solid rgba(248,113,113,.6);border-radius:4px;padding:6px 8px;font-size:10px;">
+        Tanpa point-in-time: ambil fitur "sekarang" (Feb 1) = <strong style="color:rgba(248,113,113,.8);">210.5</strong><br>
+        → Data leakage! Model belajar dari informasi yang belum ada saat churn
+      </div>
+    </div>
+    <p style="font-size:10px;color:var(--text3);margin-top:12px;">↑ Tanpa point-in-time correctness, model kamu training dengan "informasi dari masa depan" — yang tidak tersedia saat production. Hasilnya: model tampak hebat saat training, tapi jelek di production.</p>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Hands-on]</strong> Setup Feast dengan local file source dan SQLite online store. Definisikan 3 feature views untuk domain e-commerce (customer, product, session). Materialize dan test retrieval dengan <code>get_online_features</code>.</li>
+<li><strong>[Bug Hunting]</strong> Buat dataset training yang sengaja memiliki training-serving skew: gunakan satu definisi fitur untuk training (rata-rata 7 hari) dan definisi berbeda untuk serving (rata-rata 14 hari). Train model, deploy, dan dokumentasikan berapa besar degradasi metrik yang dihasilkan.</li>
+<li><strong>[Arsitektur]</strong> Bandingkan Feast vs Tecton vs Hopsworks. Untuk startup dengan data &lt;100GB dan tim 5 orang, mana yang paling cost-effective? Buat ADR (Architecture Decision Record) singkat.</li>
+</ul></div>
+
+</div><!-- /mlops3d -->
+
+<div class="divider"></div>
+
+<!-- 3E -->
+<div class="sub" id="mlops3e">
+<div class="subtit"><span class="ac">3.5</span> Cloud ML Platforms <span class="subid">// managed vs self-hosted tradeoffs</span></div>
+<div class="prose">
+<p>Ketika memilih antara membangun infrastruktur ML sendiri vs menggunakan managed cloud platform, keputusan ini bukan soal mana yang "lebih baik" — tapi soal mana yang tepat untuk konteks spesifikmu. AWS SageMaker, GCP Vertex AI, dan Azure ML masing-masing menawarkan managed end-to-end ML platform: dari data preparation, training, experiment tracking, model registry, hingga deployment dan monitoring. Tapi mereka datang dengan tradeoff signifikan.</p>
+<p>Argumen terkuat untuk managed platform: kamu tidak perlu mengelola infrastruktur Kubernetes, storage, networking, dan security dari nol. Engineer bisa fokus ke ML, bukan DevOps. Argumen terkuat untuk self-hosted: vendor lock-in yang serius (pipeline SageMaker tidak mudah dipindahkan ke Azure), biaya yang bisa 3–5x lebih mahal dibanding raw infrastructure, dan kurangnya fleksibilitas untuk use case non-standar. <strong>Rule of thumb</strong>: mulai dengan managed platform, pindah ke self-hosted setelah kamu tahu persis apa yang kamu butuhkan.</p>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>AWS SageMaker</h4><p>Platform paling mature dan feature-complete. Kekuatan: integrasi tight dengan AWS ekosistem (S3, IAM, VPC), SageMaker Pipelines untuk MLOps workflow, built-in algorithms yang sangat dioptimasi untuk distributed training, SageMaker Inference untuk berbagai deployment pattern (real-time, batch, multi-model endpoint). Kelemahan: pricing kompleks dan mahal, UI yang overwhelming, learning curve tinggi untuk pemula.</p></div>
+<div class="gc"><h4>GCP Vertex AI</h4><p>Generasi kedua Google Cloud ML platform (menggantikan AI Platform yang deprecated). Kekuatan: integrasi native dengan BigQuery untuk feature engineering, Vertex AI Pipelines berbasis Kubeflow (open standard), excellent AutoML untuk non-expert. Kelemahan: ekosistem lebih kecil dari AWS, documentation kurang lengkap untuk edge cases, fitur masih lebih sedikit dari SageMaker di beberapa area.</p></div>
+<div class="gc"><h4>Azure ML</h4><p>Pilihan natural untuk enterprise yang sudah heavily invested di Microsoft stack (Active Directory, Azure DevOps, Power BI). Kekuatan: integrasi seamless dengan Azure DevOps untuk CI/CD, responsible AI tools paling mature (Fairlearn, InterpretML), enterprise governance yang kuat. Kelemahan: GPU availability kadang lebih terbatas dari AWS/GCP, UI kurang intuitif, beberapa fitur masih dalam preview.</p></div>
+<div class="gc"><h4>Kapan Self-Hosted?</h4><p>Self-hosted (Kubernetes + MLflow + Seldon/KServe + Feast) masuk akal ketika: (1) regulasi atau data sovereignty mengharuskan on-premise, (2) scale sudah cukup besar untuk justify engineering cost (biasanya &gt;50 model di production), (3) kebutuhan customization yang tidak bisa dipenuhi managed platform, atau (4) vendor lock-in adalah risiko bisnis yang tidak bisa diterima. Bukan untuk startup early-stage.</p></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">sagemaker_training.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> sagemaker
+<span class="kw">from</span> sagemaker.pytorch <span class="kw">import</span> PyTorch
+<span class="kw">from</span> sagemaker.inputs <span class="kw">import</span> TrainingInput
+<span class="kw">from</span> sagemaker.debugger <span class="kw">import</span> ProfilerConfig, FrameworkProfile
+
+<span class="cm"># SageMaker session dan role dari IAM</span>
+session = sagemaker.<span class="fn">Session</span>()
+role = sagemaker.<span class="fn">get_execution_role</span>()
+bucket = session.<span class="fn">default_bucket</span>()
+
+<span class="cm"># ─── Definisi Training Job ─────────────────────────────────────</span>
+estimator = <span class="fn">PyTorch</span>(
+    entry_point=<span class="st">"train.py"</span>,         <span class="cm"># training script kamu</span>
+    source_dir=<span class="st">"./src"</span>,             <span class="cm"># folder yang di-upload ke S3</span>
+    role=role,
+    framework_version=<span class="st">"2.3"</span>,
+    py_version=<span class="st">"py311"</span>,
+
+    <span class="cm"># Instance type — SageMaker punya ratusan opsi</span>
+    instance_type=<span class="st">"ml.p3.8xlarge"</span>,  <span class="cm"># 4x V100 GPU</span>
+    instance_count=<span class="nm">2</span>,               <span class="cm"># 2 nodes × 4 GPU = 8 GPU total</span>
+
+    <span class="cm"># Hyperparameters — bisa di-override oleh SageMaker HPO</span>
+    hyperparameters={
+        <span class="st">"epochs"</span>: <span class="nm">50</span>,
+        <span class="st">"batch-size"</span>: <span class="nm">128</span>,
+        <span class="st">"learning-rate"</span>: <span class="nm">0.001</span>,
+        <span class="st">"model-name"</span>: <span class="st">"resnet50"</span>,
+    },
+
+    <span class="cm"># SageMaker Profiler — otomatis capture GPU/CPU utilization</span>
+    profiler_config=<span class="fn">ProfilerConfig</span>(
+        system_monitor_interval_millis=<span class="nm">500</span>,
+        framework_profile_params=<span class="fn">FrameworkProfile</span>(num_steps=<span class="nm">10</span>)
+    ),
+
+    <span class="cm"># Distributed training dengan SageMaker Data Parallel</span>
+    distribution={
+        <span class="st">"smdistributed"</span>: {<span class="st">"dataparallel"</span>: {<span class="st">"enabled"</span>: <span class="kw">True</span>}}
+    },
+
+    <span class="cm"># Checkpoint ke S3 untuk fault tolerance</span>
+    checkpoint_s3_uri=<span class="st">f"s3://{bucket}/checkpoints/run-001"</span>,
+
+    <span class="cm"># Spot training: bisa hemat 70–90% biaya, tapi bisa diinterupsi</span>
+    use_spot_instances=<span class="kw">True</span>,
+    max_wait=<span class="nm">7200</span>,  <span class="cm"># max 2 jam termasuk waktu tunggu spot</span>
+    max_run=<span class="nm">3600</span>,   <span class="cm"># max 1 jam actual training</span>
+)
+
+<span class="cm"># Data channels — SageMaker download dari S3 ke /opt/ml/input/data/</span>
+estimator.<span class="fn">fit</span>({
+    <span class="st">"train"</span>: <span class="fn">TrainingInput</span>(
+        s3_data=<span class="st">f"s3://{bucket}/datasets/imagenet/train"</span>,
+        content_type=<span class="st">"application/x-recordio"</span>,
+        input_mode=<span class="st">"FastFile"</span>,  <span class="cm"># stream dari S3, tidak perlu download penuh</span>
+    ),
+    <span class="st">"validation"</span>: <span class="fn">TrainingInput</span>(
+        s3_data=<span class="st">f"s3://{bucket}/datasets/imagenet/val"</span>,
+        input_mode=<span class="st">"FastFile"</span>,
+    )
+}, wait=<span class="kw">False</span>)  <span class="cm"># async — tidak block Python process</span>
+
+<span class="kw">print</span>(<span class="st">f"Training job: {estimator.latest_training_job.name}"</span>)</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">sagemaker_deploy.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> sagemaker
+<span class="kw">from</span> sagemaker.pytorch <span class="kw">import</span> PyTorchModel
+<span class="kw">from</span> sagemaker.async_inference <span class="kw">import</span> AsyncInferenceConfig
+<span class="kw">from</span> sagemaker.serializers <span class="kw">import</span> JSONSerializer
+<span class="kw">from</span> sagemaker.deserializers <span class="kw">import</span> JSONDeserializer
+
+<span class="cm"># ─── Deploy ke Real-time Endpoint ─────────────────────────────</span>
+model = <span class="fn">PyTorchModel</span>(
+    model_data=<span class="st">f"s3://my-bucket/models/fraud-detector-v2/model.tar.gz"</span>,
+    role=sagemaker.<span class="fn">get_execution_role</span>(),
+    framework_version=<span class="st">"2.3"</span>,
+    py_version=<span class="st">"py311"</span>,
+    entry_point=<span class="st">"inference.py"</span>,  <span class="cm"># harus define model_fn() dan predict_fn()</span>
+)
+
+<span class="cm"># Real-time endpoint: latency rendah, selalu on (biaya terus jalan)</span>
+predictor = model.<span class="fn">deploy</span>(
+    initial_instance_count=<span class="nm">1</span>,
+    instance_type=<span class="st">"ml.g4dn.xlarge"</span>,  <span class="cm"># T4 GPU, cost-effective</span>
+    serializer=<span class="fn">JSONSerializer</span>(),
+    deserializer=<span class="fn">JSONDeserializer</span>(),
+    endpoint_name=<span class="st">"fraud-detector-prod"</span>,
+)
+
+<span class="cm"># Data capture untuk model monitoring</span>
+<span class="kw">from</span> sagemaker.model_monitor <span class="kw">import</span> DataCaptureConfig
+data_capture = <span class="fn">DataCaptureConfig</span>(
+    enable_capture=<span class="kw">True</span>,
+    sampling_percentage=<span class="nm">10</span>,       <span class="cm"># capture 10% requests</span>
+    destination_s3_uri=<span class="st">f"s3://my-bucket/capture/fraud-detector"</span>,
+    capture_options=[<span class="st">"REQUEST"</span>, <span class="st">"RESPONSE"</span>],
+)
+
+<span class="cm"># ─── Async Inference (untuk workload besar, batch-like) ────────</span>
+<span class="cm"># Request masuk ke SQS queue, response ditulis ke S3</span>
+<span class="cm"># Cocok untuk dokumen besar atau batch processing asinkron</span>
+async_predictor = model.<span class="fn">deploy</span>(
+    async_inference_config=<span class="fn">AsyncInferenceConfig</span>(
+        output_path=<span class="st">f"s3://my-bucket/async-output/"</span>,
+        max_concurrent_invocations_per_instance=<span class="nm">4</span>,
+        failure_path=<span class="st">f"s3://my-bucket/async-failures/"</span>,
+    ),
+    instance_type=<span class="st">"ml.g4dn.xlarge"</span>,
+    initial_instance_count=<span class="nm">1</span>,
+)
+
+<span class="cm"># Cost optimization: scale to zero saat tidak ada request</span>
+<span class="kw">from</span> sagemaker.serverless <span class="kw">import</span> ServerlessInferenceConfig
+serverless = <span class="fn">ServerlessInferenceConfig</span>(
+    memory_size_in_mb=<span class="nm">4096</span>,   <span class="cm"># 4GB RAM</span>
+    max_concurrency=<span class="nm">10</span>,        <span class="cm"># max concurrent requests</span>
+)<span class="cm"># Cocok untuk model CPU-only dengan traffic sporadic</span></pre></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- Visualisasi Interaktif: Cloud ML Platform Cost Estimator -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="viz-wrap">
+<div class="viz-title">Cloud ML Platform Cost Estimator — SageMaker vs Self-Hosted</div>
+<div class="viz-body" style="padding:0;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="cloud-canvas" width="420" height="280"></canvas>
+    <div class="viz-canvas-controls">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:10px;">
+        Sesuaikan estimasi workload:
+      </div>
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">
+        Models di production: <span id="cloud-models-val" style="color:var(--accent);">5</span>
+      </label>
+      <input type="range" id="cloud-models" min="1" max="50" value="5" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">
+        Req/day (ribuan): <span id="cloud-rps-val" style="color:var(--teal);">100</span>K
+      </label>
+      <input type="range" id="cloud-rps" min="10" max="1000" value="100" step="10" style="width:100%;margin:4px 0 0;accent-color:var(--teal);">
+      <div id="cloud-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;margin-top:10px;">
+        Sesuaikan slider untuk melihat estimasi cost.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var canvas, ctx, W, H;
+
+  function initCloud(){
+    canvas = document.getElementById('cloud-canvas'); if(!canvas) return;
+    var cw=canvas.parentElement.clientWidth||420;
+    var lw=cw>10?cw:420, lh=Math.round(lw*(280/420));
+    var dpr=window.devicePixelRatio||1;
+    canvas.width=lw*dpr; canvas.height=lh*dpr;
+    canvas.style.width=lw+'px'; canvas.style.height=lh+'px';
+    ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+    W=lw; H=lh;
+  }
+
+  function calcCosts(models, rpsK){
+    // Simplified cost model (USD/month)
+    var rps = rpsK * 1000;
+    // SageMaker: per endpoint (ml.g4dn.xlarge ~$0.70/hr = $504/mo) + data transfer
+    var sagemakerPerModel = 504 + 50; // endpoint + extras
+    var sagemakerTotal = models * sagemakerPerModel + rps * 0.000002 * 30 * 24;
+    // Self-hosted K8s: shared infra amortized + ops overhead
+    var k8sBase = 800; // 2 g4dn.xlarge nodes
+    var k8sOps = Math.max(1000, models * 50); // SRE/MLOps time
+    var k8sTotal = k8sBase + k8sOps + rps * 0.0000005 * 30 * 24;
+    // SageMaker Serverless for small workloads
+    var serverlessTotal = models * 50 + rps * 0.000005 * 30 * 24;
+    return {
+      sagemaker: Math.round(sagemakerTotal),
+      k8s: Math.round(k8sTotal),
+      serverless: Math.round(serverlessTotal),
+    };
+  }
+
+  function drawCloud(){
+    if(!ctx) return;
+    var models = parseInt(document.getElementById('cloud-models').value);
+    var rpsK = parseInt(document.getElementById('cloud-rps').value);
+    document.getElementById('cloud-models-val').textContent = models;
+    document.getElementById('cloud-rps-val').textContent = rpsK;
+
+    var costs = calcCosts(models, rpsK);
+    var maxCost = Math.max(costs.sagemaker, costs.k8s, costs.serverless);
+
+    ctx.clearRect(0,0,W,H);
+
+    var bars = [
+      { label: 'SageMaker\nReal-time', cost: costs.sagemaker, color: 'rgba(245,158,11,0.8)' },
+      { label: 'SageMaker\nServerless', cost: costs.serverless, color: 'rgba(45,212,191,0.8)' },
+      { label: 'Self-hosted\n(K8s+ops)', cost: costs.k8s, color: 'rgba(124,109,250,0.8)' },
+    ];
+
+    var barW = (W - 60) / bars.length - 16;
+    var maxH = H - 80;
+    var top = 20;
+
+    bars.forEach(function(bar, i){
+      var x = 30 + i * ((W-60)/bars.length);
+      var barH = (bar.cost / maxCost) * maxH;
+      var y = top + maxH - barH;
+
+      ctx.fillStyle = bar.color.replace('0.8','0.15');
+      ctx.fillRect(x, top, barW, maxH);
+
+      ctx.fillStyle = bar.color;
+      ctx.fillRect(x, y, barW, barH);
+
+      // Cost label on top
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = 'bold 10px IBM Plex Mono,monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('$'+(bar.cost>=1000?(bar.cost/1000).toFixed(1)+'K':bar.cost), x+barW/2, y-6);
+
+      // Bar labels
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '9px IBM Plex Mono,monospace';
+      var lines = bar.label.split('\n');
+      lines.forEach(function(line, li){
+        ctx.fillText(line, x+barW/2, H-24+li*12);
+      });
+    });
+
+    // Y-axis label
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = '8px IBM Plex Mono,monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('USD/month', 2, 14);
+
+    // Recommendation
+    var rec = '';
+    var recColor = 'rgba(255,255,255,0.5)';
+    if(costs.serverless < costs.k8s && costs.serverless < costs.sagemaker){
+      rec = '→ Serverless paling hemat untuk workload ini';
+      recColor = 'rgba(45,212,191,0.8)';
+    } else if(costs.k8s < costs.sagemaker * 0.6){
+      rec = '→ Self-hosted 40%+ lebih hemat — pertimbangkan jika ops mature';
+      recColor = 'rgba(124,109,250,0.8)';
+    } else {
+      rec = '→ SageMaker cost-competitive, nilai DevOps-nya tinggi';
+      recColor = 'rgba(245,158,11,0.8)';
+    }
+    ctx.fillStyle = recColor;
+    ctx.font = 'bold 9px IBM Plex Mono,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(rec, W/2, H-4);
+
+    document.getElementById('cloud-info').innerHTML =
+      '<div style="line-height:1.8;">' +
+      '<strong style="color:var(--amber);">SageMaker Real-time:</strong> $'+costs.sagemaker.toLocaleString()+'/mo<br>' +
+      '<strong style="color:var(--teal);">SageMaker Serverless:</strong> $'+costs.serverless.toLocaleString()+'/mo<br>' +
+      '<strong style="color:var(--accent);">Self-hosted (K8s):</strong> $'+costs.k8s.toLocaleString()+'/mo<br>' +
+      '<span style="color:var(--text3);font-size:9px;">*Estimasi kasar termasuk instance + ops overhead. Harga aktual bervariasi per region.</span>' +
+      '</div>';
+  }
+
+  initCloud();
+  drawCloud();
+  document.getElementById('cloud-models').addEventListener('input', drawCloud);
+  document.getElementById('cloud-rps').addEventListener('input', drawCloud);
+  window.addEventListener('resize',function(){initCloud();drawCloud();});
+})();
+</script>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Multi-cloud dan hybrid strategy</strong>Tim ML yang mature sering menggunakan hybrid approach: AWS SageMaker untuk training (karena managed distributed training yang excellent dan spot instance), GCP BigQuery + Vertex AI Pipelines untuk orchestration (karena BigQuery integration superior untuk feature engineering), dan self-hosted Kubernetes untuk serving (karena biaya dan kontrol). Kuncinya: pastikan model artifact dan data format agnostic terhadap platform — gunakan MLflow sebagai abstraksi layer, ONNX untuk model portability, dan Parquet/Arrow untuk data format.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Evaluasi]</strong> Buat scorecard perbandingan SageMaker vs Vertex AI vs Azure ML untuk use case spesifik: startup fintech, 3 model di production, tim ML 4 orang, regulasi ketat soal data residency. Kriteria: cost, compliance, ease of use, vendor lock-in risk.</li>
+<li><strong>[Hands-on]</strong> Deploy model ke SageMaker Serverless Inference (gratis tier tersedia). Bandingkan cold start latency vs warm latency. Kapan serverless tidak cocok untuk ML serving?</li>
+<li><strong>[Arsitektur]</strong> Desain ML platform stack untuk perusahaan yang sudah on-premise (tidak bisa pakai cloud publik karena data sensitivity). Tools yang bisa digunakan: MLflow, Kubeflow/Argo, MinIO (S3-compatible), Seldon Core, Feast. Buat diagram arsitektur dan identifikasi 3 risiko utama implementasi.</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 3 selesai · 15/25 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 4 — Model Serving &amp; Deployment Patterns</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(14)">← 3.4 Feature Store</button>
+    <button class="tnbtn primary" onclick="goToPage('mlopsfi4')">Fase 4 →</button>
+  </div>
+</div>
+
+</div><!-- /mlops3e -->
+
+</section><!-- /mlopsfase3 -->

@@ -1,0 +1,1241 @@
+<section class="cs p4" id="mlopsfase4">
+<div class="fase-intro" id="mlopsfi4">
+<div class="sh">
+  <div class="sbadge p4">04</div>
+  <div>
+    <div class="stitle">Fase 4 — Monitoring &amp; Observability</div>
+    <div class="sdesc">Model yang sudah di-deploy bukan berarti pekerjaan selesai — justru pekerjaan baru dimulai. Fase ini membahas mengapa monitoring ML berbeda dari monitoring software biasa, bagaimana mendeteksi data drift dan concept drift sebelum berdampak ke pengguna, dan bagaimana membangun sistem alerting yang actionable untuk model di production.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 7–8</span><span class="mc">ML Observability</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#mlops4a">ML Monitoring Fundamentals</a>
+  <a class="snavi" href="#mlops4b">Evidently AI</a>
+  <a class="snavi" href="#mlops4c">Prometheus &amp; Grafana</a>
+  <a class="snavi" href="#mlops4d">Alerting &amp; Incident Response</a>
+  <a class="snavi" href="#mlops4e">Retraining Triggers</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 7–8</div>
+    <div class="topic-nav-title">Mulai dari: 4.1 ML Monitoring Fundamentals</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi3')">← Fase 3</button>
+    <button class="tnbtn primary" onclick="goToPage('mlops4a')">Mulai Fase 4 →</button>
+  </div>
+</div>
+</div><!-- /mlopsfi4 -->
+
+<!-- 4A -->
+<div class="sub" id="mlops4a">
+<div class="subtit"><span class="ac">4.1</span> ML Monitoring Fundamentals <span class="subid">// kenapa APM tradisional tidak cukup untuk ML</span></div>
+<div class="prose">
+<p>Software konvensional gagal dengan cara yang deterministik: ada exception, ada stack trace, ada error log yang jelas. Model machine learning gagal dengan cara yang jauh lebih berbahaya — secara diam-diam. Model terus mengembalikan prediksi, latency normal, tidak ada error, tapi kualitas prediksi memburuk secara gradual selama berminggu-minggu. Pengguna mulai mendapatkan rekomendasi yang tidak relevan, fraud yang tidak terdeteksi, harga yang salah — sebelum tim menyadari ada masalah.</p>
+<p>Inilah yang membuat monitoring ML secara fundamental berbeda dari Application Performance Monitoring (APM) tradisional. APM mengukur hal-hal seperti latency, throughput, error rate, dan resource utilization — semua metrik yang mengukur <em>bagaimana</em> sistem berjalan, bukan <em>seberapa baik</em> prediksi yang dihasilkan. Model bisa berjalan dengan sempurna secara infrastruktur tapi menghasilkan prediksi yang tidak berguna karena dunia telah berubah sejak model dilatih.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Tiga Mode Kegagalan Model di Production</div>
+<div class="viz-body">
+  <div class="cmp">
+    <div class="cmpc bad">
+      <div class="cmph">Data Drift</div>
+      <div class="cmpb"><pre>Input distribution berubah,
+tapi relationship X→Y tetap sama.
+
+Contoh: model fraud detection
+dilatih saat user desktop 80%,
+sekarang mobile 70%.
+Feature distribusi berubah.
+
+Gejala: prediksi confidence
+turun, atau distribusi output
+berbeda dari saat training.
+
+Solusi: retrain dengan
+data terbaru.</pre></div>
+    </div>
+    <div class="cmpc bad">
+      <div class="cmph">Concept Drift</div>
+      <div class="cmpb"><pre>Relationship X→Y berubah,
+meskipun distribusi X sama.
+
+Contoh: model sentiment
+dilatih sebelum kata slang
+baru viral. Kata sama,
+makna berbeda di konteks baru.
+
+Gejala: akurasi turun
+signifikan pada data baru,
+terutama segmen tertentu.
+
+Solusi: retrain + mungkin
+tambah fitur baru.</pre></div>
+    </div>
+    <div class="cmpc bad">
+      <div class="cmph">Model Degradation</div>
+      <div class="cmpb"><pre>Bukan input yang berubah,
+tapi sistem sekitarnya.
+
+Contoh: pipeline preprocessing
+berubah, upstream service
+mulai kirim format berbeda,
+atau feedback loop membuat
+training data terkontaminasi.
+
+Gejala: performa turun
+tiba-tiba, bukan gradual.
+
+Solusi: audit pipeline,
+data validation, feature store.</pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="prose">
+<h4>Metrik yang harus dimonitor di setiap layer</h4>
+<ul>
+<li><strong>Data/Input metrics</strong> — distribusi setiap feature (mean, std, min, max, quantiles), null rate, schema violations, out-of-range values. Ini yang APM tradisional tidak pernah ukur.</li>
+<li><strong>Model output metrics</strong> — distribusi prediksi (apakah model tiba-tiba lebih banyak prediksi class 0?), prediction confidence/probability distribution, output range violations.</li>
+<li><strong>Business metrics</strong> — conversion rate, click-through rate, accuracy terhadap ground truth yang delayed (ground truth sering baru tersedia beberapa jam/hari kemudian). Ini adalah "truth" tertinggi.</li>
+<li><strong>System metrics</strong> — latency P50/P95/P99, throughput, memory, CPU, GPU utilization. APM tradisional sudah bagus di sini.</li>
+</ul>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Ground truth latency adalah masalah terbesar di ML monitoring</strong>Kamu bisa mengukur prediksi model secara real-time, tapi kamu tidak bisa mengukur akurasi secara real-time karena label yang benar sering baru tersedia nanti. Model churn prediction butuh 30 hari untuk tahu apakah prediksinya benar. Model fraud detection tahu dalam hitungan jam. Model rekomendasi tahu dalam hitungan menit dari click. Strategi monitoring harus dirancang sesuai ground truth latency masing-masing use case.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">monitoring_baseline.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> typing <span class="kw">import</span> Dict, List, Optional
+<span class="kw">import</span> logging
+
+logger = logging.<span class="fn">getLogger</span>(<span class="nm">__name__</span>)
+
+@dataclass
+<span class="kw">class</span> <span class="tp">FeatureStats</span>:
+    <span class="st">"""Statistik baseline untuk satu feature."""</span>
+    name: <span class="tp">str</span>
+    mean: <span class="tp">float</span>
+    std: <span class="tp">float</span>
+    min_val: <span class="tp">float</span>
+    max_val: <span class="tp">float</span>
+    quantiles: Dict[<span class="tp">str</span>, <span class="tp">float</span>]  <span class="cm"># {"p25": ..., "p50": ..., "p75": ..., "p95": ...}</span>
+    null_rate: <span class="tp">float</span>
+
+<span class="kw">class</span> <span class="tp">FeatureMonitor</span>:
+    <span class="st">"""Monitor distribusi feature vs baseline training data."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, psi_threshold: <span class="tp">float</span> = <span class="nm">0.2</span>, ks_alpha: <span class="tp">float</span> = <span class="nm">0.05</span>):
+        self.baseline_stats: Dict[<span class="tp">str</span>, FeatureStats] = {}
+        self.psi_threshold = psi_threshold  <span class="cm"># PSI > 0.2 = significant drift</span>
+        self.ks_alpha = ks_alpha            <span class="cm"># KS test p-value threshold</span>
+        self.baseline_samples: Dict[<span class="tp">str</span>, np.ndarray] = {}
+
+    <span class="kw">def</span> <span class="fn">fit_baseline</span>(self, df: pd.DataFrame, numerical_cols: List[<span class="tp">str</span>]) -> <span class="kw">None</span>:
+        <span class="st">"""Rekam statistik baseline dari training data."""</span>
+        <span class="kw">for</span> col <span class="kw">in</span> numerical_cols:
+            values = df[col].<span class="fn">dropna</span>().<span class="fn">values</span>
+            self.baseline_samples[col] = values
+            self.baseline_stats[col] = <span class="fn">FeatureStats</span>(
+                name=col,
+                mean=<span class="tp">float</span>(values.<span class="fn">mean</span>()),
+                std=<span class="tp">float</span>(values.<span class="fn">std</span>()),
+                min_val=<span class="tp">float</span>(values.<span class="fn">min</span>()),
+                max_val=<span class="tp">float</span>(values.<span class="fn">max</span>()),
+                quantiles={
+                    <span class="st">"p25"</span>: <span class="tp">float</span>(np.<span class="fn">percentile</span>(values, <span class="nm">25</span>)),
+                    <span class="st">"p50"</span>: <span class="tp">float</span>(np.<span class="fn">percentile</span>(values, <span class="nm">50</span>)),
+                    <span class="st">"p75"</span>: <span class="tp">float</span>(np.<span class="fn">percentile</span>(values, <span class="nm">75</span>)),
+                    <span class="st">"p95"</span>: <span class="tp">float</span>(np.<span class="fn">percentile</span>(values, <span class="nm">95</span>)),
+                },
+                null_rate=<span class="tp">float</span>(df[col].<span class="fn">isna</span>().<span class="fn">mean</span>()),
+            )
+        logger.<span class="fn">info</span>(<span class="st">f"Baseline fitted for {len(numerical_cols)} features"</span>)
+
+    <span class="kw">def</span> <span class="fn">compute_psi</span>(self, baseline: np.ndarray, current: np.ndarray,
+                    n_bins: <span class="tp">int</span> = <span class="nm">10</span>) -> <span class="tp">float</span>:
+        <span class="st">"""Population Stability Index: PSI < 0.1 = stabil, 0.1-0.2 = perlu investigasi, > 0.2 = drift signifikan."""</span>
+        bins = np.<span class="fn">percentile</span>(baseline, np.<span class="fn">linspace</span>(<span class="nm">0</span>, <span class="nm">100</span>, n_bins + <span class="nm">1</span>))
+        bins[<span class="nm">0</span>] -= <span class="nm">1e-8</span>; bins[-<span class="nm">1</span>] += <span class="nm">1e-8</span>
+
+        base_dist, _ = np.<span class="fn">histogram</span>(baseline, bins=bins, density=<span class="kw">False</span>)
+        curr_dist, _ = np.<span class="fn">histogram</span>(current, bins=bins, density=<span class="kw">False</span>)
+
+        <span class="cm"># Normalize ke proporsi, hindari log(0)</span>
+        base_pct = (base_dist + <span class="nm">1e-8</span>) / (<span class="tp">len</span>(baseline) + <span class="nm">1e-8</span>)
+        curr_pct = (curr_dist + <span class="nm">1e-8</span>) / (<span class="tp">len</span>(current) + <span class="nm">1e-8</span>)
+
+        psi = np.<span class="fn">sum</span>((curr_pct - base_pct) * np.<span class="fn">log</span>(curr_pct / base_pct))
+        <span class="kw">return</span> <span class="tp">float</span>(psi)
+
+    <span class="kw">def</span> <span class="fn">check_drift</span>(self, current_df: pd.DataFrame) -> Dict[<span class="tp">str</span>, dict]:
+        <span class="st">"""Cek drift untuk semua feature yang di-monitor."""</span>
+        results = {}
+        <span class="kw">for</span> col, baseline_vals <span class="kw">in</span> self.baseline_samples.<span class="fn">items</span>():
+            <span class="kw">if</span> col <span class="kw">not in</span> current_df.columns:
+                logger.<span class="fn">warning</span>(<span class="st">f"Feature {col!r} hilang dari current data!"</span>)
+                <span class="kw">continue</span>
+            current_vals = current_df[col].<span class="fn">dropna</span>().<span class="fn">values</span>
+            psi = self.<span class="fn">compute_psi</span>(baseline_vals, current_vals)
+            ks_stat, ks_pval = stats.<span class="fn">ks_2samp</span>(baseline_vals, current_vals)
+            results[col] = {
+                <span class="st">"psi"</span>: psi,
+                <span class="st">"psi_status"</span>: <span class="st">"drift"</span> <span class="kw">if</span> psi > self.psi_threshold <span class="kw">else</span> (<span class="st">"warning"</span> <span class="kw">if</span> psi > <span class="nm">0.1</span> <span class="kw">else</span> <span class="st">"ok"</span>),
+                <span class="st">"ks_statistic"</span>: ks_stat,
+                <span class="st">"ks_pvalue"</span>: ks_pval,
+                <span class="st">"ks_drift"</span>: ks_pval < self.ks_alpha,
+                <span class="st">"null_rate_current"</span>: <span class="tp">float</span>(current_df[col].<span class="fn">isna</span>().<span class="fn">mean</span>()),
+            }
+        <span class="kw">return</span> results</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prediction_monitor.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> time
+<span class="kw">import</span> structlog
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+<span class="kw">from</span> typing <span class="kw">import</span> Any, Dict
+
+log = structlog.<span class="fn">get_logger</span>()
+
+<span class="kw">class</span> <span class="tp">PredictionLogger</span>:
+    <span class="st">"""Log setiap prediksi dengan context lengkap untuk observability.</span>
+<span class="st">    Structured logging penting agar log bisa di-query di ELK/Loki.</span>
+<span class="st">    """</span>
+
+    <span class="kw">def</span> <span class="fn">log_prediction</span>(
+        self,
+        request_id: <span class="tp">str</span>,
+        model_name: <span class="tp">str</span>,
+        model_version: <span class="tp">str</span>,
+        features: Dict[<span class="tp">str</span>, Any],
+        prediction: Any,
+        probability: <span class="tp">float</span>,
+        latency_ms: <span class="tp">float</span>,
+        metadata: Optional[Dict] = <span class="kw">None</span>,
+    ) -> <span class="kw">None</span>:
+        log.<span class="fn">info</span>(
+            <span class="st">"prediction"</span>,
+            request_id=request_id,
+            model_name=model_name,
+            model_version=model_version,
+            prediction=prediction,
+            probability=probability,
+            latency_ms=latency_ms,
+            <span class="cm"># PENTING: log feature values untuk enable replay dan drift detection</span>
+            feature_age_days=features.<span class="fn">get</span>(<span class="st">"age_days"</span>),
+            feature_amount=features.<span class="fn">get</span>(<span class="st">"amount"</span>),
+            feature_country=features.<span class="fn">get</span>(<span class="st">"country"</span>),
+            <span class="cm"># metadata opsional: A/B test group, user segment, dll</span>
+            **(metadata <span class="kw">or</span> {}),
+        )
+
+    <span class="kw">def</span> <span class="fn">log_ground_truth</span>(
+        self,
+        request_id: <span class="tp">str</span>,
+        actual_label: Any,
+        feedback_delay_hours: <span class="tp">float</span>,
+    ) -> <span class="kw">None</span>:
+        <span class="st">"""Log ground truth saat tersedia — untuk menghitung akurasi delayed."""</span>
+        log.<span class="fn">info</span>(
+            <span class="st">"ground_truth"</span>,
+            request_id=request_id,  <span class="cm"># join key ke prediction log</span>
+            actual_label=actual_label,
+            feedback_delay_hours=feedback_delay_hours,
+        )
+        <span class="cm"># Di downstream, JOIN prediction + ground_truth by request_id</span>
+        <span class="cm"># → hitung accuracy, precision, recall secara time-windowed</span></pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Training-serving skew adalah sumber silent failure #1</strong>Model dilatih dengan satu distribusi data, di-serve dengan distribusi lain. Penyebab umum: preprocessing logic berbeda antara training pipeline dan serving pipeline (misalnya imputation strategy berubah), feature engineering yang berbeda di training vs online, atau upstream data source yang berubah format tanpa notifikasi. Solusi: gunakan feature store yang sama untuk training dan serving, dan lakukan data validation di kedua sisi menggunakan Great Expectations atau Pydantic.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Sebuah model rekomendasi e-commerce dilatih pada data Juni 2024. Pada bulan Desember, ada sale besar. Apakah ini data drift, concept drift, atau keduanya? Bagaimana kamu akan membedakannya secara empiris?</li>
+<li><strong>[Kode]</strong> Implementasikan PSI calculation di atas dan test dengan dua distribusi: satu normal(0,1) dan satu normal(1,1). Berapa PSI yang dihasilkan? Sekarang coba dengan normal(3,1) — apakah PSI > 0.2?</li>
+<li><strong>[Eksplorasi]</strong> Bandingkan PSI vs KS-test vs Wasserstein distance untuk mendeteksi drift. Pada distribusi mana masing-masing metrik paling sensitif? Kapan false positive bisa terjadi?</li>
+</ul></div>
+
+</div><!-- /mlops4a -->
+
+<div class="divider"></div>
+
+<!-- 4B -->
+<div class="sub" id="mlops4b">
+<div class="subtit"><span class="ac">4.2</span> Evidently AI <span class="subid">// open-source ML monitoring yang praktis</span></div>
+<div class="prose">
+<p>Evidently AI adalah library open-source Python yang menyederhanakan pembuatan data drift reports, model quality reports, dan data quality checks. Dibandingkan mengimplementasikan PSI atau KS-test sendiri, Evidently memberikan framework yang konsisten, visualisasi langsung, dan bisa di-embed ke monitoring pipeline. Ini bukan monitoring system lengkap — Evidently adalah library analisis yang menghasilkan laporan, yang kemudian kamu integrasikan ke stack monitoring yang lebih besar.</p>
+<p>Konsep utama Evidently: kamu punya <strong>reference dataset</strong> (biasanya training data atau data dari periode "sehat" yang diketahui) dan <strong>current dataset</strong> (data production yang ingin diperiksa). Evidently membandingkan keduanya menggunakan berbagai statistical tests dan menghasilkan laporan yang bisa disajikan sebagai HTML, JSON, atau dikirim ke monitoring dashboard.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Arsitektur Evidently — Report vs Test Suite</div>
+<div class="viz-body">
+  <div class="cmp">
+    <div class="cmpc good">
+      <div class="cmph">Report — Exploratory Analysis</div>
+      <div class="cmpb"><pre>Untuk: eksplorasi, investigasi,
+debugging, one-off analysis.
+
+Output: HTML visual yang
+kaya dengan chart dan detail.
+Cocok untuk shared dengan
+stakeholder non-teknis.
+
+Contoh use case:
+- Weekly drift review
+- Post-incident analysis
+- New data cohort exploration
+
+from evidently.report import Report
+from evidently.metric_preset import (
+  DataDriftPreset,
+  DataQualityPreset
+)
+
+report = Report(metrics=[
+  DataDriftPreset(),
+  DataQualityPreset(),
+])
+report.run(ref, curr)
+report.save_html("report.html")</pre></div>
+    </div>
+    <div class="cmpc good">
+      <div class="cmph">Test Suite — Automated Checks</div>
+      <div class="cmpb"><pre>Untuk: CI/CD, automated
+pipeline, alerting triggers.
+
+Output: PASS/FAIL per test
+dengan detail kondisi. Bisa
+di-parse programmatically.
+Cocok untuk automation.
+
+Contoh use case:
+- Pre-deployment validation
+- Nightly health check
+- Retraining trigger logic
+
+from evidently.test_suite import TestSuite
+from evidently.test_preset import (
+  DataStabilityTestPreset,
+  DataDriftTestPreset
+)
+
+suite = TestSuite(tests=[
+  DataStabilityTestPreset(),
+  DataDriftTestPreset(),
+])
+suite.run(ref, curr)
+result = suite.as_dict()
+failed = [t for t in result["tests"]
+          if t["status"] == "FAIL"]</pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">evidently_drift_report.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> evidently.report <span class="kw">import</span> Report
+<span class="kw">from</span> evidently.metric_preset <span class="kw">import</span> DataDriftPreset, TargetDriftPreset
+<span class="kw">from</span> evidently.metrics <span class="kw">import</span> (
+    DatasetDriftMetric,
+    DatasetMissingValuesMetric,
+    ColumnDriftMetric,
+    ColumnSummaryMetric,
+)
+<span class="kw">from</span> evidently <span class="kw">import</span> ColumnMapping
+
+<span class="cm"># === Setup column mapping (penting untuk Evidently tahu role tiap kolom) ===</span>
+column_mapping = <span class="fn">ColumnMapping</span>(
+    target=<span class="st">"churn"</span>,               <span class="cm"># kolom label/target</span>
+    prediction=<span class="st">"churn_probability"</span>, <span class="cm"># kolom prediksi model</span>
+    numerical_features=[
+        <span class="st">"tenure_days"</span>, <span class="st">"monthly_spend"</span>,
+        <span class="st">"support_tickets"</span>, <span class="st">"login_frequency"</span>,
+    ],
+    categorical_features=[<span class="st">"plan_type"</span>, <span class="st">"country"</span>, <span class="st">"device_type"</span>],
+)
+
+<span class="cm"># === Reference: training data atau data bulan lalu ===</span>
+reference_df = pd.<span class="fn">read_parquet</span>(<span class="st">"data/reference_june.parquet"</span>)
+<span class="cm"># === Current: data production minggu ini ===</span>
+current_df = pd.<span class="fn">read_parquet</span>(<span class="st">"data/current_week.parquet"</span>)
+
+<span class="cm"># === Report lengkap — untuk investigasi manual ===</span>
+report = <span class="fn">Report</span>(metrics=[
+    <span class="fn">DatasetDriftMetric</span>(),              <span class="cm"># apakah dataset secara keseluruhan drift?</span>
+    <span class="fn">DatasetMissingValuesMetric</span>(),       <span class="cm"># ada kolom yang null rate naik?</span>
+    <span class="fn">DataDriftPreset</span>(),                  <span class="cm"># drift report per kolom</span>
+    <span class="fn">TargetDriftPreset</span>(),                <span class="cm"># apakah distribusi target berubah?</span>
+    <span class="fn">ColumnDriftMetric</span>(column_name=<span class="st">"monthly_spend"</span>),   <span class="cm"># deep-dive satu kolom</span>
+    <span class="fn">ColumnSummaryMetric</span>(column_name=<span class="st">"monthly_spend"</span>),  <span class="cm"># summary stats</span>
+])
+
+report.<span class="fn">run</span>(
+    reference_data=reference_df,
+    current_data=current_df,
+    column_mapping=column_mapping,
+)
+
+<span class="cm"># Simpan sebagai HTML untuk review tim</span>
+report.<span class="fn">save_html</span>(<span class="st">"reports/drift_report_w27.html"</span>)
+
+<span class="cm"># Atau ambil sebagai dict untuk programmatic processing</span>
+report_dict = report.<span class="fn">as_dict</span>()
+n_drifted = report_dict[<span class="st">"metrics"</span>][<span class="nm">0</span>][<span class="st">"result"</span>][<span class="st">"number_of_drifted_columns"</span>]
+share_drifted = report_dict[<span class="st">"metrics"</span>][<span class="nm">0</span>][<span class="st">"result"</span>][<span class="st">"share_of_drifted_columns"</span>]
+<span class="fn">print</span>(<span class="st">f"Drifted columns: {n_drifted} ({share_drifted:.1%})"</span>)</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">evidently_test_suite.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> evidently.test_suite <span class="kw">import</span> TestSuite
+<span class="kw">from</span> evidently.tests <span class="kw">import</span> (
+    TestNumberOfDriftedColumns,
+    TestShareOfDriftedColumns,
+    TestNumberOfMissingValues,
+    TestColumnDrift,
+    TestMeanInNSigmas,
+)
+
+<span class="cm"># === Test Suite — untuk automated pipeline/alerting ===</span>
+suite = <span class="fn">TestSuite</span>(tests=[
+    <span class="cm"># Fail jika lebih dari 3 kolom drift</span>
+    <span class="fn">TestNumberOfDriftedColumns</span>(lte=<span class="nm">3</span>),
+
+    <span class="cm"># Fail jika > 30% kolom drift</span>
+    <span class="fn">TestShareOfDriftedColumns</span>(lte=<span class="nm">0.3</span>),
+
+    <span class="cm"># Kolom kritis harus tidak drift secara individual</span>
+    <span class="fn">TestColumnDrift</span>(column_name=<span class="st">"monthly_spend"</span>),
+    <span class="fn">TestColumnDrift</span>(column_name=<span class="st">"tenure_days"</span>),
+
+    <span class="cm"># Mean feature harus dalam range ±3 sigma dari baseline</span>
+    <span class="fn">TestMeanInNSigmas</span>(column_name=<span class="st">"login_frequency"</span>, n=<span class="nm">3</span>),
+    <span class="fn">TestMeanInNSigmas</span>(column_name=<span class="st">"support_tickets"</span>, n=<span class="nm">3</span>),
+
+    <span class="cm"># Null rate tidak boleh naik signifikan</span>
+    <span class="fn">TestNumberOfMissingValues</span>(),
+])
+
+suite.<span class="fn">run</span>(reference_data=reference_df, current_data=current_df,
+           column_mapping=column_mapping)
+
+result = suite.<span class="fn">as_dict</span>()
+failed_tests = [
+    t <span class="kw">for</span> t <span class="kw">in</span> result[<span class="st">"tests"</span>]
+    <span class="kw">if</span> t[<span class="st">"status"</span>] == <span class="st">"FAIL"</span>
+]
+
+<span class="kw">if</span> failed_tests:
+    <span class="fn">print</span>(<span class="st">f"ALERT: {len(failed_tests)} test(s) failed!"</span>)
+    <span class="kw">for</span> t <span class="kw">in</span> failed_tests:
+        <span class="fn">print</span>(<span class="st">f"  - {t['name']}: {t['description']}"</span>)
+    <span class="cm"># Di production: kirim ke alerting system, trigger retraining pipeline, dll</span>
+    raise <span class="fn">RuntimeError</span>(<span class="st">"Data quality check failed — aborting deployment"</span>)
+
+<span class="fn">print</span>(<span class="st">"All tests passed — data distribution looks healthy"</span>)</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Pilih reference dataset dengan hati-hati</strong>Reference dataset yang buruk membuat semua metrik drift menjadi tidak bermakna. Pilihan terbaik: data dari 30–90 hari terakhir sebelum model di-deploy, bukan training data dari setahun lalu. Jika model di-retrain secara rutin, update reference dataset seiring retraining. Beberapa tim menggunakan rolling window (misalnya data 2 minggu lalu vs 2 minggu ini) untuk mendeteksi perubahan gradual yang baru muncul.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Apa perbedaan antara menggunakan training data vs recent production data sebagai reference di Evidently? Dalam kondisi apa masing-masing lebih tepat digunakan?</li>
+<li><strong>[Kode]</strong> Buat synthetic dataset dengan 5 numerical features dan satu target. Inject drift ke 2 features (ubah mean ±2 sigma). Jalankan Evidently Report dan verifikasi bahwa hanya 2 kolom tersebut yang terdeteksi drift.</li>
+<li><strong>[Eksplorasi]</strong> Explore Evidently's Monitoring UI (Evidently Cloud atau self-hosted). Bagaimana kamu akan men-schedule nightly drift check dan mengirim notifikasi Slack jika ada kolom yang drift?</li>
+</ul></div>
+
+</div><!-- /mlops4b -->
+
+<div class="divider"></div>
+
+<!-- 4C -->
+<div class="sub" id="mlops4c">
+<div class="subtit"><span class="ac">4.3</span> Prometheus &amp; Grafana untuk ML <span class="subid">// custom metrics &amp; visualisasi real-time</span></div>
+<div class="prose">
+<p>Evidently bagus untuk batch drift analysis, tapi kamu juga butuh real-time metrics: berapa banyak prediksi per detik? Berapa latency P99 model endpoint? Berapa persen request yang mendapat prediksi dengan confidence rendah? Untuk kebutuhan ini, Prometheus dan Grafana adalah standar industri — Prometheus sebagai time-series metrics database, Grafana sebagai visualization layer.</p>
+<p>Filosofi Prometheus adalah <strong>pull-based</strong>: Prometheus secara aktif "scrape" (menarik) metrics dari setiap service melalui HTTP endpoint <code>/metrics</code>. Service kamu menggunakan library <code>prometheus_client</code> untuk mendefinisikan dan mengekspos metrics, lalu Prometheus polling endpoint tersebut setiap N detik dan menyimpan data time-series. Grafana kemudian query Prometheus menggunakan bahasa PromQL untuk membuat dashboard real-time.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">ml_metrics.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> prometheus_client <span class="kw">import</span> (
+    Counter, Histogram, Gauge, Summary,
+    start_http_server, REGISTRY,
+)
+<span class="kw">import</span> time
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> functools <span class="kw">import</span> wraps
+<span class="kw">from</span> typing <span class="kw">import</span> Callable, Any
+
+<span class="cm"># === Definisi metrics — BUAT SEKALI, gunakan berkali-kali ===</span>
+
+<span class="cm"># Counter: hanya naik, tidak pernah turun. Cocok untuk request count, error count.</span>
+PREDICTION_COUNTER = <span class="fn">Counter</span>(
+    <span class="st">"ml_predictions_total"</span>,
+    <span class="st">"Total number of predictions made"</span>,
+    labelnames=[<span class="st">"model_name"</span>, <span class="st">"model_version"</span>, <span class="st">"prediction_class"</span>],
+)
+
+REQUEST_ERRORS = <span class="fn">Counter</span>(
+    <span class="st">"ml_prediction_errors_total"</span>,
+    <span class="st">"Total number of prediction errors"</span>,
+    labelnames=[<span class="st">"model_name"</span>, <span class="st">"error_type"</span>],
+)
+
+<span class="cm"># Histogram: distribusi nilai dalam bucket. Ideal untuk latency.</span>
+<span class="cm"># Bucket didefinisikan dalam detik: 1ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s</span>
+PREDICTION_LATENCY = <span class="fn">Histogram</span>(
+    <span class="st">"ml_prediction_latency_seconds"</span>,
+    <span class="st">"Prediction latency in seconds"</span>,
+    labelnames=[<span class="st">"model_name"</span>, <span class="st">"model_version"</span>],
+    buckets=[<span class="nm">0.001</span>, <span class="nm">0.005</span>, <span class="nm">0.01</span>, <span class="nm">0.025</span>,
+             <span class="nm">0.05</span>, <span class="nm">0.1</span>, <span class="nm">0.25</span>, <span class="nm">0.5</span>, <span class="nm">1.0</span>, <span class="nm">2.5</span>],
+)
+
+<span class="cm"># Gauge: bisa naik dan turun. Cocok untuk nilai current state.</span>
+MODEL_CONFIDENCE_GAUGE = <span class="fn">Gauge</span>(
+    <span class="st">"ml_prediction_confidence_avg"</span>,
+    <span class="st">"Rolling average prediction confidence (probability) — last 1000 predictions"</span>,
+    labelnames=[<span class="st">"model_name"</span>],
+)
+
+DRIFT_SCORE_GAUGE = <span class="fn">Gauge</span>(
+    <span class="st">"ml_feature_drift_score"</span>,
+    <span class="st">"Current PSI drift score per feature"</span>,
+    labelnames=[<span class="st">"model_name"</span>, <span class="st">"feature_name"</span>],
+)
+
+DATA_FRESHNESS_GAUGE = <span class="fn">Gauge</span>(
+    <span class="st">"ml_training_data_age_days"</span>,
+    <span class="st">"Days since model was last trained"</span>,
+    labelnames=[<span class="st">"model_name"</span>],
+)
+
+<span class="cm"># === Decorator untuk instrument fungsi prediksi ===</span>
+<span class="kw">def</span> <span class="fn">monitor_prediction</span>(model_name: <span class="tp">str</span>, model_version: <span class="tp">str</span>) -> Callable:
+    <span class="kw">def</span> <span class="fn">decorator</span>(func: Callable) -> Callable:
+        @<span class="fn">wraps</span>(func)
+        <span class="kw">def</span> <span class="fn">wrapper</span>(*args, **kwargs) -> Any:
+            start = time.<span class="fn">perf_counter</span>()
+            <span class="kw">try</span>:
+                result = <span class="fn">func</span>(*args, **kwargs)
+                elapsed = time.<span class="fn">perf_counter</span>() - start
+
+                PREDICTION_LATENCY.<span class="fn">labels</span>(
+                    model_name=model_name,
+                    model_version=model_version,
+                ).<span class="fn">observe</span>(elapsed)
+
+                <span class="cm"># Asumsi result adalah (prediction_class, probability)</span>
+                pred_class, prob = result
+                PREDICTION_COUNTER.<span class="fn">labels</span>(
+                    model_name=model_name,
+                    model_version=model_version,
+                    prediction_class=<span class="tp">str</span>(pred_class),
+                ).<span class="fn">inc</span>()
+
+                <span class="kw">return</span> result
+            <span class="kw">except</span> <span class="tp">Exception</span> <span class="kw">as</span> e:
+                REQUEST_ERRORS.<span class="fn">labels</span>(
+                    model_name=model_name,
+                    error_type=<span class="tp">type</span>(e).<span class="nm">__name__</span>,
+                ).<span class="fn">inc</span>()
+                <span class="kw">raise</span>
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+<span class="cm"># === Contoh penggunaan ===</span>
+@<span class="fn">monitor_prediction</span>(model_name=<span class="st">"churn_model"</span>, model_version=<span class="st">"v2.1.0"</span>)
+<span class="kw">def</span> <span class="fn">predict_churn</span>(features: dict) -> tuple:
+    <span class="cm"># model.predict(features) → return (class, probability)</span>
+    <span class="kw">return</span> (<span class="nm">1</span>, <span class="nm">0.87</span>)  <span class="cm"># placeholder</span>
+
+<span class="cm"># Start metrics server di port 8000 — Prometheus scrape dari sini</span>
+<span class="fn">start_http_server</span>(<span class="nm">8000</span>)  <span class="cm"># → curl http://localhost:8000/metrics</span></pre></div>
+</div>
+
+<div class="prose">
+<h4>PromQL queries penting untuk ML monitoring</h4>
+<ul>
+<li><strong>Request rate</strong>: <code>rate(ml_predictions_total[5m])</code> — prediksi per detik dalam 5 menit terakhir</li>
+<li><strong>Error rate</strong>: <code>rate(ml_prediction_errors_total[5m]) / rate(ml_predictions_total[5m])</code> — fraksi request yang error</li>
+<li><strong>Latency P95</strong>: <code>histogram_quantile(0.95, rate(ml_prediction_latency_seconds_bucket[5m]))</code></li>
+<li><strong>Prediction distribution</strong>: <code>sum by (prediction_class)(rate(ml_predictions_total[1h]))</code> — apakah model lebih banyak prediksi class 0 atau 1?</li>
+<li><strong>Drift alert</strong>: <code>ml_feature_drift_score{feature_name="monthly_spend"} > 0.2</code></li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">drift_exporter.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> schedule
+<span class="kw">import</span> time
+<span class="kw">from</span> evidently.report <span class="kw">import</span> Report
+<span class="kw">from</span> evidently.metrics <span class="kw">import</span> ColumnDriftMetric
+
+<span class="kw">class</span> <span class="tp">DriftExporter</span>:
+    <span class="st">"""Jalankan Evidently drift check secara terjadwal,</span>
+<span class="st">    ekspor hasilnya ke Prometheus sebagai Gauge metrics.</span>
+<span class="st">    """</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, model_name: <span class="tp">str</span>, feature_cols: list, monitor: <span class="tp">FeatureMonitor</span>):
+        self.model_name = model_name
+        self.feature_cols = feature_cols
+        self.monitor = monitor
+
+    <span class="kw">def</span> <span class="fn">run_and_export</span>(self, current_df) -> <span class="kw">None</span>:
+        <span class="st">"""Hitung drift dan update Prometheus Gauge."""</span>
+        drift_results = self.monitor.<span class="fn">check_drift</span>(current_df)
+        <span class="kw">for</span> feature, metrics <span class="kw">in</span> drift_results.<span class="fn">items</span>():
+            DRIFT_SCORE_GAUGE.<span class="fn">labels</span>(
+                model_name=self.model_name,
+                feature_name=feature,
+            ).<span class="fn">set</span>(metrics[<span class="st">"psi"</span>])
+
+            <span class="kw">if</span> metrics[<span class="st">"psi_status"</span>] == <span class="st">"drift"</span>:
+                <span class="fn">print</span>(
+                    <span class="st">f"[DRIFT ALERT] Feature '{feature}' PSI = {metrics['psi']:.3f}"</span>
+                    <span class="st">f" (threshold: 0.2) — consider retraining!"</span>
+                )
+
+<span class="cm"># === Schedule: jalankan setiap jam, bukan setiap request ===</span>
+<span class="cm"># Drift detection mahal secara komputasi — batch, bukan per-request</span>
+exporter = <span class="fn">DriftExporter</span>(<span class="st">"churn_model"</span>, feature_cols, monitor)
+schedule.<span class="fn">every</span>(<span class="nm">1</span>).<span class="fn">hour</span>.<span class="fn">do</span>(exporter.run_and_export, current_df=<span class="fn">get_hourly_batch</span>())
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    schedule.<span class="fn">run_pending</span>()
+    time.<span class="fn">sleep</span>(<span class="nm">60</span>)</pre></div>
+</div>
+
+<!-- Visualisasi Interaktif: Drift Detector Simulator -->
+<div class="viz-wrap">
+<div class="viz-title">Drift Detector Simulator — Geser Slider untuk Lihat Kapan Alert Triggered</div>
+<div class="viz-body" style="padding:0;">
+  <div class="viz-canvas-wrap" style="padding:16px 20px;">
+    <canvas id="drift-canvas" width="400" height="240"></canvas>
+    <div class="viz-canvas-controls">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Distribution Shift (sigma) = <span id="drift-shift-val" style="color:var(--accent);">0.0</span></label>
+      <input type="range" id="drift-shift" min="0" max="4" step="0.1" value="0" style="width:100%;margin:4px 0 10px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Distribution Scale = <span id="drift-scale-val" style="color:var(--teal);">1.0</span></label>
+      <input type="range" id="drift-scale" min="0.5" max="3" step="0.1" value="1" style="width:100%;margin:4px 0 10px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">PSI Threshold = <span id="drift-thr-val" style="color:var(--amber);">0.20</span></label>
+      <input type="range" id="drift-thr" min="0.05" max="0.5" step="0.05" value="0.2" style="width:100%;margin:4px 0 16px;accent-color:var(--amber);">
+      <div id="drift-status" style="font-size:12px;font-family:'IBM Plex Mono',monospace;padding:6px 10px;border-radius:6px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:rgba(74,222,128,0.9);">PSI: 0.00 — No Drift</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;">
+        <div>PSI &lt; 0.1 = Stable</div>
+        <div>0.1–0.2 = Investigate</div>
+        <div>PSI &gt; 0.2 = Drift Alert</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+
+  function gaussianRandom(mean, std) {
+    var u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  function generateSamples(n, mean, std) {
+    var s = [];
+    for(var i = 0; i < n; i++) s.push(gaussianRandom(mean, std));
+    return s;
+  }
+
+  function computePSI(base, curr, nBins) {
+    nBins = nBins || 10;
+    var allVals = base.concat(curr);
+    allVals.sort(function(a,b){return a-b;});
+    var mn = allVals[0], mx = allVals[allVals.length-1];
+    var binW = (mx - mn) / nBins;
+    if(binW === 0) return 0;
+    var baseCts = new Array(nBins).fill(0);
+    var currCts = new Array(nBins).fill(0);
+    base.forEach(function(v){ var b = Math.min(Math.floor((v-mn)/binW), nBins-1); baseCts[b]++; });
+    curr.forEach(function(v){ var b = Math.min(Math.floor((v-mn)/binW), nBins-1); currCts[b]++; });
+    var psi = 0;
+    for(var i = 0; i < nBins; i++){
+      var bp = (baseCts[i] + 1e-6) / (base.length + 1e-6);
+      var cp = (currCts[i] + 1e-6) / (curr.length + 1e-6);
+      psi += (cp - bp) * Math.log(cp / bp);
+    }
+    return psi;
+  }
+
+  function initDrift(){
+    cv = document.getElementById('drift-canvas');
+    if(!cv) return;
+    var cw = cv.parentElement.clientWidth || 400;
+    var lw = cw > 10 ? cw : 400;
+    var lh = Math.round(lw * (240/400));
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = lw*dpr; cv.height = lh*dpr;
+    cv.style.width = lw+'px'; cv.style.height = lh+'px';
+    ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    W = lw; H = lh;
+  }
+
+  function drawDrift(){
+    if(!ctx) return;
+    var shift = parseFloat(document.getElementById('drift-shift').value);
+    var scale = parseFloat(document.getElementById('drift-scale').value);
+    var threshold = parseFloat(document.getElementById('drift-thr').value);
+    document.getElementById('drift-shift-val').textContent = shift.toFixed(1);
+    document.getElementById('drift-scale-val').textContent = scale.toFixed(1);
+    document.getElementById('drift-thr-val').textContent = threshold.toFixed(2);
+
+    var base = generateSamples(500, 0, 1);
+    var curr = generateSamples(500, shift, scale);
+    var psi = computePSI(base, curr, 12);
+
+    var statusEl = document.getElementById('drift-status');
+    var statusColor, statusText;
+    if(psi < 0.1){
+      statusColor = 'rgba(74,222,128,'; statusText = 'Stable — No Action Needed';
+    } else if(psi < threshold){
+      statusColor = 'rgba(245,158,11,'; statusText = 'Warning — Investigate';
+    } else {
+      statusColor = 'rgba(248,113,113,'; statusText = 'DRIFT ALERT — Retrain Triggered!';
+    }
+    statusEl.style.background = statusColor+'0.1)';
+    statusEl.style.borderColor = statusColor+'0.4)';
+    statusEl.style.color = statusColor+'0.9)';
+    statusEl.textContent = 'PSI: ' + psi.toFixed(3) + ' — ' + statusText;
+
+    ctx.clearRect(0, 0, W, H);
+    var nBins = 20;
+    var allVals = base.concat(curr);
+    var mn = Math.min.apply(null, allVals) - 0.2;
+    var mx = Math.max.apply(null, allVals) + 0.2;
+    var binW = (mx - mn) / nBins;
+    var baseCts = new Array(nBins).fill(0);
+    var currCts = new Array(nBins).fill(0);
+    base.forEach(function(v){ var b = Math.min(Math.floor((v-mn)/binW), nBins-1); baseCts[b]++; });
+    curr.forEach(function(v){ var b = Math.min(Math.floor((v-mn)/binW), nBins-1); currCts[b]++; });
+    var maxCt = Math.max.apply(null, baseCts.concat(currCts));
+    var padL = 30, padR = 16, padT = 16, padB = 30;
+    var plotW = W - padL - padR;
+    var plotH = H - padT - padB;
+    var barW = plotW / nBins * 0.45;
+
+    for(var i = 0; i < nBins; i++){
+      var x = padL + (i / nBins) * plotW;
+      var bh = (baseCts[i] / maxCt) * plotH;
+      var ch = (currCts[i] / maxCt) * plotH;
+      ctx.fillStyle = 'rgba(124,109,250,0.5)';
+      ctx.fillRect(x, padT + plotH - bh, barW, bh);
+      ctx.fillStyle = psi >= threshold ? 'rgba(248,113,113,0.5)' : psi >= 0.1 ? 'rgba(245,158,11,0.5)' : 'rgba(74,222,128,0.5)';
+      ctx.fillRect(x + barW + 2, padT + plotH - ch, barW, ch);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+    ctx.strokeRect(padL, padT, plotW, plotH);
+
+    ctx.fillStyle = 'rgba(124,109,250,0.8)'; ctx.fillRect(padL, H-padB+8, 14, 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = '8px IBM Plex Mono,monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Reference', padL+18, H-padB+16);
+    ctx.fillStyle = psi >= threshold ? 'rgba(248,113,113,0.8)' : 'rgba(74,222,128,0.8)';
+    ctx.fillRect(padL+90, H-padB+8, 14, 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('Current', padL+108, H-padB+16);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.textAlign = 'center';
+    ctx.fillText('Distribusi feature — geser shift untuk simulasi data drift', W/2, padT-4);
+  }
+
+  initDrift();
+  drawDrift();
+  document.getElementById('drift-shift').addEventListener('input', drawDrift);
+  document.getElementById('drift-scale').addEventListener('input', drawDrift);
+  document.getElementById('drift-thr').addEventListener('input', drawDrift);
+  window.addEventListener('resize', function(){ initDrift(); drawDrift(); });
+})();
+</script>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Jangan monitor setiap feature dengan latency yang sama</strong>Pisahkan metrics berdasarkan kritikalitasnya. Feature yang langsung mempengaruhi revenue (price, fraud score) perlu monitoring real-time per menit. Feature sekunder cukup hourly drift check. Ini menghindari alert fatigue dan menjaga cost infrastruktur monitoring tetap reasonable. Buat "critical feature" list bersama product owner saat onboarding model baru.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan Counter vs Gauge vs Histogram di Prometheus. Berikan contoh ML metric yang tepat untuk masing-masing tipe. Mengapa tidak semua metrik bisa menggunakan Gauge?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>monitor_prediction</code> decorator di atas dan attach ke sebuah fungsi model inference sederhana. Jalankan <code>start_http_server(8000)</code>, buat 100 prediksi, lalu buka <code>http://localhost:8000/metrics</code> dan verifikasi counter dan histogram terpopulasi.</li>
+<li><strong>[Eksplorasi]</strong> Install Grafana dan Prometheus via Docker Compose. Buat dashboard dengan 4 panel: prediction rate, error rate, latency P95, dan drift score. Screenshot hasilnya. Apa yang kamu pelajari dari membuat dashboard ini?</li>
+</ul></div>
+
+</div><!-- /mlops4c -->
+
+<div class="divider"></div>
+
+<!-- 4D -->
+<div class="sub" id="mlops4d">
+<div class="subtit"><span class="ac">4.4</span> Alerting &amp; Incident Response <span class="subid">// dari alert ke tindakan dalam hitungan menit</span></div>
+<div class="prose">
+<p>Monitoring tanpa alerting adalah seperti smoke detector tanpa alarm — kamu tahu ada asap tapi tidak ada yang dibangunkan. Di sisi lain, alerting yang terlalu agresif menghasilkan alert fatigue: tim berhenti merespons karena terlalu banyak noise. Desain alerting yang baik adalah keahlian tersendiri, dan prinsip utamanya adalah: <strong>setiap alert yang sampai ke pager manusia harus actionable dan memerlukan respons segera</strong>. Jika tidak bisa direspons, itu bukan alert — itu logging.</p>
+<p>Untuk ML systems, alerting lebih kompleks dari software biasa karena ada dua layer: alerting infrastruktur (latency, error rate) yang urgent dan relatif mudah di-threshold, dan alerting kualitas model (drift, accuracy degradation) yang lebih nuanced — sering kali threshold perlu disesuaikan dengan business context dan tidak ada angka "benar" yang universal.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Hierarki Alert untuk ML System</div>
+<div class="viz-body">
+  <div class="aloop">
+    <div class="ln" style="border-color:rgba(248,113,113,.4)"><div class="lni" style="background:rgba(248,113,113,.2)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(248,113,113,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div><div><div class="lnn">P1 — Critical (Page Immediately, 24/7)</div><div class="lnd">Error rate &gt; 5%, model endpoint down, latency P99 &gt; 5s, semua prediksi output constant (model stuck)</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(245,158,11,.4)"><div class="lni" style="background:rgba(245,158,11,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><div><div class="lnn">P2 — High (Page During Business Hours)</div><div class="lnd">Latency P95 &gt; 1s, PSI &gt; 0.3 pada critical features, prediction distribution shift &gt; 20%, null rate naik &gt; 5%</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(124,109,250,.4)"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="lnn">P3 — Medium (Slack/Email, Investigate Next Day)</div><div class="lnd">PSI 0.1–0.3, accuracy degradation &lt; 5%, model training data age &gt; 30 hari, non-critical feature missing</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(74,222,128,.3)"><div class="lni" style="background:rgba(74,222,128,.1)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="lnn">P4 — Low (Dashboard Only, Weekly Review)</div><div class="lnd">PSI 0.05–0.1, minor metric fluctuations dalam batas normal, non-urgent data quality issues</div></div></div>
+  </div>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">YAML</span><span class="cf">alertmanager_rules.yml</span></div>
+<div class="cbb"><pre><span class="cm"># Prometheus Alerting Rules untuk ML Model</span>
+groups:
+  - name: ml_model_alerts
+    rules:
+      <span class="cm"># P1 — Model endpoint down</span>
+      - alert: MLModelEndpointDown
+        expr: up{job="ml-model"} == 0
+        <span class="kw">for</span>: <span class="nm">1m</span>
+        labels:
+          severity: critical
+          team: ml-platform
+        annotations:
+          summary: <span class="st">"ML Model endpoint down: {{ $labels.instance }}"</span>
+          description: <span class="st">"Model endpoint has been down for >1 minute. Prediction requests are failing."</span>
+          runbook_url: <span class="st">"https://wiki.company.com/runbooks/ml-endpoint-down"</span>
+
+      <span class="cm"># P1 — Error rate spike</span>
+      - alert: MLHighErrorRate
+        expr: |
+          (rate(ml_prediction_errors_total[5m]) /
+           rate(ml_predictions_total[5m])) > 0.05
+        <span class="kw">for</span>: <span class="nm">2m</span>
+        labels:
+          severity: critical
+        annotations:
+          summary: <span class="st">"High prediction error rate: {{ $value | humanizePercentage }}"</span>
+          runbook_url: <span class="st">"https://wiki.company.com/runbooks/ml-high-error-rate"</span>
+
+      <span class="cm"># P1 — Latency terlalu tinggi</span>
+      - alert: MLHighLatency
+        expr: |
+          histogram_quantile(0.99,
+            rate(ml_prediction_latency_seconds_bucket[5m])
+          ) > 5.0
+        <span class="kw">for</span>: <span class="nm">3m</span>
+        labels:
+          severity: critical
+        annotations:
+          summary: <span class="st">"P99 latency > 5s: {{ $value }}s for {{ $labels.model_name }}"</span>
+
+      <span class="cm"># P2 — Data drift terdeteksi</span>
+      - alert: MLDataDrift
+        expr: ml_feature_drift_score > 0.3
+        <span class="kw">for</span>: <span class="nm">10m</span>
+        labels:
+          severity: warning
+        annotations:
+          summary: <span class="st">"Data drift on {{ $labels.feature_name }}: PSI={{ $value | humanize }}"</span>
+          description: <span class="st">"Feature {{ $labels.feature_name }} shows significant distribution shift. Consider retraining."</span>
+
+      <span class="cm"># P3 — Model sudah lama tidak retrain</span>
+      - alert: MLModelStale
+        expr: ml_training_data_age_days > 30
+        <span class="kw">for</span>: <span class="nm">1h</span>
+        labels:
+          severity: info
+        annotations:
+          summary: <span class="st">"Model {{ $labels.model_name }} trained {{ $value }} days ago"</span></pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">incident_response.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> httpx
+<span class="kw">import</span> json
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+<span class="kw">from</span> typing <span class="kw">import</span> List, Optional
+
+<span class="kw">class</span> <span class="tp">Severity</span>(Enum):
+    CRITICAL = <span class="st">"P1"</span>
+    HIGH     = <span class="st">"P2"</span>
+    MEDIUM   = <span class="st">"P3"</span>
+    LOW      = <span class="st">"P4"</span>
+
+@dataclass
+<span class="kw">class</span> <span class="tp">MLIncident</span>:
+    title: <span class="tp">str</span>
+    severity: Severity
+    model_name: <span class="tp">str</span>
+    model_version: <span class="tp">str</span>
+    description: <span class="tp">str</span>
+    runbook_steps: List[<span class="tp">str</span>]
+    metrics_snapshot: dict = field(default_factory=dict)
+    created_at: <span class="tp">str</span> = field(default_factory=<span class="kw">lambda</span>: datetime.<span class="fn">utcnow</span>().<span class="fn">isoformat</span>())
+
+<span class="kw">class</span> <span class="tp">PagerDutyNotifier</span>:
+    <span class="st">"""Kirim alert ke PagerDuty Events API v2."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, integration_key: <span class="tp">str</span>):
+        self.integration_key = integration_key
+        self.api_url = <span class="st">"https://events.pagerduty.com/v2/enqueue"</span>
+
+    <span class="kw">def</span> <span class="fn">trigger</span>(self, incident: MLIncident) -> <span class="tp">str</span>:
+        <span class="st">"""Trigger PagerDuty incident. Returns dedup_key untuk later resolve."""</span>
+        dedup_key = <span class="st">f"{incident.model_name}-{incident.title}-{incident.created_at[:10]}"</span>
+
+        payload = {
+            <span class="st">"routing_key"</span>: self.integration_key,
+            <span class="st">"event_action"</span>: <span class="st">"trigger"</span>,
+            <span class="st">"dedup_key"</span>: dedup_key,
+            <span class="st">"payload"</span>: {
+                <span class="st">"summary"</span>: <span class="st">f"[{incident.severity.value}] {incident.title}"</span>,
+                <span class="st">"severity"</span>: <span class="st">"critical"</span> <span class="kw">if</span> incident.severity == Severity.CRITICAL <span class="kw">else</span> <span class="st">"warning"</span>,
+                <span class="st">"source"</span>: <span class="st">f"ml-monitoring/{incident.model_name}/{incident.model_version}"</span>,
+                <span class="st">"component"</span>: incident.model_name,
+                <span class="st">"custom_details"</span>: {
+                    <span class="st">"model_version"</span>: incident.model_version,
+                    <span class="st">"description"</span>: incident.description,
+                    <span class="st">"runbook"</span>: <span class="st">"\n"</span>.<span class="fn">join</span>(<span class="st">f"{i+1}. {s}"</span> <span class="kw">for</span> i,s <span class="kw">in</span> <span class="fn">enumerate</span>(incident.runbook_steps)),
+                    <span class="st">"metrics_at_incident"</span>: incident.metrics_snapshot,
+                },
+            },
+        }
+
+        resp = httpx.<span class="fn">post</span>(self.api_url, json=payload, timeout=<span class="nm">10.0</span>)
+        resp.<span class="fn">raise_for_status</span>()
+        <span class="kw">return</span> dedup_key
+
+    <span class="kw">def</span> <span class="fn">resolve</span>(self, dedup_key: <span class="tp">str</span>) -> <span class="kw">None</span>:
+        <span class="st">"""Resolve PagerDuty incident saat masalah teratasi."""</span>
+        payload = {
+            <span class="st">"routing_key"</span>: self.integration_key,
+            <span class="st">"event_action"</span>: <span class="st">"resolve"</span>,
+            <span class="st">"dedup_key"</span>: dedup_key,
+        }
+        httpx.<span class="fn">post</span>(self.api_url, json=payload, timeout=<span class="nm">10.0</span>).<span class="fn">raise_for_status</span>()
+
+<span class="cm"># === Runbook template untuk drift incident ===</span>
+DRIFT_RUNBOOK = [
+    <span class="st">"Cek Grafana dashboard: panel 'Feature Drift Score' — feature mana yang PSI tertinggi?"</span>,
+    <span class="st">"Bandingkan distribusi feature saat ini vs baseline di Evidently Report"</span>,
+    <span class="st">"Identifikasi apakah ada perubahan upstream: data source, ETL pipeline, atau schema?"</span>,
+    <span class="st">"Jika drift datang dari event eksternal (promo, seasonality): catat sebagai expected, tidak perlu retrain"</span>,
+    <span class="st">"Jika drift genuine: trigger retraining pipeline di MLflow Projects"</span>,
+    <span class="st">"Monitor model baru di staging selama 2 jam sebelum promote ke production"</span>,
+    <span class="st">"Update reference dataset setelah retrain selesai"</span>,
+]</pre></div>
+</div>
+
+<div class="prose">
+<h4>SLO dan SLA untuk ML systems</h4>
+<ul>
+<li><strong>SLO (Service Level Objective)</strong> — target internal: "model latency P99 &lt; 200ms diukur per 30 hari rolling window". SLO lebih strict dari SLA karena merupakan warning sebelum SLA dilanggar. Tim platform bertanggung jawab ke SLO.</li>
+<li><strong>SLA (Service Level Agreement)</strong> — komitmen ke customer: "99.5% uptime per bulan, P99 latency &lt; 500ms". Jika dilanggar ada konsekuensi finansial atau reputasi. SLA harus lebih longgar dari SLO.</li>
+<li><strong>Error Budget</strong> — jika SLO adalah 99.9% uptime/bulan, error budget adalah 0.1% = ~44 menit/bulan. Gunakan error budget untuk guide pengambilan keputusan: jika budget hampir habis, freeze deployment baru sampai akhir bulan.</li>
+<li><strong>ML-specific SLOs</strong> — selain latency dan uptime, pertimbangkan: "model accuracy tidak boleh turun &gt; 5% dari baseline selama 7 hari rolling", "tidak lebih dari 3 critical drift alerts per bulan tanpa acknowledged retraining".</li>
+</ul>
+</div>
+
+<div class="callout danger">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></span>
+<div class="ctxt"><strong>Alert fatigue adalah ancaman nyata untuk ML teams</strong>Tim yang menerima 50+ alert per hari akan berhenti merespons secara serius. Gejala: alert dibiarkan terlalu lama, "snooze everything" jadi budaya, incident yang mestinya P1 direspons seperti P3. Solusi: lakukan alert audit triwulanan, hapus alert yang tidak pernah actionable, pastikan setiap alert punya runbook yang jelas, dan investasikan dalam alert deduplication dan intelligent grouping di Alertmanager.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Sebuah model fraud detection di-alert karena PSI melonjak saat festival hari raya. Apakah ini seharusnya P1 atau P3? Bagaimana kamu akan mendesain alerting yang aware terhadap seasonality/calendar events?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>PagerDutyNotifier</code> di atas menggunakan PagerDuty free tier atau mock endpoint. Tambahkan fungsi <code>auto_resolve_if_healthy()</code> yang memanggil <code>resolve()</code> jika metrics kembali normal.</li>
+<li><strong>[Eksplorasi]</strong> Baca dokumentasi Alertmanager tentang "inhibition rules" dan "routing". Bagaimana kamu akan mendesain routing agar alert P2 dari production dikirim ke on-call engineer, tapi alert P3 dari staging hanya masuk ke Slack channel?</li>
+</ul></div>
+
+</div><!-- /mlops4d -->
+
+<div class="divider"></div>
+
+<!-- 4E -->
+<div class="sub" id="mlops4e">
+<div class="subtit"><span class="ac">4.5</span> Retraining Triggers <span class="subid">// kapan dan bagaimana retrain model secara otomatis</span></div>
+<div class="prose">
+<p>Retraining adalah "obat" untuk data drift dan concept drift — tapi seperti obat, timing dan dosisnya penting. Retrain terlalu jarang dan model akan terdegradasi secara diam-diam. Retrain terlalu sering dan kamu membuang compute, mungkin overfitting ke noise terbaru, dan berpotensi menghapus knowledge dari data lama yang masih relevan. Tantangan terbesar: bagaimana mengetahui kapan saat yang tepat untuk retrain?</p>
+<p>Ada dua strategi utama: <strong>scheduled retraining</strong> (retrain setiap hari/minggu/bulan terlepas dari kondisi) dan <strong>drift-triggered retraining</strong> (retrain hanya ketika monitoring mendeteksi degradasi). Keduanya memiliki trade-off berbeda, dan banyak production system menggabungkan keduanya.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Scheduled vs Drift-Triggered Retraining — Trade-offs</div>
+<div class="viz-body">
+  <div class="cmp">
+    <div class="cmpc good">
+      <div class="cmph">Scheduled Retraining</div>
+      <div class="cmpb"><pre>Kapan: setiap N hari,
+terlepas dari drift.
+
+Pro:
++ Predictable, mudah diplan
++ Selalu pakai data terbaru
++ Tidak butuh drift detection
++ Mudah diaudit untuk compliance
+
+Con:
+- Bisa waste compute jika
+  data tidak berubah
+- Mungkin retrain terlalu
+  lambat saat ada event besar
+- Jika N terlalu besar,
+  drift masih terakumulasi
+
+Kapan pakai:
+Model yang datanya berubah
+perlahan dan predictably.
+Contoh: model harga properti
+(retrain bulanan).</pre></div>
+    </div>
+    <div class="cmpc good">
+      <div class="cmph">Drift-Triggered Retraining</div>
+      <div class="cmpb"><pre>Kapan: saat monitoring
+mendeteksi degradasi.
+
+Pro:
++ Responsive terhadap
+  perubahan mendadak
++ Hemat compute saat
+  distribusi stabil
++ Alert-driven — ada
+  audit trail yang jelas
+
+Con:
+- Membutuhkan monitoring
+  yang reliable
+- False positive bisa
+  trigger unnecessary retrain
+- False negative: drift tidak
+  terdeteksi sampai terlambat
+
+Kapan pakai:
+Model yang datanya jarang
+berubah tapi bisa berubah
+drastis. Contoh: model
+sentiment saat viral event.</pre></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">retraining_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> mlflow
+<span class="kw">import</span> mlflow.sklearn
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> typing <span class="kw">import</span> Optional
+<span class="kw">import</span> logging
+
+logger = logging.<span class="fn">getLogger</span>(<span class="nm">__name__</span>)
+
+@dataclass
+<span class="kw">class</span> <span class="tp">RetrainingConfig</span>:
+    model_name: <span class="tp">str</span>
+    <span class="cm"># Scheduled: retrain setiap N hari, bahkan tanpa drift</span>
+    max_age_days: <span class="tp">int</span> = <span class="nm">30</span>
+    <span class="cm"># Drift-triggered: retrain jika PSI di atas threshold</span>
+    psi_threshold: <span class="tp">float</span> = <span class="nm">0.25</span>
+    <span class="cm"># Akurasi: retrain jika akurasi turun lebih dari ini</span>
+    accuracy_drop_threshold: <span class="tp">float</span> = <span class="nm">0.05</span>
+    <span class="cm"># Data minimum untuk retrain (jangan retrain dengan data terlalu sedikit)</span>
+    min_samples_for_retrain: <span class="tp">int</span> = <span class="nm">5000</span>
+
+<span class="kw">class</span> <span class="tp">RetrainingDecider</span>:
+    <span class="st">"""Logika untuk memutuskan kapan retrain diperlukan."""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, config: RetrainingConfig):
+        self.config = config
+
+    <span class="kw">def</span> <span class="fn">should_retrain</span>(
+        self,
+        current_psi_scores: dict,          <span class="cm"># {feature_name: psi_score}</span>
+        current_accuracy: Optional[<span class="tp">float</span>], <span class="cm"># None jika ground truth belum tersedia</span>
+        baseline_accuracy: <span class="tp">float</span>,
+        model_age_days: <span class="tp">int</span>,
+        available_samples: <span class="tp">int</span>,
+    ) -> tuple[<span class="tp">bool</span>, <span class="tp">str</span>]:
+        <span class="st">"""Returns (should_retrain, reason)."""</span>
+
+        <span class="kw">if</span> available_samples < self.config.min_samples_for_retrain:
+            <span class="kw">return</span> <span class="kw">False</span>, <span class="st">f"Not enough data: {available_samples} < {self.config.min_samples_for_retrain}"</span>
+
+        <span class="cm"># Trigger 1: Model terlalu tua</span>
+        <span class="kw">if</span> model_age_days >= self.config.max_age_days:
+            <span class="kw">return</span> <span class="kw">True</span>, <span class="st">f"Scheduled: model age {model_age_days} days >= {self.config.max_age_days}"</span>
+
+        <span class="cm"># Trigger 2: Feature drift</span>
+        drifted = {f: s <span class="kw">for</span> f, s <span class="kw">in</span> current_psi_scores.<span class="fn">items</span>() <span class="kw">if</span> s > self.config.psi_threshold}
+        <span class="kw">if</span> drifted:
+            top_drifted = <span class="fn">max</span>(drifted, key=<span class="kw">lambda</span> k: drifted[k])
+            <span class="kw">return</span> <span class="kw">True</span>, <span class="st">f"Drift detected: {top_drifted} PSI={drifted[top_drifted]:.3f}"</span>
+
+        <span class="cm"># Trigger 3: Accuracy degradation (hanya jika ground truth tersedia)</span>
+        <span class="kw">if</span> current_accuracy <span class="kw">is not None</span>:
+            drop = baseline_accuracy - current_accuracy
+            <span class="kw">if</span> drop > self.config.accuracy_drop_threshold:
+                <span class="kw">return</span> <span class="kw">True</span>, <span class="st">f"Accuracy drop: {drop:.3f} > threshold {self.config.accuracy_drop_threshold}"</span>
+
+        <span class="kw">return</span> <span class="kw">False</span>, <span class="st">"No retraining needed"</span>
+
+<span class="kw">def</span> <span class="fn">run_retraining_pipeline</span>(
+    config: RetrainingConfig,
+    train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
+) -> <span class="tp">str</span>:
+    <span class="st">"""Jalankan retraining dan register model baru ke MLflow Registry."""</span>
+    <span class="kw">with</span> mlflow.<span class="fn">start_run</span>(run_name=<span class="st">f"retrain-{datetime.utcnow():%Y%m%d-%H%M}"</span>):
+        mlflow.<span class="fn">set_tags</span>({
+            <span class="st">"trigger"</span>: <span class="st">"drift"</span>,
+            <span class="st">"model_name"</span>: config.model_name,
+            <span class="st">"train_samples"</span>: <span class="tp">len</span>(train_df),
+        })
+
+        <span class="cm"># ... train model ...</span>
+        model = <span class="fn">train_model</span>(train_df)
+        metrics = <span class="fn">evaluate_model</span>(model, val_df)
+
+        mlflow.sklearn.<span class="fn">log_model</span>(model, <span class="st">"model"</span>)
+        mlflow.<span class="fn">log_metrics</span>(metrics)
+
+        <span class="cm"># Register ke Model Registry untuk enable staged rollout</span>
+        run_id = mlflow.<span class="fn">active_run</span>().<span class="fn">info</span>.run_id
+        model_uri = <span class="st">f"runs:/{run_id}/model"</span>
+        mlflow.<span class="fn">register_model</span>(model_uri, config.model_name)
+        logger.<span class="fn">info</span>(<span class="st">f"New model registered: {config.model_name}, run_id={run_id}"</span>)
+        <span class="kw">return</span> run_id</pre></div>
+</div>
+
+<div class="prose">
+<h4>Continual Learning dan Catastrophic Forgetting</h4>
+<p>Strategi di atas adalah full batch retraining — buang model lama, latih dari nol dengan data terbaru. Ini aman dan predictable, tapi ada alternatif: <strong>online learning</strong> atau <strong>continual learning</strong>, di mana model di-update secara inkremental dengan data baru tanpa melupakan data lama.</p>
+<ul>
+<li><strong>Catastrophic forgetting</strong> adalah masalah utama continual learning: ketika model di-update hanya dengan data baru, ia "melupakan" pola yang dipelajari dari data lama. Neural network sangat rentan terhadap ini — gradient update untuk task baru overwrite weight yang relevan untuk task lama.</li>
+<li><strong>Elastic Weight Consolidation (EWC)</strong> — menambah regularization yang melindungi weight "penting" dari data lama dari perubahan terlalu besar. Menggunakan Fisher Information Matrix untuk identifikasi weight yang kritis.</li>
+<li><strong>Replay buffer / Experience replay</strong> — saat training dengan data baru, mix-in sebagian data lama secara acak. Simple dan efektif untuk banyak kasus. Di-popularize dari deep reinforcement learning (DQN).</li>
+<li><strong>Untuk sistem production</strong>: kecuali ada kebutuhan spesifik untuk latency sangat rendah atau skenario streaming, batch retraining scheduled dengan windowed data (misalnya: 6 bulan terakhir) adalah strategi yang paling robust dan mudah di-debug.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">online_learning.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> river <span class="kw">import</span> linear_model, preprocessing, metrics, stream
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> collections <span class="kw">import</span> deque
+<span class="kw">import</span> random
+
+<span class="cm"># === Online learning dengan River library ===</span>
+<span class="cm"># River adalah library khusus untuk streaming/incremental ML</span>
+
+model = preprocessing.<span class="fn">StandardScaler</span>() | linear_model.<span class="fn">LogisticRegression</span>()
+metric = metrics.<span class="fn">Accuracy</span>()
+replay_buffer = <span class="fn">deque</span>(maxlen=<span class="nm">1000</span>)  <span class="cm"># simpan 1000 sample lama untuk replay</span>
+
+<span class="kw">def</span> <span class="fn">update_model_online</span>(features: dict, label: <span class="tp">int</span>) -> <span class="tp">float</span>:
+    <span class="st">"""Update model dengan satu sample baru + experience replay.</span>
+<span class="st">    Returns current prediction accuracy.</span>
+<span class="st">    """</span>
+    <span class="cm"># Prediksi dulu sebelum update (untuk evaluasi fairness)</span>
+    pred = model.<span class="fn">predict_one</span>(features)
+    metric.<span class="fn">update</span>(label, pred)
+
+    <span class="cm"># Update dengan sample baru</span>
+    model.<span class="fn">learn_one</span>(features, label)
+
+    <span class="cm"># Experience replay: update juga dengan satu sample lama secara acak</span>
+    <span class="cm"># Ini mengurangi catastrophic forgetting secara simple</span>
+    <span class="kw">if</span> <span class="tp">len</span>(replay_buffer) > <span class="nm">50</span>:
+        old_x, old_y = random.<span class="fn">choice</span>(replay_buffer)
+        model.<span class="fn">learn_one</span>(old_x, old_y)
+
+    <span class="cm"># Simpan ke replay buffer</span>
+    replay_buffer.<span class="fn">append</span>((features, label))
+    <span class="kw">return</span> metric.<span class="fn">get</span>()
+
+<span class="cm"># === Kapan TIDAK pakai online learning ===</span>
+<span class="cm"># 1. Model Anda adalah neural network besar (catastrophic forgetting lebih severe)</span>
+<span class="cm"># 2. Label tersedia dengan delay besar (tidak bisa update segera)</span>
+<span class="cm"># 3. Butuh reproducibility audit trail (online learning harder to audit)</span>
+<span class="cm"># 4. Distribution shift sangat tiba-tiba (model online bisa "mislearn" cepat)</span>
+<span class="cm">#</span>
+<span class="cm"># Gunakan online learning untuk:</span>
+<span class="cm"># 1. Model sederhana (linear models, shallow trees)</span>
+<span class="cm"># 2. High-throughput streaming data (click prediction, ad CTR)</span>
+<span class="cm"># 3. Kasus di mana recency sangat penting (user behavior yang berubah cepat)</span>
+
+<span class="cm"># === Windowed batch retraining — best of both worlds ===</span>
+<span class="kw">def</span> <span class="fn">get_training_window</span>(
+    full_history_df: pd.DataFrame,
+    window_days: <span class="tp">int</span> = <span class="nm">90</span>,
+    warmup_days: <span class="tp">int</span> = <span class="nm">30</span>,   <span class="cm"># data lama untuk mencegah forgetting</span>
+) -> pd.DataFrame:
+    <span class="st">"""Ambil window data untuk retraining: recent data + sample dari data lama.</span>
+<span class="st">    Strategi hybrid: batch retrain tapi dengan data yang ada temporal diversity.</span>
+<span class="st">    """</span>
+    cutoff = pd.Timestamp.<span class="fn">now</span>() - pd.<span class="fn">Timedelta</span>(days=window_days)
+    recent = full_history_df[full_history_df[<span class="st">"timestamp"</span>] >= cutoff]
+
+    <span class="cm"># Sample data lebih tua untuk regularization — jaga stabilitas model</span>
+    old_data = full_history_df[full_history_df[<span class="st">"timestamp"</span>] < cutoff]
+    warmup_cutoff = pd.Timestamp.<span class="fn">now</span>() - pd.<span class="fn">Timedelta</span>(days=window_days + warmup_days)
+    warmup = old_data[old_data[<span class="st">"timestamp"</span>] >= warmup_cutoff].<span class="fn">sample</span>(
+        n=<span class="fn">min</span>(<span class="tp">len</span>(warmup), <span class="nm">2000</span>), replace=<span class="kw">False</span>
+    )
+
+    <span class="kw">return</span> pd.<span class="fn">concat</span>([recent, warmup]).<span class="fn">reset_index</span>(drop=<span class="kw">True</span>)</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Shadow mode sebelum promote model baru</strong>Setelah retrain, jangan langsung promote model baru ke 100% traffic. Gunakan shadow mode: model baru menerima semua request dan membuat prediksi, tapi prediksinya tidak digunakan untuk keputusan nyata — hanya di-log. Bandingkan distribusi output model lama vs baru selama 2–24 jam. Jika distribusi serupa dan tidak ada anomali, baru lakukan gradual rollout (5% → 20% → 50% → 100%) menggunakan feature flags atau A/B testing framework.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Sebuah model prediksi permintaan di startup logistik harus retrain setiap hari karena volume order berubah drastis. Apakah kamu akan pakai full batch retrain atau online learning? Justifikasikan dengan mempertimbangkan: biaya compute, risk of forgetting seasonal patterns, interpretability needs.</li>
+<li><strong>[Kode]</strong> Implementasikan <code>RetrainingDecider.should_retrain()</code> dan tulis unit tests yang meng-cover tiga trigger: age-based, PSI-based, dan accuracy-based. Test edge case: apa yang terjadi jika PSI tinggi tapi available_samples di bawah minimum?</li>
+<li><strong>[Eksplorasi]</strong> Baca paper "Three scenarios for continual learning" (van de Ven et al., 2019). Identifikasi scenario mana yang paling relevan untuk ML production systems di e-commerce. Apa yang paper rekomendasikan untuk mitigasi catastrophic forgetting yang paling practical?</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 4 selesai · 5 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 5 — Advanced MLOps &amp; Platform</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi3')">← Fase 3</button>
+    <button class="tnbtn primary" onclick="goToPage('mlopsfi5')">Fase 5 →</button>
+  </div>
+</div>
+
+</div><!-- /mlops4e -->
+
+</section><!-- /mlopsfase4 -->

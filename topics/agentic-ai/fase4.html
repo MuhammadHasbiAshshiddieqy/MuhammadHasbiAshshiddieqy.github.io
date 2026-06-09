@@ -175,6 +175,117 @@
 </div>
 </div>
 
+<!-- ═══ Visualisasi Interaktif: Retry Strategy Visualizer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">📈 Retry Strategy Visualizer — Exponential Backoff vs Linear</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="retry-canvas" width="400" height="240" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Base Delay: <span id="rt-delay-val" style="color:var(--accent);">1.0s</span></label>
+      <input type="range" id="rt-delay" min="1" max="10" value="10" style="width:100%;margin:4px 0 8px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Max Retries: <span id="rt-max-val" style="color:var(--teal);">5</span></label>
+      <input type="range" id="rt-max" min="1" max="10" value="5" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Per-attempt Success Rate: <span id="rt-sr-val" style="color:var(--amber);">60%</span></label>
+      <input type="range" id="rt-sr" min="10" max="95" value="60" style="width:100%;margin:4px 0 12px;accent-color:var(--amber);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:2;padding:10px;background:var(--bg3);border-radius:8px;">
+        <div>Total max wait: <strong id="rt-total-wait" style="color:var(--coral);">31s</strong></div>
+        <div>Cumulative success prob: <strong id="rt-cum-prob" style="color:var(--green);">99.0%</strong></div>
+        <div style="margin-top:4px;font-size:9px;color:var(--text3);">Exponential: delay × 2ⁿ<br>Linear: delay × n</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=400,H=240;
+  function initRt(){cv=document.getElementById('retry-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+
+  function drawRt(){
+    if(!ctx)return;
+    var delay=parseInt(document.getElementById('rt-delay').value)/10;
+    var maxR=parseInt(document.getElementById('rt-max').value);
+    var sr=parseInt(document.getElementById('rt-sr').value)/100;
+    document.getElementById('rt-delay-val').textContent=delay.toFixed(1)+'s';
+    document.getElementById('rt-max-val').textContent=maxR;
+    document.getElementById('rt-sr-val').textContent=(sr*100).toFixed(0)+'%';
+
+    var expTotal=0,linTotal=0,cumProb=1-(1-sr);
+    for(var i=0;i<maxR;i++){expTotal+=delay*Math.pow(2,i);linTotal+=delay*(i+1);if(i>0)cumProb=1-Math.pow(1-sr,i+1);}
+    document.getElementById('rt-total-wait').textContent=expTotal.toFixed(0)+'s';
+    document.getElementById('rt-cum-prob').textContent=(cumProb*100).toFixed(1)+'%';
+
+    ctx.clearRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.03)';ctx.lineWidth=1;
+    for(var gy=0;gy<H;gy+=30){ctx.beginPath();ctx.moveTo(40,gy);ctx.lineTo(W-20,gy);ctx.stroke();}
+    for(var gx=40;gx<W;gx+=50){ctx.beginPath();ctx.moveTo(gx,30);ctx.lineTo(gx,H-30);ctx.stroke();}
+
+    // Axes
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(40,H-30);ctx.lineTo(W-20,H-30);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(40,30);ctx.lineTo(40,H-30);ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Attempt →',W/2,H-10);
+    ctx.save();ctx.translate(12,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('Delay (s) →',0,0);ctx.restore();
+
+    var maxDelay=delay*Math.pow(2,maxR-1);
+    var scaleY=(H-70)/Math.max(maxDelay,10);
+
+    // Exponential bars
+    for(var i=0;i<maxR;i++){
+      var d=delay*Math.pow(2,i);
+      var barH=d*scaleY;
+      var x=50+i*(W-80)/maxR,barW=(W-80)/maxR-8;
+      ctx.fillStyle='rgba(124,109,250,0.6)';ctx.fillRect(x,H-30-barH,barW,barH);
+      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(d.toFixed(1)+'s',x+barW/2,H-32-barH);
+      ctx.fillText('R'+(i+1),x+barW/2,H-14);
+    }
+
+    // Linear line overlay
+    ctx.strokeStyle='rgba(245,158,11,0.6)';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    for(var i=0;i<maxR;i++){
+      var ld=delay*(i+1);
+      var lx=50+i*(W-80)/maxR+(W-80)/maxR/2;
+      var ly=H-30-ld*scaleY;
+      if(i===0)ctx.moveTo(lx,ly);else ctx.lineTo(lx,ly);
+    }
+    ctx.stroke();ctx.setLineDash([]);
+
+    // Success probability line
+    ctx.strokeStyle='rgba(74,222,128,0.7)';ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var i=0;i<maxR;i++){
+      var prob=1-Math.pow(1-sr,i+1);
+      var px=50+i*(W-80)/maxR+(W-80)/maxR/2;
+      var py=H-30-prob*(H-70);
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+      ctx.fillStyle='rgba(74,222,128,0.8)';
+      ctx.beginPath();ctx.arc(px,py,4,0,Math.PI*2);ctx.fill();
+    }
+    ctx.stroke();
+
+    // Legend
+    ctx.fillStyle='rgba(124,109,250,0.7)';ctx.fillRect(50,8,12,4);
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Exponential',66,14);
+    ctx.strokeStyle='rgba(245,158,11,0.6)';ctx.lineWidth=2;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(140,10);ctx.lineTo(155,10);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillText('Linear',158,14);
+    ctx.fillStyle='rgba(74,222,128,0.7)';
+    ctx.beginPath();ctx.arc(230,10,4,0,Math.PI*2);ctx.fill();
+    ctx.fillText('Success Prob',236,14);
+  }
+
+  initRt();drawRt();
+  ['rt-delay','rt-max','rt-sr'].forEach(function(id){document.getElementById(id).addEventListener('input',drawRt);});
+  window.addEventListener('resize',function(){initRt();drawRt();});
+})();
+</script>
+
 </div><!-- /s4a -->
 
 <div class="divider"></div>

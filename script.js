@@ -23,6 +23,17 @@ var FASE_CONTAINERS = {
   'i3':'fase3-container','i4':'fase4-container','i5':'fase5-container'
 };
 
+// ── Lazy-load (MLOps) ────────────────────────────────────────────────────────
+var MLOPS_FASE_FILES = {
+  'mlopsi1':'topics/mlops/fase1.html', 'mlopsi2':'topics/mlops/fase2.html',
+  'mlopsi3':'topics/mlops/fase3.html', 'mlopsi4':'topics/mlops/fase4.html',
+  'mlopsi5':'topics/mlops/fase5.html'
+};
+var MLOPS_FASE_CONTAINERS = {
+  'mlopsi1':'mlopsfase1-container','mlopsi2':'mlopsfase2-container','mlopsi3':'mlopsfase3-container',
+  'mlopsi4':'mlopsfase4-container','mlopsi5':'mlopsfase5-container'
+};
+
 // ── Lazy-load (Language Model) ────────────────────────────────────────────────
 var LM_FASE_FILES = {
   'lmi1':'topics/language-model/fase1.html', 'lmi2':'topics/language-model/fase2.html',
@@ -41,8 +52,8 @@ function loadFase(faseId) {
   var files = (activeCurriculum === 'language-model') ? LM_FASE_FILES : FASE_FILES;
   var containers = (activeCurriculum === 'language-model') ? LM_FASE_CONTAINERS : FASE_CONTAINERS;
   // cek kedua map karena faseId bisa dari salah satu
-  var file = LM_FASE_FILES[faseId] || FASE_FILES[faseId];
-  var containerId = LM_FASE_CONTAINERS[faseId] || FASE_CONTAINERS[faseId];
+  var file = MLOPS_FASE_FILES[faseId] || LM_FASE_FILES[faseId] || FASE_FILES[faseId];
+  var containerId = MLOPS_FASE_CONTAINERS[faseId] || LM_FASE_CONTAINERS[faseId] || FASE_CONTAINERS[faseId];
   if (!file || !containerId) return Promise.resolve();
   var container = document.getElementById(containerId);
   if (!container) return Promise.resolve();
@@ -77,10 +88,10 @@ function toggleSB(){
 
 // ── Curriculum open/close ─────────────────────────────────────────────────────
 function openCurriculum(id) {
-  var label = id === 'language-model' ? 'Language Model Fundamentals' : 'Agentic AI Mastery';
+  var label = id === 'language-model' ? 'Language Model Fundamentals' : id === 'mlops' ? 'MLOps & Model Deployment' : 'Agentic AI Mastery';
   enterCurriculum(id, label);
-  var firstFase = (id === 'language-model') ? 'lmi1' : 'i0';
-  var startPage = (id === 'language-model') ? 'lmfi1' : 'fi0';
+  var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : 'i0';
+  var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : 'fi0';
   loadFase(firstFase).then(function(){ goToPage(startPage); });
 }
 
@@ -167,6 +178,45 @@ function renderSidebar(curriculum) {
         ['s5e','5.6 Checklist Keahlian']
       ]),
       sbGlossary()
+    ].join('');
+  } else if (curriculum === 'mlops') {
+    sc.innerHTML = [
+      '<div class="sidebar-topic-label">MLOps & Model Deployment</div>',
+      sbPhase('mlopsi1','Fase 1 — ML Pipeline','mlopsfi1',[
+        ['mlops1a','1.1 Kenapa MLOps?'],
+        ['mlops1b','1.2 Data Versioning (DVC)'],
+        ['mlops1c','1.3 Experiment Tracking (MLflow)'],
+        ['mlops1d','1.4 Model Registry'],
+        ['mlops1e','1.5 Pipeline Orchestration']
+      ]),
+      sbPhase('mlopsi2','Fase 2 — Model Serving','mlopsfi2',[
+        ['mlops2a','2.1 Serving Fundamentals'],
+        ['mlops2b','2.2 FastAPI untuk ML'],
+        ['mlops2c','2.3 Triton Inference Server'],
+        ['mlops2d','2.4 Model Optimization'],
+        ['mlops2e','2.5 Serving Patterns']
+      ]),
+      sbPhase('mlopsi3','Fase 3 — Infrastructure','mlopsfi3',[
+        ['mlops3a','3.1 Docker untuk ML'],
+        ['mlops3b','3.2 Kubernetes untuk ML'],
+        ['mlops3c','3.3 Ray Distributed'],
+        ['mlops3d','3.4 Feature Store'],
+        ['mlops3e','3.5 Cloud ML Platforms']
+      ]),
+      sbPhase('mlopsi4','Fase 4 — Monitoring','mlopsfi4',[
+        ['mlops4a','4.1 ML Monitoring Fundamentals'],
+        ['mlops4b','4.2 Evidently AI'],
+        ['mlops4c','4.3 Prometheus & Grafana'],
+        ['mlops4d','4.4 Alerting & Incident Response'],
+        ['mlops4e','4.5 Retraining Triggers']
+      ]),
+      sbPhase('mlopsi5','Fase 5 — CI/CD & Checklist','mlopsfi5',[
+        ['mlops5a','5.1 CI/CD untuk ML'],
+        ['mlops5b','5.2 Model Testing Strategies'],
+        ['mlops5c','5.3 Deployment Strategies'],
+        ['mlops5d','5.4 Cost Optimization'],
+        ['mlops5e','5.5 MLOps Maturity & Checklist']
+      ])
     ].join('');
   } else {
     sc.innerHTML = [
@@ -288,6 +338,34 @@ var PHASE_FIRST = {0:'home', 1:'fi1', 10:'fi2', 20:'fi3', 27:'fi4', 38:'fi5'};
 var PAGE_LABELS = {'home':'Beranda','fi0':'Fase 0 — Mulai Cepat','fi1':'Fase 1 — Fondasi','fi2':'Fase 2 — Architecture','fi3':'Fase 3 — Multi-Agent','fi4':'Fase 4 — Production','fi5':'Fase 5 — Build Agent'};
 var PHASE_INTRO_MAP = {'i0':'fi0','i1':'fi1','i2':'fi2','i3':'fi3','i4':'fi4','i5':'fi5'};
 
+// ── MLOPS Topics ──────────────────────────────────────────────────────────────
+var MLOPS_TOPICS = [
+  'mlops1a','mlops1b','mlops1c','mlops1d','mlops1e',
+  'mlops2a','mlops2b','mlops2c','mlops2d','mlops2e',
+  'mlops3a','mlops3b','mlops3c','mlops3d','mlops3e',
+  'mlops4a','mlops4b','mlops4c','mlops4d','mlops4e',
+  'mlops5a','mlops5b','mlops5c','mlops5d','mlops5e'
+];
+var MLOPS_TOPIC_LABELS = {
+  'mlops1a':'1.1 Kenapa MLOps?','mlops1b':'1.2 Data Versioning','mlops1c':'1.3 Experiment Tracking','mlops1d':'1.4 Model Registry','mlops1e':'1.5 Pipeline Orchestration',
+  'mlops2a':'2.1 Serving Fundamentals','mlops2b':'2.2 FastAPI untuk ML','mlops2c':'2.3 Triton Inference Server','mlops2d':'2.4 Model Optimization','mlops2e':'2.5 Serving Patterns',
+  'mlops3a':'3.1 Docker untuk ML','mlops3b':'3.2 Kubernetes untuk ML','mlops3c':'3.3 Ray Distributed','mlops3d':'3.4 Feature Store','mlops3e':'3.5 Cloud ML Platforms',
+  'mlops4a':'4.1 ML Monitoring Fundamentals','mlops4b':'4.2 Evidently AI','mlops4c':'4.3 Prometheus & Grafana','mlops4d':'4.4 Alerting & Incident Response','mlops4e':'4.5 Retraining Triggers',
+  'mlops5a':'5.1 CI/CD untuk ML','mlops5b':'5.2 Model Testing Strategies','mlops5c':'5.3 Deployment Strategies','mlops5d':'5.4 Cost Optimization','mlops5e':'5.5 MLOps Maturity & Checklist'
+};
+var MLOPS_PHASE_MAP = {
+  'mlops1a':'mlopsi1','mlops1b':'mlopsi1','mlops1c':'mlopsi1','mlops1d':'mlopsi1','mlops1e':'mlopsi1',
+  'mlops2a':'mlopsi2','mlops2b':'mlopsi2','mlops2c':'mlopsi2','mlops2d':'mlopsi2','mlops2e':'mlopsi2',
+  'mlops3a':'mlopsi3','mlops3b':'mlopsi3','mlops3c':'mlopsi3','mlops3d':'mlopsi3','mlops3e':'mlopsi3',
+  'mlops4a':'mlopsi4','mlops4b':'mlopsi4','mlops4c':'mlopsi4','mlops4d':'mlopsi4','mlops4e':'mlopsi4',
+  'mlops5a':'mlopsi5','mlops5b':'mlopsi5','mlops5c':'mlopsi5','mlops5d':'mlopsi5','mlops5e':'mlopsi5'
+};
+var MLOPS_PHASE_NUMS = {'mlopsi1':'1','mlopsi2':'2','mlopsi3':'3','mlopsi4':'4','mlopsi5':'5'};
+var MLOPS_PHASE_LAST  = {4:'mlopsfi2', 9:'mlopsfi3', 14:'mlopsfi4', 19:'mlopsfi5'};
+var MLOPS_PHASE_FIRST = {0:'mlopshome', 5:'mlopsfi2', 10:'mlopsfi3', 15:'mlopsfi4', 20:'mlopsfi5'};
+var MLOPS_PAGE_LABELS = {'mlopshome':'Beranda MLOps','mlopsfi1':'Fase 1 — ML Pipeline','mlopsfi2':'Fase 2 — Model Serving','mlopsfi3':'Fase 3 — Infrastructure','mlopsfi4':'Fase 4 — Monitoring','mlopsfi5':'Fase 5 — CI/CD & Checklist'};
+var MLOPS_PHASE_INTRO_MAP = {'mlopsi1':'mlopsfi1','mlopsi2':'mlopsfi2','mlopsi3':'mlopsfi3','mlopsi4':'mlopsfi4','mlopsi5':'mlopsfi5'};
+
 // ── LANGUAGE MODEL Topics ─────────────────────────────────────────────────────
 var LM_TOPICS = [
   'lm1a','lm1b','lm1c','lm1d','lm1e','lm1f',
@@ -325,6 +403,8 @@ function injectNavBars() {
   var topics, phaseLastMap, phaseFirstMap, pageLabels;
   if (activeCurriculum === 'language-model') {
     topics = LM_TOPICS; phaseLastMap = LM_PHASE_LAST; phaseFirstMap = LM_PHASE_FIRST; pageLabels = LM_PAGE_LABELS;
+  } else if (activeCurriculum === 'mlops') {
+    topics = MLOPS_TOPICS; phaseLastMap = MLOPS_PHASE_LAST; phaseFirstMap = MLOPS_PHASE_FIRST; pageLabels = MLOPS_PAGE_LABELS;
   } else {
     topics = TOPICS; phaseLastMap = PHASE_LAST; phaseFirstMap = PHASE_FIRST; pageLabels = PAGE_LABELS;
   }
@@ -374,18 +454,15 @@ function injectNavBars() {
 // ── hideAll ───────────────────────────────────────────────────────────────────
 var AA_PAGES = ['glossary','fi0','fi1','fi2','fi3','fi4','fi5'];
 var LM_PAGES = ['lmfi1','lmfi2','lmfi3','lmfi4','lmfi5'];
+var MLOPS_PAGES = ['mlopsfi1','mlopsfi2','mlopsfi3','mlopsfi4','mlopsfi5'];
 
 function hideAll() {
-  var allPageIds = AA_PAGES.concat(LM_PAGES);
+  var allPageIds = AA_PAGES.concat(LM_PAGES).concat(MLOPS_PAGES);
   allPageIds.forEach(function(id){
     var el = document.getElementById(id);
     if (el) { el.classList.remove('page-home--active'); el.classList.remove('fase-intro--active'); }
   });
-  TOPICS.forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.classList.remove('sub--active');
-  });
-  LM_TOPICS.forEach(function(id){
+  TOPICS.concat(LM_TOPICS).concat(MLOPS_TOPICS).forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.classList.remove('sub--active');
   });
@@ -399,6 +476,7 @@ function goToPage(pageId) {
   // cari fase yang harus di-load untuk page ini
   var faseId = null;
   Object.keys(PHASE_INTRO_MAP).forEach(function(k){ if (PHASE_INTRO_MAP[k] === pageId) faseId = k; });
+  Object.keys(MLOPS_PHASE_INTRO_MAP).forEach(function(k){ if (MLOPS_PHASE_INTRO_MAP[k] === pageId) faseId = faseId || k; });
   Object.keys(LM_PHASE_INTRO_MAP).forEach(function(k){ if (LM_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
 
   if (faseId) {
@@ -426,10 +504,10 @@ function _showPage(pageId) {
 
 // ── goTo ──────────────────────────────────────────────────────────────────────
 function goTo(idx) {
-  var topics = activeCurriculum === 'language-model' ? LM_TOPICS : TOPICS;
-  var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : PHASE_MAP;
-  var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : PHASE_NUMS;
-  var phaseIntroMap = activeCurriculum === 'language-model' ? LM_PHASE_INTRO_MAP : PHASE_INTRO_MAP;
+  var topics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : TOPICS;
+  var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_MAP : PHASE_MAP;
+  var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : activeCurriculum === 'mlops' ? MLOPS_PHASE_NUMS : PHASE_NUMS;
+  var phaseIntroMap = activeCurriculum === 'language-model' ? LM_PHASE_INTRO_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_INTRO_MAP : PHASE_INTRO_MAP;
 
   if (idx < 0 || idx >= topics.length) return;
   var nextId = topics[idx];
@@ -497,6 +575,7 @@ function enterCurriculum(id, label) {
 
   var lmTopicIdx = LM_TOPICS.indexOf(hash);
   var aaTopicIdx = TOPICS.indexOf(hash);
+  var mlopsTopicIdx = MLOPS_TOPICS.indexOf(hash);
 
   if (!hash || hash === 'landing') {
     document.getElementById('landing').classList.add('landing--active');
@@ -519,6 +598,15 @@ function enterCurriculum(id, label) {
     var faseId = null;
     Object.keys(PHASE_INTRO_MAP).forEach(function(k){ if (PHASE_INTRO_MAP[k]===hash) faseId=k; });
     if (faseId) loadFase(faseId).then(function(){ goToPage(hash); });
+    else goToPage(hash);
+  } else if (mlopsTopicIdx >= 0) {
+    enterCurriculum('mlops','MLOps & Model Deployment');
+    goTo(mlopsTopicIdx);
+  } else if (MLOPS_PAGES.indexOf(hash) >= 0) {
+    enterCurriculum('mlops','MLOps & Model Deployment');
+    var mlopsFaseId = null;
+    Object.keys(MLOPS_PHASE_INTRO_MAP).forEach(function(k){ if (MLOPS_PHASE_INTRO_MAP[k]===hash) mlopsFaseId=k; });
+    if (mlopsFaseId) loadFase(mlopsFaseId).then(function(){ goToPage(hash); });
     else goToPage(hash);
   } else {
     document.getElementById('landing').classList.add('landing--active');

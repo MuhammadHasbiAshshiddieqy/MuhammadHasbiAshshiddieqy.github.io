@@ -1,0 +1,795 @@
+<section class="cs p5" id="mlopsfase5">
+<div class="fase-intro" id="mlopsfi5">
+<div class="sh">
+  <div class="sbadge p5">05</div>
+  <div>
+    <div class="stitle">Fase 5 — CI/CD, Testing &amp; Production Checklist</div>
+    <div class="sdesc">Sistem ML yang benar-benar production-ready bukan hanya soal model yang akurat — tapi soal pipeline yang reproducible, test suite yang komprehensif, deployment yang aman, dan cost yang terkendali. Fase ini menutup loop MLOps dari development ke production.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 9–10</span><span class="mc">Production Ready</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#mlops5a">CI/CD untuk ML</a>
+  <a class="snavi" href="#mlops5b">Model Testing</a>
+  <a class="snavi" href="#mlops5c">Deployment Strategies</a>
+  <a class="snavi" href="#mlops5d">Cost Optimization</a>
+  <a class="snavi" href="#mlops5e">MLOps Maturity</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 9–10</div>
+    <div class="topic-nav-title">Mulai dari: 5.1 CI/CD untuk ML</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi4')">← Fase 4</button>
+    <button class="tnbtn primary" onclick="goTo(22)">Mulai Fase 5 →</button>
+  </div>
+</div>
+</div><!-- /mlopsfi5 -->
+
+<!-- 5A -->
+<div class="sub" id="mlops5a">
+<div class="subtit"><span class="ac">5.1</span> CI/CD untuk ML <span class="subid">// automate everything</span></div>
+<div class="prose">
+<p>CI/CD untuk software tradisional sudah matang — setiap push trigger build, test, dan deploy otomatis. Tapi CI/CD untuk ML lebih kompleks: kita tidak hanya menguji kode, tapi juga model, data, dan perilaku sistem secara end-to-end. Pipeline ML yang baik harus bisa reproduce hasil yang sama, mendeteksi regresi model, dan deploy dengan zero-downtime — semua secara otomatis.</p>
+<p>GitHub Actions adalah pilihan paling pragmatis untuk MLOps CI/CD karena terintegrasi langsung dengan repo, mendukung GPU runners (via self-hosted atau cloud runners), dan bisa trigger pipeline dari berbagai event: push, PR, schedule, atau workflow dispatch untuk manual trigger. Kombinasi dengan DVC untuk data versioning dan MLflow untuk experiment tracking menciptakan pipeline yang fully auditable.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">ML CI/CD Pipeline — Dari Push ke Production</div>
+<div class="viz-body">
+  <div style="display:flex;flex-direction:column;gap:0;font-family:'IBM Plex Mono',monospace;font-size:11px;">
+    <div style="display:flex;align-items:center;gap:0;">
+      <div style="background:rgba(124,109,250,0.1);border:1px solid rgba(124,109,250,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--accent);">📝 Code Push</div>
+      <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
+      <div style="background:rgba(45,212,191,0.1);border:1px solid rgba(45,212,191,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--teal);">🧪 Lint &amp; Unit Test</div>
+      <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--amber);">📊 Data Validation</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding-right:55px;"><div style="width:1px;height:20px;background:var(--border2);margin-right:55px;"></div></div>
+    <div style="display:flex;align-items:center;gap:0;flex-direction:row-reverse;">
+      <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--green);">🚀 Deploy (Canary)</div>
+      <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
+      <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--coral);">🤖 Model Test</div>
+      <div style="flex:1;height:1px;background:var(--border2);margin:0 4px;"></div>
+      <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;padding:10px 16px;min-width:110px;text-align:center;color:var(--accent);">🏋️ Train &amp; Eval</div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:12px;line-height:1.7;">
+      Setiap stage bisa fail-fast: data validation gagal → training tidak jalan. Model test gagal → deploy tidak terjadi.
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">YAML</span><span class="cf">.github/workflows/ml-pipeline.yml</span></div>
+<div class="cbb"><pre><span class="kw">name</span>: ML Pipeline
+
+<span class="kw">on</span>:
+  <span class="kw">push</span>:
+    <span class="kw">branches</span>: [main]
+  <span class="kw">pull_request</span>:
+    <span class="kw">branches</span>: [main]
+  <span class="kw">schedule</span>:
+    - <span class="kw">cron</span>: <span class="st">'0 2 * * 1'</span>  <span class="cm"># Weekly retraining Senin 02:00</span>
+  <span class="kw">workflow_dispatch</span>:  <span class="cm"># Manual trigger dengan input</span>
+    <span class="kw">inputs</span>:
+      <span class="kw">force_retrain</span>:
+        <span class="kw">type</span>: boolean
+        <span class="kw">default</span>: false
+
+<span class="kw">jobs</span>:
+  <span class="kw">validate</span>:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: actions/checkout@v4
+      - <span class="kw">name</span>: Setup Python
+        <span class="kw">uses</span>: actions/setup-python@v5
+        <span class="kw">with</span>: { python-version: <span class="st">'3.11'</span> }
+      - <span class="kw">name</span>: Install deps
+        <span class="kw">run</span>: pip install -r requirements.txt
+      - <span class="kw">name</span>: Lint
+        <span class="kw">run</span>: ruff check . && mypy src/
+      - <span class="kw">name</span>: Unit tests
+        <span class="kw">run</span>: pytest tests/unit/ -v --tb=short
+      - <span class="kw">name</span>: Validate data schema
+        <span class="kw">run</span>: python scripts/validate_data.py
+
+  <span class="kw">train</span>:
+    <span class="kw">needs</span>: validate
+    <span class="kw">runs-on</span>: [self-hosted, gpu]  <span class="cm"># GPU runner untuk training</span>
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: actions/checkout@v4
+      - <span class="kw">name</span>: Pull data with DVC
+        <span class="kw">run</span>: dvc pull
+        <span class="kw">env</span>:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - <span class="kw">name</span>: Train model
+        <span class="kw">run</span>: python src/train.py --config configs/prod.yaml
+      - <span class="kw">name</span>: Evaluate &amp; compare
+        <span class="kw">run</span>: python scripts/evaluate.py --challenger new --champion registry
+      - <span class="kw">name</span>: Register if better
+        <span class="kw">run</span>: python scripts/register_model.py --promote-if-better
+
+  <span class="kw">deploy</span>:
+    <span class="kw">needs</span>: train
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">if</span>: github.ref == <span class="st">'refs/heads/main'</span>
+    <span class="kw">steps</span>:
+      - <span class="kw">name</span>: Deploy canary (10%)
+        <span class="kw">run</span>: kubectl apply -f k8s/canary.yaml
+      - <span class="kw">name</span>: Run smoke tests
+        <span class="kw">run</span>: pytest tests/smoke/ --base-url ${{ vars.CANARY_URL }}
+      - <span class="kw">name</span>: Promote to production
+        <span class="kw">run</span>: kubectl apply -f k8s/production.yaml</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">scripts/evaluate.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> mlflow
+<span class="kw">import</span> sys
+<span class="kw">from</span> mlflow.tracking <span class="kw">import</span> MlflowClient
+
+<span class="kw">def</span> <span class="fn">compare_models</span>(challenger_run_id: <span class="tp">str</span>, champion_name: <span class="tp">str</span>) -> <span class="tp">bool</span>:
+    <span class="st">"""Return True jika challenger lebih baik dari champion."""</span>
+    client = <span class="fn">MlflowClient</span>()
+
+    <span class="cm"># Ambil metrics challenger dari run saat ini</span>
+    challenger = client.<span class="fn">get_run</span>(challenger_run_id)
+    challenger_f1 = challenger.data.metrics[<span class="st">'f1_score'</span>]
+    challenger_latency = challenger.data.metrics[<span class="st">'p99_latency_ms'</span>]
+
+    <span class="cm"># Ambil metrics champion dari production registry</span>
+    champion_version = client.<span class="fn">get_model_version_by_alias</span>(champion_name, <span class="st">'production'</span>)
+    champion_run = client.<span class="fn">get_run</span>(champion_version.run_id)
+    champion_f1 = champion_run.data.metrics[<span class="st">'f1_score'</span>]
+    champion_latency = champion_run.data.metrics[<span class="st">'p99_latency_ms'</span>]
+
+    <span class="fn">print</span>(<span class="fn">f</span><span class="st">"Champion: F1={champion_f1:.4f}, P99={champion_latency:.1f}ms"</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="st">"Challenger: F1={challenger_f1:.4f}, P99={challenger_latency:.1f}ms"</span>)
+
+    <span class="cm"># Challenger menang jika F1 lebih baik DAN latency tidak lebih buruk dari 10%</span>
+    f1_improved = challenger_f1 > champion_f1 * <span class="nm">1.001</span>  <span class="cm"># min +0.1%</span>
+    latency_ok = challenger_latency <= champion_latency * <span class="nm">1.10</span>   <span class="cm"># max +10%</span>
+
+    <span class="kw">if</span> f1_improved <span class="kw">and</span> latency_ok:
+        <span class="fn">print</span>(<span class="st">"✅ Challenger wins — promoting to staging"</span>)
+        <span class="kw">return</span> <span class="kw">True</span>
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="st">"❌ Champion retained"</span>)
+        <span class="kw">return</span> <span class="kw">False</span>
+
+<span class="kw">if</span> __name__ == <span class="st">'__main__'</span>:
+    winner = <span class="fn">compare_models</span>(
+        challenger_run_id=os.environ[<span class="st">'MLFLOW_RUN_ID'</span>],
+        champion_name=<span class="st">'fraud-detector'</span>
+    )
+    sys.<span class="fn">exit</span>(<span class="nm">0</span> <span class="kw">if</span> winner <span class="kw">else</span> <span class="nm">1</span>)  <span class="cm"># Non-zero exit = pipeline gagal</span></pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Self-hosted vs Cloud Runners:</strong> GPU training di GitHub Actions membutuhkan self-hosted runner atau cloud runners berbayar (AWS CodeBuild, GCP Cloud Build). Untuk prototyping, pakai CPU-only runner dengan dataset kecil. Untuk production, dedicated GPU runner lebih cost-effective daripada cloud per-minute billing untuk training job yang panjang.</div>
+</div>
+
+<div class="divider"></div>
+</div><!-- /mlops5a -->
+
+<!-- 5B -->
+<div class="sub" id="mlops5b">
+<div class="subtit"><span class="ac">5.2</span> Model Testing Strategies <span class="subid">// beyond accuracy metrics</span></div>
+<div class="prose">
+<p>Testing model ML sangat berbeda dari testing software biasa. Unit test untuk fungsi deterministik mudah — kamu tahu input dan expected output persis. Tapi model ML adalah probabilistic system: output bervariasi, "benar" tidak selalu binary, dan failure mode seringkali subtle dan distributional. Kamu perlu strategi testing berlapis.</p>
+<p>Marco Ribeiro et al. (2020) memperkenalkan <strong>Behavioral Testing (CheckList)</strong> — framework yang terinspirasi dari software testing: Minimum Functionality Tests (MFT) untuk kemampuan dasar, Invariance Tests (INV) untuk robustness terhadap perturbasi yang seharusnya tidak mengubah prediksi, dan Directional Expectation Tests (DIR) untuk memastikan perturbasi tertentu mengubah output ke arah yang benar.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">tests/model/test_behavioral.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> pytest
+<span class="kw">from</span> src.model <span class="kw">import</span> SentimentClassifier
+
+<span class="kw">@pytest.fixture</span>(<span class="kw">scope</span>=<span class="st">'session'</span>)
+<span class="kw">def</span> <span class="fn">model</span>():
+    <span class="kw">return</span> SentimentClassifier.<span class="fn">load_from_registry</span>(<span class="st">'production'</span>)
+
+<span class="kw">class</span> <span class="fn">TestMinimumFunctionality</span>:
+    <span class="st">"""MFT: kemampuan dasar yang HARUS dimiliki model."""</span>
+
+    <span class="kw">def</span> <span class="fn">test_obvious_positive</span>(self, model):
+        <span class="cm"># Model harus benar untuk kalimat positif yang jelas</span>
+        obvious_positives = [
+            <span class="st">"This product is absolutely amazing!"</span>,
+            <span class="st">"I love this, best purchase ever"</span>,
+            <span class="st">"Highly recommend to everyone"</span>,
+        ]
+        <span class="kw">for</span> text <span class="kw">in</span> obvious_positives:
+            pred = model.<span class="fn">predict</span>(text)
+            <span class="kw">assert</span> pred[<span class="st">'label'</span>] == <span class="st">'POSITIVE'</span>, <span class="fn">f</span><span class="st">"Failed on: {text}"</span>
+            <span class="kw">assert</span> pred[<span class="st">'confidence'</span>] > <span class="nm">0.85</span>
+
+    <span class="kw">def</span> <span class="fn">test_obvious_negative</span>(self, model):
+        obvious_negatives = [
+            <span class="st">"Terrible product, complete waste of money"</span>,
+            <span class="st">"Worst experience I've ever had"</span>,
+        ]
+        <span class="kw">for</span> text <span class="kw">in</span> obvious_negatives:
+            <span class="kw">assert</span> model.<span class="fn">predict</span>(text)[<span class="st">'label'</span>] == <span class="st">'NEGATIVE'</span>
+
+<span class="kw">class</span> <span class="fn">TestInvariance</span>:
+    <span class="st">"""INV: perturbasi yang seharusnya TIDAK mengubah prediksi."""</span>
+
+    <span class="kw">def</span> <span class="fn">test_typo_robustness</span>(self, model):
+        <span class="cm"># Typo kecil tidak boleh mengubah sentiment</span>
+        original = <span class="st">"This product is great"</span>
+        with_typo = <span class="st">"Tis prodcut is graet"</span>
+        <span class="kw">assert</span> model.<span class="fn">predict</span>(original)[<span class="st">'label'</span>] == model.<span class="fn">predict</span>(with_typo)[<span class="st">'label'</span>]
+
+    <span class="kw">def</span> <span class="fn">test_name_invariance</span>(self, model):
+        <span class="cm"># Ganti nama orang tidak boleh mengubah sentiment</span>
+        text1 = <span class="st">"John loved the product"</span>
+        text2 = <span class="st">"Sarah loved the product"</span>
+        <span class="kw">assert</span> model.<span class="fn">predict</span>(text1)[<span class="st">'label'</span>] == model.<span class="fn">predict</span>(text2)[<span class="st">'label'</span>]
+
+<span class="kw">class</span> <span class="fn">TestDirectional</span>:
+    <span class="st">"""DIR: perturbasi yang HARUS mengubah prediksi ke arah tertentu."""</span>
+
+    <span class="kw">def</span> <span class="fn">test_negation_flips_sentiment</span>(self, model):
+        <span class="cm"># Menambah "not" harus mengubah arah sentiment</span>
+        positive = <span class="st">"I like this product"</span>
+        negated = <span class="st">"I do not like this product"</span>
+        pos_score = model.<span class="fn">predict</span>(positive)[<span class="st">'positive_prob'</span>]
+        neg_score = model.<span class="fn">predict</span>(negated)[<span class="st">'positive_prob'</span>]
+        <span class="kw">assert</span> neg_score < pos_score, <span class="st">"Negation should reduce positive probability"</span></pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">tests/data/test_schema.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> great_expectations.dataset <span class="kw">import</span> PandasDataset
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="kw">def</span> <span class="fn">validate_training_data</span>(df: pd.DataFrame) -> <span class="tp">dict</span>:
+    <span class="st">"""Validasi schema dan distribusi data training sebelum dipakai."""</span>
+    ds = <span class="fn">PandasDataset</span>(df)
+
+    results = {}
+
+    <span class="cm"># Schema checks</span>
+    results[<span class="st">'columns_exist'</span>] = ds.<span class="fn">expect_table_columns_to_match_ordered_list</span>(
+        [<span class="st">'text'</span>, <span class="st">'label'</span>, <span class="st">'created_at'</span>]
+    )[<span class="st">'success'</span>]
+
+    <span class="cm"># Tidak ada null di kolom kritis</span>
+    results[<span class="st">'no_null_text'</span>] = ds.<span class="fn">expect_column_values_to_not_be_null</span>(<span class="st">'text'</span>)[<span class="st">'success'</span>]
+    results[<span class="st">'no_null_label'</span>] = ds.<span class="fn">expect_column_values_to_not_be_null</span>(<span class="st">'label'</span>)[<span class="st">'success'</span>]
+
+    <span class="cm"># Label harus dari set yang valid</span>
+    results[<span class="st">'valid_labels'</span>] = ds.<span class="fn">expect_column_values_to_be_in_set</span>(
+        <span class="st">'label'</span>, [<span class="st">'POSITIVE'</span>, <span class="st">'NEGATIVE'</span>, <span class="st">'NEUTRAL'</span>]
+    )[<span class="st">'success'</span>]
+
+    <span class="cm"># Class balance check — tidak ada class yang dominasi >80%</span>
+    label_dist = df[<span class="st">'label'</span>].<span class="fn">value_counts</span>(normalize=<span class="kw">True</span>)
+    results[<span class="st">'balanced_classes'</span>] = label_dist.<span class="fn">max</span>() < <span class="nm">0.80</span>
+
+    <span class="cm"># Text length reasonable</span>
+    results[<span class="st">'text_length_ok'</span>] = ds.<span class="fn">expect_column_value_lengths_to_be_between</span>(
+        <span class="st">'text'</span>, min_value=<span class="nm">5</span>, max_value=<span class="nm">512</span>
+    )[<span class="st">'success'</span>]
+
+    failed = [k <span class="kw">for</span> k, v <span class="kw">in</span> results.<span class="fn">items</span>() <span class="kw">if not</span> v]
+    <span class="kw">if</span> failed:
+        <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="fn">f</span><span class="st">"Data validation failed: {failed}"</span>)
+
+    <span class="kw">return</span> results</pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+<div class="ctxt"><strong>Accuracy saja tidak cukup:</strong> Model dengan 95% accuracy bisa tetap gagal di production jika tidak robust terhadap typo, tidak fair terhadap kelompok tertentu, atau berperilaku aneh di edge cases. Behavioral testing mengekspos failure mode yang tidak terlihat dari aggregate metrics.</div>
+</div>
+
+<div class="divider"></div>
+</div><!-- /mlops5b -->
+
+<!-- 5C -->
+<div class="sub" id="mlops5c">
+<div class="subtit"><span class="ac">5.3</span> Deployment Strategies <span class="subid">// zero-downtime model rollout</span></div>
+<div class="prose">
+<p>Deploy model baru ke production adalah momen paling berisiko dalam ML lifecycle. Model bisa punya akurasi tinggi di offline evaluation tapi berperilaku buruk di production karena distribusi data yang berbeda, edge cases yang tidak ada di test set, atau interaksi dengan sistem lain yang tidak diperhitungkan. Deployment strategy yang baik meminimalkan blast radius jika sesuatu salah.</p>
+<p>Ada empat strategi utama, masing-masing dengan tradeoff antara keamanan, kompleksitas, dan kecepatan feedback. Pilihan strategi bergantung pada seberapa kritikal service, seberapa yakin kamu dengan model baru, dan kapasitas tim untuk monitor.</p>
+</div>
+
+<div class="cmp">
+  <div class="cmpc good">
+    <div class="cmph">🔵 Blue-Green Deployment</div>
+    <div class="cmpb"><pre>Blue (current): 100% traffic
+Green (new): 0% traffic
+
+Test green thoroughly
+↓
+Switch: green = 100%
+blue = 0% (standby)
+
+Rollback: switch back instantly
+Zero-downtime: ✅
+Risk: all-or-nothing switch</pre></div>
+  </div>
+  <div class="cmpc good">
+    <div class="cmph">🐤 Canary Release</div>
+    <div class="cmpb"><pre>Step 1: new model = 5% traffic
+         monitor 1 hour
+Step 2: new model = 25% traffic
+         monitor 2 hours
+Step 3: new model = 50% traffic
+Step 4: new model = 100%
+
+Rollback: reduce to 0% instantly
+Risk: limited blast radius
+Best for: production ML models</pre></div>
+  </div>
+  <div class="cmpc">
+    <div class="cmph">👻 Shadow Deployment</div>
+    <div class="cmpb"><pre>Production model: serves users
+Shadow model: receives same
+  requests but responses DISCARDED
+
+Compare outputs offline:
+- agreement rate
+- latency difference
+- edge case discovery
+
+Risk: zero (no user impact)
+Cost: 2× compute</pre></div>
+  </div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">YAML</span><span class="cf">k8s/canary-rollout.yaml (Argo Rollouts)</span></div>
+<div class="cbb"><pre><span class="kw">apiVersion</span>: argoproj.io/v1alpha1
+<span class="kw">kind</span>: Rollout
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: fraud-detector
+<span class="kw">spec</span>:
+  <span class="kw">replicas</span>: 10
+  <span class="kw">strategy</span>:
+    <span class="kw">canary</span>:
+      <span class="kw">steps</span>:
+        - <span class="kw">setWeight</span>: 5      <span class="cm"># 5% traffic ke canary</span>
+        - <span class="kw">pause</span>: {duration: 1h}
+        - <span class="kw">setWeight</span>: 20
+        - <span class="kw">pause</span>: {duration: 2h}
+        - <span class="kw">analysis</span>:         <span class="cm"># Auto-rollback jika metrics buruk</span>
+            templates:
+              - templateName: fraud-detector-analysis
+        - <span class="kw">setWeight</span>: 50
+        - <span class="kw">pause</span>: {duration: 4h}
+        - <span class="kw">setWeight</span>: 100
+      <span class="kw">analysis</span>:
+        <span class="kw">templates</span>:
+          - <span class="kw">templateName</span>: success-rate
+        <span class="kw">args</span>:
+          - <span class="kw">name</span>: service-name
+            <span class="kw">value</span>: fraud-detector-canary
+---
+<span class="kw">apiVersion</span>: argoproj.io/v1alpha1
+<span class="kw">kind</span>: AnalysisTemplate
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: success-rate
+<span class="kw">spec</span>:
+  <span class="kw">metrics</span>:
+    - <span class="kw">name</span>: success-rate
+      <span class="kw">interval</span>: 5m
+      <span class="kw">successCondition</span>: result[0] >= 0.95
+      <span class="kw">failureLimit</span>: 3      <span class="cm"># Auto-rollback setelah 3 failures</span>
+      <span class="kw">provider</span>:
+        <span class="kw">prometheus</span>:
+          <span class="kw">address</span>: http://prometheus:9090
+          <span class="kw">query</span>: |
+            sum(rate(http_requests_total{
+              job="fraud-detector-canary",status="200"
+            }[5m])) /
+            sum(rate(http_requests_total{
+              job="fraud-detector-canary"
+            }[5m]))</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">src/shadow_router.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> asyncio
+<span class="kw">import</span> httpx
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, Request
+
+app = <span class="fn">FastAPI</span>()
+
+<span class="kw">async def</span> <span class="fn">shadow_request</span>(url: <span class="tp">str</span>, payload: <span class="tp">dict</span>):
+    <span class="st">"""Fire-and-forget ke shadow model — response dibuang."""</span>
+    <span class="kw">try</span>:
+        <span class="kw">async with</span> httpx.<span class="fn">AsyncClient</span>(timeout=<span class="nm">5.0</span>) <span class="kw">as</span> client:
+            resp = <span class="kw">await</span> client.<span class="fn">post</span>(url, json=payload)
+            <span class="cm"># Log untuk comparison, bukan untuk serve ke user</span>
+            <span class="fn">log_shadow_result</span>(payload, resp.<span class="fn">json</span>())
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="cm"># Shadow failure tidak boleh affect production</span>
+        logger.<span class="fn">warning</span>(<span class="fn">f</span><span class="st">"Shadow request failed: {e}"</span>)
+
+<span class="kw">@app.post</span>(<span class="st">"/predict"</span>)
+<span class="kw">async def</span> <span class="fn">predict</span>(request: Request):
+    payload = <span class="kw">await</span> request.<span class="fn">json</span>()
+
+    <span class="cm"># Production response (yang di-serve ke user)</span>
+    prod_response = <span class="kw">await</span> <span class="fn">call_production_model</span>(payload)
+
+    <span class="cm"># Shadow request — async, tidak block production response</span>
+    asyncio.<span class="fn">create_task</span>(<span class="fn">shadow_request</span>(SHADOW_URL, payload))
+
+    <span class="kw">return</span> prod_response  <span class="cm"># Return production result immediately</span></pre></div>
+</div>
+
+<div class="divider"></div>
+</div><!-- /mlops5c -->
+
+<!-- 5D -->
+<div class="sub" id="mlops5d">
+<div class="subtit"><span class="ac">5.4</span> Cost Optimization <span class="subid">// ML bisa sangat mahal kalau tidak dikelola</span></div>
+<div class="prose">
+<p>Cost ML di production terdiri dari dua komponen besar: <strong>training cost</strong> (GPU compute, storage) dan <strong>inference cost</strong> (serving infrastructure). Training biasanya one-time atau periodic, tapi inference berjalan 24/7 — inilah yang mendominasi total cost untuk model yang mature. Optimasi inference bahkan perubahan kecil bisa berdampak besar: mengurangi latency 30% bisa berarti mengurangi jumlah instance 30% juga.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">💰 ML Cost Breakdown — Training vs Inference</div>
+<div class="viz-body" style="padding:16px 20px;">
+  <div class="viz-canvas-wrap">
+    <canvas id="cost-canvas" width="400" height="260"></canvas>
+    <div class="viz-canvas-controls">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Monthly requests: <span id="cost-req-val" style="color:var(--accent);">10M</span></label>
+      <input type="range" id="cost-req" min="1" max="7" value="4" style="width:100%;margin:4px 0 12px;accent-color:var(--accent);">
+      <label style="font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Model size: <span id="cost-size-val" style="color:var(--teal);">7B</span></label>
+      <input type="range" id="cost-size" min="1" max="5" value="2" style="width:100%;margin:4px 0 12px;accent-color:var(--teal);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:2;color:var(--text2);background:var(--bg3);padding:10px;border-radius:8px;">
+        <div>GPU instances: <strong id="cost-gpu" style="color:var(--coral);">4×</strong></div>
+        <div>Monthly cost: <strong id="cost-total" style="color:var(--amber);">$2,400</strong></div>
+        <div style="font-size:9px;color:var(--text3);margin-top:4px;">With INT8 quant: <span id="cost-quant" style="color:var(--green);">-40%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+  var reqLabels = ['100K','1M','5M','10M','50M','100M','500M'];
+  var reqValues = [1e5,1e6,5e6,1e7,5e7,1e8,5e8];
+  var sizeLabels = ['1B','7B','13B','70B','175B'];
+  var sizeGPU = [0.5,1,2,8,20]; // GPU instances needed per 1M req/month
+
+  function initCost(){
+    cv=document.getElementById('cost-canvas');if(!cv)return;
+    var cw=cv.parentElement.clientWidth||cv.offsetWidth||400;
+    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(260/400));}
+    ctx=cv.getContext('2d');W=cv.width;H=cv.height;
+  }
+
+  function drawCost(){
+    if(!ctx)return;
+    var ri=parseInt(document.getElementById('cost-req').value);
+    var si=parseInt(document.getElementById('cost-size').value)-1;
+    var reqs=reqValues[ri-1];
+    var gpuPerM=sizeGPU[si];
+    var gpuCount=Math.max(1,Math.round(gpuPerM*(reqs/1e6)));
+    var monthlyCost=gpuCount*600; // ~$600/mo per A10G instance
+    var quantSaving=0.40;
+
+    document.getElementById('cost-req-val').textContent=reqLabels[ri-1];
+    document.getElementById('cost-size-val').textContent=sizeLabels[si];
+    document.getElementById('cost-gpu').textContent=gpuCount+'×';
+    document.getElementById('cost-total').textContent='$'+monthlyCost.toLocaleString();
+    document.getElementById('cost-quant').textContent='-'+(quantSaving*100).toFixed(0)+'% = $'+(monthlyCost*(1-quantSaving)).toLocaleString();
+
+    ctx.clearRect(0,0,W,H);
+    var bars=[
+      {label:'GPU Compute',pct:0.65,color:'var(--coral)'},
+      {label:'Storage',pct:0.15,color:'var(--amber)'},
+      {label:'Network',pct:0.10,color:'var(--teal)'},
+      {label:'Monitoring',pct:0.10,color:'var(--accent)'},
+    ];
+    var bw=Math.min(60,W/6),gap=20,startX=40,startY=20;
+    var maxH=H-80;
+    bars.forEach(function(b,i){
+      var x=startX+i*(bw+gap);
+      var bh=b.pct*maxH;
+      var y=startY+maxH-bh;
+      ctx.fillStyle=b.color.includes('var')?getCSSVar(b.color):b.color;
+      ctx.globalAlpha=0.7;
+      ctx.beginPath();ctx.roundRect(x,y,bw,bh,4);ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.fillStyle='rgba(255,255,255,0.7)';
+      ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(Math.round(b.pct*monthlyCost).toLocaleString(),x+bw/2,y-6);
+      ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.font='9px IBM Plex Mono,monospace';
+      var words=b.label.split(' ');
+      words.forEach(function(w,wi){ctx.fillText(w,x+bw/2,startY+maxH+14+wi*12);});
+    });
+
+    // Title
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Monthly Cost Breakdown — $'+monthlyCost.toLocaleString(),10,H-8);
+  }
+
+  function getCSSVar(v){
+    var name=v.replace('var(','').replace(')','').trim();
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||'#7c6dfa';
+  }
+
+  initCost();drawCost();
+  document.getElementById('cost-req').addEventListener('input',drawCost);
+  document.getElementById('cost-size').addEventListener('input',drawCost);
+  window.addEventListener('resize',function(){initCost();drawCost();});
+})();
+</script>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">src/optimization/quantize.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">from</span> torch.quantization <span class="kw">import</span> quantize_dynamic
+<span class="kw">from</span> optimum.onnxruntime <span class="kw">import</span> ORTQuantizer, AutoQuantizationConfig
+
+<span class="kw">def</span> <span class="fn">quantize_for_inference</span>(model_path: <span class="tp">str</span>, output_path: <span class="tp">str</span>, method: <span class="tp">str</span> = <span class="st">'int8'</span>):
+    <span class="st">"""
+    Quantize model untuk inference yang lebih cepat dan hemat memory.
+    INT8: ~4× smaller, ~2× faster, <1% accuracy drop
+    FP16: ~2× smaller, ~1.5× faster, minimal accuracy drop
+    """</span>
+    <span class="kw">if</span> method == <span class="st">'dynamic_int8'</span>:
+        <span class="cm"># PyTorch dynamic quantization — paling mudah</span>
+        model = torch.<span class="fn">load</span>(model_path)
+        quantized = <span class="fn">quantize_dynamic</span>(
+            model,
+            {torch.nn.Linear},  <span class="cm"># Quantize hanya linear layers</span>
+            dtype=torch.qint8
+        )
+        torch.<span class="fn">save</span>(quantized, output_path)
+
+    <span class="kw">elif</span> method == <span class="st">'onnx_int8'</span>:
+        <span class="cm"># ONNX Runtime quantization — lebih optimal untuk serving</span>
+        quantizer = ORTQuantizer.<span class="fn">from_pretrained</span>(model_path)
+        qconfig = AutoQuantizationConfig.<span class="fn">avx512_vnni</span>(
+            is_static=<span class="kw">False</span>,   <span class="cm"># Dynamic quant, tidak butuh calibration data</span>
+            per_channel=<span class="kw">False</span>
+        )
+        quantizer.<span class="fn">quantize</span>(
+            quantization_config=qconfig,
+            save_dir=output_path,
+        )
+
+    <span class="cm"># Benchmark sebelum dan sesudah</span>
+    original_size = <span class="fn">get_model_size_mb</span>(model_path)
+    quantized_size = <span class="fn">get_model_size_mb</span>(output_path)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="st">"Size: {original_size:.0f}MB → {quantized_size:.0f}MB ({1-quantized_size/original_size:.0%} reduction)"</span>)
+
+<span class="kw">def</span> <span class="fn">benchmark_latency</span>(model_path: <span class="tp">str</span>, n_warmup: <span class="tp">int</span> = <span class="nm">10</span>, n_runs: <span class="tp">int</span> = <span class="nm">100</span>):
+    <span class="kw">import</span> time, numpy <span class="kw">as</span> np
+    <span class="kw">import</span> onnxruntime <span class="kw">as</span> ort
+
+    session = ort.<span class="fn">InferenceSession</span>(model_path, providers=[<span class="st">'CPUExecutionProvider'</span>])
+    dummy_input = {<span class="st">'input_ids'</span>: np.<span class="fn">ones</span>((<span class="nm">1</span>,<span class="nm">128</span>), dtype=np.int64)}
+
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_warmup): session.<span class="fn">run</span>(<span class="kw">None</span>, dummy_input)
+
+    latencies = []
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_runs):
+        t0 = time.<span class="fn">perf_counter</span>()
+        session.<span class="fn">run</span>(<span class="kw">None</span>, dummy_input)
+        latencies.<span class="fn">append</span>((time.<span class="fn">perf_counter</span>()-t0)*<span class="nm">1000</span>)
+
+    <span class="fn">print</span>(<span class="fn">f</span><span class="st">"P50: {np.percentile(latencies,50):.1f}ms | P99: {np.percentile(latencies,99):.1f}ms"</span>)</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+<div class="ctxt"><strong>Spot Instances untuk Training:</strong> AWS Spot / GCP Preemptible / Azure Spot bisa 60–90% lebih murah dari on-demand. Gunakan untuk training dengan checkpointing setiap epoch — jika instance di-preempt, resume dari checkpoint terakhir. Tidak cocok untuk inference (availability tidak terjamin), tapi sangat cocok untuk training dan batch inference.</div>
+</div>
+
+<div class="divider"></div>
+</div><!-- /mlops5d -->
+
+<!-- 5E -->
+<div class="sub" id="mlops5e">
+<div class="subtit"><span class="ac">5.5</span> MLOps Maturity &amp; Production Checklist <span class="subid">// dari chaos ke excellence</span></div>
+<div class="prose">
+<p>Google MLOps whitepaper mendefinisikan tiga level MLOps maturity yang menggambarkan seberapa otomatis dan scalable ML workflow sebuah organisasi. Tidak semua tim perlu mencapai level tertinggi — level yang tepat bergantung pada jumlah model di production, frekuensi retraining, dan ukuran tim ML. Yang penting: tahu di level mana kamu berada dan apa langkah selanjutnya.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">🎯 MLOps Maturity Level Explorer</div>
+<div class="viz-body" style="padding:16px 20px;">
+  <div class="viz-canvas-wrap">
+    <canvas id="maturity-canvas" width="380" height="300"></canvas>
+    <div class="viz-canvas-controls">
+      <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;">Pilih level:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button onclick="setMaturity(0)" id="mat-btn-0" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--accent-glow);color:var(--accent);cursor:pointer;text-align:left;">Level 0 — Manual</button>
+        <button onclick="setMaturity(1)" id="mat-btn-1" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;text-align:left;">Level 1 — ML Pipeline</button>
+        <button onclick="setMaturity(2)" id="mat-btn-2" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;text-align:left;">Level 2 — CI/CD Pipeline</button>
+      </div>
+      <div id="mat-desc" style="margin-top:12px;font-size:10px;color:var(--text2);line-height:1.7;font-family:'IBM Plex Mono',monospace;background:var(--bg3);padding:10px;border-radius:8px;">
+        Training manual di notebook. Deploy manual. Tidak ada monitoring. Experiment tidak reproducible. <strong style="color:var(--coral);">Kebanyakan tim ML ada di sini.</strong>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv, ctx, W, H;
+  var selectedLevel = 0;
+  var levels = [
+    {
+      label: 'Level 0 — Manual',
+      color: 'var(--coral)',
+      scores: [1,1,1,1,2,1],
+      desc: 'Training manual di notebook. Deploy manual. Tidak ada monitoring. Experiment tidak reproducible. <strong style="color:var(--coral);">Kebanyakan tim ML ada di sini.</strong>'
+    },
+    {
+      label: 'Level 1 — ML Pipeline',
+      color: 'var(--amber)',
+      scores: [3,3,4,3,3,2],
+      desc: 'Pipeline training otomatis. Experiment tracking dengan MLflow. Model registry. Basic monitoring. Retraining masih manual atau scheduled. <strong style="color:var(--amber);">Target realistis untuk tim kecil.</strong>'
+    },
+    {
+      label: 'Level 2 — CI/CD Pipeline',
+      color: 'var(--green)',
+      scores: [5,5,5,5,5,4],
+      desc: 'Full CI/CD. Auto-retraining triggered by drift. Canary deployment. Comprehensive monitoring. A/B testing built-in. <strong style="color:var(--green);">Google, Netflix, Uber level.</strong>'
+    }
+  ];
+  var axes = ['Reproducibility','Automation','Monitoring','Deployment','Experiment\nTracking','Testing'];
+
+  window.setMaturity = function(idx){
+    selectedLevel = idx;
+    for(var i=0;i<3;i++){
+      var btn=document.getElementById('mat-btn-'+i);
+      if(!btn)continue;
+      if(i===idx){btn.style.background='var(--accent-glow)';btn.style.color='var(--accent)';btn.style.borderColor='rgba(124,109,250,0.3)';}
+      else{btn.style.background='transparent';btn.style.color='var(--text3)';btn.style.borderColor='var(--border)';}
+    }
+    document.getElementById('mat-desc').innerHTML = levels[idx].desc;
+    drawMaturity();
+  };
+
+  function initMaturity(){
+    cv=document.getElementById('maturity-canvas');if(!cv)return;
+    var cw=cv.parentElement.clientWidth||cv.offsetWidth||380;
+    if(cw>10){cv.width=cw;cv.height=Math.round(cw*(300/380));}
+    ctx=cv.getContext('2d');W=cv.width;H=cv.height;
+  }
+
+  function drawMaturity(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,W,H);
+    var cx=W/2, cy=H/2+10, r=Math.min(W,H)*0.35;
+    var n=axes.length;
+
+    // Grid rings
+    for(var ring=1;ring<=5;ring++){
+      ctx.beginPath();
+      for(var i=0;i<n;i++){
+        var angle=-Math.PI/2+i*(Math.PI*2/n);
+        var pr=r*(ring/5);
+        var x=cx+Math.cos(angle)*pr, y=cy+Math.sin(angle)*pr;
+        if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.stroke();
+    }
+
+    // Axes
+    for(var i=0;i<n;i++){
+      var angle=-Math.PI/2+i*(Math.PI*2/n);
+      ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle)*r,cy+Math.sin(angle)*r);ctx.stroke();
+      // Labels
+      var lx=cx+Math.cos(angle)*(r+18), ly=cy+Math.sin(angle)*(r+18);
+      ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      var parts=axes[i].split('\n');
+      parts.forEach(function(p,pi){ctx.fillText(p,lx,ly+pi*10-((parts.length-1)*5));});
+    }
+
+    // Data polygon
+    var lv=levels[selectedLevel];
+    var col=lv.color.includes('var')?getComputedStyle(document.documentElement).getPropertyValue(lv.color.replace('var(','').replace(')','').trim()).trim()||'#7c6dfa':lv.color;
+    ctx.beginPath();
+    lv.scores.forEach(function(s,i){
+      var angle=-Math.PI/2+i*(Math.PI*2/n);
+      var pr=r*(s/5);
+      var x=cx+Math.cos(angle)*pr, y=cy+Math.sin(angle)*pr;
+      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle=col+'33';ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+
+    // Title
+    ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='bold 10px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(lv.label,cx,20);
+  }
+
+  initMaturity();drawMaturity();
+  window.addEventListener('resize',function(){initMaturity();drawMaturity();});
+})();
+</script>
+
+<div class="prose">
+<h4>Production Readiness Checklist — sebelum deploy model ke production</h4>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">✅ Pre-Production Checklist</div>
+<div class="viz-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:12px;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Model</div>
+      <div style="display:flex;flex-direction:column;gap:6px;color:var(--text2);line-height:1.5;">
+        <div>☐ Offline eval metrics memenuhi threshold</div>
+        <div>☐ Behavioral tests lulus (MFT, INV, DIR)</div>
+        <div>☐ Fairness evaluation per sub-group</div>
+        <div>☐ Model terdaftar di registry dengan metadata</div>
+        <div>☐ Inference latency P99 &lt; SLA threshold</div>
+        <div>☐ Memory footprint dalam batas GPU budget</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Data</div>
+      <div style="display:flex;flex-direction:column;gap:6px;color:var(--text2);line-height:1.5;">
+        <div>☐ Data validation lulus (schema + distribusi)</div>
+        <div>☐ Training/serving skew diidentifikasi</div>
+        <div>☐ Data lineage terdokumentasi di DVC</div>
+        <div>☐ PII handling sesuai compliance</div>
+        <div>☐ Baseline distribusi tersimpan untuk monitoring</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Infrastructure</div>
+      <div style="display:flex;flex-direction:column;gap:6px;color:var(--text2);line-height:1.5;">
+        <div>☐ Docker image build reproducible</div>
+        <div>☐ Health check endpoint tersedia</div>
+        <div>☐ Graceful shutdown diimplementasikan</div>
+        <div>☐ Resource limits (CPU/memory/GPU) di-set</div>
+        <div>☐ HPA policy dikonfigurasi</div>
+        <div>☐ Rollback procedure ditest</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Monitoring</div>
+      <div style="display:flex;flex-direction:column;gap:6px;color:var(--text2);line-height:1.5;">
+        <div>☐ Prometheus metrics terkonfigurasi</div>
+        <div>☐ Grafana dashboard dibuat</div>
+        <div>☐ Alert rules dengan threshold yang tepat</div>
+        <div>☐ On-call runbook tersedia</div>
+        <div>☐ Drift detection baseline disimpan</div>
+        <div>☐ Log structured dan searchable</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+<div class="ctxt"><strong>Start simple, then automate:</strong> Jangan langsung mengejar Level 2. Mulai dari Level 0 → Level 1 lebih dulu: pasang MLflow tracking, buat model registry, dan automated retraining script. Setelah itu stabil, baru bangun CI/CD pipeline lengkap. Premature MLOps complexity lebih berbahaya dari tidak ada MLOps sama sekali.</div>
+</div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Selesai! · 5 topik · Fase 5</div>
+    <div class="topic-nav-title">MLOps &amp; Model Deployment — Kurikulum Lengkap</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi4')">← Fase 4</button>
+    <button class="tnbtn primary" onclick="showLanding()">Kembali ke Semua Topik ↺</button>
+  </div>
+</div>
+
+</div><!-- /mlops5e -->
+</section>

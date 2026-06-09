@@ -125,6 +125,106 @@ logger = logging.<span class="fn">getLogger</span>(<span class="st">"agent"</spa
 <li><strong>[Eksperimen]</strong> Turunkan <code>max_iterations</code> ke 2 dan berikan task yang butuh lebih dari 2 tool calls. Apa yang terjadi? Bagaimana harness seharusnya menangani kondisi ini dengan graceful?</li>
 <li><strong>[Arsitektur]</strong> <code>AgentHarness</code> saat ini synchronous di level run(). Mengapa <code>async def run()</code> lebih baik untuk production? Dalam skenario apa sync bisa diterima?</li>
 </ul></div>
+<!-- ═══ Visualisasi Interaktif: Agent Execution Loop Stepper ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🔄 Agent Execution Loop — Klik "Next Step" untuk Simulasi</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="loop-canvas" width="300" height="340" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;"></canvas>
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">
+        Step <span id="loop-step">1</span>/6 &nbsp;|&nbsp; Tokens: <span id="loop-tokens" style="color:var(--accent);">1,250</span>
+      </div>
+      <div id="loop-desc" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;min-height:100px;">
+        🚀 <strong style="color:var(--accent);">User mengirim:</strong> "Buat file README.md untuk project ini"<br>System prompt + tools schema dimuat ke context window.
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button onclick="loopStep(-1)" id="loop-prev" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">← Prev</button>
+        <button onclick="loopStep(1)" id="loop-next" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent-glow);color:var(--accent);cursor:pointer;">Next Step →</button>
+        <button onclick="loopReset()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=300,H=340,step=0;
+  var steps=[
+    {title:'User Input → Context',desc:'🚀 <strong style="color:var(--accent);">User mengirim:</strong> "Buat file README.md"<br>System prompt + tools schema dimuat ke context window.',tokens:1250,highlight:0},
+    {title:'LLM Call #1 — Reasoning',desc:'🧠 <strong style="color:var(--teal);">LLM berpikir:</strong> "Aku perlu cek struktur project dulu. Pakai tool list_files."<br>stop_reason = tool_use → lanjut ke eksekusi.',tokens:1680,highlight:1},
+    {title:'Tool Execution — list_files',desc:'⚡ <strong style="color:var(--amber);">Harness eksekusi:</strong> bash("ls -la")<br>Output: src/  tests/  package.json  .gitignore<br>→ Hasil di-inject ke context window.',tokens:2100,highlight:2},
+    {title:'LLM Call #2 — Reasoning',desc:'🧠 <strong style="color:var(--teal);">LLM menganalisis:</strong> "Project Node.js dengan src/ dan tests/. Aku akan baca package.json dulu."<br>stop_reason = tool_use.',tokens:2850,highlight:1},
+    {title:'Tool Execution — read_file',desc:'⚡ <strong style="color:var(--amber);">Harness eksekusi:</strong> read_file("package.json")<br>Output: {"name":"my-app","dependencies":{...}}<br>→ Konteks project semakin jelas.',tokens:3400,highlight:2},
+    {title:'LLM Call #3 — Final Answer',desc:'✅ <strong style="color:var(--green);">LLM menyimpulkan:</strong> "Berdasarkan struktur project dan package.json, ini README yang sesuai..."<br>stop_reason = end_turn → task selesai!',tokens:4200,highlight:3}
+  ];
+
+  function initLoop(){cv=document.getElementById('loop-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);}
+
+  function drawLoop(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,W,H);
+    var nodes=[
+      {x:150,y:40,label:'User Input',color:'rgba(124,109,250,0.2)',border:'rgba(124,109,250,0.6)'},
+      {x:150,y:120,label:'LLM Call',color:'rgba(45,212,191,0.2)',border:'rgba(45,212,191,0.6)'},
+      {x:150,y:200,label:'Tool Exec',color:'rgba(245,158,11,0.2)',border:'rgba(245,158,11,0.6)'},
+      {x:150,y:280,label:'Done?',color:'rgba(74,222,128,0.2)',border:'rgba(74,222,128,0.6)'}
+    ];
+
+    // Connections
+    nodes.forEach(function(n,i){
+      if(i<3){
+        ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(n.x,n.y+22);ctx.lineTo(nodes[i+1].x,nodes[i+1].y-22);ctx.stroke();
+        // Arrow
+        var midY=(n.y+nodes[i+1].y)/2;
+        ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='14px sans-serif';ctx.textAlign='center';
+        ctx.fillText('▼',n.x,midY+6);
+      }
+    });
+    // Loop back arrow
+    ctx.strokeStyle='rgba(248,113,113,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(190,280);ctx.lineTo(250,280);ctx.lineTo(250,120);ctx.lineTo(190,120);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(248,113,113,0.4)';ctx.font='10px IBM Plex Mono,monospace';
+    ctx.fillText('↺ loop',260,200);
+
+    // Nodes
+    nodes.forEach(function(n,i){
+      var isActive=step>=0&&(
+        (i===0&&step===0)||(i===1&&(step===1||step===3))||(i===2&&(step===2||step===4))||(i===3&&step===5)
+      );
+      var alpha=isActive?1:0.35;
+      ctx.fillStyle=n.color.replace('0.2',String(isActive?0.35:0.08));
+      ctx.strokeStyle=n.border.replace('0.6',String(isActive?1:0.2));
+      ctx.lineWidth=isActive?2.5:1;
+      ctx.beginPath();ctx.roundRect(n.x-70,n.y-20,140,40,10);ctx.fill();ctx.stroke();
+      ctx.fillStyle=isActive?'#fff':'rgba(255,255,255,0.4)';
+      ctx.font=(isActive?'bold ':'')+'10px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(n.label,n.x,n.y+5);
+    });
+
+    // Iteration counter
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Agent Execution Loop — '+Math.ceil((step+1)/2)+' iterasi',150,H-6);
+  }
+
+  window.loopStep=function(dir){
+    step=Math.max(0,Math.min(5,step+dir));
+    document.getElementById('loop-step').textContent=step+1;
+    document.getElementById('loop-tokens').textContent=steps[step].tokens.toLocaleString();
+    document.getElementById('loop-desc').innerHTML=steps[step].desc;
+    document.getElementById('loop-prev').style.opacity=step===0?'0.3':'1';
+    document.getElementById('loop-next').style.opacity=step===5?'0.3':'1';
+    drawLoop();
+  };
+  window.loopReset=function(){step=0;loopStep(0);};
+
+  initLoop();loopReset();
+  window.addEventListener('resize',function(){initLoop();drawLoop();});
+})();
+</script>
+
 </div><!-- /s2a -->
 
 <div class="divider"></div>
@@ -424,6 +524,137 @@ Identify which steps can run in parallel (no dependencies).
 </svg>
 </div>
 </div>
+
+<!-- ═══ Visualisasi Interaktif: Planning Tree Explorer ═══ -->
+<div class="viz-wrap">
+<div class="viz-title">🌳 Planning Tree Explorer — Klik Node untuk Expand/Collapse</div>
+<div class="viz-body" style="padding:0;">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:16px 20px;align-items:flex-start;">
+    <canvas id="plan-canvas" width="440" height="260" style="border:1px solid var(--border);border-radius:8px;background:var(--bg);flex-shrink:0;max-width:100%;cursor:pointer;"></canvas>
+    <div style="flex:1;min-width:180px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px;">💡 Klik node untuk expand/collapse</div>
+      <div id="plan-info" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8;padding:10px;background:var(--bg3);border-radius:6px;">
+        ← Klik node di tree
+      </div>
+      <div style="margin-top:8px;font-size:9px;color:var(--text3);">
+        🟣 Goal &nbsp; 🟢 Sub-goal (paralel) &nbsp; 🟠 Step &nbsp; 🔴 Dependency
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+  var cv,ctx,W=440,H=260;
+  var tree={
+    id:'root',label:'Build REST API Todo App',x:220,y:28,type:'goal',children:[
+      {id:'data',label:'Data Layer',x:80,y:110,type:'sub',children:[
+        {id:'schema',label:'DB Schema',x:40,y:200,type:'step',deps:[]},
+        {id:'orm',label:'ORM Models',x:110,y:200,type:'step',deps:['schema']}
+      ]},
+      {id:'api',label:'API Endpoints',x:220,y:110,type:'sub',children:[
+        {id:'get',label:'GET /todos',x:180,y:200,type:'step',deps:['schema']},
+        {id:'post',label:'POST /todos',x:250,y:200,type:'step',deps:['schema','auth']}
+      ]},
+      {id:'auth',label:'Auth (JWT)',x:360,y:110,type:'sub',children:[
+        {id:'jwt',label:'JWT Middleware',x:360,y:200,type:'step',deps:['schema']}
+      ]}
+    ]
+  };
+  var collapsed={},selected=null;
+
+  function initPlan(){cv=document.getElementById('plan-canvas');if(!cv)return;var dpr=window.devicePixelRatio||1;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+    cv.onclick=function(e){
+      var rect=cv.getBoundingClientRect();
+      var mx=(e.clientX-rect.left)*(W/rect.width),my=(e.clientY-rect.top)*(H/rect.height);
+      var found=findNode(tree,mx,my);
+      if(found){
+        if(found.type==='sub'){collapsed[found.id]=!collapsed[found.id];selected=null;}
+        else {selected=selected===found.id?null:found.id;}
+        drawPlan();
+      }
+    };
+  }
+
+  function findNode(node,mx,my){
+    if(Math.abs(mx-node.x)<50&&Math.abs(my-node.y)<14) return node;
+    if(node.children&&!collapsed[node.id]){
+      for(var i=0;i<node.children.length;i++){
+        var f=findNode(node.children[i],mx,my);if(f)return f;
+      }
+    }
+    return null;
+  }
+
+  function drawPlan(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,W,H);
+    drawNode(tree,0);
+    // Info
+    var info=document.getElementById('plan-info');
+    if(selected){
+      var n=findNodeById(tree,selected);
+      if(n){
+        var deps=n.deps&&n.deps.length?n.deps.join(', '):'(tidak ada)';
+        info.innerHTML='<strong style="color:var(--accent);">'+n.label+'</strong><br>Type: '+n.type+'<br>Dependencies: '+deps+(n.type==='sub'?'<br>Klik untuk expand/collapse':'');
+      }
+    } else {
+      info.innerHTML='← Klik node di tree';
+    }
+  }
+
+  function findNodeById(node,id){
+    if(node.id===id)return node;
+    if(node.children){for(var i=0;i<node.children.length;i++){var f=findNodeById(node.children[i],id);if(f)return f;}}
+    return null;
+  }
+
+  function drawNode(node,depth){
+    var colors={goal:'rgba(124,109,250,0.2)',sub:'rgba(45,212,191,0.15)',step:'rgba(74,222,128,0.12)'};
+    var borders={goal:'rgba(124,109,250,0.6)',sub:'rgba(45,212,191,0.5)',step:'rgba(74,222,128,0.4)'};
+    var isSel=selected===node.id;
+    var isGoal=node.type==='goal';
+    ctx.fillStyle=isSel?'rgba(255,255,255,0.1)':(colors[node.type]||colors.step);
+    ctx.strokeStyle=isSel?'rgba(255,255,255,0.6)':(borders[node.type]||borders.step);
+    ctx.lineWidth=isSel?2.5:1.5;
+    var w=isGoal?180:node.type==='sub'?120:100;
+    ctx.beginPath();ctx.roundRect(node.x-w/2,node.y-14,w,28,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle=isSel?'#fff':(isGoal?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.6)');
+    ctx.font=(isGoal?'bold ':'')+'9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(node.label,node.x,node.y+4);
+
+    if(node.children&&!collapsed[node.id]){
+      for(var i=0;i<node.children.length;i++){
+        var c=node.children[i];
+        ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(node.x,node.y+14);ctx.lineTo(c.x,c.y-14);ctx.stroke();
+        drawNode(c,depth+1);
+      }
+    }
+    if(node.children&&collapsed[node.id]){
+      ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='10px sans-serif';ctx.textAlign='center';
+      ctx.fillText('+'+(node.children.length),node.x,node.y+30);
+    }
+
+    // Dep lines
+    if(node.deps&&node.deps.length&&!collapsed[node.id]){
+      node.deps.forEach(function(depId){
+        var depNode=findNodeById(tree,depId);
+        if(depNode){
+          ctx.strokeStyle='rgba(248,113,113,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,2]);
+          ctx.beginPath();ctx.moveTo(depNode.x,depNode.y+14);
+          var midX=(depNode.x+node.x)/2,midY=Math.max(depNode.y,node.y)+10;
+          ctx.lineTo(depNode.x,midY);ctx.lineTo(node.x,midY);ctx.lineTo(node.x,node.y-14);
+          ctx.stroke();ctx.setLineDash([]);
+        }
+      });
+    }
+  }
+
+  initPlan();drawPlan();
+  window.addEventListener('resize',function(){initPlan();drawPlan();});
+})();
+</script>
 
 </div><!-- /s2e -->
 

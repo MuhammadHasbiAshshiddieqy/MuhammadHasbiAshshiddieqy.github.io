@@ -1,0 +1,996 @@
+<section class="cs p1" id="mlopsfase1">
+<div class="fase-intro" id="mlopsfi1">
+<div class="sh">
+  <div class="sbadge p1">01</div>
+  <div>
+    <div class="stitle">Fase 1 — ML Pipeline &amp; Experiment Tracking</div>
+    <div class="sdesc">Sebelum kamu bisa men-deploy model ke production, kamu harus bisa me-reproduce eksperimen, melacak percobaan, dan mengelola versi data dan model secara sistematis. Fase ini membangun fondasi MLOps: dari memahami mengapa MLOps ada, cara versioning data dengan DVC, hingga tracking eksperimen dengan MLflow dan mengorkestrasikan pipeline yang reproducible.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 1–2</span><span class="mc">Fondasi MLOps</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#mlops1a">Kenapa MLOps?</a>
+  <a class="snavi" href="#mlops1b">Data Versioning</a>
+  <a class="snavi" href="#mlops1c">Experiment Tracking</a>
+  <a class="snavi" href="#mlops1d">Model Registry</a>
+  <a class="snavi" href="#mlops1e">Pipeline Orchestration</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 1–2</div>
+    <div class="topic-nav-title">Mulai dari: 1.1 Kenapa MLOps?</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('home')">← Beranda</button>
+    <button class="tnbtn primary" onclick="goTo(0)">Mulai Fase 1 →</button>
+  </div>
+</div>
+</div><!-- /mlopsfi1 -->
+
+<div class="cc" style="border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.04);margin:16px 60px 0;"><h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Cara Menggunakan Panduan Ini</h3>
+<p>Panduan ini dirancang untuk <strong>belajar mandiri</strong> dari nol atau sebagai pengayaan konseptual MLOps. Setiap topik punya tiga komponen: <strong>penjelasan konsep</strong> (kenapa ini penting?), <strong>kode yang bisa dijalankan</strong> (Python + tooling production-grade), dan <strong>latihan</strong> tiga level.</p>
+<ul>
+<li><strong><span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(45,212,191,.12);color:var(--teal);border:1px solid rgba(45,212,191,.25);padding:1px 7px;border-radius:4px;margin-right:4px;vertical-align:middle;">Pemula</span></strong> Baca penjelasan konsep, jalankan kode di environment lokal, kerjakan latihan [Konseptual]. Fokus pada memahami WHY sebelum HOW.</li>
+<li><strong><span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25);padding:1px 7px;border-radius:4px;margin-right:4px;vertical-align:middle;">Intermediate</span></strong> Kerjakan semua latihan. Hubungkan antar topik — bagaimana DVC mendukung MLflow, bagaimana Prefect mengorkestrasikan pipeline yang berisi DVC dan MLflow tracking.</li>
+<li><strong><span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.25);padding:1px 7px;border-radius:4px;margin-right:4px;vertical-align:middle;">Advanced</span></strong> Bangun full ML pipeline dari scratch menggunakan semua tools di fase ini. Integrasikan ke CI/CD. Ukur overhead MLOps terhadap produktivitas tim.</li>
+</ul></div>
+
+<div class="callout info" style="margin:12px 60px 20px;">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Prasyarat</strong><ul style="margin:6px 0 0;padding-left:16px;"><li><strong>Python:</strong> familiar dengan class, virtual environment, dan packaging dasar. Kode menggunakan MLflow, DVC, dan Prefect — semua di-install via pip.</li><li><strong>ML basics:</strong> sudah pernah melatih model (scikit-learn atau PyTorch/Keras) dan familiar dengan konsep train/val/test split, hyperparameter, dan metrik evaluasi.</li><li><strong>Git:</strong> paham dasar-dasar Git — commit, branch, push/pull. DVC dibangun di atas Git.</li><li><strong>Tools:</strong> Python 3.10+, Git, Docker (opsional tapi direkomendasikan untuk fase berikutnya).</li></ul></div>
+</div>
+
+<!-- 1A -->
+<div class="sub" id="mlops1a">
+<div class="subtit"><span class="ac">1.1</span> Kenapa MLOps? <span class="subid">// gap antara riset dan production</span></div>
+<div class="prose">
+<p>Bayangkan seorang data scientist yang berhasil membangun model klasifikasi dengan akurasi 94% di notebook Jupyter-nya. Dia excited, tim excited. Tapi saat coba di-deploy ke production? Seminggu kemudian, tidak ada yang tahu hyperparameter apa yang menghasilkan model terbaik. Dua minggu lagi, model performance-nya drop tapi tidak ada yang tau kenapa. Sebulan kemudian, data scientist resign dan semua pengetahuan tentang model itu hilang bersamanya.</p>
+<p>Ini bukan cerita fiksi — ini adalah realitas di sebagian besar perusahaan yang memulai machine learning tanpa MLOps. <strong>MLOps (Machine Learning Operations)</strong> adalah seperangkat praktik, tools, dan budaya untuk membawa riset ML ke production secara reliable, reproducible, dan scalable. Ini adalah persimpangan antara Machine Learning, DevOps, dan Data Engineering.</p>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Statistik yang menyedihkan</strong>Menurut berbagai survey industri (Gartner, VentureBeat), sekitar <strong>85–87% proyek ML tidak pernah sampai production</strong>. Dari yang sampai production, banyak yang hanya bertahan beberapa bulan sebelum degradasi performa membuat hasilnya tidak reliable. MLOps hadir untuk mengubah statistik ini.</div>
+</div>
+
+<div class="prose">
+<h4>Pain points tanpa MLOps — kenapa riset ML sering gagal di production</h4>
+<ul>
+<li><strong>Reproducibility crisis</strong> — "Model kemarin lebih bagus, tapi aku sudah overwrite weightnya." Tanpa tracking yang sistematis, eksperimen menjadi one-way door yang tidak bisa dibalik. Satu tahun kerja bisa hilang karena tidak ada yang mencatat konfigurasi training yang benar.</li>
+<li><strong>Dependency hell</strong> — "Di laptopku jalan, di server tidak." Library version mismatch, CUDA version incompatibility, environment variables yang berbeda. Tanpa containerization dan dependency management yang ketat, deployment menjadi gambling.</li>
+<li><strong>Data drift yang tidak terdeteksi</strong> — Model dilatih pada data bulan Januari. Sekarang bulan Juli, distribusi data sudah bergeser, tapi tidak ada monitoring. Model tetap "berjalan" tapi diam-diam menghasilkan prediksi yang semakin salah. Tanpa monitoring, kamu tidak tahu sampai ada complaint dari user.</li>
+<li><strong>Collaboration bottleneck</strong> — Setiap anggota tim menyimpan model di folder lokal masing-masing dengan nama yang tidak konsisten: <code>model_final.pkl</code>, <code>model_final_v2.pkl</code>, <code>model_FINAL_gunakan_ini.pkl</code>. Tidak ada single source of truth.</li>
+<li><strong>Scaling nightmare</strong> — Proses training manual yang bekerja untuk 1 model tidak bisa scale ke 100 model. Tanpa pipeline orchestration, tim butuh orang untuk secara manual memantau dan menjalankan setiap langkah.</li>
+</ul>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">ML Lifecycle — Dari Riset ke Production</div>
+<div class="viz-body">
+  <div class="tok-flow" style="flex-wrap:wrap;">
+    <div class="tok-node">Data<br><span style="color:var(--text3);font-size:10px">collection &amp; prep</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">Experiment<br><span style="font-size:10px">training &amp; tuning</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">Evaluation<br><span style="color:var(--text3);font-size:10px">metrics &amp; validation</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">Registry<br><span style="font-size:10px">versioning &amp; staging</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">Deployment<br><span style="color:var(--text3);font-size:10px">serving &amp; scaling</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">Monitoring<br><span style="font-size:10px">drift &amp; feedback</span></div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:14px;font-family:'IBM Plex Mono',monospace;">↑ ML lifecycle bukan linear — setiap tahap bisa memicu iterasi kembali ke tahap sebelumnya. MLOps membuat loop ini bisa berjalan cepat dan terkontrol.</p>
+</div>
+</div>
+
+<div class="prose">
+<h4>MLOps maturity model — kamu ada di level mana?</h4>
+<p>Google mendefinisikan tiga level MLOps maturity. Memahami posisi tim kamu sekarang adalah langkah pertama:</p>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>Level 0 — Manual Process</h4><p>Semua langkah manual: training di notebook, deployment manual ke server, tidak ada monitoring otomatis. Cocok untuk proof-of-concept dan tim yang baru mulai ML. <em>Pain point:</em> tidak scalable, tidak reproducible, sulit kolaborasi.</p></div>
+<div class="gc"><h4>Level 1 — ML Pipeline Automation</h4><p>Pipeline training otomatis, triggered oleh data baru. Experiment tracking, data versioning, dan model registry sudah ada. Deployment ke staging otomatis. <em>Mayoritas startup target level ini dulu.</em></p></div>
+<div class="gc"><h4>Level 2 — CI/CD Pipeline Automation</h4><p>Full CI/CD untuk ML: perubahan kode trigger testing, retraining, evaluasi, dan deployment otomatis. Canary deployment, A/B testing, rollback otomatis. Butuh infrastruktur yang matang. <em>Target perusahaan dengan tim ML &gt;5 orang.</em></p></div>
+<div class="gc"><h4>Realita di lapangan</h4><p>Sebagian besar perusahaan masih di level 0–0.5. Bahkan tim yang sudah di level 1 sering mengalami regression saat tim berganti. MLOps adalah perjalanan iteratif, bukan destination yang pasti dicapai.</p></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>MLOps bukan tentang tools — ini tentang kultur</strong>Adopsi MLflow atau DVC tanpa mengubah cara kerja tim tidak akan mengubah outcomes. MLOps adalah perubahan mindset: dari "berhasil di notebook" ke "bisa di-reproduce, di-monitor, dan di-improve oleh siapapun di tim, kapanpun". Tools hanya enabler.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">without_mlops.py</span></div>
+<div class="cbb"><pre><span class="cm"># === TANPA MLOps — pattern yang sering ditemui ===</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">import</span> pickle
+
+<span class="cm"># Load data — path hardcoded, tidak ada versioning</span>
+df = pd.<span class="fn">read_csv</span>(<span class="st">"/home/user/Desktop/data_final_v3_use_this.csv"</span>)
+
+<span class="cm"># Preprocessing ad-hoc tanpa dokumentasi</span>
+df = df.<span class="fn">dropna</span>()
+X = df.<span class="fn">drop</span>(<span class="st">'target'</span>, axis=<span class="nm">1</span>)
+y = df[<span class="st">'target'</span>]
+
+<span class="cm"># Training dengan parameter "yang sepertinya bagus kemarin"</span>
+model = <span class="fn">RandomForestClassifier</span>(n_estimators=<span class="nm">100</span>, max_depth=<span class="nm">5</span>)  <span class="cm"># kenapa 100? kenapa 5?</span>
+model.<span class="fn">fit</span>(X, y)
+
+<span class="cm"># Simpan ke file — nama ambigu, tidak ada metadata</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"model_final.pkl"</span>, <span class="st">"wb"</span>) <span class="kw">as</span> f:
+    pickle.<span class="fn">dump</span>(model, f)
+
+<span class="cm"># Evaluasi? "Kayaknya akurasinya sekitar 93%"</span>
+<span class="cm"># Data apa yang dipakai? Tanggal berapa ditraining? Siapa yang training?</span>
+<span class="cm"># Tidak ada yang tahu sebulan kemudian.</span></pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">with_mlops.py</span></div>
+<div class="cbb"><pre><span class="cm"># === DENGAN MLOps — sama persis tapi terstruktur ===</span>
+<span class="kw">import</span> mlflow
+<span class="kw">import</span> mlflow.sklearn
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> accuracy_score, f1_score
+
+<span class="cm"># Data di-version dengan DVC — reproducible</span>
+<span class="cm"># git checkout v1.2 lalu dvc pull akan menghasilkan data yang sama persis</span>
+df = pd.<span class="fn">read_csv</span>(<span class="st">"data/processed/features.csv"</span>)  <span class="cm"># tracked by DVC</span>
+
+X_train, X_val, y_train, y_val = <span class="fn">train_test_split</span>(
+    df.<span class="fn">drop</span>(<span class="st">'target'</span>, axis=<span class="nm">1</span>), df[<span class="st">'target'</span>],
+    test_size=<span class="nm">0.2</span>, random_state=<span class="nm">42</span>  <span class="cm"># random seed terdokumentasi</span>
+)
+
+<span class="cm"># Semua eksperimen terlacak secara otomatis</span>
+mlflow.<span class="fn">set_experiment</span>(<span class="st">"churn-prediction-v2"</span>)
+<span class="kw">with</span> mlflow.<span class="fn">start_run</span>(run_name=<span class="st">"random-forest-baseline"</span>):
+    <span class="cm"># Log hyperparameters — WHY 100 trees: setelah compare 50/100/200</span>
+    params = {<span class="st">"n_estimators"</span>: <span class="nm">100</span>, <span class="st">"max_depth"</span>: <span class="nm">5</span>, <span class="st">"min_samples_split"</span>: <span class="nm">10</span>}
+    mlflow.<span class="fn">log_params</span>(params)
+
+    model = <span class="fn">RandomForestClassifier</span>(**params, random_state=<span class="nm">42</span>)
+    model.<span class="fn">fit</span>(X_train, y_train)
+
+    preds = model.<span class="fn">predict</span>(X_val)
+    metrics = {
+        <span class="st">"accuracy"</span>: <span class="fn">accuracy_score</span>(y_val, preds),
+        <span class="st">"f1_weighted"</span>: <span class="fn">f1_score</span>(y_val, preds, average=<span class="st">"weighted"</span>),
+    }
+    mlflow.<span class="fn">log_metrics</span>(metrics)
+
+    <span class="cm"># Model tersimpan dengan full metadata: siapa, kapan, data apa, params apa</span>
+    mlflow.sklearn.<span class="fn">log_model</span>(model, <span class="st">"model"</span>, registered_model_name=<span class="st">"churn-rf"</span>)
+    <span class="fn">print</span>(<span class="st">f"Run ID: {mlflow.active_run().info.run_id}"</span>)
+    <span class="cm"># Siapapun bisa reproduce dengan: mlflow.load_model("runs:/&lt;run_id&gt;/model")</span></pre></div>
+</div>
+
+<div class="cc"><h3>Perbandingan: Dunia Tanpa vs Dengan MLOps</h3><ul>
+<li><strong>Reproducibility</strong> — tanpa: "coba lagi dari awal, semoga hasilnya sama" · dengan: setiap experiment punya run ID yang bisa di-replay exact</li>
+<li><strong>Collaboration</strong> — tanpa: email berisi file <code>model_v3_FINAL.pkl</code> · dengan: model registry central, semua akses via UI atau SDK</li>
+<li><strong>Debugging</strong> — tanpa: "entah kenapa accuracy turun bulan ini" · dengan: drift alert otomatis, audit trail lengkap siapa mengubah apa kapan</li>
+<li><strong>Overhead</strong> — tanpa MLOps: setup cepat, maintenance mahal · dengan MLOps: setup investasi waktu, maintenance jauh lebih murah di jangka panjang</li>
+</ul></div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Seorang data scientist berargumen: "Projectku masih kecil, belum butuh MLOps." Di titik mana argumen ini valid dan di titik mana menjadi technical debt? Sebutkan tiga sinyal yang menunjukkan sebuah tim sudah butuh MLOps sekarang.</li>
+<li><strong>[Kode]</strong> Install MLflow (<code>pip install mlflow</code>) dan jalankan contoh kode "with MLOps" di atas. Buka MLflow UI dengan <code>mlflow ui</code> dan explore halaman Experiments. Catat apa saja informasi yang tersimpan per run.</li>
+<li><strong>[Eksplorasi]</strong> Baca artikel "Hidden Technical Debt in Machine Learning Systems" (Sculley et al., Google, 2015). Identifikasi tiga jenis technical debt yang paling relevan untuk tim kamu saat ini dan bagaimana MLOps mengatasinya.</li>
+</ul></div>
+
+</div><!-- /mlops1a -->
+
+<div class="divider"></div>
+
+<!-- 1B -->
+<div class="sub" id="mlops1b">
+<div class="subtit"><span class="ac">1.2</span> Data Versioning <span class="subid">// kenapa Git tidak cukup untuk data</span></div>
+<div class="prose">
+<p>Sumber utama non-reproducibility dalam ML bukan kode — tapi data. Kode yang sama dengan data yang berbeda menghasilkan model yang berbeda. Ini terdengar obvious, tapi implikasinya sering diremehkan: jika kamu tidak bisa melacak dengan tepat versi data apa yang digunakan untuk melatih sebuah model, kamu tidak benar-benar memiliki reproducibility.</p>
+<p>Git dirancang untuk teks kecil (source code). Ia tidak bisa menangani file besar — coba push file CSV 500MB ke GitHub dan kamu akan mendapat error. Ini bukan bug, ini by design: Git menyimpan setiap versi file secara penuh (bukan diff) untuk binary files, sehingga repository akan membengkak secara eksponensial. Kita butuh sesuatu yang berbeda untuk data.</p>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Apa itu Data Version Control (DVC)?</strong>DVC adalah open-source tool yang bekerja di atas Git. Cara kerjanya: alih-alih menyimpan file data besar di Git, DVC menyimpan pointer kecil (file <code>.dvc</code>) yang berisi hash konten file. File data yang sesungguhnya disimpan di remote storage (S3, GCS, Azure Blob, atau bahkan server sendiri). Saat kamu <code>dvc pull</code>, DVC mengambil versi data yang tepat sesuai pointer yang ada di Git commit saat itu.</div>
+</div>
+
+<div class="prose">
+<h4>Konsep kunci DVC yang wajib dipahami</h4>
+<ul>
+<li><strong>Content-addressable storage</strong> — DVC tidak menyimpan file berdasarkan nama tapi berdasarkan hash kontennya (SHA256). Kalau file tidak berubah, tidak ada storage baru yang terpakai. Kalau berubah, versi baru dibuat tanpa menghapus yang lama.</li>
+<li><strong>Data lineage</strong> — DVC bisa melacak seluruh pipeline: dari raw data → preprocessing → features → training. Setiap tahap punya dependency yang eksplisit. Jika raw data berubah, DVC tahu tepat stage mana yang perlu dijalankan ulang (seperti <code>make</code> tapi untuk ML pipelines).</li>
+<li><strong>Remote storage</strong> — DVC mendukung S3, GCS, Azure, SSH, HDFS, dan HTTP sebagai remote. Tim menggunakan remote yang sama sehingga semua orang bisa <code>dvc pull</code> data yang sama.</li>
+<li><strong>Lock files &amp; reproducibility</strong> — <code>dvc.lock</code> menyimpan hash dari semua input dan output setiap stage. File ini masuk ke Git. Kapanpun, dari commit manapun, <code>dvc repro</code> akan menghasilkan output yang identik byte-per-byte.</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Bash + Python</span><span class="cf">dvc_setup.sh / pipeline.py</span></div>
+<div class="cbb"><pre><span class="cm"># === Setup DVC dalam project baru ===</span>
+git <span class="fn">init</span> my-ml-project &amp;&amp; cd my-ml-project
+pip <span class="fn">install</span> dvc[s3]  <span class="cm"># atau dvc[gcs], dvc[azure]</span>
+dvc <span class="fn">init</span>            <span class="cm"># membuat .dvc/ directory, auto git-add .dvc/config</span>
+git <span class="fn">commit</span> -m <span class="st">"Initialize DVC"</span>
+
+<span class="cm"># Tambahkan remote storage (contoh: S3)</span>
+dvc remote <span class="fn">add</span> -d myremote s3://my-bucket/dvc-store
+git <span class="fn">commit</span> .dvc/config -m <span class="st">"Add DVC remote"</span>
+
+<span class="cm"># Track file data — ini yang membuat DVC berbeda dari Git</span>
+dvc <span class="fn">add</span> data/raw/customers.csv
+<span class="cm"># Membuat: data/raw/customers.csv.dvc (pointer kecil, masuk Git)</span>
+<span class="cm"># .gitignore otomatis diupdate untuk exclude file asli</span>
+git <span class="fn">add</span> data/raw/customers.csv.dvc data/raw/.gitignore
+git <span class="fn">commit</span> -m <span class="st">"Track raw customer data v1.0"</span>
+dvc <span class="fn">push</span>  <span class="cm"># upload file ke S3</span>
+
+<span class="cm"># Orang lain di tim bisa mendapat data yang sama persis:</span>
+git <span class="fn">clone</span> &lt;repo&gt; &amp;&amp; dvc <span class="fn">pull</span>  <span class="cm"># exact same bytes</span></pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">YAML + Python</span><span class="cf">dvc.yaml / preprocess.py</span></div>
+<div class="cbb"><pre><span class="cm"># === Definisikan pipeline sebagai DAG di dvc.yaml ===</span>
+<span class="cm"># dvc.yaml (dikelola manual atau via `dvc stage add`)</span>
+
+stages:
+  preprocess:
+    cmd: python src/preprocess.py
+    deps:
+      - data/raw/customers.csv     <span class="cm"># input tracked by DVC</span>
+      - src/preprocess.py          <span class="cm"># kode juga jadi dependency</span>
+    params:
+      - params.yaml:               <span class="cm"># hyperparameters terpisah</span>
+          - preprocessing.test_size
+          - preprocessing.random_seed
+    outs:
+      - data/processed/features.csv  <span class="cm"># output, di-track DVC otomatis</span>
+    metrics:
+      - metrics/preprocessing.json:  <span class="cm"># statistik data</span>
+          cache: false
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - data/processed/features.csv
+      - src/train.py
+    params:
+      - params.yaml:
+          - train.n_estimators
+          - train.max_depth
+    outs:
+      - models/rf_model.pkl
+    metrics:
+      - metrics/train_metrics.json:
+          cache: false</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">preprocess.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> yaml, json
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="cm"># Baca params dari params.yaml — satu sumber kebenaran</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"params.yaml"</span>) <span class="kw">as</span> f:
+    params = yaml.<span class="fn">safe_load</span>(f)[<span class="st">"preprocessing"</span>]
+
+df = pd.<span class="fn">read_csv</span>(<span class="st">"data/raw/customers.csv"</span>)
+
+<span class="cm"># Feature engineering</span>
+df[<span class="st">"tenure_years"</span>] = df[<span class="st">"tenure_months"</span>] / <span class="nm">12</span>
+df[<span class="st">"monthly_charges_log"</span>] = df[<span class="st">"MonthlyCharges"</span>].<span class="fn">apply</span>(<span class="kw">lambda</span> x: x ** <span class="nm">0.5</span>)
+df = df.<span class="fn">dropna</span>()
+
+train_df, val_df = <span class="fn">train_test_split</span>(
+    df,
+    test_size=params[<span class="st">"test_size"</span>],
+    random_state=params[<span class="st">"random_seed"</span>],
+    stratify=df[<span class="st">"Churn"</span>]
+)
+
+Path(<span class="st">"data/processed"</span>).<span class="fn">mkdir</span>(parents=<span class="kw">True</span>, exist_ok=<span class="kw">True</span>)
+train_df.<span class="fn">to_csv</span>(<span class="st">"data/processed/features.csv"</span>, index=<span class="kw">False</span>)
+
+<span class="cm"># Log data statistics ke metrics file</span>
+stats = {
+    <span class="st">"n_rows"</span>: <span class="fn">len</span>(df),
+    <span class="st">"n_features"</span>: <span class="fn">len</span>(df.<span class="fn">columns</span>) - <span class="nm">1</span>,
+    <span class="st">"churn_rate"</span>: <span class="fn">float</span>(df[<span class="st">"Churn"</span>].<span class="fn">mean</span>()),
+    <span class="st">"train_size"</span>: <span class="fn">len</span>(train_df),
+    <span class="st">"val_size"</span>: <span class="fn">len</span>(val_df),
+}
+Path(<span class="st">"metrics"</span>).<span class="fn">mkdir</span>(exist_ok=<span class="kw">True</span>)
+<span class="kw">with</span> <span class="fn">open</span>(<span class="st">"metrics/preprocessing.json"</span>, <span class="st">"w"</span>) <span class="kw">as</span> f:
+    json.<span class="fn">dump</span>(stats, f, indent=<span class="nm">2</span>)</pre></div>
+</div>
+
+<!-- Visualisasi Interaktif: DVC Pipeline DAG -->
+<div class="viz-wrap">
+<div class="viz-title">DVC Pipeline — DAG (Directed Acyclic Graph) Interaktif</div>
+<div class="viz-body" style="padding:0;overflow:hidden;">
+<div style="padding:20px 24px 0;">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-bottom:12px;">Klik node untuk lihat dependencies &amp; outputs:</div>
+  <canvas id="dvc-canvas" width="600" height="280" style="width:100%;max-width:600px;border-radius:8px;cursor:pointer;display:block;margin:0 auto;"></canvas>
+</div>
+<div id="dvc-info" style="padding:14px 24px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);background:var(--bg3);margin-top:12px;border-top:1px solid var(--border);min-height:52px;line-height:1.7;">
+  Klik salah satu node di atas untuk melihat detail stage.
+</div>
+</div>
+</div>
+<script>
+(function(){
+  var nodes = [
+    {id:'raw',    x:80,  y:140, w:110, h:42, label:'data/raw/\ncustomers.csv', type:'data',   color:'rgba(45,212,191,0.7)'},
+    {id:'params', x:80,  y:220, w:110, h:42, label:'params.yaml',             type:'config', color:'rgba(245,158,11,0.65)'},
+    {id:'prep',   x:250, y:140, w:120, h:42, label:'stage:\npreprocess',      type:'stage',  color:'rgba(124,109,250,0.75)'},
+    {id:'feats',  x:430, y:80,  w:120, h:42, label:'data/processed/\nfeatures.csv', type:'data', color:'rgba(45,212,191,0.65)'},
+    {id:'train',  x:430, y:190, w:120, h:42, label:'stage:\ntrain',           type:'stage',  color:'rgba(124,109,250,0.75)'},
+    {id:'model',  x:610, y:140, w:110, h:42, label:'models/\nrf_model.pkl',   type:'artifact',color:'rgba(248,113,113,0.65)'},
+    {id:'metrics',x:610, y:240, w:110, h:42, label:'metrics/\ntrain.json',    type:'metric', color:'rgba(74,222,128,0.65)'},
+  ];
+  var edges = [
+    {from:'raw',    to:'prep'},
+    {from:'params', to:'prep'},
+    {from:'prep',   to:'feats'},
+    {from:'feats',  to:'train'},
+    {from:'params', to:'train'},
+    {from:'train',  to:'model'},
+    {from:'train',  to:'metrics'},
+  ];
+  var nodeInfo = {
+    raw:     'deps: none\ntype: raw data (DVC tracked)\nhash: sha256:a3f9b...\nsize: 12.4 MB',
+    params:  'deps: none\ntype: config (Git tracked)\ncontains: preprocessing.test_size=0.2\n         train.n_estimators=100',
+    prep:    'cmd: python src/preprocess.py\ndeps: data/raw/customers.csv, params.yaml\nouts: data/processed/features.csv\nstatus: ✓ cached (no changes)',
+    feats:   'deps: stage:preprocess\ntype: processed features (DVC tracked)\nhash: sha256:7c21d...\nrows: 5,634 · cols: 18',
+    train:   'cmd: python src/train.py\ndeps: data/processed/features.csv, params.yaml\nouts: models/rf_model.pkl\nstatus: ✓ cached',
+    model:   'deps: stage:train\ntype: model artifact (DVC tracked)\nhash: sha256:4e8a1...\nalgorithm: RandomForest\nsize: 2.1 MB',
+    metrics: 'deps: stage:train\ntype: metrics (Git tracked, not cached)\naccuracy: 0.931\nf1_weighted: 0.928',
+  };
+  var selectedNode = null;
+
+  var canvas = document.getElementById('dvc-canvas');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var W, H;
+
+  function initCanvas(){
+    var cw = canvas.parentElement.clientWidth || 600;
+    var lw = Math.min(cw - 48, 600);
+    var lh = Math.round(lw * (280/600));
+    canvas.width = lw * dpr; canvas.height = lh * dpr;
+    canvas.style.width = lw + 'px'; canvas.style.height = lh + 'px';
+    ctx.scale(dpr, dpr);
+    W = lw; H = lh;
+  }
+
+  function scaleX(x){ return x * W / 720; }
+  function scaleY(y){ return y * H / 300; }
+
+  function drawArrow(fx, fy, tx, ty, color){
+    ctx.save();
+    ctx.strokeStyle = color || 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
+    ctx.stroke();
+    var angle = Math.atan2(ty - fy, tx - fx);
+    ctx.fillStyle = color || 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - 8*Math.cos(angle - 0.4), ty - 8*Math.sin(angle - 0.4));
+    ctx.lineTo(tx - 8*Math.cos(angle + 0.4), ty - 8*Math.sin(angle + 0.4));
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // Draw edges
+    edges.forEach(function(e){
+      var fn = nodes.find(function(n){return n.id===e.from;});
+      var tn = nodes.find(function(n){return n.id===e.to;});
+      if(!fn||!tn) return;
+      var fx = scaleX(fn.x + fn.w), fy = scaleY(fn.y + fn.h/2);
+      var tx = scaleX(tn.x), ty = scaleY(tn.y + tn.h/2);
+      var isSel = selectedNode && (selectedNode.id===e.from||selectedNode.id===e.to);
+      drawArrow(fx, fy, tx, ty, isSel?'rgba(124,109,250,0.6)':'rgba(255,255,255,0.15)');
+    });
+    // Draw nodes
+    nodes.forEach(function(n){
+      var x=scaleX(n.x), y=scaleY(n.y), w=scaleX(n.w), h=scaleY(n.h);
+      var isSel = selectedNode && selectedNode.id===n.id;
+      ctx.save();
+      ctx.fillStyle = isSel ? n.color.replace(/[\d.]+\)$/, '0.95)') : n.color.replace(/[\d.]+\)$/, '0.5)');
+      ctx.strokeStyle = isSel ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = isSel ? 2 : 1;
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 6);
+      ctx.fill(); ctx.stroke();
+      // Label
+      ctx.fillStyle = '#e0e0e0';
+      ctx.font = (isSel?'bold ':'')+Math.max(8, scaleX(8.5))+'px IBM Plex Mono,monospace';
+      ctx.textAlign = 'center';
+      var lines = n.label.split('\n');
+      var lineH = Math.max(11, scaleY(14));
+      lines.forEach(function(l, i){
+        ctx.fillText(l, x+w/2, y+h/2 - (lines.length-1)*lineH/2 + i*lineH + 3);
+      });
+      ctx.restore();
+    });
+  }
+
+  canvas.addEventListener('click', function(evt){
+    var rect = canvas.getBoundingClientRect();
+    var cx = (evt.clientX - rect.left) * (canvas.width / rect.width / dpr);
+    var cy = (evt.clientY - rect.top) * (canvas.height / rect.height / dpr);
+    var hit = null;
+    nodes.forEach(function(n){
+      var nx=scaleX(n.x), ny=scaleY(n.y), nw=scaleX(n.w), nh=scaleY(n.h);
+      if(cx>=nx&&cx<=nx+nw&&cy>=ny&&cy<=ny+nh) hit=n;
+    });
+    selectedNode = (hit && hit===selectedNode) ? null : hit;
+    draw();
+    var info = document.getElementById('dvc-info');
+    if(selectedNode){
+      info.innerHTML = '<strong style="color:var(--teal);">' + selectedNode.id + '</strong><br>' +
+        (nodeInfo[selectedNode.id]||'').replace(/\n/g,'<br>');
+    } else {
+      info.innerHTML = 'Klik salah satu node di atas untuk melihat detail stage.';
+    }
+  });
+
+  initCanvas(); draw();
+  window.addEventListener('resize', function(){ initCanvas(); draw(); });
+})();
+</script>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>DVC dan MLflow bekerja bersama, bukan bersaing</strong>DVC menangani data dan pipeline versioning. MLflow menangani experiment tracking dan model registry. Workflow ideal: <code>dvc repro</code> menjalankan pipeline yang di dalamnya memanggil <code>mlflow.log_*</code>. Setiap run MLflow bisa menyimpan DVC commit hash sebagai tag, sehingga kamu bisa trace: "model ini ditraining dari data commit abc123 dengan experiment run xyz".</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara <code>dvc run</code> dan hanya menjalankan script Python biasa. Apa yang terjadi jika kamu mengubah file <code>params.yaml</code> tapi tidak mengubah kode preprocessing — apakah DVC akan menjalankan ulang stage preprocess?</li>
+<li><strong>[Kode]</strong> Buat project DVC minimal: init repo, tambahkan satu file CSV kecil, buat dvc.yaml dengan satu stage preprocessing, dan jalankan <code>dvc repro</code>. Verifikasi bahwa <code>dvc.lock</code> berisi hash yang benar. Ubah satu parameter di <code>params.yaml</code> dan jalankan repro lagi — stage mana yang dijalankan ulang?</li>
+<li><strong>[Eksplorasi]</strong> Setup DVC dengan remote storage lokal (<code>dvc remote add -d localremote /tmp/dvc-storage</code>). Simulasikan workflow tim: clone repo di direktori berbeda, jalankan <code>dvc pull</code>, dan verifikasi kamu mendapat file yang identik byte-per-byte.</li>
+</ul></div>
+
+</div><!-- /mlops1b -->
+
+<div class="divider"></div>
+
+<!-- 1C -->
+<div class="sub" id="mlops1c">
+<div class="subtit"><span class="ac">1.3</span> Experiment Tracking <span class="subid">// MLflow Tracking — lebih dari sekadar logging</span></div>
+<div class="prose">
+<p>Experiment tracking adalah praktik mencatat setiap percobaan training secara sistematis: hyperparameter apa yang dipakai, data apa yang digunakan, metrik apa yang dihasilkan, dan artifact apa (model, plot, dll) yang diproduksi. Tanpa ini, ML engineering adalah seperti memasak tanpa resep — sekalinya berhasil, kamu tidak bisa mengulang persis hasilnya.</p>
+<p>MLflow Tracking adalah salah satu tool paling populer untuk ini, dan dengan alasan yang baik: gratis, open-source, mudah di-setup (bisa jalan lokal tanpa server), dan punya UI yang bagus. Tapi yang lebih penting dari tool-nya adalah mental model di baliknya: setiap eksperimen adalah entitas yang punya identitas, bisa dibandingkan, dan bisa di-replay.</p>
+</div>
+
+<div class="prose">
+<h4>Hirarki konsep di MLflow Tracking</h4>
+<ul>
+<li><strong>Experiment</strong> — unit organisasi tertinggi. Biasanya satu experiment per "pertanyaan": "Apakah Random Forest lebih baik dari XGBoost untuk churn prediction?" atau "Berapa learning rate optimal untuk BERT finetune di dataset ini?". Setiap experiment bisa punya ratusan runs.</li>
+<li><strong>Run</strong> — satu percobaan training tunggal. Setiap run punya run ID unik, timestamp, dan asosiasi ke experiment induknya. Run adalah unit terkecil yang bisa dibandingkan.</li>
+<li><strong>Parameters</strong> — input ke training: hyperparameter, konfigurasi preprocessing, random seed. Di-log dengan <code>mlflow.log_param()</code>. Bersifat immutable setelah run selesai.</li>
+<li><strong>Metrics</strong> — output numerik dari training: accuracy, loss, F1, inference latency. Di-log dengan <code>mlflow.log_metric()</code>. Bisa di-log per step (misalnya loss per epoch untuk melihat training curve).</li>
+<li><strong>Artifacts</strong> — file yang diproduksi: model weights, confusion matrix plot, feature importance chart, tokenizer. Di-log dengan <code>mlflow.log_artifact()</code> atau model-specific logging.</li>
+<li><strong>Tags</strong> — metadata bebas berupa key-value string. Berguna untuk menandai run: "data_version: v1.2", "deployed: staging", "reviewer: alice".</li>
+</ul>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">train_with_mlflow.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> mlflow
+<span class="kw">import</span> mlflow.sklearn
+<span class="kw">import</span> mlflow.pytorch  <span class="cm"># atau mlflow.keras, mlflow.xgboost, dll</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> accuracy_score, f1_score, roc_auc_score
+<span class="kw">import</span> matplotlib
+matplotlib.<span class="fn">use</span>(<span class="st">"Agg"</span>)  <span class="cm"># headless rendering</span>
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> ConfusionMatrixDisplay
+
+<span class="cm"># Konfigurasi tracking URI — bisa lokal atau remote server</span>
+mlflow.<span class="fn">set_tracking_uri</span>(<span class="st">"http://localhost:5000"</span>)  <span class="cm"># atau "sqlite:///mlflow.db" untuk lokal</span>
+mlflow.<span class="fn">set_experiment</span>(<span class="st">"churn-prediction"</span>)
+
+<span class="kw">def</span> <span class="fn">train_and_log</span>(params: <span class="tp">dict</span>, X_train, y_train, X_val, y_val):
+    <span class="st">"""Satu fungsi = satu MLflow run. Mudah untuk hyperparameter sweep."""</span>
+    <span class="kw">with</span> mlflow.<span class="fn">start_run</span>(run_name=<span class="st">f"rf-n{params['n_estimators']}-d{params['max_depth']}"</span>) <span class="kw">as</span> run:
+        <span class="cm"># Tag untuk konteks tambahan</span>
+        mlflow.<span class="fn">set_tags</span>({
+            <span class="st">"model_type"</span>: <span class="st">"RandomForest"</span>,
+            <span class="st">"data_version"</span>: <span class="st">"dvc:abc123"</span>,  <span class="cm"># link ke DVC commit</span>
+            <span class="st">"author"</span>: <span class="st">"alice"</span>,
+        })
+
+        <span class="cm"># Log semua params</span>
+        mlflow.<span class="fn">log_params</span>(params)
+
+        model = <span class="fn">RandomForestClassifier</span>(**params, random_state=<span class="nm">42</span>)
+        model.<span class="fn">fit</span>(X_train, y_train)
+
+        <span class="cm"># Metrics per-threshold (untuk kurva PR/ROC manual)</span>
+        preds = model.<span class="fn">predict</span>(X_val)
+        proba = model.<span class="fn">predict_proba</span>(X_val)[:, <span class="nm">1</span>]
+
+        mlflow.<span class="fn">log_metrics</span>({
+            <span class="st">"val_accuracy"</span>: <span class="fn">accuracy_score</span>(y_val, preds),
+            <span class="st">"val_f1"</span>:       <span class="fn">f1_score</span>(y_val, preds, average=<span class="st">"weighted"</span>),
+            <span class="st">"val_roc_auc"</span>:  <span class="fn">roc_auc_score</span>(y_val, proba),
+        })
+
+        <span class="cm"># Log artifact: confusion matrix plot</span>
+        fig, ax = plt.<span class="fn">subplots</span>(figsize=(<span class="nm">5</span>, <span class="nm">4</span>))
+        <span class="fn">ConfusionMatrixDisplay</span>.<span class="fn">from_predictions</span>(y_val, preds, ax=ax)
+        plt.<span class="fn">tight_layout</span>()
+        mlflow.<span class="fn">log_figure</span>(fig, <span class="st">"confusion_matrix.png"</span>)
+        plt.<span class="fn">close</span>(fig)
+
+        <span class="cm"># Log model dengan signature (skema input/output)</span>
+        <span class="kw">from</span> mlflow.models.signature <span class="kw">import</span> infer_signature
+        signature = <span class="fn">infer_signature</span>(X_train, preds)
+        mlflow.sklearn.<span class="fn">log_model</span>(
+            model, <span class="st">"model"</span>,
+            signature=signature,
+            registered_model_name=<span class="st">"churn-rf"</span>  <span class="cm"># otomatis ke Model Registry</span>
+        )
+
+        <span class="fn">print</span>(<span class="st">f"Run ID: {run.info.run_id}"</span>)
+        <span class="kw">return</span> run.info.run_id
+
+<span class="cm"># Hyperparameter sweep — setiap kombinasi = satu run terpisah di MLflow</span>
+hyperparams_grid = [
+    {<span class="st">"n_estimators"</span>: <span class="nm">50</span>,  <span class="st">"max_depth"</span>: <span class="nm">5</span>,    <span class="st">"min_samples_split"</span>: <span class="nm">10</span>},
+    {<span class="st">"n_estimators"</span>: <span class="nm">100</span>, <span class="st">"max_depth"</span>: <span class="nm">10</span>,   <span class="st">"min_samples_split"</span>: <span class="nm">5</span>},
+    {<span class="st">"n_estimators"</span>: <span class="nm">200</span>, <span class="st">"max_depth"</span>: <span class="nm">None</span>, <span class="st">"min_samples_split"</span>: <span class="nm">2</span>},
+]
+<span class="kw">for</span> p <span class="kw">in</span> hyperparams_grid:
+    <span class="fn">train_and_log</span>(p, X_train, y_train, X_val, y_val)</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">compare_runs.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> mlflow
+<span class="kw">from</span> mlflow.tracking <span class="kw">import</span> MlflowClient
+
+client = <span class="fn">MlflowClient</span>()
+
+<span class="cm"># Query semua runs di experiment, filter dan sort programmatically</span>
+experiment = client.<span class="fn">get_experiment_by_name</span>(<span class="st">"churn-prediction"</span>)
+runs = client.<span class="fn">search_runs</span>(
+    experiment_ids=[experiment.experiment_id],
+    filter_string=<span class="st">"metrics.val_roc_auc > 0.85"</span>,  <span class="cm"># filter by metric</span>
+    order_by=[<span class="st">"metrics.val_roc_auc DESC"</span>],
+    max_results=<span class="nm">10</span>,
+)
+
+<span class="fn">print</span>(<span class="st">f"{'Run Name':30} {'AUC':8} {'F1':8} {'n_est':8} {'depth':8}"</span>)
+<span class="kw">for</span> run <span class="kw">in</span> runs:
+    <span class="fn">print</span>(
+        <span class="st">f"{run.data.tags.get('mlflow.runName',''):30}"</span>
+        <span class="st">f"{run.data.metrics.get('val_roc_auc',0):.4f}  "</span>
+        <span class="st">f"{run.data.metrics.get('val_f1',0):.4f}  "</span>
+        <span class="st">f"{run.data.params.get('n_estimators',''):8}"</span>
+        <span class="st">f"{run.data.params.get('max_depth',''):8}"</span>
+    )
+
+<span class="cm"># Load best run's model langsung dari MLflow</span>
+best_run = runs[<span class="nm">0</span>]
+model_uri = <span class="st">f"runs:/{best_run.info.run_id}/model"</span>
+best_model = mlflow.sklearn.<span class="fn">load_model</span>(model_uri)
+<span class="fn">print</span>(<span class="st">f"\nBest model loaded from run: {best_run.info.run_id}"</span>)</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>MLflow autologging — satu baris untuk semuanya</strong><code>mlflow.autolog()</code> atau <code>mlflow.sklearn.autolog()</code> secara otomatis log params, metrics, dan model tanpa kamu perlu menulis <code>log_param</code> satu per satu. Ini bagus untuk prototyping, tapi untuk production lebih baik log secara eksplisit — lebih clear, lebih kontrol, dan tidak ada surprise dari field yang di-log tanpa kamu minta.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Anatomy of a MLflow Run — Apa Saja yang Bisa Di-track</div>
+<div class="viz-body">
+<div style="overflow-x:auto">
+<table class="rt">
+<thead><tr><th>Komponen</th><th>Contoh</th><th>API</th><th>Kapan dipakai</th></tr></thead>
+<tbody>
+<tr><td>Params</td><td><code>n_estimators=100</code></td><td><code>log_param(k, v)</code></td><td>Setiap hyperparameter training</td></tr>
+<tr><td>Metrics</td><td><code>val_auc=0.931</code></td><td><code>log_metric(k, v, step=n)</code></td><td>Evaluasi numerik, per-epoch loss</td></tr>
+<tr><td>Artifacts</td><td>confusion_matrix.png</td><td><code>log_artifact(path)</code></td><td>Plot, file tambahan, dataset samples</td></tr>
+<tr><td>Model</td><td>sklearn model, PyTorch</td><td><code>mlflow.sklearn.log_model()</code></td><td>Model akhir yang bisa di-load ulang</td></tr>
+<tr><td>Tags</td><td><code>deployed: staging</code></td><td><code>set_tag(k, v)</code></td><td>Metadata kontekstual, label, state</td></tr>
+<tr><td>Dataset</td><td>DVC hash ref</td><td><code>log_input(mlflow.data.from_pandas(df))</code></td><td>Link dataset ke run (MLflow 2.4+)</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Apa perbedaan antara logging metric sebagai scalar (<code>log_metric("f1", 0.93)</code>) vs logging per-step (<code>log_metric("loss", 0.45, step=10)</code>)? Kapan kamu butuh per-step logging dan apa yang bisa kamu lihat dari visualisasinya di MLflow UI?</li>
+<li><strong>[Kode]</strong> Buat hyperparameter sweep sederhana: latih 6 model berbeda (variasikan <code>n_estimators</code> dan <code>max_depth</code>), log semua ke experiment yang sama, lalu buka MLflow UI dan bandingkan runs secara visual. Identifikasi model terbaik berdasarkan kombinasi F1 dan inference time.</li>
+<li><strong>[Eksplorasi]</strong> Setup MLflow Tracking Server dengan PostgreSQL sebagai backend store (<code>mlflow server --backend-store-uri postgresql://user:pass@localhost/mlflow</code>). Bandingkan pengalaman vs SQLite lokal — apa keuntungan PostgreSQL untuk tim yang lebih besar?</li>
+</ul></div>
+
+</div><!-- /mlops1c -->
+
+<div class="divider"></div>
+
+<!-- 1D -->
+<div class="sub" id="mlops1d">
+<div class="subtit"><span class="ac">1.4</span> Model Registry <span class="subid">// dari artifact ke deployment-ready model</span></div>
+<div class="prose">
+<p>MLflow Tracking menjawab pertanyaan "Eksperimen mana yang terbaik?" Model Registry menjawab pertanyaan yang berbeda tapi sama pentingnya: "Model mana yang sekarang berjalan di production, siapa yang meng-approve-nya, dan bagaimana saya bisa rollback kalau ada masalah?"</p>
+<p>Perbedaan antara sekadar menyimpan model dan memiliki model registry bisa terlihat kecil, tapi sangat krusial di production: tanpa registry, deployment adalah proses manual dan rentan error. Dengan registry, ada approval workflow yang jelas, history deployment yang lengkap, dan mekanisme rollback yang terstruktur.</p>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2"16"/></svg></span>
+<div class="ctxt"><strong>Model Registry adalah Git untuk model — tapi lebih dari itu</strong>Sama seperti Git melacak versi kode dengan commit hash, Model Registry melacak versi model dengan nomor versi. Tapi berbeda dari Git, registry juga menyimpan state (Staging/Production/Archived) dan transisi state bisa memerlukan approval workflow, membuatnya cocok untuk compliance dan governance requirements.</div>
+</div>
+
+<div class="prose">
+<h4>Tiga state model di MLflow Registry</h4>
+<ul>
+<li><strong>None (baru di-register)</strong> — model baru selesai dari experiment run, sudah masuk registry tapi belum di-evaluate untuk deployment. State awal setelah <code>mlflow.sklearn.log_model(..., registered_model_name="...")</code>.</li>
+<li><strong>Staging</strong> — model sudah di-evaluate, sedang dalam proses testing di environment staging. Model staging seharusnya sudah melewati automated tests dan code review, tapi belum melayani traffic production. Di sini integration test, load test, dan A/B evaluation dilakukan.</li>
+<li><strong>Production</strong> — model yang sedang aktif melayani traffic production. Idealnya hanya ada satu model per registered model name yang berada di state Production pada satu waktu (tapi bisa lebih untuk A/B testing). Transisi ke Production harus melalui approval.</li>
+<li><strong>Archived</strong> — model lama yang sudah tidak aktif tapi tetap disimpan untuk audit trail, rollback darurat, atau compliance. Jangan delete — archive saja.</li>
+</ul>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Model Lifecycle di Registry — Alur State Transitions</div>
+<div class="viz-body">
+  <div class="tok-flow" style="flex-wrap:wrap;">
+    <div class="tok-node">Training<br><span style="color:var(--text3);font-size:10px">MLflow Tracking</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">Registered<br><span style="color:var(--text3);font-size:10px">version created</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight">Staging<br><span style="font-size:10px">testing &amp; QA</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node highlight" style="background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3);">Production<br><span style="font-size:10px">serving traffic</span></div>
+    <div class="tok-arrow">→</div>
+    <div class="tok-node">Archived<br><span style="color:var(--text3);font-size:10px">historical only</span></div>
+  </div>
+  <p style="font-size:12px;color:var(--text3);margin-top:14px;font-family:'IBM Plex Mono',monospace;">↑ Setiap transisi bisa di-trigger via UI, Python API, atau CI/CD pipeline. History transisi tersimpan lengkap.</p>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">model_registry.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> mlflow.tracking <span class="kw">import</span> MlflowClient
+<span class="kw">from</span> mlflow.entities.model_registry.model_version_status <span class="kw">import</span> ModelVersionStatus
+<span class="kw">import</span> mlflow, time
+
+client = <span class="fn">MlflowClient</span>()
+
+<span class="cm"># === 1. Register model dari run yang sudah ada ===</span>
+run_id = <span class="st">"your-run-id-here"</span>
+model_name = <span class="st">"churn-prediction-rf"</span>
+model_uri = <span class="st">f"runs:/{run_id}/model"</span>
+
+result = mlflow.<span class="fn">register_model</span>(model_uri, model_name)
+<span class="fn">print</span>(<span class="st">f"Registered version: {result.version}"</span>)
+
+<span class="cm"># Tunggu model selesai di-register (async process)</span>
+<span class="kw">while</span> result.status != ModelVersionStatus.<span class="fn">to_string</span>(ModelVersionStatus.<span class="kw">READY</span>):
+    result = client.<span class="fn">get_model_version</span>(model_name, result.version)
+    time.<span class="fn">sleep</span>(<span class="nm">1</span>)
+
+<span class="cm"># === 2. Tambahkan deskripsi dan tag ===</span>
+client.<span class="fn">update_model_version</span>(
+    name=model_name,
+    version=result.version,
+    description=<span class="st">"RF classifier v2.1 — improved feature engineering, +2% AUC"</span>
+)
+client.<span class="fn">set_model_version_tag</span>(model_name, result.version, <span class="st">"data_version"</span>, <span class="st">"dvc:abc123"</span>)
+client.<span class="fn">set_model_version_tag</span>(model_name, result.version, <span class="st">"val_auc"</span>,       <span class="st">"0.931"</span>)
+
+<span class="cm"># === 3. Promote ke Staging (dengan API v1) ===</span>
+client.<span class="fn">transition_model_version_stage</span>(
+    name=model_name,
+    version=result.version,
+    stage=<span class="st">"Staging"</span>,
+    archive_existing_versions=<span class="kw">False</span>  <span class="cm"># biarkan versi staging lama tetap ada</span>
+)
+
+<span class="cm"># === 4. Setelah integration tests lulus, promote ke Production ===</span>
+client.<span class="fn">transition_model_version_stage</span>(
+    name=model_name,
+    version=result.version,
+    stage=<span class="st">"Production"</span>,
+    archive_existing_versions=<span class="kw">True</span>   <span class="cm"># archive versi production sebelumnya</span>
+)
+<span class="fn">print</span>(<span class="st">f"Model v{result.version} is now in Production!"</span>)</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">load_from_registry.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> mlflow
+
+<span class="cm"># === Load model production terbaru — cara yang benar ===</span>
+<span class="cm"># Tidak hardcode version number — selalu load yang aktif di Production</span>
+model_name = <span class="st">"churn-prediction-rf"</span>
+model = mlflow.pyfunc.<span class="fn">load_model</span>(<span class="st">f"models:/{model_name}/Production"</span>)
+
+<span class="cm"># Alternatif: load by alias (MLflow 2.x — lebih fleksibel)</span>
+<span class="cm"># client.set_registered_model_alias(model_name, "champion", version="3")</span>
+<span class="cm"># model = mlflow.pyfunc.load_model(f"models:/{model_name}@champion")</span>
+
+<span class="cm"># Predict — interface seragam apapun framework asalnya</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+df_input = pd.<span class="fn">DataFrame</span>([{<span class="st">"tenure_months"</span>: <span class="nm">24</span>, <span class="st">"MonthlyCharges"</span>: <span class="nm">65.5</span>, ...}])
+predictions = model.<span class="fn">predict</span>(df_input)
+<span class="fn">print</span>(predictions)
+
+<span class="cm"># === Rollback — jika ada masalah di Production ===</span>
+<span class="kw">from</span> mlflow.tracking <span class="kw">import</span> MlflowClient
+client = <span class="fn">MlflowClient</span>()
+
+<span class="cm"># Promote versi sebelumnya kembali ke Production</span>
+prev_version = <span class="st">"2"</span>  <span class="cm"># versi yang di-archive sebelumnya</span>
+client.<span class="fn">transition_model_version_stage</span>(
+    name=model_name,
+    version=prev_version,
+    stage=<span class="st">"Production"</span>,
+    archive_existing_versions=<span class="kw">True</span>
+)
+<span class="fn">print</span>(<span class="st">f"Rolled back to version {prev_version}"</span>)
+<span class="cm"># Rollback selesai dalam detik — tanpa downtime</span></pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>MLflow 2.x deprecates stage-based transitions</strong>Di MLflow 2.x, stage transitions (Staging/Production/Archived) sudah deprecated dan akan dihapus di versi mendatang. Gantikan dengan aliases: <code>client.set_registered_model_alias(name, "champion", version)</code> dan <code>client.set_registered_model_alias(name, "challenger", version)</code>. Pattern champion/challenger lebih fleksibel dan tidak terbatas tiga state.</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan skenario di mana kamu butuh dua model Production secara bersamaan dalam satu registered model name. Bagaimana Model Registry mendukung ini dan apa implikasinya untuk serving infrastructure?</li>
+<li><strong>[Kode]</strong> Register tiga versi model berbeda ke experiment yang sama, transisi masing-masing ke Staging. Gunakan <code>MlflowClient.search_model_versions()</code> untuk list semua versi dan statusnya secara programmatic. Simulasikan rollback dari version 3 ke version 2.</li>
+<li><strong>[Eksplorasi]</strong> Eksplorasi fitur "model aliases" di MLflow 2.x. Implementasikan champion/challenger pattern: model "champion" adalah yang sekarang di production, "challenger" adalah kandidat baru. Tulis logika deployment yang otomatis promote challenger ke champion jika metriknya lebih baik.</li>
+</ul></div>
+
+</div><!-- /mlops1d -->
+
+<div class="divider"></div>
+
+<!-- 1E -->
+<div class="sub" id="mlops1e">
+<div class="subtit"><span class="ac">1.5</span> Pipeline Orchestration <span class="subid">// Prefect, Airflow, ZenML — pipeline as code</span></div>
+<div class="prose">
+<p>Setelah kamu punya data versioning, experiment tracking, dan model registry, pertanyaan berikutnya adalah: siapa yang mengkoordinasikan semua ini? Di dunia ML production, pipeline tidak dijalankan manual — mereka di-trigger otomatis berdasarkan jadwal, event data baru, atau perubahan kode. Inilah tugas orchestrator.</p>
+<p>Orchestration adalah salah satu area dengan proliferasi tools paling banyak di MLOps. Ada Apache Airflow (paling mature, paling widely deployed), Prefect (lebih modern, developer experience lebih baik), ZenML (khusus ML, opinionated), Kubeflow Pipelines (Kubernetes-native), Metaflow (Netflix), dan masih banyak lagi. Memilih yang tepat adalah keputusan penting yang akan mempengaruhi cara kerja tim selama tahun-tahun ke depan.</p>
+</div>
+
+<div class="prose">
+<h4>Apa yang sebetulnya dilakukan orchestrator?</h4>
+<ul>
+<li><strong>DAG scheduling</strong> — mengeksekusi task dalam urutan dependency yang benar. Task A harus selesai sebelum Task B dimulai. Kalau A gagal, B tidak dijalankan. Semuanya terdefinisi sebagai code, bukan konfigurasi GUI.</li>
+<li><strong>Retry &amp; failure handling</strong> — kalau step preprocessing gagal karena network timeout, orchestrator otomatis retry N kali sebelum mark sebagai failed. Alerting bisa dikirim ke Slack atau email.</li>
+<li><strong>Resource management</strong> — mengalokasikan CPU/GPU ke task yang membutuhkan, mencegah resource contention. Step yang bisa jalan paralel dijalankan paralel.</li>
+<li><strong>Observability</strong> — semua run tersimpan dengan status, duration, dan log. Kamu bisa lihat "training pipeline tanggal 3 Januari gagal di step feature engineering, ini error message-nya".</li>
+<li><strong>Parameterization</strong> — pipeline yang sama bisa dijalankan dengan parameter berbeda: data range berbeda, environment berbeda, atau model target berbeda.</li>
+</ul>
+</div>
+
+<div style="overflow-x:auto;margin:20px 0;">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;min-width:540px;">
+<div class="cmpc" style="padding:16px;">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Prefect (Pilihan Utama)</div>
+  <ul style="font-size:12px;line-height:1.8;color:var(--text2);padding-left:0;list-style:none;margin:0;">
+    <li>✓ Python-native, no YAML boilerplate</li>
+    <li>✓ Deploy anywhere: local, Docker, K8s</li>
+    <li>✓ Built-in retry, caching, logging</li>
+    <li>✓ UI modern, observability bagus</li>
+    <li>✓ Prefect Cloud: hosted orchestration</li>
+    <li>✗ Lebih muda dari Airflow, ecosystem lebih kecil</li>
+  </ul>
+  <div style="margin-top:10px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">Best for: tim baru, modern Python stack</div>
+</div>
+<div class="cmpc" style="padding:16px;">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Apache Airflow</div>
+  <ul style="font-size:12px;line-height:1.8;color:var(--text2);padding-left:0;list-style:none;margin:0;">
+    <li>✓ Paling mature, ecosystem terbesar</li>
+    <li>✓ Widely deployed di perusahaan besar</li>
+    <li>✓ Ribuan provider dan operator</li>
+    <li>✗ Setup kompleks (perlu Celery/K8s)</li>
+    <li>✗ DAG-as-Python tapi terasa verbose</li>
+    <li>✗ Dynamic DAG support baru di 2.x</li>
+  </ul>
+  <div style="margin-top:10px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">Best for: tim dengan Airflow experience</div>
+</div>
+<div class="cmpc" style="padding:16px;">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ZenML</div>
+  <ul style="font-size:12px;line-height:1.8;color:var(--text2);padding-left:0;list-style:none;margin:0;">
+    <li>✓ Dirancang khusus untuk ML pipelines</li>
+    <li>✓ Integrasi built-in: MLflow, DVC, dll</li>
+    <li>✓ Stack-agnostic (local → cloud)</li>
+    <li>✗ Opinionated — kurang fleksibel</li>
+    <li>✗ Bukan general-purpose orchestrator</li>
+    <li>✗ Community lebih kecil</li>
+  </ul>
+  <div style="margin-top:10px;font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">Best for: ML-first teams, quick start</div>
+</div>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prefect_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> prefect <span class="kw">import</span> flow, task
+<span class="kw">from</span> prefect.tasks <span class="kw">import</span> exponential_backoff
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> mlflow, subprocess
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="cm"># === Tasks: unit terkecil yang bisa di-retry dan di-track ===</span>
+
+<span class="kw">@task</span>(retries=<span class="nm">3</span>, retry_delay_seconds=<span class="fn">exponential_backoff</span>(backoff_factor=<span class="nm">2</span>))
+<span class="kw">def</span> <span class="fn">pull_data</span>(data_version: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    <span class="st">"""Pull data dari DVC remote. Retry otomatis jika network timeout."""</span>
+    result = subprocess.<span class="fn">run</span>(
+        [<span class="st">"dvc"</span>, <span class="st">"checkout"</span>, <span class="st">f"data/raw/customers-{data_version}.csv"</span>],
+        check=<span class="kw">True</span>, capture_output=<span class="kw">True</span>
+    )
+    <span class="fn">print</span>(<span class="st">f"Pulled data version: {data_version}"</span>)
+    <span class="kw">return</span> <span class="st">f"data/raw/customers-{data_version}.csv"</span>
+
+<span class="kw">@task</span>(cache_key_fn=<span class="kw">lambda</span> ctx, params: <span class="st">f"preprocess-{params['data_path']}"</span>)
+<span class="kw">def</span> <span class="fn">preprocess</span>(data_path: <span class="tp">str</span>) -> <span class="tp">pd.DataFrame</span>:
+    <span class="st">"""Preprocessing dengan caching — kalau input sama, output langsung di-reuse."""</span>
+    df = pd.<span class="fn">read_csv</span>(data_path)
+    df[<span class="st">"tenure_years"</span>] = df[<span class="st">"tenure_months"</span>] / <span class="nm">12</span>
+    df = df.<span class="fn">dropna</span>()
+    <span class="kw">return</span> df
+
+<span class="kw">@task</span>
+<span class="kw">def</span> <span class="fn">train_model</span>(df: pd.<span class="tp">DataFrame</span>, experiment_name: <span class="tp">str</span>, params: <span class="tp">dict</span>) -> <span class="tp">str</span>:
+    <span class="st">"""Train dan log ke MLflow. Return run_id untuk tahap berikutnya."""</span>
+    mlflow.<span class="fn">set_experiment</span>(experiment_name)
+    <span class="kw">with</span> mlflow.<span class="fn">start_run</span>() <span class="kw">as</span> run:
+        <span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+        <span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+        <span class="kw">from</span> sklearn.metrics <span class="kw">import</span> roc_auc_score
+
+        X = df.<span class="fn">drop</span>(<span class="st">"Churn"</span>, axis=<span class="nm">1</span>)
+        y = df[<span class="st">"Churn"</span>]
+        X_tr, X_v, y_tr, y_v = <span class="fn">train_test_split</span>(X, y, test_size=<span class="nm">0.2</span>, random_state=<span class="nm">42</span>)
+
+        mlflow.<span class="fn">log_params</span>(params)
+        model = <span class="fn">RandomForestClassifier</span>(**params, random_state=<span class="nm">42</span>)
+        model.<span class="fn">fit</span>(X_tr, y_tr)
+
+        auc = <span class="fn">roc_auc_score</span>(y_v, model.<span class="fn">predict_proba</span>(X_v)[:, <span class="nm">1</span>])
+        mlflow.<span class="fn">log_metric</span>(<span class="st">"val_roc_auc"</span>, auc)
+        mlflow.sklearn.<span class="fn">log_model</span>(model, <span class="st">"model"</span>)
+        <span class="kw">return</span> run.info.run_id
+
+<span class="kw">@task</span>
+<span class="kw">def</span> <span class="fn">evaluate_and_promote</span>(run_id: <span class="tp">str</span>, auc_threshold: <span class="tp">float</span> = <span class="nm">0.85</span>):
+    <span class="st">"""Otomatis promote ke Staging jika metrik melewati threshold."""</span>
+    <span class="kw">from</span> mlflow.tracking <span class="kw">import</span> MlflowClient
+    client = <span class="fn">MlflowClient</span>()
+    run = client.<span class="fn">get_run</span>(run_id)
+    auc = run.data.metrics[<span class="st">"val_roc_auc"</span>]
+
+    <span class="kw">if</span> auc >= auc_threshold:
+        versions = client.<span class="fn">search_model_versions</span>(<span class="st">f"run_id='{run_id}'"</span>)
+        <span class="kw">if</span> versions:
+            client.<span class="fn">transition_model_version_stage</span>(
+                name=<span class="st">"churn-prediction-rf"</span>,
+                version=versions[<span class="nm">0</span>].version,
+                stage=<span class="st">"Staging"</span>
+            )
+            <span class="fn">print</span>(<span class="st">f"AUC={auc:.3f} >= {auc_threshold} → promoted to Staging"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="st">f"AUC={auc:.3f} < {auc_threshold} → tidak di-promote"</span>)
+
+<span class="cm"># === Flow: orkestrasikan semua tasks ===</span>
+<span class="kw">@flow</span>(name=<span class="st">"churn-training-pipeline"</span>, log_prints=<span class="kw">True</span>)
+<span class="kw">def</span> <span class="fn">training_pipeline</span>(
+    data_version: <span class="tp">str</span> = <span class="st">"v1.2"</span>,
+    experiment_name: <span class="tp">str</span> = <span class="st">"churn-prediction"</span>,
+    model_params: <span class="tp">dict</span> = <span class="kw">None</span>,
+):
+    <span class="kw">if</span> model_params <span class="kw">is</span> <span class="kw">None</span>:
+        model_params = {<span class="st">"n_estimators"</span>: <span class="nm">100</span>, <span class="st">"max_depth"</span>: <span class="nm">10</span>}
+
+    data_path = <span class="fn">pull_data</span>(data_version)       <span class="cm"># task 1: ambil data</span>
+    df = <span class="fn">preprocess</span>(data_path)                <span class="cm"># task 2: proses data</span>
+    run_id = <span class="fn">train_model</span>(df, experiment_name, model_params)  <span class="cm"># task 3</span>
+    <span class="fn">evaluate_and_promote</span>(run_id)              <span class="cm"># task 4: auto-promote</span>
+
+<span class="cm"># Jalankan sekali</span>
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">training_pipeline</span>(data_version=<span class="st">"v1.3"</span>)</pre></div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prefect_deploy.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> prefect <span class="kw">import</span> serve
+<span class="kw">from</span> prefect.client.schemas.schedules <span class="kw">import</span> CronSchedule
+<span class="kw">from</span> prefect_pipeline <span class="kw">import</span> training_pipeline
+
+<span class="cm"># === Deploy pipeline dengan schedule otomatis ===</span>
+<span class="cm"># Setiap Senin jam 2 pagi, pipeline dijalankan otomatis</span>
+deployment = training_pipeline.<span class="fn">to_deployment</span>(
+    name=<span class="st">"weekly-churn-retraining"</span>,
+    schedule=<span class="fn">CronSchedule</span>(cron=<span class="st">"0 2 * * 1"</span>),  <span class="cm"># Senin 02:00</span>
+    parameters={
+        <span class="st">"data_version"</span>: <span class="st">"latest"</span>,
+        <span class="st">"experiment_name"</span>: <span class="st">"churn-production"</span>,
+        <span class="st">"model_params"</span>: {<span class="st">"n_estimators"</span>: <span class="nm">200</span>, <span class="st">"max_depth"</span>: <span class="nm">10</span>},
+    },
+    work_pool_name=<span class="st">"docker-pool"</span>,  <span class="cm"># jalankan di Docker container</span>
+    tags=[<span class="st">"production"</span>, <span class="st">"churn"</span>, <span class="st">"weekly"</span>],
+)
+
+<span class="cm"># Juga buat deployment untuk manual trigger (tanpa schedule)</span>
+ad_hoc = training_pipeline.<span class="fn">to_deployment</span>(
+    name=<span class="st">"adhoc-churn-retraining"</span>,
+    work_pool_name=<span class="st">"docker-pool"</span>,
+)
+
+<span class="cm"># Deploy keduanya</span>
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">serve</span>(deployment, ad_hoc)
+    <span class="cm"># Buka http://localhost:4200 untuk lihat Prefect UI</span></pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Kenapa Prefect lebih baik dari Airflow untuk tim baru?</strong>Di Airflow, kamu harus menulis DAG class, mendefinisikan operator, mengelola connections dan variables di UI. Di Prefect, kamu hanya mendekorasi fungsi Python biasa dengan <code>@task</code> dan <code>@flow</code> — sisanya Prefect yang urus. Tidak perlu belajar DSL baru. Kode yang sama bisa dijalankan lokal (untuk testing) atau di-deploy ke cloud tanpa perubahan.</div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Orchestration Comparison — Kapan Pakai Apa</div>
+<div class="viz-body">
+<div style="overflow-x:auto">
+<table class="rt">
+<thead><tr><th>Kriteria</th><th>Prefect</th><th>Airflow</th><th>ZenML</th></tr></thead>
+<tbody>
+<tr><td>Learning curve</td><td>Rendah (plain Python)</td><td>Tinggi (DSL + operators)</td><td>Sedang (opinionated)</td></tr>
+<tr><td>Dynamic pipelines</td><td>Native (Python loops)</td><td>Terbatas (TaskGroup)</td><td>Terbatas</td></tr>
+<tr><td>Local dev experience</td><td>Sangat baik</td><td>Cukup (perlu Docker)</td><td>Baik</td></tr>
+<tr><td>ML-specific features</td><td>Via integrasi (MLflow)</td><td>Via operator (KFP)</td><td>Built-in</td></tr>
+<tr><td>Scale ke enterprise</td><td>Prefect Cloud / self-host</td><td>MWAA, Cloud Composer</td><td>ZenML Pro</td></tr>
+<tr><td>Community maturity</td><td>Sedang (growing fast)</td><td>Sangat besar</td><td>Kecil tapi fokus</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara "task" dan "flow" di Prefect. Kapan kamu memecah satu fungsi besar menjadi beberapa tasks yang terpisah? Apa konsekuensi granularity yang terlalu kecil (terlalu banyak task) atau terlalu besar (satu task raksasa)?</li>
+<li><strong>[Kode]</strong> Install Prefect (<code>pip install prefect</code>) dan jalankan contoh pipeline di atas secara lokal. Intentionally gagalkan task <code>pull_data</code> dengan melempar exception. Amati behavior retry di terminal. Buka Prefect UI di <code>localhost:4200</code> dan temukan flow run yang gagal tersebut.</li>
+<li><strong>[Eksplorasi]</strong> Buat pipeline yang menjalankan tiga eksperimen MLflow secara paralel (gunakan <code>futures</code> di Prefect: <code>future = task.submit()</code>). Bandingkan total runtime vs menjalankan secara serial. Identifikasi bottleneck menggunakan Prefect timeline view.</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 1 selesai · 5 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 2 — Containerisasi &amp; Model Serving</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goTo(3)">← 1.4 Model Registry</button>
+    <button class="tnbtn primary" onclick="goToPage('mlopsfi2')">Fase 2 →</button>
+  </div>
+</div>
+
+</div><!-- /mlops1e -->
+
+</section><!-- /mlopsfase1 -->

@@ -1,0 +1,1132 @@
+<section class="cs p2" id="mlopsfase2">
+<div class="fase-intro" id="mlopsfi2">
+<div class="sh">
+  <div class="sbadge p2">02</div>
+  <div>
+    <div class="stitle">Fase 2 — Model Serving &amp; Inference</div>
+    <div class="sdesc">Model yang akurat tapi tidak bisa di-serve dengan cepat dan efisien tidak punya nilai produksi. Fase ini membangun intuisi tentang tradeoff latensi vs throughput, cara membangun REST API yang robust dengan FastAPI, dan teknik optimasi model untuk inference yang 10–100x lebih cepat.</div>
+    <div class="smeta"><span class="mc">5 topik</span><span class="mc">Minggu 3–4</span><span class="mc">Production Serving</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#mlops2a">Serving Fundamentals</a>
+  <a class="snavi" href="#mlops2b">FastAPI untuk ML</a>
+  <a class="snavi" href="#mlops2c">Triton Inference Server</a>
+  <a class="snavi" href="#mlops2d">Model Optimization</a>
+  <a class="snavi" href="#mlops2e">Serving Patterns</a>
+</div>
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">5 topik · Minggu 3–4</div>
+    <div class="topic-nav-title">Mulai dari: 2.1 Serving Fundamentals</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi1')">← Fase 1</button>
+    <button class="tnbtn primary" onclick="goTo(5)">Mulai Fase 2 →</button>
+  </div>
+</div>
+</div><!-- /mlopsfi2 -->
+
+<!-- 2A -->
+<div class="sub" id="mlops2a">
+<div class="subtit"><span class="ac">2.1</span> Serving Fundamentals <span class="subid">// online, batch, streaming</span></div>
+<div class="prose">
+<p>Sebelum menulis satu baris kode serving, kamu harus memahami satu pertanyaan mendasar: <em>bagaimana model ini akan digunakan?</em> Jawabannya menentukan hampir seluruh arsitektur serving — dari infrastruktur hingga optimasi yang tepat. Ada tiga paradigma utama: <strong>online inference</strong>, <strong>batch inference</strong>, dan <strong>streaming inference</strong> — dan memilih yang salah bisa berdampak besar pada cost dan user experience.</p>
+<p><strong>Online inference</strong> (real-time) adalah model yang dipanggil langsung sebagai respons terhadap request pengguna — misalnya autocomplete, fraud detection, atau recommendation. Constraint utamanya adalah latensi: pengguna tidak mau menunggu lebih dari 100–300ms. <strong>Batch inference</strong> adalah kebalikannya — kamu memproses ribuan hingga jutaan data sekaligus pada jadwal tertentu (nightly pipeline, weekly scoring). Constraint utamanya adalah throughput dan cost: latency tidak kritis, tapi kamu ingin memproses sebanyak mungkin data per dollar. <strong>Streaming inference</strong> adalah hybrid — data mengalir dari event stream (Kafka, Kinesis) dan diproses near-real-time, tanpa pengguna menunggu secara langsung tapi tetap butuh SLA tertentu.</p>
+<p>Memahami <strong>SLA (Service Level Agreement)</strong> adalah fondasi semua keputusan teknis. SLA bukan hanya target latency rata-rata — yang relevan untuk user experience adalah <em>percentile tinggi</em>: P95 dan P99 latency. Jika P50 latency kamu 50ms tapi P99 adalah 2 detik, 1% pengguna mendapat pengalaman buruk — dan dalam sistem bertraffic tinggi, 1% bisa berarti jutaan request per hari.</p>
+</div>
+
+<!-- Latency vs Throughput Interactive Visualizer -->
+<div class="viz-wrap" style="margin-bottom:0;">
+<div class="viz-title">Latency vs Throughput Tradeoff — Eksplor Sendiri</div>
+<div class="viz-body" style="padding:0;overflow:hidden;">
+
+<div style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap;">
+  <button id="srv-tab-0" onclick="srvTab(0)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:var(--accent-glow);color:var(--accent);cursor:pointer;flex-shrink:0;">① Latency vs Throughput</button>
+  <button id="srv-tab-1" onclick="srvTab(1)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;">② Batch Size Effect</button>
+  <button id="srv-tab-2" onclick="srvTab(2)" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 18px;border:none;background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;">③ Inference Modes</button>
+</div>
+
+<!-- Panel 0: Latency vs Throughput -->
+<div id="srv-panel-0" style="padding:20px 24px;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Latency dan throughput saling bertukar: makin besar batch size, throughput naik tapi latency ikut naik. Geser slider untuk lihat tradeoff.</p>
+  <div class="viz-canvas-wrap">
+    <canvas id="srv-canvas-lat" width="320" height="240"></canvas>
+    <div class="viz-canvas-controls">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:16px;" id="srv-lat-eq">Batch=1 | Lat=12ms | QPS=83</div>
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Batch size = <span id="srv-bs-val">1</span></label>
+      <input type="range" id="srv-bs" min="1" max="64" step="1" value="1" style="width:100%;margin:6px 0 16px;accent-color:var(--accent);">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Concurrency = <span id="srv-cc-val">1</span></label>
+      <input type="range" id="srv-cc" min="1" max="16" step="1" value="1" style="width:100%;margin:6px 0 16px;accent-color:var(--accent);">
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;font-family:'IBM Plex Mono',monospace;">
+        <div>Latency = base + batch_overhead</div>
+        <div>Throughput = batch / latency</div>
+        <div style="margin-top:8px;color:var(--text2);">Sweet spot tergantung SLA kamu</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 1: Batch Size Effect -->
+<div id="srv-panel-1" style="padding:20px 24px;display:none;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Visualisasi bagaimana batch size memengaruhi GPU utilization dan latency per sample. Batch kecil = GPU idle, batch besar = latency tinggi.</p>
+  <div class="viz-canvas-wrap">
+    <canvas id="srv-canvas-batch" width="320" height="240"></canvas>
+    <div class="viz-canvas-controls">
+      <label style="font-size:12px;color:var(--text2);font-family:'IBM Plex Mono',monospace;">Target batch size = <span id="srv-tbs-val">8</span></label>
+      <input type="range" id="srv-tbs" min="1" max="128" step="1" value="8" style="width:100%;margin:6px 0 16px;accent-color:var(--teal);">
+      <div style="font-size:11px;color:var(--text3);line-height:1.8;font-family:'IBM Plex Mono',monospace;" id="srv-batch-stats">
+        GPU util: –<br>Lat/sample: –<br>Throughput: –
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 2: Inference Modes -->
+<div id="srv-panel-2" style="padding:20px 24px;display:none;">
+  <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Tiga mode inference — kapan pakai yang mana? Klik untuk detail.</p>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div id="srv-mode-online" onclick="srvModeDetail('online')" style="padding:14px 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-glow);cursor:pointer;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:6px;">Online (Real-time)</div>
+      <div style="font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;" id="srv-detail-online">Latency target: &lt;100ms P99 · Use case: API, recommendation, fraud detection · Stack: FastAPI + GPU server</div>
+    </div>
+    <div id="srv-mode-batch" onclick="srvModeDetail('batch')" style="padding:14px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:6px;">Batch (Offline)</div>
+      <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" id="srv-detail-batch">Latency target: menit–jam · Use case: nightly scoring, embedding generation · Stack: Spark + CPU/GPU cluster</div>
+    </div>
+    <div id="srv-mode-stream" onclick="srvModeDetail('stream')" style="padding:14px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:6px;">Streaming (Near-real-time)</div>
+      <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;" id="srv-detail-stream">Latency target: &lt;1–5s P95 · Use case: content moderation, log analysis · Stack: Kafka + Flink + model service</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /viz-body -->
+</div><!-- /viz-wrap -->
+
+<script>
+(function(){
+  var srvPanels = [0,1,2];
+
+  function srvDpr(cv, lw, lh) {
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = lw * dpr; cv.height = lh * dpr;
+    cv.style.width = lw + 'px'; cv.style.height = lh + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cv._lw = lw; cv._lh = lh;
+  }
+
+  [['srv-canvas-lat',320,240],['srv-canvas-batch',320,240]].forEach(function(d){
+    var cv = document.getElementById(d[0]); if(!cv) return;
+    srvDpr(cv, d[1], d[2]);
+  });
+
+  window.srvTab = function(idx) {
+    srvPanels.forEach(function(i){
+      document.getElementById('srv-panel-'+i).style.display = i===idx?'block':'none';
+      var btn = document.getElementById('srv-tab-'+i);
+      btn.style.background = i===idx?'var(--accent-glow)':'transparent';
+      btn.style.color = i===idx?'var(--accent)':'var(--text3)';
+    });
+    if(idx===0) drawSrvLat();
+    if(idx===1) drawSrvBatch();
+  };
+
+  // Panel 0 — Latency/Throughput curve
+  function drawSrvLat() {
+    var cv = document.getElementById('srv-canvas-lat'); if(!cv) return;
+    var ctx = cv.getContext('2d'), W = cv._lw||320, H = cv._lh||240;
+    var bs = parseInt(document.getElementById('srv-bs').value);
+    var cc = parseInt(document.getElementById('srv-cc').value);
+    // model: base_latency=10ms, each batch unit adds sqrt(bs)*2ms, concurrency reduces single latency slightly
+    var lat = 10 + Math.sqrt(bs) * 2.2 * (1 + (cc-1)*0.08);
+    var qps = Math.round((bs * cc * 1000) / lat);
+    document.getElementById('srv-bs-val').textContent = bs;
+    document.getElementById('srv-cc-val').textContent = cc;
+    document.getElementById('srv-lat-eq').textContent = 'Batch='+bs+' | Lat='+lat.toFixed(0)+'ms | QPS='+qps;
+
+    ctx.clearRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(var gx=0;gx<=W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<=H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // axes labels
+    ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillText('Batch Size →', W-80, H-4);
+    ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('Latency (ms)', -40, 0);ctx.restore();
+    ctx.fillText('Throughput (QPS)', W/2-40, 12);
+
+    // Draw latency curve (blue/accent)
+    ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var b=1;b<=64;b++){
+      var l = 10 + Math.sqrt(b) * 2.2 * (1 + (cc-1)*0.08);
+      var px = 20 + (b-1) * (W-40) / 63;
+      var py = H - 20 - Math.min(l / 40 * (H-40), H-40);
+      if(b===1) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // Draw throughput curve (teal)
+    ctx.strokeStyle='var(--teal)'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(var b2=1;b2<=64;b2++){
+      var l2 = 10 + Math.sqrt(b2) * 2.2 * (1 + (cc-1)*0.08);
+      var q = Math.min((b2 * cc * 1000) / l2, 600);
+      var px2 = 20 + (b2-1) * (W-40) / 63;
+      var py2 = H - 20 - (q / 600) * (H-40);
+      if(b2===1) ctx.moveTo(px2,py2); else ctx.lineTo(px2,py2);
+    }
+    ctx.stroke();
+
+    // current point
+    var curX = 20 + (bs-1)*(W-40)/63;
+    var curLatY = H - 20 - Math.min(lat/40*(H-40), H-40);
+    var curQps = Math.min((bs*cc*1000)/lat, 600);
+    var curThrY = H - 20 - (curQps/600)*(H-40);
+    ctx.fillStyle='var(--accent)'; ctx.beginPath(); ctx.arc(curX, curLatY, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='var(--teal)'; ctx.beginPath(); ctx.arc(curX, curThrY, 5, 0, Math.PI*2); ctx.fill();
+
+    // legend
+    ctx.fillStyle='var(--accent)'; ctx.fillRect(W-120,20,12,2);
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='9px IBM Plex Mono,monospace'; ctx.fillText('Latency', W-104, 24);
+    ctx.fillStyle='var(--teal)'; ctx.fillRect(W-120,34,12,2);
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fillText('Throughput', W-104, 38);
+  }
+  document.getElementById('srv-bs').addEventListener('input', drawSrvLat);
+  document.getElementById('srv-cc').addEventListener('input', drawSrvLat);
+  drawSrvLat();
+
+  // Panel 1 — Batch size vs GPU util
+  function drawSrvBatch() {
+    var cv = document.getElementById('srv-canvas-batch'); if(!cv) return;
+    var ctx = cv.getContext('2d'), W = cv._lw||320, H = cv._lh||240;
+    var tbs = parseInt(document.getElementById('srv-tbs').value);
+    // GPU utilization saturates around bs=32 for typical model
+    var gpuUtil = Math.min(100, Math.round(15 + 70 * (1 - Math.exp(-tbs/20))));
+    var latPerSample = (10 + Math.sqrt(tbs) * 2.2) / tbs;
+    var throughput = Math.round(1000 / (10 + Math.sqrt(tbs) * 2.2) * tbs);
+    document.getElementById('srv-tbs-val').textContent = tbs;
+    document.getElementById('srv-batch-stats').innerHTML =
+      'GPU util: <strong style="color:var(--teal)">' + gpuUtil + '%</strong><br>' +
+      'Lat/sample: <strong style="color:var(--accent)">' + latPerSample.toFixed(2) + 'ms</strong><br>' +
+      'Throughput: <strong style="color:var(--amber)">' + throughput + ' samples/s</strong>';
+
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(var gx=0;gx<=W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(var gy=0;gy<=H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+
+    var bars = [
+      {label:'GPU util',val:gpuUtil,max:100,color:'var(--teal)'},
+      {label:'Lat/sample',val:Math.min(latPerSample*10,100),max:100,color:'var(--accent)'},
+      {label:'Throughput',val:Math.min(throughput/20,100),max:100,color:'var(--amber)'},
+    ];
+    bars.forEach(function(b, i) {
+      var y = 40 + i * 60;
+      ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='10px IBM Plex Mono,monospace';
+      ctx.fillText(b.label, 16, y-6);
+      ctx.fillStyle='rgba(255,255,255,0.07)';
+      ctx.fillRect(16, y, W-32, 24);
+      ctx.fillStyle=b.color;
+      ctx.fillRect(16, y, (b.val/b.max)*(W-32), 24);
+    });
+
+    // Optimal zone indicator
+    var optX = 20 + (20/128)*(W-40);
+    var optX2 = 20 + (48/128)*(W-40);
+    ctx.strokeStyle='rgba(74,222,128,0.4)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(optX2,0); ctx.lineTo(optX2,H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(74,222,128,0.6)'; ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillText('sweet spot', optX, H-6);
+  }
+  document.getElementById('srv-tbs').addEventListener('input', drawSrvBatch);
+
+  // Panel 2 — Mode detail
+  var srvModes = {
+    online: {color:'var(--accent)', bg:'var(--accent-glow)'},
+    batch:  {color:'var(--teal)',   bg:'rgba(45,212,191,0.08)'},
+    stream: {color:'var(--amber)',  bg:'rgba(245,158,11,0.08)'},
+  };
+  window.srvModeDetail = function(mode) {
+    ['online','batch','stream'].forEach(function(m) {
+      var el = document.getElementById('srv-mode-'+m);
+      var active = m === mode;
+      el.style.borderColor = active ? srvModes[m].color : 'var(--border)';
+      el.style.background  = active ? srvModes[m].bg    : 'transparent';
+      el.querySelector('div').style.color = active ? srvModes[m].color : 'var(--text2)';
+    });
+  };
+
+  // ResizeObserver
+  if (window.ResizeObserver) {
+    [['srv-canvas-lat', drawSrvLat], ['srv-canvas-batch', drawSrvBatch]].forEach(function(p){
+      var cv = document.getElementById(p[0]); if(!cv) return;
+      new ResizeObserver(function(){
+        var w = cv.parentElement.clientWidth; if(w<10) return;
+        srvDpr(cv, w, Math.round(w * 0.75)); p[1]();
+      }).observe(cv);
+    });
+  }
+
+  srvTab(0);
+})();
+</script>
+
+<div class="prose">
+<h4>SLA: lebih dari sekadar angka rata-rata</h4>
+<ul>
+<li><strong>P50 (median)</strong> — 50% request lebih cepat dari ini. Angka yang "bagus" di dashboard tapi menyembunyikan tail latency.</li>
+<li><strong>P95</strong> — 95% request selesai dalam waktu ini. Target umum untuk user-facing API: &lt;200ms.</li>
+<li><strong>P99</strong> — 99% request. Yang sering memicu PagerDuty. Dalam sistem bertraffic tinggi, P99 = pengalaman ribuan pengguna per menit.</li>
+<li><strong>P999 (P99.9)</strong> — relevan untuk high-stakes systems (payment, medical). 1 dari 1000 request — jangan abaikan ini di sistem kritis.</li>
+</ul>
+<p>Formula Little's Law memberikan insight penting: <code>L = λ × W</code> — jumlah request in-flight (L) sama dengan arrival rate (λ) dikali rata-rata waktu di sistem (W). Jika throughput kamu 100 QPS dan latency 200ms, rata-rata ada 20 request sedang diproses secara bersamaan. Ini menentukan berapa banyak worker/replica yang kamu butuhkan.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">serving_modes.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> typing <span class="kw">import</span> List
+<span class="kw">import</span> time
+
+<span class="cm"># === Online Inference: single-request, latency-optimized ===</span>
+<span class="kw">class</span> <span class="fn">OnlinePredictor</span>:
+    <span class="st">"""Latency-first: proses satu request secepat mungkin."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, model, device=<span class="st">"cuda"</span>):
+        self.model = model.<span class="fn">to</span>(device).<span class="fn">eval</span>()
+        self.device = device
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, features: np.ndarray) -> <span class="fn">dict</span>:
+        <span class="kw">import</span> torch
+        <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+            x = torch.<span class="fn">tensor</span>(features, dtype=torch.float32).<span class="fn">unsqueeze</span>(<span class="nm">0</span>).<span class="fn">to</span>(self.device)
+            <span class="cm"># torch.cuda.synchronize() untuk measurement akurat</span>
+            start = time.<span class="fn">perf_counter</span>()
+            output = self.<span class="fn">model</span>(x)
+            latency_ms = (time.<span class="fn">perf_counter</span>() - start) * <span class="nm">1000</span>
+            <span class="kw">return</span> {<span class="st">"prediction"</span>: output.<span class="fn">cpu</span>().<span class="fn">numpy</span>(), <span class="st">"latency_ms"</span>: latency_ms}
+
+<span class="cm"># === Batch Inference: throughput-first ===</span>
+<span class="kw">class</span> <span class="fn">BatchPredictor</span>:
+    <span class="st">"""Throughput-first: proses banyak data sekaligus, gunakan GPU penuh."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, model, batch_size=<span class="nm">256</span>, device=<span class="st">"cuda"</span>):
+        self.model = model.<span class="fn">to</span>(device).<span class="fn">eval</span>()
+        self.batch_size = batch_size
+        self.device = device
+
+    <span class="kw">def</span> <span class="fn">predict_dataset</span>(self, dataset) -> List[np.ndarray]:
+        <span class="kw">import</span> torch
+        <span class="kw">from</span> torch.utils.data <span class="kw">import</span> DataLoader
+        loader = <span class="fn">DataLoader</span>(dataset, batch_size=self.batch_size, num_workers=<span class="nm">4</span>, pin_memory=<span class="kw">True</span>)
+        results = []
+        <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+            <span class="kw">for</span> batch <span class="kw">in</span> loader:
+                x = batch.<span class="fn">to</span>(self.device, non_blocking=<span class="kw">True</span>)
+                out = self.<span class="fn">model</span>(x)
+                results.<span class="fn">append</span>(out.<span class="fn">cpu</span>().<span class="fn">numpy</span>())
+        <span class="kw">return</span> np.<span class="fn">concatenate</span>(results)
+
+<span class="cm"># === SLA Monitoring: track percentile latencies ===</span>
+<span class="kw">class</span> <span class="fn">LatencyTracker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, window_size: <span class="tp">int</span> = <span class="nm">1000</span>):
+        self.latencies = []
+        self.window_size = window_size
+
+    <span class="kw">def</span> <span class="fn">record</span>(self, latency_ms: <span class="tp">float</span>):
+        self.latencies.<span class="fn">append</span>(latency_ms)
+        <span class="kw">if</span> <span class="fn">len</span>(self.latencies) > self.window_size:
+            self.latencies.<span class="fn">pop</span>(<span class="nm">0</span>)
+
+    <span class="kw">def</span> <span class="fn">report</span>(self) -> <span class="fn">dict</span>:
+        arr = np.<span class="fn">array</span>(self.latencies)
+        <span class="kw">return</span> {
+            <span class="st">"p50"</span>:  np.<span class="fn">percentile</span>(arr, <span class="nm">50</span>),
+            <span class="st">"p95"</span>:  np.<span class="fn">percentile</span>(arr, <span class="nm">95</span>),
+            <span class="st">"p99"</span>:  np.<span class="fn">percentile</span>(arr, <span class="nm">99</span>),
+            <span class="st">"mean"</span>: arr.<span class="fn">mean</span>(),
+            <span class="st">"max"</span>:  arr.<span class="fn">max</span>(),
+        }</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Jangan ukur latency dengan time.time()</strong>Untuk GPU, <code>time.perf_counter()</code> sebelum dan sesudah forward pass tidak akurat karena CUDA bersifat asynchronous — kernel mungkin belum selesai saat kamu mengukur. Selalu panggil <code>torch.cuda.synchronize()</code> sebelum stop timer, atau gunakan <code>torch.cuda.Event</code> untuk pengukuran yang benar-benar akurat. Di production, gunakan server-side latency metric yang diukur end-to-end dari request masuk hingga response keluar.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">gpu_latency_measurement.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+
+<span class="kw">def</span> <span class="fn">measure_gpu_latency</span>(model, input_tensor, n_warmup=<span class="nm">10</span>, n_runs=<span class="nm">100</span>) -> <span class="fn">dict</span>:
+    <span class="st">"""Pengukuran latency GPU yang benar menggunakan CUDA Events."""</span>
+    model.<span class="fn">eval</span>()
+    input_tensor = input_tensor.<span class="fn">cuda</span>()
+
+    <span class="cm"># Warmup: GPU perlu beberapa run pertama untuk "warm up" CUDA kernels</span>
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_warmup):
+            _ = <span class="fn">model</span>(input_tensor)
+    torch.cuda.<span class="fn">synchronize</span>()
+
+    <span class="cm"># Actual measurement dengan CUDA Events</span>
+    latencies = []
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_runs):
+            start_event = torch.cuda.<span class="fn">Event</span>(enable_timing=<span class="kw">True</span>)
+            end_event   = torch.cuda.<span class="fn">Event</span>(enable_timing=<span class="kw">True</span>)
+            start_event.<span class="fn">record</span>()
+            _ = <span class="fn">model</span>(input_tensor)
+            end_event.<span class="fn">record</span>()
+            torch.cuda.<span class="fn">synchronize</span>()
+            latencies.<span class="fn">append</span>(start_event.<span class="fn">elapsed_time</span>(end_event))
+
+    <span class="kw">import</span> numpy <span class="kw">as</span> np
+    arr = np.<span class="fn">array</span>(latencies)
+    <span class="kw">return</span> {
+        <span class="st">"p50_ms"</span>: <span class="fn">float</span>(np.<span class="fn">percentile</span>(arr, <span class="nm">50</span>)),
+        <span class="st">"p95_ms"</span>: <span class="fn">float</span>(np.<span class="fn">percentile</span>(arr, <span class="nm">95</span>)),
+        <span class="st">"p99_ms"</span>: <span class="fn">float</span>(np.<span class="fn">percentile</span>(arr, <span class="nm">99</span>)),
+        <span class="st">"mean_ms"</span>: <span class="fn">float</span>(arr.<span class="fn">mean</span>()),
+    }</pre></div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan Little's Law dan bagaimana ia membantu kamu menentukan jumlah replika yang dibutuhkan. Jika SLA kamu P99 &lt; 500ms dan traffic peak adalah 500 QPS, berapa minimum replika?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>LatencyTracker</code> di atas dan simulasikan 1000 request dengan distribusi latency bimodal (kebanyakan cepat, beberapa lambat). Hitung P50, P95, P99. Apakah P50 menyembunyikan masalah yang terlihat di P99?</li>
+<li><strong>[Eksplorasi]</strong> Gunakan <code>measure_gpu_latency</code> pada ResNet-50 dengan batch size 1, 8, 32, 128. Plot kurva latency vs throughput. Di batch size berapa GPU utilization mencapai &gt;80%?</li>
+</ul></div>
+
+</div><!-- /mlops2a -->
+
+<div class="divider"></div>
+
+<!-- 2B -->
+<div class="sub" id="mlops2b">
+<div class="subtit"><span class="ac">2.2</span> FastAPI untuk ML <span class="subid">// REST API yang production-ready</span></div>
+<div class="prose">
+<p>FastAPI bukan sekadar framework web — untuk ML serving, ia adalah titik pertemuan antara dunia Python/ML dan dunia HTTP/produksi. Yang membedakan FastAPI dari Flask atau Django untuk use case ini adalah tiga hal: <strong>async-first</strong> (bisa handle ratusan concurrent request tanpa blocking), <strong>Pydantic integration</strong> (validasi dan dokumentasi schema otomatis), dan <strong>type hints</strong> yang membuat API contract eksplisit dan mudah di-test.</p>
+<p>Tapi perhatian utama bukan tentang feature — ini tentang <em>arsitektur</em>. Model ML adalah resource yang mahal: loading model membutuhkan waktu (bisa 5–30 detik untuk model besar), dan model harus di-share antar request, bukan dibuat ulang untuk setiap request. Pola yang benar adalah <strong>load model sekali saat startup, shared sebagai global state atau dependency injection</strong>. Ini kedengarannya sederhana tapi sangat sering salah diimplementasikan.</p>
+<p>Pertimbangan lain yang krusial: FastAPI + Uvicorn secara default adalah single-process. Untuk production dengan CPU-bound ML inference, kamu butuh Gunicorn sebagai process manager dengan multiple Uvicorn workers — atau lebih baik lagi, containerize dan horizontal scale di Kubernetes.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">ml_api.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> contextlib <span class="kw">import</span> asynccontextmanager
+<span class="kw">from</span> typing <span class="kw">import</span> List, Optional
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> torch
+
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException, Depends
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field, field_validator
+
+<span class="cm"># === Schema dengan Pydantic v2 ===</span>
+<span class="kw">class</span> <span class="fn">PredictRequest</span>(BaseModel):
+    features: List[<span class="fn">List</span>[<span class="tp">float</span>]] = <span class="fn">Field</span>(
+        ...,
+        description=<span class="st">"2D list of feature vectors"</span>,
+        min_length=<span class="nm">1</span>,
+        max_length=<span class="nm">256</span>,
+    )
+    model_version: Optional[<span class="tp">str</span>] = <span class="fn">Field</span>(<span class="kw">None</span>, description=<span class="st">"Specific model version"</span>)
+
+    <span class="kw">@</span>field_validator(<span class="st">"features"</span>)
+    <span class="kw">@classmethod</span>
+    <span class="kw">def</span> <span class="fn">validate_features</span>(cls, v):
+        <span class="kw">for</span> row <span class="kw">in</span> v:
+            <span class="kw">if</span> <span class="fn">len</span>(row) != <span class="nm">128</span>:  <span class="cm"># expected feature dim</span>
+                <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="st">f"Feature vector harus 128-dim, dapat {len(row)}"</span>)
+        <span class="kw">return</span> v
+
+<span class="kw">class</span> <span class="fn">PredictResponse</span>(BaseModel):
+    predictions: List[<span class="tp">int</span>]
+    probabilities: List[List[<span class="tp">float</span>]]
+    latency_ms: <span class="tp">float</span>
+    model_version: <span class="tp">str</span>
+
+<span class="cm"># === Model state — dibuat sekali, dipakai semua request ===</span>
+<span class="kw">class</span> <span class="fn">ModelState</span>:
+    model: torch.nn.<span class="fn">Module</span> = <span class="kw">None</span>
+    device: <span class="tp">str</span> = <span class="st">"cpu"</span>
+    version: <span class="tp">str</span> = <span class="st">"unknown"</span>
+
+model_state = <span class="fn">ModelState</span>()
+
+<span class="cm"># === Lifespan: load model saat startup, cleanup saat shutdown ===</span>
+<span class="kw">@</span><span class="fn">asynccontextmanager</span>
+<span class="kw">async def</span> <span class="fn">lifespan</span>(app: <span class="fn">FastAPI</span>):
+    <span class="cm"># STARTUP: load model ke memory/GPU sekali saja</span>
+    <span class="fn">print</span>(<span class="st">"Loading model..."</span>)
+    model_state.device = <span class="st">"cuda"</span> <span class="kw">if</span> torch.cuda.<span class="fn">is_available</span>() <span class="kw">else</span> <span class="st">"cpu"</span>
+    model_state.model = <span class="fn">load_model</span>(<span class="st">"models/classifier_v2.pt"</span>)
+    model_state.model = model_state.model.<span class="fn">to</span>(model_state.device).<span class="fn">eval</span>()
+    model_state.version = <span class="st">"v2.1.0"</span>
+    <span class="fn">print</span>(<span class="st">f"Model ready on {model_state.device}"</span>)
+    <span class="kw">yield</span>
+    <span class="cm"># SHUTDOWN: cleanup resources</span>
+    <span class="kw">del</span> model_state.model
+    torch.cuda.<span class="fn">empty_cache</span>()
+
+app = <span class="fn">FastAPI</span>(title=<span class="st">"ML Prediction API"</span>, version=<span class="st">"2.1.0"</span>, lifespan=lifespan)
+
+<span class="cm"># === Prediction endpoint ===</span>
+<span class="kw">@app</span>.<span class="fn">post</span>(<span class="st">"/predict"</span>, response_model=<span class="fn">PredictResponse</span>)
+<span class="kw">async def</span> <span class="fn">predict</span>(req: <span class="fn">PredictRequest</span>):
+    <span class="kw">if</span> model_state.model <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(status_code=<span class="nm">503</span>, detail=<span class="st">"Model not loaded"</span>)
+    <span class="kw">import</span> time
+    x = torch.<span class="fn">tensor</span>(req.features, dtype=torch.float32).<span class="fn">to</span>(model_state.device)
+    t0 = time.<span class="fn">perf_counter</span>()
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        logits = model_state.<span class="fn">model</span>(x)
+        probs = torch.nn.functional.<span class="fn">softmax</span>(logits, dim=-<span class="nm">1</span>)
+    latency_ms = (time.<span class="fn">perf_counter</span>() - t0) * <span class="nm">1000</span>
+    <span class="kw">return</span> <span class="fn">PredictResponse</span>(
+        predictions=probs.<span class="fn">argmax</span>(dim=-<span class="nm">1</span>).<span class="fn">tolist</span>(),
+        probabilities=probs.<span class="fn">tolist</span>(),
+        latency_ms=latency_ms,
+        model_version=model_state.version,
+    )
+
+<span class="kw">@app</span>.<span class="fn">get</span>(<span class="st">"/health"</span>)
+<span class="kw">async def</span> <span class="fn">health</span>():
+    <span class="kw">return</span> {<span class="st">"status"</span>: <span class="st">"ok"</span>, <span class="st">"model_loaded"</span>: model_state.model <span class="kw">is not</span> <span class="kw">None</span>}</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Async vs Sync endpoint untuk ML inference</strong>Untuk CPU-bound ML inference, <code>async def</code> endpoint di FastAPI tidak memberikan concurrency nyata — Python GIL tetap membatasi. Gunakan <code>asyncio.get_event_loop().run_in_executor(None, sync_fn)</code> atau run inference di thread pool untuk tidak memblokir event loop. Untuk GPU inference yang lambat (&gt;50ms), selalu offload ke thread pool agar FastAPI bisa terus melayani health check dan request lain saat inference berjalan.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">async_inference.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> asyncio
+<span class="kw">from</span> concurrent.futures <span class="kw">import</span> ThreadPoolExecutor
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+<span class="kw">import</span> torch
+
+<span class="cm"># Thread pool untuk CPU-bound inference</span>
+executor = <span class="fn">ThreadPoolExecutor</span>(max_workers=<span class="nm">4</span>)
+
+<span class="kw">def</span> <span class="fn">run_inference_sync</span>(model, x: torch.Tensor) -> torch.Tensor:
+    <span class="st">"""Sync function yang dijalankan di thread pool."""</span>
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        <span class="kw">return</span> <span class="fn">model</span>(x)
+
+<span class="kw">@app</span>.<span class="fn">post</span>(<span class="st">"/predict/async"</span>)
+<span class="kw">async def</span> <span class="fn">predict_async</span>(req: <span class="fn">PredictRequest</span>):
+    <span class="st">"""Async endpoint yang tidak memblokir event loop saat inference."""</span>
+    x = torch.<span class="fn">tensor</span>(req.features, dtype=torch.float32)
+    loop = asyncio.<span class="fn">get_event_loop</span>()
+    <span class="cm"># run_in_executor: jalankan di thread pool, await hasilnya</span>
+    output = <span class="kw">await</span> loop.<span class="fn">run_in_executor</span>(
+        executor,
+        <span class="fn">run_inference_sync</span>,
+        model_state.model,
+        x
+    )
+    <span class="kw">return</span> {<span class="st">"predictions"</span>: output.<span class="fn">argmax</span>(dim=-<span class="nm">1</span>).<span class="fn">tolist</span>()}
+
+<span class="cm"># Jalankan dengan Gunicorn + Uvicorn workers untuk production:</span>
+<span class="cm"># gunicorn ml_api:app \</span>
+<span class="cm">#   --workers 4 \</span>
+<span class="cm">#   --worker-class uvicorn.workers.UvicornWorker \</span>
+<span class="cm">#   --bind 0.0.0.0:8000 \</span>
+<span class="cm">#   --timeout 60 \</span>
+<span class="cm">#   --graceful-timeout 30</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">FastAPI ML Serving Architecture</div>
+<div class="viz-body">
+  <div class="aloop">
+    <div class="ln"><div class="lni" style="background:rgba(45,212,191,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div><div class="lnn">Client Request (HTTP POST /predict)</div><div class="lnd">JSON payload → Pydantic parsing + validation — invalid request ditolak di sini (422)</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="lnn">Middleware (Auth, Rate Limit, Logging)</div><div class="lnd">Autentikasi API key, rate limiting per client, structured logging untuk observability</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(245,158,11,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/></svg></div><div><div class="lnn">Preprocessing (feature engineering)</div><div class="lnd">Normalisasi, tokenisasi, atau transformasi — gunakan pipeline yang konsisten dengan training</div></div></div>
+    <div class="lar"></div>
+    <div class="ln"><div class="lni" style="background:rgba(74,222,128,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="m9 12 2 2 4-4"/></svg></div><div><div class="lnn">Model Inference (thread pool)</div><div class="lnd">forward() di thread pool — tidak memblokir event loop, GPU/CPU inference</div></div></div>
+    <div class="lar"></div>
+    <div class="ln" style="border-color:rgba(124,109,250,.3)"><div class="lni" style="background:rgba(124,109,250,.15)"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div><div class="lnn">Response (JSON + metadata)</div><div class="lnd">predictions + probabilities + latency_ms + model_version — structured response untuk debugging</div></div></div>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Mengapa model ML harus di-load di lifespan/startup bukan di dalam endpoint handler? Apa yang terjadi dari sisi resource dan latency jika kamu load model di setiap request?</li>
+<li><strong>[Kode]</strong> Buat FastAPI endpoint untuk scikit-learn model (misal RandomForest untuk iris classification). Tambahkan: Pydantic validation, health check endpoint, dan timing middleware yang log latency setiap request.</li>
+<li><strong>[Eksplorasi]</strong> Load test API kamu menggunakan Locust. Buat locustfile.py yang simulate 100 concurrent users. Ukur P50/P95/P99 latency. Apa yang terjadi saat kamu tambah worker Gunicorn dari 1 ke 4?</li>
+</ul></div>
+
+</div><!-- /mlops2b -->
+
+<div class="divider"></div>
+
+<!-- 2C -->
+<div class="sub" id="mlops2c">
+<div class="subtit"><span class="ac">2.3</span> Triton Inference Server <span class="subid">// serving skala enterprise</span></div>
+<div class="prose">
+<p>NVIDIA Triton Inference Server adalah solusi serving yang dirancang untuk satu tujuan spesifik: memaksimalkan GPU utilization untuk model inference di skala enterprise. Ketika FastAPI dengan satu model mungkin menggunakan GPU 20–30% (karena GPU menunggu request), Triton bisa mendorong utilisasi hingga 80–95% melalui beberapa mekanisme kunci yang tidak ada di serving framework generik.</p>
+<p>Yang pertama adalah <strong>dynamic batching</strong>: Triton secara otomatis mengumpulkan request yang datang hampir bersamaan dan memproses mereka dalam satu batch GPU call. Request dari client A yang datang 2ms lebih awal bisa digabung dengan request dari client B — keduanya dapat response dalam waktu hampir sama, tapi GPU digunakan jauh lebih efisien. Yang kedua adalah <strong>concurrent model execution</strong>: Triton bisa menjalankan multiple instance model sekaligus pada GPU yang sama, memanfaatkan paralelisme hardware yang tidak bisa dilakukan oleh single-process server.</p>
+<p>Triton mendukung semua backend populer secara native: PyTorch TorchScript, ONNX Runtime, TensorRT, TensorFlow SavedModel, Python (untuk preprocessing/postprocessing), dan bahkan custom C++ backend. Model ensemble memungkinkan kamu merangkai pre/post-processing dan multiple models dalam satu pipeline yang dipanggil sebagai satu request dari client.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Triton Model Repository — Struktur Direktori</div>
+<div class="viz-body">
+<div class="cmp">
+  <div class="cmpc good">
+    <div class="cmph">Model Repository Layout</div>
+    <div class="cmpb"><pre>model_repository/
+├── text_classifier/
+│   ├── config.pbtxt       # model config
+│   ├── 1/                 # version 1
+│   │   └── model.onnx
+│   └── 2/                 # version 2 (live)
+│       └── model.onnx
+├── tokenizer/             # Python backend
+│   ├── config.pbtxt
+│   └── 1/
+│       └── model.py
+└── ensemble_pipeline/     # orchestrator
+    ├── config.pbtxt
+    └── 1/                 # no model file needed</pre></div>
+  </div>
+  <div class="cmpc good">
+    <div class="cmph">config.pbtxt (ONNX model)</div>
+    <div class="cmpb"><pre>name: "text_classifier"
+backend: "onnxruntime"
+max_batch_size: 64
+
+input [{
+  name: "input_ids"
+  data_type: TYPE_INT64
+  dims: [128]   # sequence length
+}]
+output [{
+  name: "logits"
+  data_type: TYPE_FP32
+  dims: [10]    # num classes
+}]
+
+dynamic_batching {
+  preferred_batch_size: [8, 16, 32]
+  max_queue_delay_microseconds: 5000
+}</pre></div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">triton_client.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> tritonclient.http <span class="kw">as</span> httpclient
+<span class="kw">from</span> tritonclient.utils <span class="kw">import</span> InferenceServerException
+
+<span class="kw">class</span> <span class="fn">TritonMLClient</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, url: <span class="tp">str</span> = <span class="st">"localhost:8000"</span>, model_name: <span class="tp">str</span> = <span class="st">"text_classifier"</span>):
+        self.client = httpclient.<span class="fn">InferenceServerClient</span>(url=url)
+        self.model_name = model_name
+        <span class="cm"># Verifikasi model tersedia dan ready</span>
+        <span class="kw">assert</span> self.client.<span class="fn">is_model_ready</span>(model_name), <span class="st">f"Model {model_name} not ready"</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, input_ids: np.ndarray) -> np.ndarray:
+        <span class="st">"""Send inference request ke Triton."""</span>
+        <span class="cm"># Buat input tensor</span>
+        inputs = [httpclient.<span class="fn">InferInput</span>(<span class="st">"input_ids"</span>, input_ids.shape, <span class="st">"INT64"</span>)]
+        inputs[<span class="nm">0</span>].<span class="fn">set_data_from_numpy</span>(input_ids)
+
+        <span class="cm"># Definisikan expected output</span>
+        outputs = [httpclient.<span class="fn">InferRequestedOutput</span>(<span class="st">"logits"</span>)]
+
+        <span class="cm"># Execute inference</span>
+        response = self.client.<span class="fn">infer</span>(
+            model_name=self.model_name,
+            inputs=inputs,
+            outputs=outputs,
+        )
+        <span class="kw">return</span> response.<span class="fn">as_numpy</span>(<span class="st">"logits"</span>)
+
+    <span class="kw">def</span> <span class="fn">get_model_metadata</span>(self) -> <span class="fn">dict</span>:
+        metadata = self.client.<span class="fn">get_model_metadata</span>(self.model_name)
+        <span class="kw">return</span> {
+            <span class="st">"name"</span>: metadata[<span class="st">"name"</span>],
+            <span class="st">"versions"</span>: metadata[<span class="st">"versions"</span>],
+            <span class="st">"inputs"</span>: [{<span class="st">"name"</span>: i[<span class="st">"name"</span>], <span class="st">"shape"</span>: i[<span class="st">"shape"</span>]} <span class="kw">for</span> i <span class="kw">in</span> metadata[<span class="st">"inputs"</span>]],
+        }
+
+<span class="cm"># Contoh penggunaan</span>
+client = <span class="fn">TritonMLClient</span>(url=<span class="st">"localhost:8000"</span>, model_name=<span class="st">"text_classifier"</span>)
+
+<span class="cm"># Single inference</span>
+input_ids = np.<span class="fn">array</span>([[<span class="nm">101</span>, <span class="nm">2023</span>, <span class="nm">2003</span>, <span class="nm">1037</span>, <span class="nm">102</span>] + [<span class="nm">0</span>]*<span class="nm">123</span>], dtype=np.int64)
+logits = client.<span class="fn">predict</span>(input_ids)
+<span class="fn">print</span>(<span class="st">f"Logits shape: {logits.shape}"</span>)
+
+<span class="cm"># Batch inference (Triton handle batching secara otomatis)</span>
+batch_input = np.<span class="fn">random</span>.<span class="fn">randint</span>(<span class="nm">0</span>, <span class="nm">30000</span>, size=(<span class="nm">32</span>, <span class="nm">128</span>), dtype=np.int64)
+batch_logits = client.<span class="fn">predict</span>(batch_input)</pre></div>
+</div>
+
+<div class="callout tip">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+<div class="ctxt"><strong>Dynamic Batching: pengaturan kritis</strong><code>max_queue_delay_microseconds</code> adalah parameter yang paling berpengaruh. Nilai 5000 (5ms) berarti Triton akan menunggu hingga 5ms untuk mengumpulkan request sebelum dispatch batch. Untuk P99 SLA 100ms, nilai ini masih aman. Tapi untuk P99 SLA 20ms, 5ms delay sudah 25% budget latensi kamu — turunkan ke 1000-2000µs. Selalu set <code>preferred_batch_size</code> berdasarkan profiling GPU kamu, bukan default.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">triton_python_backend.py</span></div>
+<div class="cbb"><pre><span class="cm"># model.py untuk Triton Python Backend (preprocessing pipeline)</span>
+<span class="kw">import</span> json
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> triton_python_backend_utils <span class="kw">as</span> pb_utils
+<span class="kw">from</span> transformers <span class="kw">import</span> AutoTokenizer
+
+<span class="kw">class</span> <span class="fn">TritonPythonModel</span>:
+    <span class="st">"""Python backend untuk tokenization — dijalankan sebagai step pertama ensemble."""</span>
+
+    <span class="kw">def</span> <span class="fn">initialize</span>(self, args):
+        <span class="st">"""Dipanggil sekali saat model load. Load berat resources di sini."""</span>
+        model_config = json.<span class="fn">loads</span>(args[<span class="st">"model_config"</span>])
+        self.tokenizer = AutoTokenizer.<span class="fn">from_pretrained</span>(<span class="st">"bert-base-uncased"</span>)
+        self.max_length = <span class="nm">128</span>
+
+    <span class="kw">def</span> <span class="fn">execute</span>(self, requests):
+        <span class="st">"""Dipanggil untuk setiap (dynamic) batch request."""</span>
+        responses = []
+        <span class="kw">for</span> request <span class="kw">in</span> requests:
+            <span class="cm"># Ambil input text dari request</span>
+            texts_tensor = pb_utils.<span class="fn">get_input_tensor_by_name</span>(request, <span class="st">"text"</span>)
+            texts = [t.<span class="fn">decode</span>(<span class="st">"utf-8"</span>) <span class="kw">for</span> t <span class="kw">in</span> texts_tensor.<span class="fn">as_numpy</span>().<span class="fn">flatten</span>()]
+
+            <span class="cm"># Tokenize</span>
+            enc = self.tokenizer(
+                texts, max_length=self.max_length,
+                padding=<span class="st">"max_length"</span>, truncation=<span class="kw">True</span>,
+                return_tensors=<span class="st">"np"</span>
+            )
+
+            <span class="cm"># Buat output tensors</span>
+            out_ids = pb_utils.<span class="fn">Tensor</span>(<span class="st">"input_ids"</span>, enc[<span class="st">"input_ids"</span>].<span class="fn">astype</span>(np.int64))
+            out_mask = pb_utils.<span class="fn">Tensor</span>(<span class="st">"attention_mask"</span>, enc[<span class="st">"attention_mask"</span>].<span class="fn">astype</span>(np.int64))
+            responses.<span class="fn">append</span>(pb_utils.<span class="fn">InferenceResponse</span>([out_ids, out_mask]))
+        <span class="kw">return</span> responses
+
+    <span class="kw">def</span> <span class="fn">finalize</span>(self):
+        <span class="st">"""Cleanup saat model di-unload."""</span>
+        <span class="kw">del</span> self.tokenizer</pre></div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan perbedaan antara instance_group di Triton (multiple model instances) dengan dynamic batching. Kapan kamu butuh keduanya sekaligus? Apa tradeoffnya terhadap GPU memory?</li>
+<li><strong>[Kode]</strong> Export model PyTorch ke ONNX, buat config.pbtxt yang valid, dan jalankan Triton via Docker (<code>docker run --gpus all nvcr.io/nvidia/tritonserver:latest</code>). Bandingkan throughput Triton vs FastAPI untuk 1000 concurrent requests menggunakan Locust.</li>
+<li><strong>[Eksplorasi]</strong> Buat ensemble pipeline di Triton yang menggabungkan Python tokenizer → ONNX BERT → Python postprocessor. Ukur overhead latency dari orchestration ensemble vs single model inference.</li>
+</ul></div>
+
+</div><!-- /mlops2c -->
+
+<div class="divider"></div>
+
+<!-- 2D -->
+<div class="sub" id="mlops2d">
+<div class="subtit"><span class="ac">2.4</span> Model Optimization <span class="subid">// 10x lebih cepat, biaya 1/10</span></div>
+<div class="prose">
+<p>Model optimization untuk inference adalah salah satu area yang paling high-leverage di MLOps: investasi satu minggu engineer bisa menghasilkan 5–50x speedup yang langsung berdampak pada cost dan user experience. Ada tiga level optimasi yang bisa dilakukan secara komplementer: <strong>format conversion</strong> (ONNX, TorchScript), <strong>hardware-specific compilation</strong> (TensorRT, torch.compile), dan <strong>precision reduction</strong> (quantization INT8/FP16, pruning, knowledge distillation).</p>
+<p>Penting untuk memahami mengapa optimasi ini bekerja. Model PyTorch saat inference masih mengandung banyak overhead dari framework dinamis: Python interpreter, autograd graph, dan general-purpose operator implementation. ONNX/TensorRT menghilangkan overhead ini dengan menyimpan <em>computation graph yang sudah dioptimasi</em> — operator fusion menggabungkan beberapa operasi (misal BatchNorm + ReLU) menjadi satu kernel GPU, mengurangi memory bandwidth dan kernel launch overhead.</p>
+<p>Quantization INT8 lebih dari sekadar "FP32 → INT8". Prosesnya melibatkan <strong>calibration</strong> — mengamati distribusi aktivasi model pada representative dataset untuk menentukan scale factor yang tepat. Tanpa calibration yang baik, akurasi bisa turun drastis. Post-Training Quantization (PTQ) adalah titik awal yang cepat; Quantization-Aware Training (QAT) memberikan akurasi lebih baik dengan biaya training ulang.</p>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">model_optimization.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> onnx
+<span class="kw">import</span> onnxruntime <span class="kw">as</span> ort
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># === Step 1: Export ke ONNX ===</span>
+<span class="kw">def</span> <span class="fn">export_to_onnx</span>(model: nn.<span class="fn">Module</span>, save_path: <span class="tp">str</span>, input_shape=(1, 128)):
+    model.<span class="fn">eval</span>()
+    dummy_input = torch.<span class="fn">randint</span>(<span class="nm">0</span>, <span class="nm">30000</span>, input_shape)
+    torch.onnx.<span class="fn">export</span>(
+        model,
+        dummy_input,
+        save_path,
+        export_params=<span class="kw">True</span>,
+        opset_version=<span class="nm">17</span>,         <span class="cm"># gunakan opset terbaru untuk support operator terlengkap</span>
+        do_constant_folding=<span class="kw">True</span>, <span class="cm"># fold constant ops — mengurangi graph size</span>
+        input_names=[<span class="st">"input_ids"</span>],
+        output_names=[<span class="st">"logits"</span>],
+        dynamic_axes={             <span class="cm"># dynamic batch dan sequence length</span>
+            <span class="st">"input_ids"</span>: {<span class="nm">0</span>: <span class="st">"batch"</span>, <span class="nm">1</span>: <span class="st">"seq_len"</span>},
+            <span class="st">"logits"</span>:    {<span class="nm">0</span>: <span class="st">"batch"</span>},
+        }
+    )
+    <span class="cm"># Verifikasi ONNX graph valid</span>
+    onnx_model = onnx.<span class="fn">load</span>(save_path)
+    onnx.<span class="fn">checker</span>.<span class="fn">check_model</span>(onnx_model)
+    <span class="fn">print</span>(<span class="st">f"ONNX model saved dan verified: {save_path}"</span>)
+
+<span class="cm"># === Step 2: Run dengan ONNX Runtime ===</span>
+<span class="kw">class</span> <span class="fn">ONNXPredictor</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, model_path: <span class="tp">str</span>, use_gpu: <span class="tp">bool</span> = <span class="kw">True</span>):
+        providers = [<span class="st">"CUDAExecutionProvider"</span>, <span class="st">"CPUExecutionProvider"</span>] <span class="kw">if</span> use_gpu <span class="kw">else</span> [<span class="st">"CPUExecutionProvider"</span>]
+        sess_opts = ort.<span class="fn">SessionOptions</span>()
+        sess_opts.graph_optimization_level = ort.GraphOptimizationLevel.<span class="fn">ORT_ENABLE_ALL</span>
+        sess_opts.intra_op_num_threads = <span class="nm">4</span>
+        self.session = ort.<span class="fn">InferenceSession</span>(model_path, sess_opts, providers=providers)
+        self.input_name = self.session.<span class="fn">get_inputs</span>()[<span class="nm">0</span>].<span class="fn">name</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, input_ids: np.ndarray) -> np.ndarray:
+        <span class="kw">return</span> self.session.<span class="fn">run</span>(<span class="kw">None</span>, {self.input_name: input_ids})[<span class="nm">0</span>]
+
+<span class="cm"># === Step 3: ONNX → INT8 Quantization (Post-Training Quantization) ===</span>
+<span class="kw">from</span> onnxruntime.quantization <span class="kw">import</span> quantize_dynamic, QuantType
+
+<span class="kw">def</span> <span class="fn">quantize_model</span>(input_path: <span class="tp">str</span>, output_path: <span class="tp">str</span>):
+    <span class="fn">quantize_dynamic</span>(
+        model_input=input_path,
+        model_output=output_path,
+        weight_type=QuantType.<span class="fn">QInt8</span>,        <span class="cm"># weights jadi INT8</span>
+        optimize_model=<span class="kw">True</span>,
+        per_channel=<span class="kw">True</span>,                    <span class="cm"># lebih akurat dari per-tensor</span>
+        reduce_range=<span class="kw">True</span>,                   <span class="cm"># gunakan 7-bit range untuk CPU compatibility</span>
+    )
+    <span class="fn">print</span>(<span class="st">f"Quantized model saved: {output_path}"</span>)
+
+<span class="cm"># === Step 4: torch.compile — PyTorch 2.0 native optimization ===</span>
+<span class="kw">def</span> <span class="fn">compile_model</span>(model: nn.<span class="fn">Module</span>, mode: <span class="tp">str</span> = <span class="st">"reduce-overhead"</span>) -> nn.<span class="fn">Module</span>:
+    <span class="st">"""
+    mode options:
+    - "default": balance compile time vs runtime (bagus untuk eksperimen)
+    - "reduce-overhead": agresif optimize, lebih lama compile, runtime lebih cepat
+    - "max-autotune": paling agresif, butuh warmup banyak iteration
+    """</span>
+    <span class="kw">return</span> torch.<span class="fn">compile</span>(model, mode=mode, fullgraph=<span class="kw">True</span>)</pre></div>
+</div>
+
+<div class="callout warn">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+<div class="ctxt"><strong>Validasi akurasi setelah setiap optimasi</strong>Setiap langkah optimasi berpotensi memperkenalkan numerik errors. Selalu jalankan benchmark akurasi end-to-end setelah ONNX export, setelah quantization, dan setelah TensorRT compilation. Untuk model klasifikasi, biasanya akurasi drop &lt;0.5% untuk FP16 dan &lt;1–2% untuk INT8 masih acceptable. Untuk model yang output digunakan dalam downstream computation (embedding, regression), validasi distribusi output secara kuantitatif, bukan hanya classification accuracy.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">tensorrt_optimization.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> tensorrt <span class="kw">as</span> trt
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">class</span> <span class="fn">TensorRTConverter</span>:
+    <span class="st">"""Convert ONNX model ke TensorRT engine untuk maksimum GPU performance."""</span>
+
+    <span class="kw">def</span> <span class="fn">build_engine</span>(
+        self,
+        onnx_path: <span class="tp">str</span>,
+        engine_path: <span class="tp">str</span>,
+        precision: <span class="tp">str</span> = <span class="st">"fp16"</span>,      <span class="cm"># "fp32", "fp16", atau "int8"</span>
+        max_batch_size: <span class="tp">int</span> = <span class="nm">32</span>,
+    ):
+        logger = trt.<span class="fn">Logger</span>(trt.Logger.<span class="fn">WARNING</span>)
+        builder = trt.<span class="fn">Builder</span>(logger)
+        network = builder.<span class="fn">create_network</span>(
+            <span class="nm">1</span> &lt;&lt; <span class="fn">int</span>(trt.NetworkDefinitionCreationFlag.<span class="fn">EXPLICIT_BATCH</span>)
+        )
+        parser = trt.OnnxParser.<span class="fn">OnnxParser</span>(network, logger)
+
+        <span class="kw">with</span> <span class="fn">open</span>(onnx_path, <span class="st">"rb"</span>) <span class="kw">as</span> f:
+            <span class="kw">assert</span> parser.<span class="fn">parse</span>(f.<span class="fn">read</span>()), <span class="st">"ONNX parse failed"</span>
+
+        config = builder.<span class="fn">create_builder_config</span>()
+        config.set_memory_pool_limit(trt.MemoryPoolType.<span class="fn">WORKSPACE</span>, <span class="nm">4</span> &lt;&lt; <span class="nm">30</span>)  <span class="cm"># 4 GB workspace</span>
+
+        <span class="kw">if</span> precision == <span class="st">"fp16"</span>:
+            config.<span class="fn">set_flag</span>(trt.BuilderFlag.<span class="fn">FP16</span>)
+        <span class="kw">elif</span> precision == <span class="st">"int8"</span>:
+            config.<span class="fn">set_flag</span>(trt.BuilderFlag.<span class="fn">INT8</span>)
+            config.int8_calibrator = self.<span class="fn">_create_calibrator</span>()  <span class="cm"># WAJIB untuk INT8</span>
+
+        <span class="cm"># Dynamic shape profiles</span>
+        profile = builder.<span class="fn">create_optimization_profile</span>()
+        profile.<span class="fn">set_shape</span>(
+            <span class="st">"input_ids"</span>,
+            min=(<span class="nm">1</span>, <span class="nm">16</span>),   max=(<span class="nm">32</span>, <span class="nm">128</span>),  opt=(<span class="nm">8</span>, <span class="nm">64</span>)
+        )
+        config.<span class="fn">add_optimization_profile</span>(profile)
+
+        serialized_engine = builder.<span class="fn">build_serialized_network</span>(network, config)
+        <span class="kw">with</span> <span class="fn">open</span>(engine_path, <span class="st">"wb"</span>) <span class="kw">as</span> f:
+            f.<span class="fn">write</span>(serialized_engine)
+        <span class="fn">print</span>(<span class="st">f"TensorRT engine ({precision}) saved: {engine_path}"</span>)
+
+<span class="cm"># Benchmark: typical speedup dari optimasi (ResNet-50, batch=1, GPU A100)</span>
+<span class="cm"># PyTorch FP32  → latency ~8ms  (baseline)</span>
+<span class="cm"># ONNX FP32     → latency ~6ms  (1.3x speedup)</span>
+<span class="cm"># TensorRT FP16 → latency ~2ms  (4x speedup)</span>
+<span class="cm"># TensorRT INT8 → latency ~1ms  (8x speedup, akurasi drop &lt;1%)</span></pre></div>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Optimization Speedup Comparison</div>
+<div class="viz-body">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
+    <div style="color:var(--text3);margin-bottom:12px;">Relative throughput vs PyTorch FP32 baseline (higher = better):</div>
+    <div class="cbar-row"><div class="cbar-label">PyTorch FP32</div><div class="cbar-track"><div class="cbar-fill" style="--tw:12%;background:rgba(255,255,255,0.3);"></div></div><div class="cbar-val">1×</div></div>
+    <div class="cbar-row"><div class="cbar-label">TorchScript</div><div class="cbar-track"><div class="cbar-fill" style="--tw:18%;background:var(--teal);"></div></div><div class="cbar-val">1.5×</div></div>
+    <div class="cbar-row"><div class="cbar-label">ONNX Runtime FP32</div><div class="cbar-track"><div class="cbar-fill" style="--tw:22%;background:var(--teal);"></div></div><div class="cbar-val">1.8×</div></div>
+    <div class="cbar-row"><div class="cbar-label">ONNX Runtime INT8</div><div class="cbar-track"><div class="cbar-fill" style="--tw:40%;background:var(--amber);"></div></div><div class="cbar-val">3.3×</div></div>
+    <div class="cbar-row"><div class="cbar-label">TensorRT FP16</div><div class="cbar-track"><div class="cbar-fill" style="--tw:60%;background:var(--accent);"></div></div><div class="cbar-val">5×</div></div>
+    <div class="cbar-row"><div class="cbar-label">TensorRT INT8</div><div class="cbar-track"><div class="cbar-fill" style="--tw:95%;background:var(--green);"></div></div><div class="cbar-val">8×</div></div>
+    <p style="margin-top:14px;color:var(--text3);">* Angka bervariasi signifikan tergantung model architecture, batch size, dan GPU. Selalu benchmark pada hardware dan workload spesifik kamu.</p>
+  </div>
+</div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Jelaskan mengapa operator fusion (misal Conv+BN+ReLU → satu kernel) memberikan speedup. Apa yang dihemat: compute, memory bandwidth, atau keduanya? Bagaimana ini berbeda dengan quantization?</li>
+<li><strong>[Kode]</strong> Export ResNet-18 (pretrained torchvision) ke ONNX. Jalankan dengan ORT, ukur latency dengan <code>measure_gpu_latency</code>. Kemudian quantize ke INT8 dengan <code>quantize_dynamic</code> dan bandingkan: latency, model size (bytes), dan Top-1 accuracy pada ImageNet val-mini.</li>
+<li><strong>[Eksplorasi]</strong> Gunakan <code>torch.compile(model, mode="max-autotune")</code> pada transformer model (distilbert-base). Ukur first inference (termasuk compilation overhead) vs subsequent inference. Kapan overhead compilation terbayarkan?</li>
+</ul></div>
+
+</div><!-- /mlops2d -->
+
+<div class="divider"></div>
+
+<!-- 2E -->
+<div class="sub" id="mlops2e">
+<div class="subtit"><span class="ac">2.5</span> Serving Patterns <span class="subid">// deploy tanpa downtime, rollout tanpa risiko</span></div>
+<div class="prose">
+<p>Cara kamu men-deploy model baru sama pentingnya dengan model itu sendiri. Sebuah model yang 5% lebih akurat tapi di-deploy dengan cara yang menyebabkan downtime atau degradasi untuk semua pengguna adalah jauh lebih buruk dari model lama yang stabil. Serving patterns adalah strategi deployment yang memungkinkan kamu memperbarui model dengan risiko minimal dan observability yang tinggi.</p>
+<p><strong>Blue-Green deployment</strong> adalah strategi paling sederhana: jalankan dua environment identik ("blue" = production saat ini, "green" = versi baru). Setelah green siap dan divalidasi, switch traffic 100% dari blue ke green secara instant. Rollback semudah switch balik. Kekurangan: butuh dua kali resource selama transisi.</p>
+<p><strong>Canary release</strong> lebih granular: kirim sebagian kecil traffic (misal 5%, lalu 20%, lalu 50%) ke versi baru secara bertahap. Jika metrik bagus, tingkatkan traffic. Jika ada degradasi, rollback hanya mempengaruhi sebagian pengguna. Ini adalah strategi standar untuk model ML karena kamu bisa validasi pada real traffic sebelum full rollout.</p>
+<p><strong>Shadow deployment</strong> adalah pola paling aman: model baru menerima copy traffic production tapi responnya tidak dikirim ke pengguna. Kamu bisa compare prediksi model baru vs model lama secara offline tanpa dampak apapun ke user. Ideal untuk validasi model sebelum canary.</p>
+<p><strong>A/B testing</strong> mirip canary tapi tujuannya berbeda: bukan untuk safe rollout, tapi untuk mengukur dampak bisnis dari dua versi model. Pengguna dibagi menjadi dua kelompok secara random dan konsisten (user-based splitting, bukan request-based) sehingga setiap user selalu mendapat model yang sama.</p>
+</div>
+
+<div class="viz-wrap">
+<div class="viz-title">Serving Patterns — Perbandingan Strategi Deployment</div>
+<div class="viz-body">
+<svg class="arch-svg" viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" style="max-height:360px;">
+  <defs>
+    <marker id="sarr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(124,109,250,0.6)"/>
+    </marker>
+    <marker id="sarr2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(45,212,191,0.6)"/>
+    </marker>
+    <marker id="sarr3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(245,158,11,0.6)"/>
+    </marker>
+    <marker id="sarr4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="rgba(248,113,113,0.5)"/>
+    </marker>
+  </defs>
+
+  <!-- Blue-Green -->
+  <text x="10" y="18" font-family="IBM Plex Mono" font-size="10" fill="rgba(45,212,191,0.9)">Blue-Green Deployment</text>
+  <rect x="10" y="26" width="55" height="28" rx="5" fill="rgba(45,212,191,0.1)" stroke="rgba(45,212,191,0.4)"/>
+  <text x="37" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--teal)">Traffic</text>
+  <text x="37" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">100%</text>
+  <line x1="65" y1="40" x2="88" y2="40" stroke="rgba(45,212,191,0.5)" stroke-width="1.5" marker-end="url(#sarr2)"/>
+  <rect x="90" y="26" width="55" height="28" rx="5" fill="rgba(45,212,191,0.15)" stroke="rgba(45,212,191,0.6)"/>
+  <text x="117" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--teal)">BLUE</text>
+  <text x="117" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">v1.0 live</text>
+  <line x1="145" y1="40" x2="163" y2="40" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="165" y="26" width="55" height="28" rx="5" fill="rgba(74,222,128,0.1)" stroke="rgba(74,222,128,0.4)" stroke-dasharray="3,2"/>
+  <text x="192" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(74,222,128,0.7)">GREEN</text>
+  <text x="192" y="50" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">v2.0 ready</text>
+  <text x="230" y="43" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">→ instant switch, rollback mudah</text>
+
+  <!-- Canary -->
+  <text x="10" y="98" font-family="IBM Plex Mono" font-size="10" fill="rgba(245,158,11,0.9)">Canary Release</text>
+  <rect x="10" y="106" width="55" height="28" rx="5" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.4)"/>
+  <text x="37" y="118" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--amber)">Traffic</text>
+  <text x="37" y="130" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">100%</text>
+  <line x1="65" y1="120" x2="88" y2="112" stroke="rgba(245,158,11,0.4)" stroke-width="1.5" marker-end="url(#sarr3)"/>
+  <line x1="65" y1="120" x2="88" y2="128" stroke="rgba(124,109,250,0.4)" stroke-width="1.5" marker-end="url(#sarr)"/>
+  <rect x="90" y="100" width="60" height="24" rx="5" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.5)"/>
+  <text x="120" y="113" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--amber)">v1.0 — 95%</text>
+  <rect x="90" y="126" width="60" height="24" rx="5" fill="rgba(124,109,250,0.12)" stroke="rgba(124,109,250,0.5)"/>
+  <text x="120" y="139" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--accent)">v2.0 — 5%</text>
+  <text x="165" y="123" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">→ gradual rollout, monitor metrics</text>
+
+  <!-- Shadow -->
+  <text x="10" y="178" font-family="IBM Plex Mono" font-size="10" fill="rgba(248,113,113,0.9)">Shadow Deployment</text>
+  <rect x="10" y="186" width="55" height="28" rx="5" fill="rgba(248,113,113,0.08)" stroke="rgba(248,113,113,0.3)"/>
+  <text x="37" y="198" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(248,113,113,0.8)">Traffic</text>
+  <text x="37" y="210" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">100%</text>
+  <line x1="65" y1="200" x2="88" y2="195" stroke="rgba(45,212,191,0.5)" stroke-width="1.5" marker-end="url(#sarr2)"/>
+  <line x1="65" y1="200" x2="88" y2="210" stroke="rgba(248,113,113,0.3)" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#sarr4)"/>
+  <rect x="90" y="183" width="60" height="24" rx="5" fill="rgba(45,212,191,0.12)" stroke="rgba(45,212,191,0.5)"/>
+  <text x="120" y="196" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--teal)">v1.0 live</text>
+  <rect x="90" y="199" width="60" height="24" rx="5" fill="rgba(248,113,113,0.08)" stroke="rgba(248,113,113,0.3)" stroke-dasharray="3,2"/>
+  <text x="120" y="212" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(248,113,113,0.7)">v2.0 shadow</text>
+  <text x="165" y="203" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">→ compare offline, zero user impact</text>
+  <text x="165" y="214" font-family="IBM Plex Mono" font-size="7" fill="#4a4a5a">shadow response discarded</text>
+
+  <!-- A/B Testing -->
+  <text x="10" y="258" font-family="IBM Plex Mono" font-size="10" fill="rgba(124,109,250,0.9)">A/B Testing</text>
+  <rect x="10" y="266" width="55" height="28" rx="5" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.4)"/>
+  <text x="37" y="278" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--accent)">Users</text>
+  <text x="37" y="290" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#5a5a6a">split by ID</text>
+  <line x1="65" y1="280" x2="88" y2="272" stroke="rgba(124,109,250,0.5)" stroke-width="1.5" marker-end="url(#sarr)"/>
+  <line x1="65" y1="280" x2="88" y2="292" stroke="rgba(45,212,191,0.5)" stroke-width="1.5" marker-end="url(#sarr2)"/>
+  <rect x="90" y="260" width="60" height="24" rx="5" fill="rgba(124,109,250,0.12)" stroke="rgba(124,109,250,0.5)"/>
+  <text x="120" y="273" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--accent)">Group A — v1</text>
+  <rect x="90" y="280" width="60" height="24" rx="5" fill="rgba(45,212,191,0.12)" stroke="rgba(45,212,191,0.5)"/>
+  <text x="120" y="293" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="var(--teal)">Group B — v2</text>
+  <text x="165" y="278" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">→ measure business impact</text>
+  <text x="165" y="289" font-family="IBM Plex Mono" font-size="7" fill="#4a4a5a">user-consistent, statistical significance</text>
+
+  <!-- Legend bottom -->
+  <text x="10" y="330" font-family="IBM Plex Mono" font-size="8" fill="#5a5a6a">Risk level:  Blue-Green (medium) &lt; Canary (low) &lt; Shadow (none)  |  A/B: untuk keputusan bisnis, bukan safety</text>
+</svg>
+</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">serving_patterns.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> hashlib
+<span class="kw">from</span> typing <span class="kw">import</span> Optional
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass, field
+<span class="kw">from</span> enum <span class="kw">import</span> Enum
+
+<span class="kw">class</span> <span class="fn">DeploymentStrategy</span>(Enum):
+    BLUE_GREEN = <span class="st">"blue_green"</span>
+    CANARY     = <span class="st">"canary"</span>
+    SHADOW     = <span class="st">"shadow"</span>
+    AB_TEST    = <span class="st">"ab_test"</span>
+
+<span class="kw">@</span>dataclass
+<span class="kw">class</span> <span class="fn">CanaryRouter</span>:
+    <span class="st">"""Route traffic antara model lama dan baru berdasarkan canary_percentage."""</span>
+    stable_predictor: <span class="fn">object</span>
+    canary_predictor: <span class="fn">object</span>
+    canary_percentage: <span class="tp">float</span> = <span class="nm">0.05</span>  <span class="cm"># mulai dengan 5%</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, features, request_id: <span class="tp">str</span>) -> <span class="fn">dict</span>:
+        <span class="kw">import</span> random
+        use_canary = random.<span class="fn">random</span>() < self.canary_percentage
+        predictor = self.canary_predictor <span class="kw">if</span> use_canary <span class="kw">else</span> self.stable_predictor
+        result = predictor.<span class="fn">predict</span>(features)
+        result[<span class="st">"model_variant"</span>] = <span class="st">"canary"</span> <span class="kw">if</span> use_canary <span class="kw">else</span> <span class="st">"stable"</span>
+        <span class="kw">return</span> result
+
+<span class="kw">class</span> <span class="fn">ShadowDeployment</span>:
+    <span class="st">"""Jalankan shadow model secara async, bandingkan output tanpa mempengaruhi user."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, production_predictor, shadow_predictor, comparison_logger):
+        self.prod = production_predictor
+        self.shadow = shadow_predictor
+        self.logger = comparison_logger
+
+    <span class="kw">async def</span> <span class="fn">predict</span>(self, features) -> <span class="fn">dict</span>:
+        <span class="kw">import</span> asyncio
+        <span class="cm"># Jalankan production dan shadow secara bersamaan</span>
+        prod_task = asyncio.<span class="fn">create_task</span>(self.<span class="fn">_run_async</span>(self.prod, features))
+        shadow_task = asyncio.<span class="fn">create_task</span>(self.<span class="fn">_run_async</span>(self.shadow, features))
+
+        prod_result = <span class="kw">await</span> prod_task
+        <span class="cm"># Shadow: fire and forget — tidak delay response ke user</span>
+        asyncio.<span class="fn">ensure_future</span>(self.<span class="fn">_log_shadow</span>(shadow_task, prod_result))
+        <span class="kw">return</span> prod_result  <span class="cm"># hanya return production result ke user</span>
+
+    <span class="kw">async def</span> <span class="fn">_log_shadow</span>(self, shadow_task, prod_result):
+        <span class="kw">try</span>:
+            shadow_result = <span class="kw">await</span> shadow_task
+            <span class="kw">await</span> self.logger.<span class="fn">log_comparison</span>(prod_result, shadow_result)
+        <span class="kw">except</span> <span class="fn">Exception</span> <span class="kw">as</span> e:
+            <span class="kw">await</span> self.logger.<span class="fn">log_shadow_error</span>(e)
+
+<span class="kw">class</span> <span class="fn">ABTestRouter</span>:
+    <span class="st">"""User-consistent A/B split — user yang sama selalu dapat model yang sama."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, model_a, model_b, traffic_split: <span class="tp">float</span> = <span class="nm">0.5</span>):
+        self.model_a = model_a
+        self.model_b = model_b
+        self.traffic_split = traffic_split  <span class="cm"># fraction ke model B</span>
+
+    <span class="kw">def</span> <span class="fn">_get_variant</span>(self, user_id: <span class="tp">str</span>) -> <span class="tp">str</span>:
+        <span class="cm"># Hash user_id → consistent assignment (bukan random per-request)</span>
+        h = <span class="fn">int</span>(hashlib.<span class="fn">md5</span>(user_id.<span class="fn">encode</span>()).<span class="fn">hexdigest</span>(), <span class="nm">16</span>)
+        <span class="kw">return</span> <span class="st">"B"</span> <span class="kw">if</span> (h % <span class="nm">100</span>) < <span class="fn">int</span>(self.traffic_split * <span class="nm">100</span>) <span class="kw">else</span> <span class="st">"A"</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, features, user_id: <span class="tp">str</span>) -> <span class="fn">dict</span>:
+        variant = self.<span class="fn">_get_variant</span>(user_id)
+        model = self.model_b <span class="kw">if</span> variant == <span class="st">"B"</span> <span class="kw">else</span> self.model_a
+        result = model.<span class="fn">predict</span>(features)
+        result[<span class="st">"ab_variant"</span>] = variant  <span class="cm"># log ini untuk analysis!</span>
+        <span class="kw">return</span> result</pre></div>
+</div>
+
+<div class="callout info">
+<span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+<div class="ctxt"><strong>Metrik apa yang harus dimonitor saat canary?</strong>Jangan hanya monitor model accuracy — monitor business metrics dan teknis metrics secara bersamaan. Teknis: latency P99, error rate (5xx), throughput. Bisnis: conversion rate, click-through rate, user retention. Model bisa secara teknis "lebih akurat" di offline evaluation tapi menurunkan business metric di production — fenomena ini disebut <em>metric misalignment</em> dan sangat umum. Canary deployment memungkinkan kamu mendeteksi ini sebelum full rollout.</div>
+</div>
+
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">deployment_monitoring.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> prometheus_client <span class="kw">import</span> Counter, Histogram, Gauge
+<span class="kw">import</span> functools, time
+
+<span class="cm"># Prometheus metrics untuk monitoring serving patterns</span>
+inference_latency = <span class="fn">Histogram</span>(
+    <span class="st">"model_inference_latency_seconds"</span>,
+    <span class="st">"Inference latency distribution"</span>,
+    labelnames=[<span class="st">"model_version"</span>, <span class="st">"variant"</span>],
+    buckets=[.<span class="nm">005</span>, .<span class="nm">01</span>, .<span class="nm">025</span>, .<span class="nm">05</span>, .<span class="nm">1</span>, .<span class="nm">25</span>, .<span class="nm">5</span>, <span class="nm">1.0</span>]
+)
+prediction_counter = <span class="fn">Counter</span>(
+    <span class="st">"model_predictions_total"</span>,
+    <span class="st">"Total predictions per variant"</span>,
+    labelnames=[<span class="st">"model_version"</span>, <span class="st">"variant"</span>, <span class="st">"label"</span>]
+)
+error_counter = <span class="fn">Counter</span>(
+    <span class="st">"model_errors_total"</span>,
+    <span class="st">"Total prediction errors"</span>,
+    labelnames=[<span class="st">"model_version"</span>, <span class="st">"error_type"</span>]
+)
+
+<span class="kw">def</span> <span class="fn">monitor_prediction</span>(model_version: <span class="tp">str</span>, variant: <span class="tp">str</span> = <span class="st">"stable"</span>):
+    <span class="st">"""Decorator untuk auto-monitoring setiap prediction call."""</span>
+    <span class="kw">def</span> <span class="fn">decorator</span>(func):
+        <span class="kw">@</span>functools.<span class="fn">wraps</span>(func)
+        <span class="kw">async def</span> <span class="fn">wrapper</span>(*args, **kwargs):
+            start = time.<span class="fn">perf_counter</span>()
+            <span class="kw">try</span>:
+                result = <span class="kw">await</span> <span class="fn">func</span>(*args, **kwargs)
+                latency = time.<span class="fn">perf_counter</span>() - start
+                inference_latency.<span class="fn">labels</span>(model_version, variant).<span class="fn">observe</span>(latency)
+                prediction_counter.<span class="fn">labels</span>(model_version, variant, result[<span class="st">"label"</span>]).<span class="fn">inc</span>()
+                <span class="kw">return</span> result
+            <span class="kw">except</span> <span class="fn">Exception</span> <span class="kw">as</span> e:
+                error_counter.<span class="fn">labels</span>(model_version, <span class="fn">type</span>(e).__name__).<span class="fn">inc</span>()
+                <span class="kw">raise</span>
+        <span class="kw">return</span> wrapper
+    <span class="kw">return</span> decorator
+
+<span class="cm"># Gunakan di endpoint:</span>
+<span class="cm"># @monitor_prediction(model_version="v2.1.0", variant="canary")</span>
+<span class="cm"># async def predict_canary(req): ...</span></pre></div>
+</div>
+
+<div class="cc" style="border-color:rgba(124,109,250,.2);background:rgba(124,109,250,.04);"><h3>Latihan</h3><ul>
+<li><strong>[Konseptual]</strong> Apa perbedaan fundamental antara A/B testing dan canary release dalam konteks tujuan dan cara menganalisis hasilnya? Kapan kamu butuh keduanya secara berurutan (shadow → canary → A/B)?</li>
+<li><strong>[Kode]</strong> Implementasikan <code>CanaryRouter</code> dan <code>ABTestRouter</code> di atas. Buat simulasi dengan dua scikit-learn model (v1 dan v2) dan 10.000 "request". Hitung distribusi traffic aktual vs target canary_percentage. Pastikan ABTestRouter konsisten (user yang sama selalu dapat model yang sama).</li>
+<li><strong>[Eksplorasi]</strong> Riset bagaimana Kubernetes Argo Rollouts atau Flagger mengimplementasikan canary deployment untuk ML services. Apa keuntungan menggunakan tool ini vs implementasi manual di application layer seperti di atas?</li>
+</ul></div>
+
+<div class="topic-nav">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Fase 2 selesai · 10 topik</div>
+    <div class="topic-nav-title">Lanjut ke: Fase 3 — Monitoring &amp; Observability</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('mlopsfi1')">← Fase 1</button>
+    <button class="tnbtn primary" onclick="goToPage('mlopsfi3')">Fase 3 →</button>
+  </div>
+</div>
+
+</div><!-- /mlops2e -->
+
+</section><!-- /mlopsfase2 -->

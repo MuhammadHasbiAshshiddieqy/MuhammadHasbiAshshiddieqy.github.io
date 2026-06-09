@@ -36,10 +36,11 @@ var I18N = {
     'aa.cta':               'Buka →',
 
     'mlops.label':          'Kurikulum 03',
-    'mlops.badge':          'Segera',
     'mlops.desc':           'Pipeline training, experiment tracking, model registry, serving infrastructure, monitoring drift, dan CI/CD untuk ML systems.',
-    'mlops.pill':           'Dalam persiapan',
-    'mlops.cta':            'Segera hadir',
+    'mlops.pill.phase':     '5 fase',
+    'mlops.pill.topic':     '25 topik',
+    'mlops.pill.week':      '~10 minggu',
+    'mlops.cta':            'Buka →',
 
     // ── Built by section ──
     'builtby.label':        'Built by',
@@ -140,10 +141,11 @@ var I18N = {
     'aa.cta':               'Open →',
 
     'mlops.label':          'Curriculum 03',
-    'mlops.badge':          'Coming Soon',
     'mlops.desc':           'Training pipelines, experiment tracking, model registry, serving infrastructure, drift monitoring, and CI/CD for ML systems.',
-    'mlops.pill':           'In preparation',
-    'mlops.cta':            'Coming soon',
+    'mlops.pill.phase':     '5 phases',
+    'mlops.pill.topic':     '25 topics',
+    'mlops.pill.week':      '~10 weeks',
+    'mlops.cta':            'Open →',
 
     // ── Built by section ──
     'builtby.label':        'Built by',
