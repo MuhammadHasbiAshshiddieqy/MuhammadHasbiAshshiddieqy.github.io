@@ -513,12 +513,10 @@ function _showPage(pageId) {
     var parentSection = el.closest('.cs');
     if (parentSection) parentSection.style.display = 'block';
   }
-  if (!_isPopstate) history.pushState(null,'','#'+pageId);
+  if (location.hash !== '#'+pageId) history.pushState(null,'','#'+pageId);
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'});
 }
-
-var _isPopstate = false;
 
 // ── goTo ──────────────────────────────────────────────────────────────────────
 function goTo(idx) {
@@ -543,7 +541,7 @@ function goTo(idx) {
 
     document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
     window.scrollTo({top:0,behavior:'smooth'});
-    if (!_isPopstate) history.pushState(null,'','#'+nextId);
+    if (location.hash !== '#'+nextId) history.pushState(null,'','#'+nextId);
 
     document.querySelectorAll('.sit').forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
@@ -633,8 +631,7 @@ function enterCurriculum(id, label) {
 
   window.addEventListener('popstate', function() {
     var h = location.hash.replace('#','');
-    _isPopstate = true;
-    if (!h || h === 'landing') { showLanding(); _isPopstate = false; return; }
+    if (!h || h === 'landing') { showLanding(); return; }
     var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h);
     if (lmIdx >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
@@ -655,6 +652,5 @@ function enterCurriculum(id, label) {
       if (activeCurriculum !== 'mlops') enterCurriculum('mlops','MLOps & Model Deployment');
       goToPage(h);
     }
-    _isPopstate = false;
   });
 })();
