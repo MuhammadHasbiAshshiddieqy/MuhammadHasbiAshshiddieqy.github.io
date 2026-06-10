@@ -513,7 +513,6 @@ function _showPage(pageId, skipPush) {
     var parentSection = el.closest('.cs');
     if (parentSection) parentSection.style.display = 'block';
   }
-  console.log('[_showPage]', pageId, 'skipPush:', skipPush);
   if (!skipPush) history.pushState(null,'','#'+pageId);
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'});
@@ -542,8 +541,7 @@ function goTo(idx, skipPush) {
 
     document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
     window.scrollTo({top:0,behavior:'smooth'});
-    console.log('[goTo]', nextId, 'skipPush:', skipPush);
-  if (!skipPush) history.pushState(null,'','#'+nextId);
+    if (!skipPush) history.pushState(null,'','#'+nextId);
 
     document.querySelectorAll('.sit').forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
@@ -633,7 +631,6 @@ function enterCurriculum(id, label) {
 
   window.addEventListener('popstate', function() {
     var h = location.hash.replace('#','');
-    console.log('[popstate] hash:', JSON.stringify(h), 'activeCurriculum:', activeCurriculum);
     if (!h || h === 'landing') { showLanding(); return; }
     var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h);
     if (lmIdx >= 0) {
