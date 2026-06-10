@@ -599,31 +599,31 @@ function enterCurriculum(id, label) {
     var ham = document.querySelector('.ham'); if (ham) ham.classList.remove('ham--visible');
   } else if (lmTopicIdx >= 0) {
     enterCurriculum('language-model','Language Model Fundamentals');
-    goTo(lmTopicIdx);
+    goTo(lmTopicIdx, true);
   } else if (LM_PAGES.indexOf(hash) >= 0) {
     enterCurriculum('language-model','Language Model Fundamentals');
     var lmFaseId = null;
     Object.keys(LM_PHASE_INTRO_MAP).forEach(function(k){ if (LM_PHASE_INTRO_MAP[k]===hash) lmFaseId=k; });
-    if (lmFaseId) loadFase(lmFaseId).then(function(){ goToPage(hash); });
-    else goToPage(hash);
+    if (lmFaseId) loadFase(lmFaseId).then(function(){ goToPage(hash, true); });
+    else goToPage(hash, true);
   } else if (aaTopicIdx >= 0) {
     enterCurriculum('agentic-ai','Agentic AI Mastery');
-    goTo(aaTopicIdx);
+    goTo(aaTopicIdx, true);
   } else if (AA_PAGES.indexOf(hash) >= 0) {
     enterCurriculum('agentic-ai','Agentic AI Mastery');
     var faseId = null;
     Object.keys(PHASE_INTRO_MAP).forEach(function(k){ if (PHASE_INTRO_MAP[k]===hash) faseId=k; });
-    if (faseId) loadFase(faseId).then(function(){ goToPage(hash); });
-    else goToPage(hash);
+    if (faseId) loadFase(faseId).then(function(){ goToPage(hash, true); });
+    else goToPage(hash, true);
   } else if (mlopsTopicIdx >= 0) {
     enterCurriculum('mlops','MLOps & Model Deployment');
-    goTo(mlopsTopicIdx);
+    goTo(mlopsTopicIdx, true);
   } else if (MLOPS_PAGES.indexOf(hash) >= 0) {
     enterCurriculum('mlops','MLOps & Model Deployment');
     var mlopsFaseId = null;
     Object.keys(MLOPS_PHASE_INTRO_MAP).forEach(function(k){ if (MLOPS_PHASE_INTRO_MAP[k]===hash) mlopsFaseId=k; });
-    if (mlopsFaseId) loadFase(mlopsFaseId).then(function(){ goToPage(hash); });
-    else goToPage(hash);
+    if (mlopsFaseId) loadFase(mlopsFaseId).then(function(){ goToPage(hash, true); });
+    else goToPage(hash, true);
   } else {
     document.getElementById('landing').classList.add('landing--active');
     document.getElementById('sidebar').classList.add('sidebar--hidden');
