@@ -488,7 +488,7 @@ function hideAll() {
 // ── goToPage ──────────────────────────────────────────────────────────────────
 var HOME_PAGE_IDS = ['glossary'];
 
-function goToPage(pageId) {
+function goToPage(pageId, skipPush) {
   // cari fase yang harus di-load untuk page ini
   var faseId = null;
   Object.keys(PHASE_INTRO_MAP).forEach(function(k){ if (PHASE_INTRO_MAP[k] === pageId) faseId = k; });
@@ -496,13 +496,13 @@ function goToPage(pageId) {
   Object.keys(LM_PHASE_INTRO_MAP).forEach(function(k){ if (LM_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
 
   if (faseId) {
-    loadFase(faseId).then(function(){ _showPage(pageId); });
+    loadFase(faseId).then(function(){ _showPage(pageId, skipPush); });
   } else {
-    _showPage(pageId);
+    _showPage(pageId, skipPush);
   }
 }
 
-function _showPage(pageId) {
+function _showPage(pageId, skipPush) {
   hideAll();
   var el = document.getElementById(pageId);
   if (!el) return;
@@ -513,13 +513,13 @@ function _showPage(pageId) {
     var parentSection = el.closest('.cs');
     if (parentSection) parentSection.style.display = 'block';
   }
-  if (location.hash !== '#'+pageId) history.pushState(null,'','#'+pageId);
+  if (!skipPush) history.pushState(null,'','#'+pageId);
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ── goTo ──────────────────────────────────────────────────────────────────────
-function goTo(idx) {
+function goTo(idx, skipPush) {
   var topics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : TOPICS;
   var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_MAP : PHASE_MAP;
   var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : activeCurriculum === 'mlops' ? MLOPS_PHASE_NUMS : PHASE_NUMS;
@@ -541,7 +541,7 @@ function goTo(idx) {
 
     document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
     window.scrollTo({top:0,behavior:'smooth'});
-    if (location.hash !== '#'+nextId) history.pushState(null,'','#'+nextId);
+    if (!skipPush) history.pushState(null,'','#'+nextId);
 
     document.querySelectorAll('.sit').forEach(function(a){
       a.classList.toggle('active', a.getAttribute('href')==='#'+nextId);
@@ -635,22 +635,22 @@ function enterCurriculum(id, label) {
     var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h);
     if (lmIdx >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
-      goTo(lmIdx);
+      goTo(lmIdx, true);
     } else if (aaIdx >= 0) {
       if (activeCurriculum !== 'agentic-ai') enterCurriculum('agentic-ai','Agentic AI Mastery');
-      goTo(aaIdx);
+      goTo(aaIdx, true);
     } else if (mlIdx >= 0) {
       if (activeCurriculum !== 'mlops') enterCurriculum('mlops','MLOps & Model Deployment');
-      goTo(mlIdx);
+      goTo(mlIdx, true);
     } else if (LM_PAGES.indexOf(h) >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
-      goToPage(h);
+      goToPage(h, true);
     } else if (AA_PAGES.indexOf(h) >= 0) {
       if (activeCurriculum !== 'agentic-ai') enterCurriculum('agentic-ai','Agentic AI Mastery');
-      goToPage(h);
+      goToPage(h, true);
     } else if (MLOPS_PAGES.indexOf(h) >= 0) {
       if (activeCurriculum !== 'mlops') enterCurriculum('mlops','MLOps & Model Deployment');
-      goToPage(h);
+      goToPage(h, true);
     }
   });
 })();
