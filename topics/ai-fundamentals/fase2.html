@@ -4,8 +4,8 @@
   <div class="sbadge">02</div>
   <div>
     <div class="stitle">Neural Networks — Otak Buatan dari Nol</div>
-    <div class="sdesc">Neural Network adalah fondasi Deep Learning. Pelajari bagaimana neuron tiruan bekerja, apa itu activation function, bagaimana backpropagation menyebarkan error ke seluruh jaringan, dan visualisasikan ANN memisahkan kelas secara interaktif.</div>
-    <div class="smeta"><span class="mc">~60 menit</span><span class="mc">4 topik</span><span class="mc">4 visualisasi</span></div>
+    <div class="sdesc">Neural Network adalah fondasi Deep Learning. Pelajari bagaimana neuron tiruan bekerja, apa itu activation function, bagaimana backpropagation menyebarkan error ke seluruh jaringan, dan kenali masalah-masalah nyata saat melatih jaringan.</div>
+    <div class="smeta"><span class="mc">~75 menit</span><span class="mc">5 topik</span><span class="mc">5 visualisasi</span></div>
   </div>
 </div>
 <div class="snav">
@@ -13,10 +13,11 @@
   <a class="snavi" href="#aif2b">Activation Functions</a>
   <a class="snavi" href="#aif2c">Backpropagation</a>
   <a class="snavi" href="#aif2d">ANN Interaktif</a>
+  <a class="snavi" href="#aif2f">Masalah Training</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">4 topik · ~60 menit</div>
+      <div class="topic-nav-counter">5 topik · ~75 menit</div>
       <div class="topic-nav-title">Mulai dari: 2.1 Neuron Tiruan</div>
     </div>
     <div class="topic-nav-btns">
@@ -31,8 +32,9 @@
 <ul>
 <li><strong>2.1 Neuron Tiruan</strong> — Geser bobot (w1, w2) dan bias secara real-time. Lihat bagaimana output berubah — visualisasi persis seperti cara neuron biologis bekerja.</li>
 <li><strong>2.2 Activation Functions</strong> — Bandingkan ReLU, Sigmoid, Tanh, dan Leaky ReLU secara visual. Pahami mengapa pilihan activation function penting.</li>
-<li><strong>2.3 Backpropagation</strong> — Animasi step-by-step forward pass dan backward pass. Lihat bagaimana error "mengalir mundur" ke setiap bobot.</li>
+<li><strong>2.3 Backpropagation</strong> — Animasi step-by-step forward pass dan backward pass. Lihat bagaimana error "mengalir mundur" dan kurva loss turun lewat gradient descent.</li>
 <li><strong>2.4 ANN Interaktif</strong> — Latih jaringan secara real-time, lihat decision boundary terbentuk. Ganti dataset (XOR, circle, spiral) dan amati perbedaannya.</li>
+<li><strong>2.5 Masalah dalam Training</strong> — Overfitting, vanishing gradient, saddle point, dan learning rate — visualisasi masalah nyata yang dihadapi setiap praktisi.</li>
 </ul></div>
 
 <div class="callout info" style="margin:12px 60px 20px;">
@@ -140,6 +142,22 @@
 </ul>
 <p>Proses ini diulangi ribuan kali hingga model konvergen ke solusi yang baik.</p>
 </div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Gradient Descent: Bola Menuruni Kurva Loss</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;align-items:center;">
+      <span style="font-size:12px;color:var(--text2);">Learning Rate:</span>
+      <button class="tnbtn gd-lr active" data-lr="0.02" style="font-size:11px;padding:5px 10px;">Kecil (0.02)</button>
+      <button class="tnbtn gd-lr" data-lr="0.15" style="font-size:11px;padding:5px 10px;">Sedang (0.15)</button>
+      <button class="tnbtn gd-lr" data-lr="0.6" style="font-size:11px;padding:5px 10px;">Besar (0.6)</button>
+      <button class="tnbtn primary" id="gd-start" style="font-size:11px;padding:5px 12px;">▶ Mulai</button>
+      <button class="tnbtn" id="gd-reset" style="font-size:11px;padding:5px 10px;">↺ Reset</button>
+    </div>
+    <canvas id="gdCanvas" style="width:100%;max-width:560px;height:240px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="gd-msg" style="text-align:center;font-size:12px;color:var(--text3);margin-top:10px;font-family:'IBM Plex Mono',monospace;min-height:18px;"></div>
+  </div>
+</div>
 </div>
 
 <!-- 2D: ANN Interactive -->
@@ -184,6 +202,95 @@
   </div>
 </div>
 
+<!-- 2F: Masalah dalam Training -->
+<div class="sub" id="aif2f">
+<div class="subtit"><span class="ac">2.5</span> Masalah dalam Training Neural Network <span class="subid">// tantangan nyata yang dihadapi setiap praktisi</span></div>
+<div class="prose">
+<p>Melatih neural network tidak selalu mulus. Ada beberapa jebakan klasik yang membuat model gagal belajar atau belajar hal yang salah. Memahami masalah-masalah ini adalah langkah pertama untuk menghindarinya.</p>
+</div>
+
+<!-- Overfitting / Underfitting -->
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><div class="ctxt"><strong>Analogi: Belajar untuk Ujian</strong><p style="margin:6px 0 0"><strong>Underfitting</strong> seperti siswa yang tidak belajar sama sekali — tidak bisa menjawab soal latihan maupun soal ujian. <strong>Overfitting</strong> seperti siswa yang menghafal semua soal latihan — bisa menjawab soal latihan dengan sempurna, tapi gagal saat soal ujian berbeda. Model yang baik <em>memahami polanya</em>, bukan menghafal datanya.</p></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Overfitting vs Underfitting: Kurva Loss Training &amp; Validasi</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn fit-scenario active" data-s="underfit" style="font-size:11px;padding:5px 12px;">Underfitting</button>
+      <button class="tnbtn fit-scenario" data-s="good" style="font-size:11px;padding:5px 12px;">Model Baik</button>
+      <button class="tnbtn fit-scenario" data-s="overfit" style="font-size:11px;padding:5px 12px;">Overfitting</button>
+    </div>
+    <canvas id="fitCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="fit-msg" style="text-align:center;font-size:12px;margin-top:10px;min-height:36px;color:var(--text2);line-height:1.5;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Cara Mengatasi Overfitting</h4>
+<ul>
+  <li><strong>Dropout</strong> — saat training, sejumlah neuron dimatikan secara acak setiap langkah. Model dipaksa belajar dari banyak jalur berbeda, bukan satu jalur hafalan.</li>
+  <li><strong>Regularisasi (L1/L2)</strong> — menambahkan "hukuman" untuk bobot yang terlalu besar, sehingga model tetap sederhana.</li>
+  <li><strong>Early Stopping</strong> — hentikan training saat performa di data validasi mulai memburuk, meski performa training masih naik.</li>
+  <li><strong>Tambah Data</strong> — lebih banyak data membuat sulit untuk "dihafal"; model terpaksa belajar pola umum.</li>
+</ul>
+</div>
+
+<!-- Vanishing / Exploding Gradient -->
+<div class="prose" style="margin-top:28px;">
+<h4>Masalah Gradien: Mengecil atau Meledak</h4>
+<p>Saat backpropagation meneruskan koreksi ke layer-layer awal, ada dua masalah yang bisa terjadi:</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Vanishing vs Exploding Gradient per Layer</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn grad-scenario active" data-g="vanishing" style="font-size:11px;padding:5px 12px;">Vanishing Gradient</button>
+      <button class="tnbtn grad-scenario" data-g="exploding" style="font-size:11px;padding:5px 12px;">Exploding Gradient</button>
+      <button class="tnbtn grad-scenario" data-g="healthy" style="font-size:11px;padding:5px 12px;">Gradien Sehat</button>
+    </div>
+    <canvas id="gradCanvas" style="width:100%;max-width:560px;height:200px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="grad-msg" style="text-align:center;font-size:12px;margin-top:10px;min-height:36px;color:var(--text2);line-height:1.5;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<ul>
+  <li><strong>Vanishing Gradient</strong> — koreksi mengecil saat merambat ke layer awal. Layer awal nyaris tidak belajar. Sering terjadi dengan aktivasi Sigmoid/Tanh di jaringan dalam. Solusi: gunakan ReLU, atau arsitektur khusus seperti LSTM/ResNet.</li>
+  <li><strong>Exploding Gradient</strong> — koreksi membesar tak terkendali. Bobot melompat-lompat, training kacau. Solusi: <em>gradient clipping</em> (batasi nilai maksimum gradien) atau normalisasi bobot awal.</li>
+</ul>
+</div>
+
+<!-- Saddle Point & Local Minima -->
+<div class="prose" style="margin-top:28px;">
+<h4>Jebakan di Lanskap Loss: Saddle Point &amp; Local Minima</h4>
+<p>Bayangkan kurva loss sebagai pegunungan terbalik — kita ingin menemukan lembah terdalam. Tapi perjalanan itu tidak selalu mulus.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Lanskap Loss: Local Minima &amp; Saddle Point</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn trap-scenario active" data-t="localmin" style="font-size:11px;padding:5px 12px;">Local Minima</button>
+      <button class="tnbtn trap-scenario" data-t="saddle" style="font-size:11px;padding:5px 12px;">Saddle Point (Tapal Kuda)</button>
+      <button class="tnbtn trap-scenario" data-t="global" style="font-size:11px;padding:5px 12px;">Global Minima</button>
+    </div>
+    <canvas id="trapCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="trap-msg" style="text-align:center;font-size:12px;margin-top:10px;min-height:40px;color:var(--text2);line-height:1.5;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<ul>
+  <li><strong>Local Minima</strong> — lembah kecil yang bukan titik terendah. Model berhenti di sini dan mengira sudah optimal, padahal ada solusi yang jauh lebih baik di tempat lain.</li>
+  <li><strong>Saddle Point (Tapal Kuda)</strong> — titik di mana gradien = 0 tapi bukan lembah. Dari satu arah terlihat seperti puncak, dari arah lain seperti lembah. Model bisa "terjebak" di sini karena gradiennya mendekati nol. Ini lebih sering terjadi dari local minima di jaringan berdimensi tinggi.</li>
+  <li><strong>Solusi umum</strong> — gunakan optimizer seperti <em>Adam</em> atau <em>SGD dengan momentum</em> yang memberi "inersia" pada bola sehingga bisa melewati lembah kecil atau saddle point.</li>
+</ul>
+</div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Masalah Training</strong><p style="margin:6px 0 0">Empat masalah utama: <strong>Overfitting</strong> (hafal data, tidak generalisasi) — atasi dengan dropout/regularisasi. <strong>Underfitting</strong> (model terlalu sederhana) — tambah kapasitas jaringan. <strong>Vanishing/Exploding Gradient</strong> (sinyal belajar menghilang/meledak) — pilih aktivasi dan inisialisasi bobot yang tepat. <strong>Saddle Point/Local Minima</strong> (terjebak di optima palsu) — gunakan optimizer modern seperti Adam.</p></div></div>
+</div>
+
 <!-- TENSORFLOW PLAYGROUND -->
 <div class="sub" id="aif2e">
 <div class="subtit"><span class="ac"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span> Coba Sendiri — TensorFlow Neural Network Playground <span class="subid">// eksperimen langsung di browser</span></div>
@@ -213,7 +320,7 @@
 </div>
 </div>
 
-<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 2 — Neural Networks</strong><p style="margin:6px 0 0">Kamu sudah memahami neuron tiruan (weighted sum + activation), empat fungsi aktivasi utama (Sigmoid/Tanh/ReLU/Leaky ReLU), mekanisme backpropagation (forward → loss → backward → update), dan melihat ANN bekerja secara interaktif. Fase berikutnya: CNN — bagaimana neural network "melihat" gambar.</p></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 2 — Neural Networks</strong><p style="margin:6px 0 0">Kamu sudah memahami neuron tiruan (weighted sum + activation), empat fungsi aktivasi utama (Sigmoid/Tanh/ReLU/Leaky ReLU), mekanisme backpropagation dengan visualisasi gradient descent, melihat ANN bekerja secara interaktif, dan mengenal masalah-masalah nyata: overfitting, vanishing/exploding gradient, saddle point, dan local minima. Fase berikutnya: CNN — bagaimana neural network "melihat" gambar.</p></div></div>
 </div>
 
 <style>
@@ -608,6 +715,474 @@ document.getElementById('ann-stop-btn').addEventListener('click',function(){
 genDataset('xor');
 drawANN();
 drawANNNet();
+
+/* ── Gradient Descent Viz ─────────────────────────── */
+(function(){
+  var gdLR = 0.02;
+  var gdX = 2.8; // starting weight value
+  var gdRunning = false;
+  var gdTimer = null;
+  var gdHistory = [];
+
+  function lossFunc(x){ return 0.5 * x * x + 0.3 * Math.sin(x * 3) * 0.4; }
+  function lossGrad(x){ return x + 0.3 * Math.cos(x * 3) * 1.2; }
+
+  function drawGD(){
+    var c = document.getElementById('gdCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 240);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var pad = 40, W = lw - pad * 2, H = lh - pad * 2;
+    var xMin = -3.2, xMax = 3.2;
+    var yMin = -0.3, yMax = 5.5;
+    function toSX(v){ return pad + (v - xMin) / (xMax - xMin) * W; }
+    function toSY(v){ return pad + H - (v - yMin) / (yMax - yMin) * H; }
+
+    // axes
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, pad + H); ctx.lineTo(pad + W, pad + H); ctx.stroke();
+    // zero line
+    ctx.strokeStyle = '#334155'; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(pad, toSY(0)); ctx.lineTo(pad + W, toSY(0)); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // x axis labels
+    ctx.fillStyle = '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    [-3,-2,-1,0,1,2,3].forEach(function(v){
+      ctx.fillText(v, toSX(v), pad + H + 13);
+    });
+    ctx.textAlign = 'right';
+    [0,1,2,3,4,5].forEach(function(v){
+      ctx.fillText(v, pad - 4, toSY(v) + 3);
+    });
+
+    // axis labels
+    ctx.fillStyle = '#64748b'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Nilai Bobot (w)', pad + W / 2, lh - 4);
+    ctx.save(); ctx.translate(10, pad + H / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Loss', 0, 0); ctx.restore();
+
+    // loss curve
+    ctx.beginPath(); ctx.strokeStyle = '#7c6dfa'; ctx.lineWidth = 2.5;
+    for(var i = 0; i <= W; i++){
+      var xv = xMin + (i / W) * (xMax - xMin);
+      var yv = lossFunc(xv);
+      var sx = pad + i, sy = toSY(yv);
+      i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // minimum marker
+    ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(toSX(0), pad); ctx.lineTo(toSX(0), pad + H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#2dd4bf'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Global Min', toSX(0), pad - 4);
+
+    // history trail
+    if(gdHistory.length > 1){
+      ctx.beginPath(); ctx.strokeStyle = 'rgba(251,191,36,.35)'; ctx.lineWidth = 1.5;
+      gdHistory.forEach(function(hx, i){
+        var sx = toSX(hx), sy = toSY(lossFunc(hx));
+        i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+      });
+      ctx.stroke();
+    }
+
+    // current ball
+    var bsx = toSX(gdX), bsy = toSY(lossFunc(gdX));
+    ctx.fillStyle = 'rgba(251,191,36,.2)'; ctx.beginPath(); ctx.arc(bsx, bsy, 12, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(bsx, bsy, 7, 0, Math.PI*2); ctx.fill();
+
+    // tangent line (gradient)
+    if(!gdRunning || gdHistory.length > 0){
+      var g = lossGrad(gdX);
+      var tx1 = gdX - 0.6, tx2 = gdX + 0.6;
+      ctx.strokeStyle = 'rgba(248,113,113,.7)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath();
+      ctx.moveTo(toSX(tx1), toSY(lossFunc(gdX) + g*(tx1-gdX)));
+      ctx.lineTo(toSX(tx2), toSY(lossFunc(gdX) + g*(tx2-gdX)));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    // step count & loss value
+    ctx.fillStyle = '#94a3b8'; ctx.font = '10px IBM Plex Mono,monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Step: ' + gdHistory.length, pad + 4, pad + 14);
+    ctx.fillText('Loss: ' + lossFunc(gdX).toFixed(4), pad + 4, pad + 27);
+    ctx.fillText('w: ' + gdX.toFixed(4), pad + 4, pad + 40);
+    ctx.textAlign = 'left';
+  }
+
+  function gdStep(){
+    var g = lossGrad(gdX);
+    gdX = gdX - gdLR * g;
+    gdHistory.push(gdX);
+    drawGD();
+    var msg = document.getElementById('gd-msg');
+    var loss = lossFunc(gdX);
+    if(loss < 0.01){
+      msg.textContent = 'Konvergen! Loss mendekati 0. Model sudah menemukan bobot terbaik.';
+      msg.style.color = 'var(--green)';
+      clearInterval(gdTimer); gdRunning = false;
+      document.getElementById('gd-start').disabled = false;
+    } else if(gdHistory.length >= 200){
+      msg.textContent = 'Batas langkah tercapai. Learning rate terlalu kecil — konvergensi lambat.';
+      msg.style.color = 'var(--amber)';
+      clearInterval(gdTimer); gdRunning = false;
+      document.getElementById('gd-start').disabled = false;
+    } else if(Math.abs(gdX) > 10){
+      msg.textContent = 'Divergen! Learning rate terlalu besar — bobot meledak keluar kurva.';
+      msg.style.color = 'var(--coral)';
+      clearInterval(gdTimer); gdRunning = false;
+      document.getElementById('gd-start').disabled = false;
+    } else {
+      var dir = g > 0 ? 'kiri' : 'kanan';
+      msg.textContent = 'Langkah ' + gdHistory.length + ' — gradient=' + g.toFixed(3) + ', bergerak ke ' + dir + '. Loss=' + loss.toFixed(4);
+      msg.style.color = 'var(--text3)';
+    }
+  }
+
+  document.querySelectorAll('.gd-lr').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.gd-lr').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      gdLR = parseFloat(this.dataset.lr);
+      // reset when LR changed
+      gdX = 2.8; gdHistory = []; gdRunning = false;
+      clearInterval(gdTimer);
+      document.getElementById('gd-start').disabled = false;
+      document.getElementById('gd-msg').textContent = 'Learning rate diubah ke ' + gdLR + '. Klik Mulai.';
+      document.getElementById('gd-msg').style.color = 'var(--text3)';
+      drawGD();
+    });
+  });
+
+  document.getElementById('gd-start').addEventListener('click', function(){
+    if(gdRunning) return;
+    gdRunning = true;
+    this.disabled = true;
+    document.getElementById('gd-msg').textContent = 'Berjalan...';
+    var interval = gdLR <= 0.02 ? 80 : gdLR <= 0.15 ? 120 : 160;
+    gdTimer = setInterval(gdStep, interval);
+  });
+
+  document.getElementById('gd-reset').addEventListener('click', function(){
+    clearInterval(gdTimer); gdRunning = false;
+    gdX = 2.8; gdHistory = [];
+    document.getElementById('gd-start').disabled = false;
+    document.getElementById('gd-msg').textContent = '';
+    drawGD();
+  });
+
+  drawGD();
+})();
+
+/* ── Overfitting / Underfitting Viz ─────────────────────────── */
+(function(){
+  var fitScenario = 'underfit';
+  var scenarios = {
+    underfit: {
+      train: [0.95,0.82,0.75,0.71,0.69,0.68,0.67,0.67,0.66,0.66],
+      val:   [0.97,0.85,0.78,0.74,0.72,0.71,0.70,0.70,0.70,0.70],
+      msg: 'Underfitting — Model terlalu sederhana. Baik loss training maupun validasi sama-sama tinggi dan stagnan. Model tidak bisa mempelajari pola data sama sekali.',
+      color: 'var(--amber)'
+    },
+    good: {
+      train: [0.95,0.75,0.58,0.44,0.33,0.25,0.19,0.15,0.12,0.10],
+      val:   [0.97,0.78,0.63,0.51,0.43,0.37,0.33,0.31,0.30,0.29],
+      msg: 'Model Baik — Loss training turun, loss validasi ikut turun dan stabil. Model belajar pola umum, bukan hafalan.',
+      color: 'var(--green)'
+    },
+    overfit: {
+      train: [0.95,0.72,0.52,0.34,0.22,0.13,0.07,0.04,0.02,0.01],
+      val:   [0.97,0.76,0.60,0.56,0.58,0.63,0.71,0.80,0.89,0.98],
+      msg: 'Overfitting — Loss training terus turun mendekati 0, tapi loss validasi mulai naik lagi setelah epoch ke-4. Model menghafal data training, gagal di data baru.',
+      color: 'var(--coral)'
+    }
+  };
+
+  function drawFit(){
+    var c = document.getElementById('fitCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 220);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var s = scenarios[fitScenario];
+    var pad = 40, W = lw - pad * 2 - 10, H = lh - pad * 2;
+    var n = s.train.length;
+    function toSX(i){ return pad + i * W / (n - 1); }
+    function toSY(v){ return pad + (v / 1.1) * H; }
+
+    // grid
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+    [0, 0.25, 0.5, 0.75, 1.0].forEach(function(v){
+      ctx.beginPath(); ctx.moveTo(pad, toSY(v)); ctx.lineTo(pad + W, toSY(v)); ctx.stroke();
+      ctx.fillStyle = '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'right';
+      ctx.fillText(v.toFixed(2), pad - 4, toSY(v) + 3);
+    });
+    // epoch labels
+    ctx.fillStyle = '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    for(var i = 0; i < n; i++){
+      if(i % 2 === 0) ctx.fillText('E' + (i+1), toSX(i), pad + H + 13);
+    }
+    // axis labels
+    ctx.fillStyle = '#64748b'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Epoch', pad + W / 2, lh - 4);
+    ctx.save(); ctx.translate(10, pad + H / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Loss', 0, 0); ctx.restore();
+
+    // draw lines
+    function drawLine(data, color, dash){
+      ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+      if(dash) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+      data.forEach(function(v, i){
+        i === 0 ? ctx.moveTo(toSX(i), toSY(v)) : ctx.lineTo(toSX(i), toSY(v));
+      });
+      ctx.stroke(); ctx.setLineDash([]);
+      // dots
+      data.forEach(function(v, i){
+        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(toSX(i), toSY(v), 3.5, 0, Math.PI*2); ctx.fill();
+      });
+    }
+    drawLine(s.train, '#7c6dfa', false);
+    drawLine(s.val, '#f87171', true);
+
+    // early stop marker for overfit
+    if(fitScenario === 'overfit'){
+      ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(toSX(3), pad); ctx.lineTo(toSX(3), pad + H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#2dd4bf'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('Early Stop', toSX(3), pad - 4);
+    }
+
+    // legend
+    ctx.font = '10px DM Sans,sans-serif';
+    ctx.fillStyle = '#7c6dfa'; ctx.fillRect(pad, pad + 4, 16, 3);
+    ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'left'; ctx.fillText('Training Loss', pad + 20, pad + 10);
+    ctx.fillStyle = '#f87171'; ctx.fillRect(pad + 130, pad + 4, 16, 3);
+    ctx.fillStyle = '#94a3b8'; ctx.fillText('Validation Loss', pad + 150, pad + 10);
+
+    var msgEl = document.getElementById('fit-msg');
+    msgEl.textContent = s.msg;
+    msgEl.style.color = s.color;
+  }
+
+  document.querySelectorAll('.fit-scenario').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.fit-scenario').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      fitScenario = this.dataset.s;
+      drawFit();
+    });
+  });
+  drawFit();
+})();
+
+/* ── Vanishing / Exploding Gradient Viz ─────────────────────────── */
+(function(){
+  var gradScenario = 'vanishing';
+  var gradScenarios = {
+    vanishing: {
+      values: [0.0002, 0.002, 0.015, 0.08, 0.35, 0.80],
+      color: function(i){ return 'rgba(248,113,113,' + (0.3 + i*0.12) + ')'; },
+      msg: 'Vanishing Gradient — Gradien di layer awal (kiri) nyaris nol. Layer awal tidak belajar sama sekali karena koreksinya terlalu kecil untuk mengubah bobot.',
+      msgColor: 'var(--coral)'
+    },
+    exploding: {
+      values: [42.5, 18.3, 7.8, 3.2, 1.4, 0.6],
+      color: function(i){ return 'rgba(251,191,36,' + (0.9 - i*0.1) + ')'; },
+      msg: 'Exploding Gradient — Gradien di layer awal sangat besar. Bobot diperbarui terlalu drastis, training menjadi tidak stabil dan loss bisa menjadi NaN.',
+      msgColor: 'var(--amber)'
+    },
+    healthy: {
+      values: [0.55, 0.58, 0.62, 0.60, 0.57, 0.53],
+      color: function(){ return 'rgba(74,222,128,0.75)'; },
+      msg: 'Gradien Sehat — Setiap layer menerima koreksi yang seimbang. Semua layer belajar secara merata, inilah yang kita inginkan.',
+      msgColor: 'var(--green)'
+    }
+  };
+
+  function drawGrad(){
+    var c = document.getElementById('gradCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 200);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var s = gradScenarios[gradScenario];
+    var n = s.values.length;
+    var maxV = Math.max.apply(null, s.values);
+    var pad = 40, W = lw - pad * 2, H = lh - pad * 2 - 10;
+    var bw = Math.min(60, W / n - 12);
+
+    ctx.fillStyle = '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    ctx.fillText('← Output (Kanan ke Kiri = Mundur ke Layer Awal)', pad + W/2, lh - 4);
+
+    var layerLabels = ['Layer 1\n(Awal)', 'Layer 2', 'Layer 3', 'Layer 4', 'Layer 5', 'Output'];
+    for(var i = 0; i < n; i++){
+      var v = s.values[i];
+      var bh = Math.max(4, (v / maxV) * H);
+      var bx = pad + (i / n) * W + (W / n - bw) / 2;
+      var by = pad + H - bh;
+      ctx.fillStyle = s.color(i);
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 4) : ctx.rect(bx, by, bw, bh);
+      ctx.fill();
+      // value label
+      ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 10px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText(v >= 1 ? v.toFixed(1) : v.toFixed(4), bx + bw/2, by - 5);
+      // layer label
+      ctx.fillStyle = '#64748b'; ctx.font = '9px DM Sans,sans-serif';
+      ctx.fillText(layerLabels[i].split('\n')[0], bx + bw/2, pad + H + 14);
+      if(layerLabels[i].includes('\n')){
+        ctx.fillText(layerLabels[i].split('\n')[1], bx + bw/2, pad + H + 24);
+      }
+    }
+
+    // y-axis label
+    ctx.fillStyle = '#64748b'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+    ctx.save(); ctx.translate(10, pad + H/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText('Besar Gradien', 0, 0); ctx.restore();
+
+    var msgEl = document.getElementById('grad-msg');
+    msgEl.textContent = s.msg;
+    msgEl.style.color = s.msgColor;
+  }
+
+  document.querySelectorAll('.grad-scenario').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.grad-scenario').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      gradScenario = this.dataset.g;
+      drawGrad();
+    });
+  });
+  drawGrad();
+})();
+
+/* ── Saddle Point / Local Minima Viz ─────────────────────────── */
+(function(){
+  var trapScenario = 'localmin';
+  var trapBallX = -2.2;
+  var trapAnimTimer = null;
+
+  var trapCurves = {
+    localmin: {
+      fn: function(x){ return 0.15*x*x*x*x - 0.8*x*x + 0.5*x + 2.5; },
+      ballStart: -2.2,
+      msg: 'Local Minima — Bola terjebak di lembah kecil di sebelah kiri. Ini bukan titik terendah (ada lembah yang lebih dalam di kanan), tapi gradient di sini = 0 sehingga optimizer berhenti.',
+      msgColor: 'var(--amber)',
+      markerX: 1.85, markerLabel: 'Global Min'
+    },
+    saddle: {
+      fn: function(x){ return 0.2*x*x*x - 0.6*x + 1.5; },
+      ballStart: -2.0,
+      msg: 'Saddle Point (Tapal Kuda) — Di titik tengah, kurva datar dari satu arah tapi menurun dari arah lain. Gradient mendekati 0, optimizer bisa "beku" di sini. Lebih umum terjadi di jaringan berdimensi tinggi.',
+      msgColor: 'var(--text2)',
+      markerX: 1.0, markerLabel: 'Saddle Point'
+    },
+    global: {
+      fn: function(x){ return 0.4*(x-0.5)*(x-0.5) + 0.2; },
+      ballStart: -2.5,
+      msg: 'Global Minima — Optimizer berhasil menemukan titik terendah sejati dari kurva loss. Inilah tujuan training: bobot yang memberikan loss paling kecil.',
+      msgColor: 'var(--green)',
+      markerX: 0.5, markerLabel: 'Global Min'
+    }
+  };
+
+  function drawTrap(ballX){
+    var c = document.getElementById('trapCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 220);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var s = trapCurves[trapScenario];
+    var pad = 40, W = lw - pad*2, H = lh - pad*2;
+    var xMin = -3, xMax = 3;
+    // find y range
+    var ySamples = [];
+    for(var i = 0; i <= 60; i++){ ySamples.push(s.fn(xMin + i*(xMax-xMin)/60)); }
+    var yMin = Math.min.apply(null, ySamples) - 0.3;
+    var yMax = Math.max.apply(null, ySamples) + 0.5;
+    function toSX(v){ return pad + (v-xMin)/(xMax-xMin)*W; }
+    function toSY(v){ return pad + H - (v-yMin)/(yMax-yMin)*H; }
+
+    // grid
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, pad+H); ctx.lineTo(pad+W, pad+H); ctx.stroke();
+
+    // axis labels
+    ctx.fillStyle = '#64748b'; ctx.font = '10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Nilai Bobot (w)', pad + W/2, lh - 4);
+    ctx.save(); ctx.translate(10, pad+H/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText('Loss', 0, 0); ctx.restore();
+
+    // curve
+    ctx.beginPath(); ctx.strokeStyle = '#7c6dfa'; ctx.lineWidth = 2.5;
+    for(var i = 0; i <= W; i++){
+      var xv = xMin + (i/W)*(xMax-xMin);
+      var yv = s.fn(xv);
+      var sx = pad+i, sy = toSY(yv);
+      i===0 ? ctx.moveTo(sx,sy) : ctx.lineTo(sx,sy);
+    }
+    ctx.stroke();
+
+    // marker
+    ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(toSX(s.markerX), pad); ctx.lineTo(toSX(s.markerX), pad+H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#2dd4bf'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+    ctx.fillText(s.markerLabel, toSX(s.markerX), pad - 4);
+
+    // ball
+    var bsx = toSX(ballX), bsy = toSY(s.fn(ballX));
+    ctx.fillStyle = 'rgba(251,191,36,.2)'; ctx.beginPath(); ctx.arc(bsx, bsy, 13, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(bsx, bsy, 7, 0, Math.PI*2); ctx.fill();
+
+    var msgEl = document.getElementById('trap-msg');
+    msgEl.textContent = s.msg;
+    msgEl.style.color = s.msgColor;
+  }
+
+  function animateBall(){
+    clearInterval(trapAnimTimer);
+    var s = trapCurves[trapScenario];
+    trapBallX = s.ballStart;
+    var lr = 0.08;
+    function grad(x){ return (s.fn(x+0.001)-s.fn(x-0.001))/0.002; }
+    var steps = 0;
+    trapAnimTimer = setInterval(function(){
+      var g = grad(trapBallX);
+      trapBallX -= lr * g;
+      steps++;
+      drawTrap(trapBallX);
+      var absG = Math.abs(g);
+      if(absG < 0.005 || steps > 150){
+        clearInterval(trapAnimTimer);
+      }
+    }, 60);
+  }
+
+  document.querySelectorAll('.trap-scenario').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.trap-scenario').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      trapScenario = this.dataset.t;
+      clearInterval(trapAnimTimer);
+      trapBallX = trapCurves[trapScenario].ballStart;
+      drawTrap(trapBallX);
+      setTimeout(animateBall, 400);
+    });
+  });
+
+  drawTrap(trapBallX);
+  setTimeout(animateBall, 600);
+})();
 
 // redraw on resize
 var resizeTimer;
