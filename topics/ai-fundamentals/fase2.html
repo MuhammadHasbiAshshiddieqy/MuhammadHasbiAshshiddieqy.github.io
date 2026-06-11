@@ -24,6 +24,7 @@
       <button class="tnbtn primary" onclick="goTo(9)">Mulai →</button>
     </div>
   </div>
+</div><!-- /aifi2 -->
 
 <div class="cc" style="border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.04);margin:20px 0 0;"><h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>Dari Satu Neuron ke Jaringan Penuh</h3>
 <p>Fase 2 adalah jantung dari Deep Learning. Kamu akan membangun intuisi dari bawah ke atas: mulai dari satu neuron buatan, lalu memahami bagaimana ribuan neuron bekerja bersama untuk belajar dari data.</p>
@@ -33,7 +34,6 @@
 <li><strong>2.3 Backpropagation</strong> — Animasi step-by-step forward pass dan backward pass. Lihat bagaimana error "mengalir mundur" ke setiap bobot.</li>
 <li><strong>2.4 ANN Interaktif</strong> — Latih jaringan secara real-time, lihat decision boundary terbentuk. Ganti dataset (XOR, circle, spiral) dan amati perbedaannya.</li>
 </ul></div>
-</div><!-- /aifi2 -->
 
 <div class="callout info" style="margin:12px 0 4px;">
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
@@ -253,8 +253,8 @@ function updateNeuron(){
   var a=1/(1+Math.exp(-z));
   var c=document.getElementById('neuronCanvas');
   if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=220;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,220);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   var cx=lw/2, cy=lh/2;
@@ -309,8 +309,8 @@ var afInfo={
 function drawAF(){
   var c=document.getElementById('afCanvas');
   if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=220;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,220);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   var pad=35, W=lw-pad*2, H=lh-pad*2;
@@ -367,8 +367,8 @@ var bpXs=[60,180,320,440];
 function drawBP(phase){
   var c=document.getElementById('bpCanvas');
   if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=260;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,260);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   var scaleX=lw/560;

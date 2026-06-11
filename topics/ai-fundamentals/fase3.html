@@ -24,6 +24,7 @@
       <button class="tnbtn primary" onclick="goTo(13)">Mulai →</button>
     </div>
   </div>
+</div><!-- /aifi3 -->
 
 <div class="cc" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04);margin:20px 0 0;"><h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>Bagaimana Mesin Melihat Gambar</h3>
 <p>CNN adalah arsitektur yang mengubah computer vision selamanya. Fase ini menjelaskan <em>mengapa</em> CNN bekerja sangat baik untuk gambar — bukan dengan rumus abstrak, tapi dengan <strong>visualisasi animasi</strong> yang menunjukkan proses secara langsung.</p>
@@ -33,7 +34,6 @@
 <li><strong>3.3 Pooling</strong> — Bandingkan Max Pooling vs Average Pooling secara visual pada grid 4×4 berwarna.</li>
 <li><strong>3.4 Arsitektur CNN</strong> — Blok animasi arsitektur CNN lengkap: dari input image hingga classification output.</li>
 </ul></div>
-</div><!-- /aifi3 -->
 
 <div class="callout info" style="margin:12px 0 4px;">
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
@@ -524,8 +524,8 @@ var archBlocks=[
 function drawArch(activeIdx){
   var c=document.getElementById('cnnArchCanvas');
   if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-20), lh=200;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,200);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   var scale=lw/460;

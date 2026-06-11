@@ -262,8 +262,8 @@ function linReg(){
 function drawLR(){
   var c=document.getElementById('linregCanvas');
   if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=280;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,280);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   // grid
@@ -331,8 +331,8 @@ function drawLogit(){
   if(!c) return;
   var thresh=parseFloat(document.getElementById('logit-thresh').value);
   document.getElementById('logit-thresh-val').textContent=thresh.toFixed(2);
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=280;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,280);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   var pad=40, W=lw-pad*2, H=lh-pad*2;
@@ -388,8 +388,8 @@ var dtActive=-1;
 function drawDTree(){
   var c=document.getElementById('dtreeCanvas');
   if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=320;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,320);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
   var scaleX=lw/560;
@@ -487,8 +487,8 @@ function drawSVM(){
   var c=document.getElementById('svmCanvas');
   if(!c) return;
   var kernel=document.getElementById('svm-kernel').value;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=280;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var sz=fitCanvas(c,560,280);
+  var lw=sz[0], lh=sz[1], dpr=sz[2];
   var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
 
