@@ -111,7 +111,7 @@ function openCurriculum(id) {
   enterCurriculum(id, label);
   var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : id === 'ai-fundamentals' ? 'aifi0' : 'i0';
   var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : id === 'ai-fundamentals' ? 'aifi0' : 'fi0';
-  loadFase(firstFase).then(function(){ goToPage(startPage); });
+  loadFase(firstFase).then(function(){ _showPage(startPage); });
 }
 
 function showLanding() {
@@ -666,6 +666,7 @@ document.addEventListener('click', function(e){
 // ── Init ──────────────────────────────────────────────────────────────────────
 function enterCurriculum(id, label) {
   activeCurriculum = id;
+  hideAll();
   document.getElementById('landing').classList.remove('landing--active');
   document.getElementById('sidebar').classList.remove('sidebar--hidden');
   document.getElementById('layout').classList.remove('layout--no-sidebar');
