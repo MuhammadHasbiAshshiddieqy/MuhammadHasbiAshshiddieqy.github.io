@@ -140,37 +140,37 @@ function renderSidebar(curriculum) {
   if (curriculum === 'ai-fundamentals') {
     sc.innerHTML = [
       '<div class="sidebar-topic-label">AI Fundamentals dari Nol</div>',
-      sbPhase('aifi0','Fase 0 — Pengenalan AI','aifi0',[
+      sbPhase('aifi0','Fase 0 — Pengenalan AI','aiffi0',[
         ['aif0a','0.1 Apa itu AI?'],
         ['aif0b','0.2 AI vs ML vs Deep Learning'],
         ['aif0c','0.3 Cara Mesin Belajar'],
         ['aif0d','0.4 Tiga Jenis Pembelajaran']
       ]),
-      sbPhase('aifi1','Fase 1 — ML Klasik','aifi1',[
+      sbPhase('aifi1','Fase 1 — ML Klasik','aiffi1',[
         ['aif1a','1.1 Linear Regression'],
         ['aif1b','1.2 Logistic Regression'],
         ['aif1c','1.3 Decision Tree'],
         ['aif1d','1.4 Random Forest'],
         ['aif1e','1.5 SVM']
       ]),
-      sbPhase('aifi2','Fase 2 — Neural Networks','aifi2',[
+      sbPhase('aifi2','Fase 2 — Neural Networks','aiffi2',[
         ['aif2a','2.1 Neuron Tiruan'],
         ['aif2b','2.2 Activation Functions'],
         ['aif2c','2.3 Backpropagation'],
         ['aif2d','2.4 ANN Interaktif']
       ]),
-      sbPhase('aifi3','Fase 3 — CNN','aifi3',[
+      sbPhase('aifi3','Fase 3 — CNN','aiffi3',[
         ['aif3a','3.1 Konvolusi & Filter'],
         ['aif3b','3.2 Feature Maps'],
         ['aif3c','3.3 Pooling'],
         ['aif3d','3.4 Arsitektur CNN']
       ]),
-      sbPhase('aifi4','Fase 4 — RNN & LSTM','aifi4',[
+      sbPhase('aifi4','Fase 4 — RNN & LSTM','aiffi4',[
         ['aif4a','4.1 RNN & Vanishing Gradient'],
         ['aif4b','4.2 LSTM Memory Cell'],
         ['aif4c','4.3 Seq2Seq & Aplikasi']
       ]),
-      sbPhase('aifi5','Fase 5 — Transformer & LLM','aifi5',[
+      sbPhase('aifi5','Fase 5 — Transformer & LLM','aiffi5',[
         ['aif5a','5.1 Attention Mechanism'],
         ['aif5b','5.2 Arsitektur Transformer'],
         ['aif5c','5.3 LLM & Pre-training'],
@@ -397,11 +397,11 @@ var AIF_PHASE_MAP = {
   'aif5a':'aifi5','aif5b':'aifi5','aif5c':'aifi5','aif5d':'aifi5','aif5e':'aifi5'
 };
 var AIF_PHASE_NUMS = {'aifi0':'0','aifi1':'1','aifi2':'2','aifi3':'3','aifi4':'4','aifi5':'5'};
-var AIF_PHASE_LAST  = {3:'aifi1', 8:'aifi2', 12:'aifi3', 16:'aifi4', 19:'aifi5'};
-var AIF_PHASE_FIRST = {0:'aifhome', 4:'aifi1', 9:'aifi2', 13:'aifi3', 17:'aifi4', 20:'aifi5'};
-var AIF_PAGE_LABELS = {'aifhome':'Beranda AI Fundamentals','aifi0':'Fase 0 — Pengenalan AI','aifi1':'Fase 1 — ML Klasik','aifi2':'Fase 2 — Neural Networks','aifi3':'Fase 3 — CNN','aifi4':'Fase 4 — RNN & LSTM','aifi5':'Fase 5 — Transformer & LLM'};
-var AIF_PHASE_INTRO_MAP = {'aifi0':'aifi0','aifi1':'aifi1','aifi2':'aifi2','aifi3':'aifi3','aifi4':'aifi4','aifi5':'aifi5'};
-var AIF_PAGES = ['aifi0','aifi1','aifi2','aifi3','aifi4','aifi5'];
+var AIF_PHASE_LAST  = {3:'aiffi1', 8:'aiffi2', 12:'aiffi3', 16:'aiffi4', 19:'aiffi5'};
+var AIF_PHASE_FIRST = {0:'aifhome', 4:'aiffi1', 9:'aiffi2', 13:'aiffi3', 17:'aiffi4', 20:'aiffi5'};
+var AIF_PAGE_LABELS = {'aifhome':'Beranda AI Fundamentals','aiffi0':'Fase 0 — Pengenalan AI','aiffi1':'Fase 1 — ML Klasik','aiffi2':'Fase 2 — Neural Networks','aiffi3':'Fase 3 — CNN','aiffi4':'Fase 4 — RNN & LSTM','aiffi5':'Fase 5 — Transformer & LLM'};
+var AIF_PHASE_INTRO_MAP = {'aifi0':'aiffi0','aifi1':'aiffi1','aifi2':'aiffi2','aifi3':'aiffi3','aifi4':'aiffi4','aifi5':'aiffi5'};
+var AIF_PAGES = ['aiffi0','aiffi1','aiffi2','aiffi3','aiffi4','aiffi5'];
 
 // ── AGENTIC AI Topics ─────────────────────────────────────────────────────────
 var TOPICS = [
