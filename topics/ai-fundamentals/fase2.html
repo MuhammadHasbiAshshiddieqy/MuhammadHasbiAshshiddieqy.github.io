@@ -33,12 +33,12 @@
 <li><strong>2.3 Backpropagation</strong> — Animasi step-by-step forward pass dan backward pass. Lihat bagaimana error "mengalir mundur" ke setiap bobot.</li>
 <li><strong>2.4 ANN Interaktif</strong> — Latih jaringan secara real-time, lihat decision boundary terbentuk. Ganti dataset (XOR, circle, spiral) dan amati perbedaannya.</li>
 </ul></div>
+</div><!-- /aifi2 -->
 
 <div class="callout info" style="margin:12px 0 4px;">
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
 <div class="ctxt"><strong>Prasyarat</strong> — Fase 1 (ML Klasik) direkomendasikan tapi tidak wajib. Konsep dasar seperti "model belajar dari data" dan "error/loss" sudah cukup untuk memulai fase ini.</div>
 </div>
-</div><!-- /aifi2 -->
 
 <!-- 2A: Neuron -->
 <div class="sub" id="aif2a">
@@ -186,7 +186,7 @@
 
 <!-- TENSORFLOW PLAYGROUND -->
 <div class="sub" id="aif2e">
-<div class="subtit"><span class="ac">🧪</span> Coba Sendiri — TensorFlow Neural Network Playground <span class="subid">// eksperimen langsung di browser</span></div>
+<div class="subtit"><span class="ac"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span> Coba Sendiri — TensorFlow Neural Network Playground <span class="subid">// eksperimen langsung di browser</span></div>
 <div class="prose">
 <p>Sekarang saatnya kamu bereksperimen sendiri! Di bawah ini adalah <strong>TensorFlow Playground</strong> — tools interaktif buatan Google yang memungkinkan kamu mengubah arsitektur neural network, learning rate, activation function, dan melihat bagaimana decision boundary berubah secara <em>real-time</em>. Tidak perlu install apapun.</p>
 <p><strong>Tips eksplorasi:</strong></p>
@@ -199,7 +199,7 @@
 </div>
 
 <div class="viz-block">
-  <div class="viz-title">🧠 TensorFlow Playground — Neural Network Interaktif</div>
+  <div class="viz-title">TensorFlow Playground — Neural Network Interaktif</div>
   <div class="viz-body" style="padding:0;">
     <iframe 
       src="https://playground.tensorflow.org/"
@@ -420,7 +420,7 @@ function drawBP(phase){
     ctx.fillText('←',bpXs[2]*scaleX-16,240);
     ctx.fillText('←',bpXs[1]*scaleX-16,240);
   }
-  var msgs=['Jaringan siap. Klik Forward Pass untuk mulai.','→ Forward Pass: Input mengalir maju, setiap neuron hitung z dan a.','← Backward Pass: Error mengalir mundur, gradient dihitung tiap layer.','✅ Update bobot: w = w - lr × ∂L/∂w. Iterasi selesai!'];
+  var msgs=['Jaringan siap. Klik Forward Pass untuk mulai.','→ Forward Pass: Input mengalir maju, setiap neuron hitung z dan a.','← Backward Pass: Error mengalir mundur, gradient dihitung tiap layer.','Update bobot: w = w - lr × ∂L/∂w. Iterasi selesai!'];
   document.getElementById('bp-msg').textContent=msgs[phase]||'';
 }
 document.getElementById('bp-forward').addEventListener('click',function(){bpPhase=1;drawBP(1);this.disabled=true;document.getElementById('bp-backward').disabled=false;});

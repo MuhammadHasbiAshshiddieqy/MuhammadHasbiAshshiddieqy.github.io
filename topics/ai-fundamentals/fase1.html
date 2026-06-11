@@ -25,6 +25,7 @@
       <button class="tnbtn primary" onclick="goTo(4)">Mulai →</button>
     </div>
   </div>
+</div><!-- /aifi1 -->
 
 <div class="cc" style="border-color:rgba(124,109,250,.3);background:rgba(124,109,250,.04);margin:20px 0 0;"><h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Apa yang Akan Kamu Pelajari</h3>
 <p>Fase 1 mencakup algoritma Machine Learning klasik yang masih digunakan di industri setiap hari. Setiap algoritma punya <strong>visualisasi interaktif</strong> — kamu bisa bereksperimen langsung dan melihat bagaimana model bereaksi terhadap data.</p>
@@ -40,7 +41,6 @@
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
 <div class="ctxt"><strong>Prasyarat</strong> — Sudah selesai Fase 0 atau sudah punya intuisi dasar tentang apa itu AI dan ML. Tidak perlu coding — semua visualisasi berjalan di browser.</div>
 </div>
-</div><!-- /aifi1 -->
 
 <!-- 1A: Linear Regression -->
 <div class="sub" id="aif1a">
@@ -103,10 +103,10 @@
 <div class="prose">
 <h4>Kelebihan &amp; Kekurangan</h4>
 <ul>
-  <li>✅ Sederhana, cepat, mudah diinterpretasi</li>
-  <li>✅ Menghasilkan probabilitas, bukan hanya label</li>
-  <li>❌ Tanpa feature engineering tambahan, hanya bisa memisahkan kelas yang <em>linearly separable</em></li>
-  <li>❌ Tidak bisa menangkap pola kompleks non-linear</li>
+  <li>Sederhana, cepat, mudah diinterpretasi</li>
+  <li>Menghasilkan probabilitas, bukan hanya label</li>
+  <li>Tanpa feature engineering tambahan, hanya bisa memisahkan kelas yang <em>linearly separable</em></li>
+  <li>Tidak bisa menangkap pola kompleks non-linear</li>
 </ul>
 <p><strong>Kapan digunakan:</strong> Deteksi spam, prediksi churn pelanggan, diagnosis medis dasar, credit scoring.</p>
 </div>
@@ -155,7 +155,7 @@
     <div id="rf-viz" style="display:flex;flex-direction:column;gap:16px;">
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;" id="rf-trees"></div>
       <div style="text-align:center;">
-        <button class="tnbtn primary" id="rf-vote-btn" style="font-size:12px;">🗳️ Jalankan Voting</button>
+        <button class="tnbtn primary" id="rf-vote-btn" style="font-size:12px;">Jalankan Voting</button>
       </div>
       <div id="rf-result" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;display:none;">
         <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">HASIL AKHIR (Majority Vote)</div>
@@ -379,10 +379,10 @@ var dtNodes=[
   {x:280,y:30,q:'Penghasilan > 5jt?',yes:1,no:2,leaf:false},
   {x:150,y:110,q:'Usia > 25?',yes:3,no:4,leaf:false},
   {x:410,y:110,q:'Punya jaminan?',yes:5,no:6,leaf:false},
-  {x:80,y:200,q:'✅ LAYAK',leaf:true,color:'#34d399'},
-  {x:220,y:200,q:'❌ TOLAK',leaf:true,color:'#f87171'},
-  {x:340,y:200,q:'✅ LAYAK',leaf:true,color:'#34d399'},
-  {x:480,y:200,q:'❌ TOLAK',leaf:true,color:'#f87171'}
+  {x:80,y:200,q:'LAYAK',leaf:true,color:'#34d399'},
+  {x:220,y:200,q:'TOLAK',leaf:true,color:'#f87171'},
+  {x:340,y:200,q:'LAYAK',leaf:true,color:'#34d399'},
+  {x:480,y:200,q:'TOLAK',leaf:true,color:'#f87171'}
 ];
 var dtActive=-1;
 function drawDTree(){
@@ -424,7 +424,7 @@ function animateDTree(){
   document.getElementById('dtree-msg').textContent='Node 0: Penghasilan > 5jt? → Ya';
   var seq=[
     function(){dtActive=1;drawDTree();document.getElementById('dtree-msg').textContent='Node 1: Usia > 25? → Ya';},
-    function(){dtActive=3;drawDTree();document.getElementById('dtree-msg').textContent='✅ Hasil: LAYAK KREDIT (penghasilan tinggi + usia matang)';},
+    function(){dtActive=3;drawDTree();document.getElementById('dtree-msg').textContent='Hasil: LAYAK KREDIT (penghasilan tinggi + usia matang)';},
     function(){dtActive=-1;drawDTree();document.getElementById('dtree-msg').textContent='Klik tombol untuk animasi ulang';}
   ];
   var i=0;
@@ -440,11 +440,11 @@ drawDTree();
 function buildRFTrees(){
   var container=document.getElementById('rf-trees');
   container.innerHTML='';
-  var votes=['✅ Layak','✅ Layak','❌ Tolak','✅ Layak','❌ Tolak','✅ Layak','✅ Layak'];
+  var votes=['Layak','Layak','Tolak','Layak','Tolak','Layak','Layak'];
   votes.forEach(function(v,i){
     var d=document.createElement('div');
     d.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;width:80px;opacity:.4;transition:all .4s;';
-    d.innerHTML='<div style="font-size:18px;margin-bottom:4px;">🌲</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text3);">Tree '+(i+1)+'</div><div id="rf-vote-'+i+'" style="font-size:10px;color:var(--text2);margin-top:4px;min-height:14px;"></div>';
+    d.innerHTML='<div style="margin-bottom:4px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text3);">Tree '+(i+1)+'</div><div id="rf-vote-'+i+'" style="font-size:10px;color:var(--text2);margin-top:4px;min-height:14px;"></div>';
     d.id='rf-tree-'+i;
     container.appendChild(d);
   });
@@ -461,18 +461,18 @@ document.getElementById('rf-vote-btn').addEventListener('click', function(){
       var el=document.getElementById('rf-tree-'+i);
       if(el){
         el.style.opacity='1';
-        el.style.borderColor=v.includes('✅')?'rgba(74,222,128,.4)':'rgba(248,113,113,.4)';
+        el.style.borderColor=v==='Layak'?'rgba(74,222,128,.4)':'rgba(248,113,113,.4)';
         var vEl=document.getElementById('rf-vote-'+i);
-        if(vEl){ vEl.textContent=v; vEl.style.color=v.includes('✅')?'#4ade80':'#f87171'; }
+        if(vEl){ vEl.textContent=v; vEl.style.color=v==='Layak'?'#4ade80':'#f87171'; }
       }
-      if(v.includes('✅')) yes++; else no++;
+      if(v==='Layak') yes++; else no++;
       if(i===rfVotes.length-1){
         setTimeout(function(){
           var res=document.getElementById('rf-result');
           var fin=document.getElementById('rf-final');
           var bar=document.getElementById('rf-score-bar');
           res.style.display='block';
-          fin.textContent=(yes>no?'✅ LAYAK KREDIT':'❌ TOLAK')+' ('+yes+' vs '+no+' suara)';
+          fin.textContent=(yes>no?'LAYAK KREDIT':'TOLAK')+' ('+yes+' vs '+no+' suara)';
           fin.style.color=yes>no?'#4ade80':'#f87171';
           bar.innerHTML='<div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;"><div style="height:100%;background:'+(yes>no?'#4ade80':'#f87171')+';width:'+(yes/rfVotes.length*100)+'%;border-radius:4px;transition:width .8s;"></div></div><div style="font-size:10px;color:var(--text3);margin-top:4px;">Kepercayaan: '+(yes/rfVotes.length*100).toFixed(0)+'%</div>';
           btn.disabled=false;

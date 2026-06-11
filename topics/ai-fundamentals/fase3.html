@@ -33,12 +33,12 @@
 <li><strong>3.3 Pooling</strong> — Bandingkan Max Pooling vs Average Pooling secara visual pada grid 4×4 berwarna.</li>
 <li><strong>3.4 Arsitektur CNN</strong> — Blok animasi arsitektur CNN lengkap: dari input image hingga classification output.</li>
 </ul></div>
+</div><!-- /aifi3 -->
 
 <div class="callout info" style="margin:12px 0 4px;">
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
 <div class="ctxt"><strong>Prasyarat</strong> — Fase 2 (Neural Networks) sangat direkomendasikan. Kamu perlu memahami konsep layer, bobot, dan forward pass sebelum masuk ke CNN.</div>
 </div>
-</div><!-- /aifi3 -->
 
 <!-- 3A: Convolution & Filters -->
 <div class="sub" id="aif3a">
@@ -360,7 +360,7 @@ document.getElementById('cnn-anim-btn').addEventListener('click',function(){
       clearInterval(cnnAnimTimer); cnnAnimRunning=false;
       document.getElementById('cnn-anim-btn').disabled=false;
       document.getElementById('cnn-stop-btn').disabled=true;
-      document.getElementById('cnn-msg').textContent='✅ Konvolusi selesai! Seluruh feature map telah dihitung.';
+      document.getElementById('cnn-msg').textContent='Konvolusi selesai! Seluruh feature map telah dihitung.';
       drawInput(); drawOutputFull(false);
     }
   },120);
@@ -451,8 +451,8 @@ function drawPooling(){
   ctx2.textAlign='left'; ctx2.textBaseline='alphabetic';
   document.getElementById('pool-explanation').innerHTML =
     activePool==='max'
-    ? '🔵 <strong>Max Pooling:</strong> Dari setiap region 2×2, ambil nilai <strong>terbesar</strong>. Pertanyaannya: "Apakah fitur ini <em>ada</em> di region ini?" Paling umum digunakan.'
-    : '🟢 <strong>Average Pooling:</strong> Dari setiap region 2×2, ambil nilai <strong>rata-rata</strong>. Pertanyaannya: "Seberapa kuat rata-rata fitur ini?" Cocok untuk fitur yang tersebar.';
+    ? '<strong>Max Pooling:</strong> Dari setiap region 2×2, ambil nilai <strong>terbesar</strong>. Pertanyaannya: "Apakah fitur ini <em>ada</em> di region ini?" Paling umum digunakan.'
+    : '<strong>Average Pooling:</strong> Dari setiap region 2×2, ambil nilai <strong>rata-rata</strong>. Pertanyaannya: "Seberapa kuat rata-rata fitur ini?" Cocok untuk fitur yang tersebar.';
 }
 document.querySelectorAll('.pool-btn').forEach(function(btn){
   btn.addEventListener('click',function(){
@@ -547,7 +547,7 @@ function drawArch(activeIdx){
     }
   });
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-  var msgs=['','Input: gambar 224×224 pixel, 3 channel RGB','Conv+ReLU: filter 64×3×3 menyapu gambar, ReLU aktivasi','Max Pooling: ukuran dikurangi 2×','Dua layer konvolusi: fitur makin kompleks','Pooling lagi: kompresi lebih lanjut','Flatten: ubah 3D tensor jadi 1D vector','Fully Connected: klasifikasi dari fitur abstrak','✅ Softmax: distribusi probabilitas 1000 kelas'];
+  var msgs=['','Input: gambar 224×224 pixel, 3 channel RGB','Conv+ReLU: filter 64×3×3 menyapu gambar, ReLU aktivasi','Max Pooling: ukuran dikurangi 2×','Dua layer konvolusi: fitur makin kompleks','Pooling lagi: kompresi lebih lanjut','Flatten: ubah 3D tensor jadi 1D vector','Fully Connected: klasifikasi dari fitur abstrak','Softmax: distribusi probabilitas 1000 kelas'];
   document.getElementById('arch-msg').textContent=msgs[activeIdx]||'';
 }
 document.getElementById('arch-animate').addEventListener('click',function(){

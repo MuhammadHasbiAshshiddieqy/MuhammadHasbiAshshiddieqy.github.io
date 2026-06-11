@@ -35,12 +35,12 @@
 <li><strong>5.4 Peta Model Modern</strong> — Filter grid model berdasarkan kategori: LLM, Image Generation, Vision, Multimodal.</li>
 <li><strong>5.5 Dari Sini, Ke Mana?</strong> — Rekomendasi jalur lanjutan ke kurikulum lain (Language Model, Agentic AI, MLOps).</li>
 </ul></div>
+</div><!-- /aifi5 -->
 
 <div class="callout info" style="margin:12px 0 4px;">
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
 <div class="ctxt"><strong>Prasyarat</strong> — Fase 4 (RNN & LSTM) direkomendasikan agar kamu memahami <em>mengapa</em> Transformer lahir sebagai solusi — bukan hanya <em>apa</em> yang ia lakukan. Koneksi antar fase adalah bagian terpenting dari belajar.</div>
 </div>
-</div><!-- /aifi5 -->
 
 <!-- 5A: Attention -->
 <div class="sub" id="aif5a">
@@ -164,10 +164,10 @@
   <div class="viz-body" style="padding:16px;">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
       <button class="tnbtn model-cat-btn active" data-cat="all" style="font-size:11px;padding:5px 10px;">Semua</button>
-      <button class="tnbtn model-cat-btn" data-cat="llm" style="font-size:11px;padding:5px 10px;">💬 LLM / Text</button>
-      <button class="tnbtn model-cat-btn" data-cat="image" style="font-size:11px;padding:5px 10px;">🖼️ Image Gen</button>
-      <button class="tnbtn model-cat-btn" data-cat="vision" style="font-size:11px;padding:5px 10px;">👁️ Vision</button>
-      <button class="tnbtn model-cat-btn" data-cat="multimodal" style="font-size:11px;padding:5px 10px;">🌐 Multimodal</button>
+      <button class="tnbtn model-cat-btn" data-cat="llm" style="font-size:11px;padding:5px 10px;">LLM / Text</button>
+      <button class="tnbtn model-cat-btn" data-cat="image" style="font-size:11px;padding:5px 10px;">Image Gen</button>
+      <button class="tnbtn model-cat-btn" data-cat="vision" style="font-size:11px;padding:5px 10px;">Vision</button>
+      <button class="tnbtn model-cat-btn" data-cat="multimodal" style="font-size:11px;padding:5px 10px;">Multimodal</button>
     </div>
     <div id="model-map-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
   </div>
@@ -199,21 +199,21 @@
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:16px 0;">
   <div style="background:var(--bg2);border:1px solid rgba(45,212,191,.25);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;" onclick="openCurriculum('language-model')">
-    <div style="font-size:24px;margin-bottom:8px;">📖</div>
+    <div style="margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Kurikulum 01</div>
     <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:6px;">Language Model Fundamentals</div>
     <div style="font-size:12px;color:var(--text3);line-height:1.5;">Dari NLP klasik hingga Transformer modern. Deep dive tokenisasi, embedding, BERT, GPT, dan cara kerja LLM dari dalam.</div>
     <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);">Buka →</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(124,109,250,.25);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;" onclick="openCurriculum('agentic-ai')">
-    <div style="font-size:24px;margin-bottom:8px;">🤖</div>
+    <div style="margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Kurikulum 02</div>
     <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:6px;">Agentic AI Mastery</div>
     <div style="font-size:12px;color:var(--text3);line-height:1.5;">Bangun AI agent yang sesungguhnya bekerja: harness, memory, multi-agent, observability, dan deployment production.</div>
     <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);">Buka →</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;" onclick="openCurriculum('mlops')">
-    <div style="font-size:24px;margin-bottom:8px;">⚙️</div>
+    <div style="margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Kurikulum 03</div>
     <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:6px;">MLOps & Deployment</div>
     <div style="font-size:12px;color:var(--text3);line-height:1.5;">Pipeline training, experiment tracking, model registry, serving, monitoring, dan CI/CD untuk sistem ML production.</div>
@@ -223,46 +223,46 @@
 
 <!-- ETIKA & LIMITASI -->
 <div class="sub" id="aif5e1">
-<div class="subtit"><span class="ac">⚠️</span> Etika &amp; Limitasi AI <span class="subid">// yang perlu kamu tahu sebelum terjun</span></div>
+<div class="subtit"><span class="ac"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Etika &amp; Limitasi AI <span class="subid">// yang perlu kamu tahu sebelum terjun</span></div>
 <div class="prose">
 <p>AI adalah alat yang sangat powerful — tapi bukan tanpa risiko. Sebagai seseorang yang memahami fondasi AI, penting untuk tahu batasan dan tanggung jawab etisnya.</p>
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:16px 0;">
   <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
-    <div style="font-size:20px;margin-bottom:6px;">🎭</div>
+    <div style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Bias Data</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;">AI belajar dari data yang dibuat manusia — dan data manusia penuh bias. Model rekrutmen bisa diskriminatif gender, model kredit bisa bias ras. <strong>AI tidak netral</strong> — ia merefleksikan bias dalam data trainingnya.</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
-    <div style="font-size:20px;margin-bottom:6px;">🌀</div>
+    <div style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Halusinasi LLM</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;">LLM seperti ChatGPT bisa "mengarang" fakta dengan sangat meyakinkan. Model tidak tahu mana yang benar — ia hanya memprediksi token yang "masuk akal" secara statistik. <strong>Selalu verifikasi</strong> output LLM.</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
-    <div style="font-size:20px;margin-bottom:6px;">🔒</div>
+    <div style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Privasi &amp; Data</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;">Model AI bisa "mengingat" data pribadi dari training. Jangan pernah memasukkan data sensitif (password, data pelanggan, rahasia perusahaan) ke layanan AI publik. Gunakan model lokal untuk data sensitif.</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
-    <div style="font-size:20px;margin-bottom:6px;">🎬</div>
+    <div style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Deepfake &amp; Misinformasi</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;">AI bisa menghasilkan gambar, video, dan suara palsu yang sulit dibedakan dari aslinya. Gunakan AI secara bertanggung jawab — jangan membuat konten yang menipu atau merugikan orang lain.</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
-    <div style="font-size:20px;margin-bottom:6px;">💼</div>
+    <div style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Dampak Pekerjaan</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;">AI akan mengotomasi banyak tugas — tapi juga menciptakan peran baru. Kuncinya: <strong>belajar beradaptasi</strong>. Pahami AI sebagai alat yang memperkuat kemampuanmu, bukan menggantikanmu sepenuhnya.</div>
   </div>
   <div style="background:var(--bg2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:16px;">
-    <div style="font-size:20px;margin-bottom:6px;">✅</div>
+    <div style="margin-bottom:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px;">Prinsip Dasar</div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;"><strong>1.</strong> Transparansi — jelaskan saat kamu menggunakan AI<br><strong>2.</strong> Akuntabilitas — kamu bertanggung jawab atas output<br><strong>3.</strong> Fairness — periksa bias sebelum deploy<br><strong>4.</strong> Privacy — jaga data pengguna</div>
   </div>
 </div>
 </div>
 
-<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>🎉 Selamat! Kurikulum 00 Selesai</strong><p style="margin:6px 0 0">Kamu telah menguasai fondasi lengkap AI: dari definisi dan sejarah, algoritma ML klasik (Linear Regression, Logistic Regression, Decision Tree, Random Forest, SVM), Neural Networks dengan backpropagation, CNN untuk computer vision, RNN/LSTM untuk sequence modeling, hingga Transformer dan ekosistem LLM modern. Fondasi ini adalah modal yang solid untuk melanjutkan ke topik apapun di atas.</p></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Selamat! Kurikulum 00 Selesai</strong><p style="margin:6px 0 0">Kamu telah menguasai fondasi lengkap AI: dari definisi dan sejarah, algoritma ML klasik (Linear Regression, Logistic Regression, Decision Tree, Random Forest, SVM), Neural Networks dengan backpropagation, CNN untuk computer vision, RNN/LSTM untuk sequence modeling, hingga Transformer dan ekosistem LLM modern. Fondasi ini adalah modal yang solid untuk melanjutkan ke topik apapun di atas.</p></div></div>
 </div>
 
 <style>
