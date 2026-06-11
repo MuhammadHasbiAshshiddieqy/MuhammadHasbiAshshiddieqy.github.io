@@ -1,0 +1,524 @@
+<section class="cs p1" id="aif1">
+<div class="fase-intro" id="aifi1">
+<div class="sh">
+  <div class="sbadge">01</div>
+  <div>
+    <div class="stitle">Machine Learning Klasik — Algoritma Fondasi</div>
+    <div class="sdesc">Sebelum Deep Learning, para insinyur membangun sistem yang luar biasa hanya dengan algoritma sederhana. Pahami Linear Regression, Logistic Regression, Decision Tree, Random Forest, dan SVM — lengkap dengan visualisasi interaktif bagaimana tiap algoritma "berpikir".</div>
+    <div class="smeta"><span class="mc">~60 menit</span><span class="mc">5 topik</span><span class="mc">5 visualisasi</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#aif1a">Linear Regression</a>
+  <a class="snavi" href="#aif1b">Logistic Regression</a>
+  <a class="snavi" href="#aif1c">Decision Tree</a>
+  <a class="snavi" href="#aif1d">Random Forest</a>
+  <a class="snavi" href="#aif1e">SVM</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · ~60 menit</div>
+      <div class="topic-nav-title">Mulai dari: 1.1 Linear Regression</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('aifi0')">← Fase 0</button>
+      <button class="tnbtn primary" onclick="goTo(4)">Mulai →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 1A: Linear Regression -->
+<div class="sub" id="aif1a">
+<div class="subtit"><span class="ac">1.1</span> Linear Regression <span class="subid">// garis terbaik melalui data</span></div>
+<div class="prose">
+<p>Algoritma ML paling sederhana: temukan garis lurus yang paling cocok menggambarkan hubungan antara dua variabel. Cocok untuk memprediksi <em>nilai numerik kontinu</em>.</p>
+<p><strong>Rumus:</strong> <code>y = wx + b</code> — model mencari nilai <em>w</em> (kemiringan) dan <em>b</em> (intercept) yang meminimalkan total error terhadap semua data.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Drag titik, lihat garis berubah</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="linregCanvas" style="width:100%;max-width:560px;height:280px;display:block;margin:0 auto;cursor:crosshair;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="display:flex;gap:16px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text3);">Klik canvas untuk tambah titik · Klik titik + drag untuk geser</span>
+      <button class="tnbtn" id="linreg-clear" style="font-size:11px;padding:4px 12px;">Bersihkan</button>
+    </div>
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">
+      <span>y = <span id="linreg-w" style="color:var(--teal)">?</span>x + <span id="linreg-b" style="color:var(--amber)">?</span></span>
+      <span>R² = <span id="linreg-r2" style="color:var(--green)">?</span></span>
+      <span>MSE = <span id="linreg-mse" style="color:var(--coral)">?</span></span>
+    </div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Cara Kerja — Gradient Descent</h4>
+<p>Model tidak langsung "tahu" garis terbaik. Ia mulai dari garis acak, lalu perlahan-lahan menggeser bobot <em>w</em> dan <em>b</em> ke arah yang mengurangi error. Proses ini disebut <strong>Gradient Descent</strong>.</p>
+<ul>
+  <li><strong>MSE (Mean Squared Error)</strong> — ukuran error: rata-rata kuadrat selisih prediksi vs kenyataan.</li>
+  <li><strong>R² (R-squared)</strong> — seberapa baik model menjelaskan variasi data (0–1, makin dekat 1 makin baik).</li>
+  <li><strong>Overfitting</strong> — model terlalu "hafal" data training, gagal di data baru. Solusi: lebih banyak data atau regularisasi.</li>
+</ul>
+<p><strong>Kapan digunakan:</strong> Prediksi harga rumah, estimasi penjualan, analisis tren.</p>
+</div>
+</div>
+
+<!-- 1B: Logistic Regression -->
+<div class="sub" id="aif1b">
+<div class="subtit"><span class="ac">1.2</span> Logistic Regression <span class="subid">// klasifikasi dengan probabilitas</span></div>
+<div class="prose">
+<p>Nama "regression" sedikit menyesatkan — ini sebenarnya algoritma <strong>klasifikasi</strong>. Alih-alih garis lurus, ia menggunakan kurva berbentuk S (<em>sigmoid</em>) untuk memprediksi probabilitas suatu kelas: apakah email ini spam? apakah tumor ini ganas?</p>
+<p><strong>Output:</strong> Angka antara 0 dan 1 (probabilitas). Jika > 0.5 → kelas positif, jika ≤ 0.5 → kelas negatif.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Fungsi Sigmoid &amp; Decision Boundary Interaktif</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">
+        Threshold: <input type="range" id="logit-thresh" min="0.1" max="0.9" step="0.05" value="0.5" style="width:120px;">
+        <span id="logit-thresh-val" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);width:30px;">0.50</span>
+      </label>
+    </div>
+    <canvas id="logitCanvas" style="width:100%;max-width:560px;height:280px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;">Geser threshold untuk lihat bagaimana batas keputusan berubah</p>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Kelebihan &amp; Kekurangan</h4>
+<ul>
+  <li>✅ Sederhana, cepat, mudah diinterpretasi</li>
+  <li>✅ Menghasilkan probabilitas, bukan hanya label</li>
+  <li>❌ Tanpa feature engineering tambahan, hanya bisa memisahkan kelas yang <em>linearly separable</em></li>
+  <li>❌ Tidak bisa menangkap pola kompleks non-linear</li>
+</ul>
+<p><strong>Kapan digunakan:</strong> Deteksi spam, prediksi churn pelanggan, diagnosis medis dasar, credit scoring.</p>
+</div>
+</div>
+
+<!-- 1C: Decision Tree -->
+<div class="sub" id="aif1c">
+<div class="subtit"><span class="ac">1.3</span> Decision Tree <span class="subid">// pohon pertanyaan ya/tidak</span></div>
+<div class="prose">
+<p>Decision Tree belajar dengan membuat serangkaian pertanyaan ya/tidak tentang fitur data, seperti bermain <em>20 Questions</em>. Di setiap node, model memilih pertanyaan yang paling efektif memisahkan kelas-kelas yang ada.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Pohon Keputusan "Layak Kredit?"</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="dtreeCanvas" style="width:100%;max-width:560px;height:320px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="tnbtn primary" id="dtree-animate" style="font-size:12px;">▶ Animasikan Traversal</button>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;" id="dtree-msg">Klik tombol untuk melihat bagaimana data diklasifikasikan</p>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Konsep Penting</h4>
+<ul>
+  <li><strong>Gini Impurity / Entropy</strong> — ukuran seberapa "campur" data di sebuah node. Pertanyaan terbaik = yang paling mengurangi impurity.</li>
+  <li><strong>Depth (kedalaman)</strong> — semakin dalam pohon, semakin "hafal" data training → risiko overfitting tinggi.</li>
+  <li><strong>Pruning</strong> — memangkas cabang yang tidak berguna untuk mengurangi overfitting.</li>
+</ul>
+<p><strong>Kelebihan:</strong> Mudah dipahami manusia, tidak perlu normalisasi data, bisa handle data kategorikal. <strong>Kekurangan:</strong> Sangat rentan overfitting jika pohon terlalu dalam.</p>
+</div>
+</div>
+
+<!-- 1D: Random Forest -->
+<div class="sub" id="aif1d">
+<div class="subtit"><span class="ac">1.4</span> Random Forest <span class="subid">// kekuatan kolektif pohon-pohon acak</span></div>
+<div class="prose">
+<p>Satu decision tree mudah overfitting. Solusinya? Bangun <strong>ratusan pohon</strong> dengan data dan fitur yang berbeda-beda (acak), lalu ambil suara terbanyak (<em>majority voting</em>). Inilah Random Forest.</p>
+<p><strong>Analogi:</strong> Jika kamu ingin nasihat penting, apakah kamu tanya satu orang saja, atau tanya 100 orang berbeda dan ikuti pendapat mayoritas? Kolektif lebih andal dari individu.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Ensemble Voting: Banyak Pohon, Satu Keputusan</div>
+  <div class="viz-body" style="padding:20px;">
+    <div id="rf-viz" style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;" id="rf-trees"></div>
+      <div style="text-align:center;">
+        <button class="tnbtn primary" id="rf-vote-btn" style="font-size:12px;">🗳️ Jalankan Voting</button>
+      </div>
+      <div id="rf-result" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;display:none;">
+        <div style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:6px;">HASIL AKHIR (Majority Vote)</div>
+        <div id="rf-final" style="font-size:18px;font-family:'IBM Plex Mono',monospace;color:var(--text);"></div>
+        <div id="rf-score-bar" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Mengapa Lebih Baik dari Single Tree?</h4>
+<ul>
+  <li><strong>Bagging (Bootstrap Aggregating)</strong> — tiap pohon dilatih pada subset data acak, mengurangi variance.</li>
+  <li><strong>Feature randomness</strong> — tiap split hanya mempertimbangkan subset fitur acak, memastikan diversitas pohon.</li>
+  <li><strong>Out-of-bag error</strong> — data yang tidak dipakai tiap pohon bisa digunakan sebagai validation gratis.</li>
+</ul>
+<p><strong>Kapan digunakan:</strong> Hampir semua masalah tabular (data berbentuk tabel). Sangat populer di kompetisi data science. Tahan terhadap outlier dan missing values.</p>
+</div>
+</div>
+
+<!-- 1E: SVM -->
+<div class="sub" id="aif1e">
+<div class="subtit"><span class="ac">1.5</span> Support Vector Machine (SVM) <span class="subid">// garis pemisah dengan margin terlebar</span></div>
+<div class="prose">
+<p>SVM tidak hanya mencari <em>sembarang</em> garis yang memisahkan dua kelas — ia mencari garis dengan <strong>margin terlebar</strong> antara kelas-kelas tersebut. Semakin lebar margin, semakin "yakin" model dalam prediksinya.</p>
+<p>Yang membuat SVM istimewa: dengan <strong>kernel trick</strong>, ia bisa memisahkan data yang tidak bisa dipisahkan oleh garis lurus — dengan cara "memproyeksikan" data ke dimensi yang lebih tinggi.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Maximum Margin Classifier</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">
+        Kernel:
+        <select id="svm-kernel" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;">
+          <option value="linear">Linear</option>
+          <option value="rbf">RBF (Radial)</option>
+        </select>
+      </label>
+    </div>
+    <canvas id="svmCanvas" style="width:100%;max-width:560px;height:280px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;" id="svm-caption">Garis kuning = hyperplane, daerah abu = margin, titik dilingkari = support vectors</p>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Kernel Trick — Sihir SVM</h4>
+<ul>
+  <li><strong>Linear kernel</strong> — separasi langsung di dimensi asli. Cepat, baik untuk data high-dimensional seperti teks.</li>
+  <li><strong>RBF (Radial Basis Function)</strong> — memproyeksikan ke dimensi tak terbatas. Bisa memisahkan data dengan batas non-linear kompleks.</li>
+  <li><strong>Support Vectors</strong> — titik-titik data yang paling dekat dengan hyperplane. Hanya ini yang menentukan posisi garis pemisah.</li>
+</ul>
+<p><strong>Kapan digunakan:</strong> Klasifikasi teks (dengan linear kernel), pengenalan gambar tradisional, dataset ukuran sedang dengan batas keputusan kompleks.</p>
+</div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Ringkasan Fase 1 — Algoritma ML Klasik</strong><p style="margin:6px 0 0">Kamu sudah pelajari 5 algoritma fondasi: <strong>Linear Regression</strong> untuk prediksi numerik, <strong>Logistic Regression</strong> untuk klasifikasi biner, <strong>Decision Tree</strong> untuk aturan yang bisa dibaca manusia, <strong>Random Forest</strong> untuk ensemble yang kuat, dan <strong>SVM</strong> untuk margin maksimal. Fase berikutnya: Neural Network — di sinilah Deep Learning dimulai.</p></div></div>
+</div>
+
+<style>
+.viz-block{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;}
+.viz-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);padding:10px 16px;letter-spacing:.04em;}
+.viz-body{padding:20px;}
+</style>
+
+<script>
+(function(){
+
+/* ── Linear Regression ─────────────────────────── */
+var lrPoints=[], lrDragging=-1;
+function seedPoints(){
+  var pts=[[60,220],[100,195],[150,170],[200,150],[260,125],[310,105],[370,80],[430,60],[490,45]];
+  pts.forEach(function(p){lrPoints.push({x:p[0],y:p[1]});});
+}
+seedPoints();
+
+function linReg(){
+  if(lrPoints.length<2) return null;
+  var n=lrPoints.length,sx=0,sy=0,sxy=0,sx2=0;
+  lrPoints.forEach(function(p){sx+=p.x;sy+=p.y;sxy+=p.x*p.y;sx2+=p.x*p.x;});
+  var w=(n*sxy-sx*sy)/(n*sx2-sx*sx);
+  var b=(sy-w*sx)/n;
+  var yMean=sy/n, ssTot=0, ssRes=0;
+  lrPoints.forEach(function(p){ssTot+=Math.pow(p.y-yMean,2);ssRes+=Math.pow(p.y-(w*p.x+b),2);});
+  var r2=1-ssRes/ssTot;
+  var mse=ssRes/n;
+  return {w:w,b:b,r2:r2,mse:mse};
+}
+
+function drawLR(){
+  var c=document.getElementById('linregCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=280;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  // grid
+  ctx.strokeStyle='#0f172a'; ctx.lineWidth=1;
+  for(var i=0;i<=4;i++){ctx.beginPath();ctx.moveTo(0,lh*(i/4));ctx.lineTo(lw,lh*(i/4));ctx.stroke();}
+  for(var i=0;i<=5;i++){ctx.beginPath();ctx.moveTo(lw*(i/5),0);ctx.lineTo(lw*(i/5),lh);ctx.stroke();}
+  var reg=linReg();
+  if(reg){
+    // residual lines
+    ctx.strokeStyle='rgba(248,113,113,.3)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    lrPoints.forEach(function(p){
+      var yp=reg.w*p.x+reg.b;
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x,yp); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    // regression line
+    ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(0,reg.b); ctx.lineTo(lw,reg.w*lw+reg.b); ctx.stroke();
+    document.getElementById('linreg-w').textContent=reg.w.toFixed(3);
+    document.getElementById('linreg-b').textContent=reg.b.toFixed(1);
+    document.getElementById('linreg-r2').textContent=Math.max(0,reg.r2).toFixed(3);
+    document.getElementById('linreg-mse').textContent=reg.mse.toFixed(1);
+  }
+  lrPoints.forEach(function(p,i){
+    ctx.fillStyle=i===lrDragging?'#fbbf24':'#60a5fa';
+    ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill();
+  });
+}
+
+var lrc=document.getElementById('linregCanvas');
+function getPos(e){
+  var r=lrc.getBoundingClientRect(), scaleX=lrc.offsetWidth/lrc.offsetWidth;
+  var touch=e.touches?e.touches[0]:e;
+  return {x:(touch.clientX-r.left)*(lrc.offsetWidth/r.width), y:(touch.clientY-r.top)*(lrc.offsetHeight/r.height)};
+}
+lrc.addEventListener('click', function(e){
+  if(lrDragging>=0) return;
+  var p=getPos(e);
+  // check if near existing point
+  for(var i=0;i<lrPoints.length;i++){
+    var dx=lrPoints[i].x-p.x, dy=lrPoints[i].y-p.y;
+    if(Math.sqrt(dx*dx+dy*dy)<12) return;
+  }
+  lrPoints.push(p); drawLR();
+});
+lrc.addEventListener('mousedown', function(e){
+  var p=getPos(e);
+  for(var i=0;i<lrPoints.length;i++){
+    var dx=lrPoints[i].x-p.x, dy=lrPoints[i].y-p.y;
+    if(Math.sqrt(dx*dx+dy*dy)<10){lrDragging=i;break;}
+  }
+});
+lrc.addEventListener('mousemove', function(e){
+  if(lrDragging<0) return;
+  var p=getPos(e);
+  lrPoints[lrDragging]={x:p.x,y:p.y}; drawLR();
+});
+lrc.addEventListener('mouseup', function(){lrDragging=-1;});
+document.getElementById('linreg-clear').addEventListener('click', function(){lrPoints=[];drawLR();});
+drawLR();
+
+/* ── Logistic Regression ─────────────────────────── */
+function drawLogit(){
+  var c=document.getElementById('logitCanvas');
+  if(!c) return;
+  var thresh=parseFloat(document.getElementById('logit-thresh').value);
+  document.getElementById('logit-thresh-val').textContent=thresh.toFixed(2);
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=280;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var pad=40, W=lw-pad*2, H=lh-pad*2;
+  // axis
+  ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,pad+H); ctx.lineTo(pad+W,pad+H); ctx.stroke();
+  ctx.fillStyle='#475569'; ctx.font='10px IBM Plex Mono,monospace';
+  ctx.fillText('x',pad+W-5,pad+H+14); ctx.fillText('P(y=1)',pad-30,pad+5);
+  // sigmoid
+  ctx.beginPath(); ctx.strokeStyle='#7c6dfa'; ctx.lineWidth=2.5;
+  for(var i=0;i<=W;i++){
+    var xv=(i/W)*10-5, yv=1/(1+Math.exp(-xv));
+    var cx=pad+i, cy=pad+H*(1-yv);
+    i===0?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);
+  }
+  ctx.stroke();
+  // threshold line
+  var ty=pad+H*(1-thresh);
+  ctx.strokeStyle='#fbbf24'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(pad,ty); ctx.lineTo(pad+W,ty); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24'; ctx.font='10px IBM Plex Mono,monospace';
+  ctx.fillText('threshold = '+thresh.toFixed(2), pad+4, ty-5);
+  // shade regions
+  ctx.fillStyle='rgba(248,113,113,.07)';
+  ctx.fillRect(pad,ty,W,pad+H-ty);
+  ctx.fillStyle='rgba(74,222,128,.07)';
+  ctx.fillRect(pad,pad,W,ty-pad);
+  ctx.fillStyle='#f87171'; ctx.font='11px DM Sans,sans-serif';
+  ctx.fillText('Prediksi: NEGATIF (< threshold)', pad+8, ty+20);
+  ctx.fillStyle='#4ade80';
+  ctx.fillText('Prediksi: POSITIF (≥ threshold)', pad+8, ty-18);
+  // axis ticks
+  ctx.fillStyle='#475569'; ctx.font='9px IBM Plex Mono,monospace';
+  for(var v=0;v<=1;v+=0.25){
+    var yy=pad+H*(1-v);
+    ctx.fillText(v.toFixed(2),pad-28,yy+3);
+  }
+}
+document.getElementById('logit-thresh').addEventListener('input', drawLogit);
+drawLogit();
+
+/* ── Decision Tree ─────────────────────────── */
+var dtNodes=[
+  {x:280,y:30,q:'Penghasilan > 5jt?',yes:1,no:2,leaf:false},
+  {x:150,y:110,q:'Usia > 25?',yes:3,no:4,leaf:false},
+  {x:410,y:110,q:'Punya jaminan?',yes:5,no:6,leaf:false},
+  {x:80,y:200,q:'✅ LAYAK',leaf:true,color:'#34d399'},
+  {x:220,y:200,q:'❌ TOLAK',leaf:true,color:'#f87171'},
+  {x:340,y:200,q:'✅ LAYAK',leaf:true,color:'#34d399'},
+  {x:480,y:200,q:'❌ TOLAK',leaf:true,color:'#f87171'}
+];
+var dtActive=-1;
+function drawDTree(){
+  var c=document.getElementById('dtreeCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=320;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var scaleX=lw/560;
+  // draw edges
+  [[0,1,'Ya'],[0,2,'Tidak'],[1,3,'Ya'],[1,4,'Tidak'],[2,5,'Ya'],[2,6,'Tidak']].forEach(function(e){
+    var from=dtNodes[e[0]], to=dtNodes[e[1]];
+    var fx=from.x*scaleX, fy=from.y+40, tx=to.x*scaleX, ty=to.y;
+    var isActive = dtActive>=0 && (
+      (dtActive===0&&(e[0]===0)) || (dtActive===1&&e[0]===1) || (dtActive===2&&e[0]===2) ||
+      (dtActive===3&&(e[0]===1&&e[1]===3)) || (dtActive===4&&(e[0]===1&&e[1]===4)) ||
+      (dtActive===5&&(e[0]===2&&e[1]===5)) || (dtActive===6&&(e[0]===2&&e[1]===6))
+    );
+    ctx.strokeStyle=isActive?'#fbbf24':'#334155'; ctx.lineWidth=isActive?2.5:1.5;
+    ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(tx,ty); ctx.stroke();
+    ctx.fillStyle='#fbbf24'; ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillText(e[2],(fx+tx)/2+2,(fy+ty)/2);
+  });
+  // draw nodes
+  dtNodes.forEach(function(n,i){
+    var x=n.x*scaleX, y=n.y, w=n.leaf?80:130, h=32, rx=x-w/2, ry=y;
+    ctx.fillStyle=i===dtActive?(n.color||'rgba(124,109,250,.3)'):(n.leaf?'rgba(255,255,255,.04)':'rgba(124,109,250,.08)');
+    ctx.strokeStyle=i===dtActive?(n.color||'var(--accent)'):(n.leaf?(n.color+'44'):'rgba(124,109,250,.3)');
+    ctx.lineWidth=i===dtActive?2:1;
+    ctx.beginPath(); ctx.roundRect(rx,ry,w,h,6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=n.leaf?(n.color||'#e2e8f0'):'#e2e8f0'; ctx.font='10px DM Sans,sans-serif';
+    ctx.textAlign='center'; ctx.fillText(n.q,x,y+20); ctx.textAlign='left';
+  });
+}
+var dtStep=0, dtPath=[0];
+function animateDTree(){
+  dtStep=0; dtPath=[0]; dtActive=0; drawDTree();
+  document.getElementById('dtree-msg').textContent='Node 0: Penghasilan > 5jt? → Ya';
+  var seq=[
+    function(){dtActive=1;drawDTree();document.getElementById('dtree-msg').textContent='Node 1: Usia > 25? → Ya';},
+    function(){dtActive=3;drawDTree();document.getElementById('dtree-msg').textContent='✅ Hasil: LAYAK KREDIT (penghasilan tinggi + usia matang)';},
+    function(){dtActive=-1;drawDTree();document.getElementById('dtree-msg').textContent='Klik tombol untuk animasi ulang';}
+  ];
+  var i=0;
+  var t=setInterval(function(){
+    if(i>=seq.length){clearInterval(t);return;}
+    seq[i](); i++;
+  },1000);
+}
+document.getElementById('dtree-animate').addEventListener('click', animateDTree);
+drawDTree();
+
+/* ── Random Forest ─────────────────────────── */
+function buildRFTrees(){
+  var container=document.getElementById('rf-trees');
+  container.innerHTML='';
+  var votes=['✅ Layak','✅ Layak','❌ Tolak','✅ Layak','❌ Tolak','✅ Layak','✅ Layak'];
+  votes.forEach(function(v,i){
+    var d=document.createElement('div');
+    d.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;width:80px;opacity:.4;transition:all .4s;';
+    d.innerHTML='<div style="font-size:18px;margin-bottom:4px;">🌲</div><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--text3);">Tree '+(i+1)+'</div><div id="rf-vote-'+i+'" style="font-size:10px;color:var(--text2);margin-top:4px;min-height:14px;"></div>';
+    d.id='rf-tree-'+i;
+    container.appendChild(d);
+  });
+  return votes;
+}
+var rfVotes=buildRFTrees();
+document.getElementById('rf-vote-btn').addEventListener('click', function(){
+  var btn=this; btn.disabled=true;
+  rfVotes=buildRFTrees();
+  document.getElementById('rf-result').style.display='none';
+  var yes=0, no=0;
+  rfVotes.forEach(function(v,i){
+    setTimeout(function(){
+      var el=document.getElementById('rf-tree-'+i);
+      if(el){
+        el.style.opacity='1';
+        el.style.borderColor=v.includes('✅')?'rgba(74,222,128,.4)':'rgba(248,113,113,.4)';
+        var vEl=document.getElementById('rf-vote-'+i);
+        if(vEl){ vEl.textContent=v; vEl.style.color=v.includes('✅')?'#4ade80':'#f87171'; }
+      }
+      if(v.includes('✅')) yes++; else no++;
+      if(i===rfVotes.length-1){
+        setTimeout(function(){
+          var res=document.getElementById('rf-result');
+          var fin=document.getElementById('rf-final');
+          var bar=document.getElementById('rf-score-bar');
+          res.style.display='block';
+          fin.textContent=(yes>no?'✅ LAYAK KREDIT':'❌ TOLAK')+' ('+yes+' vs '+no+' suara)';
+          fin.style.color=yes>no?'#4ade80':'#f87171';
+          bar.innerHTML='<div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;"><div style="height:100%;background:'+(yes>no?'#4ade80':'#f87171')+';width:'+(yes/rfVotes.length*100)+'%;border-radius:4px;transition:width .8s;"></div></div><div style="font-size:10px;color:var(--text3);margin-top:4px;">Kepercayaan: '+(yes/rfVotes.length*100).toFixed(0)+'%</div>';
+          btn.disabled=false;
+        },400);
+      }
+    },i*300+300);
+  });
+});
+
+/* ── SVM ─────────────────────────── */
+function drawSVM(){
+  var c=document.getElementById('svmCanvas');
+  if(!c) return;
+  var kernel=document.getElementById('svm-kernel').value;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=280;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+
+  var seed=99;
+  function rand(){seed=(seed*1664525+1013904223)&0xffffffff;return(seed>>>0)/0xffffffff;}
+
+  if(kernel==='linear'){
+    var pts1=[], pts2=[];
+    for(var i=0;i<18;i++) pts1.push({x:60+rand()*160,y:60+rand()*160});
+    for(var i=0;i<18;i++) pts2.push({x:290+rand()*180,y:60+rand()*160});
+    // margin region
+    ctx.fillStyle='rgba(251,191,36,.04)';
+    ctx.beginPath(); ctx.moveTo(220,0); ctx.lineTo(280,0); ctx.lineTo(280,lh); ctx.lineTo(220,lh); ctx.closePath(); ctx.fill();
+    // margin lines
+    ctx.strokeStyle='rgba(251,191,36,.3)'; ctx.lineWidth=1; ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(220,0); ctx.lineTo(220,lh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(280,0); ctx.lineTo(280,lh); ctx.stroke(); ctx.setLineDash([]);
+    // hyperplane
+    ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(250,0); ctx.lineTo(250,lh); ctx.stroke();
+    ctx.fillStyle='#fbbf24'; ctx.font='10px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText('Hyperplane',250,20); ctx.fillText('← Margin →',250,lh-10); ctx.textAlign='left';
+    pts1.forEach(function(p){ ctx.fillStyle='#60a5fa'; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); });
+    pts2.forEach(function(p){ ctx.fillStyle='#f87171'; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); });
+    // support vectors (circles)
+    [{x:220,y:90},{x:220,y:150}].forEach(function(sv){
+      ctx.strokeStyle='#60a5fa'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(sv.x,sv.y,8,0,Math.PI*2); ctx.stroke();
+    });
+    [{x:280,y:80},{x:280,y:155}].forEach(function(sv){
+      ctx.strokeStyle='#f87171'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(sv.x,sv.y,8,0,Math.PI*2); ctx.stroke();
+    });
+  } else {
+    // RBF — circular boundary
+    var inner=[], outer=[];
+    for(var i=0;i<15;i++){
+      var a=rand()*Math.PI*2, r=50+rand()*40;
+      inner.push({x:lw/2+Math.cos(a)*r, y:lh/2+Math.sin(a)*r*0.8});
+    }
+    for(var i=0;i<18;i++){
+      var a=rand()*Math.PI*2, r=130+rand()*60;
+      outer.push({x:lw/2+Math.cos(a)*r, y:lh/2+Math.sin(a)*r*0.75});
+    }
+    // decision boundary (ellipse)
+    ctx.strokeStyle='#fbbf24'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.ellipse(lw/2,lh/2,105,90,0,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(251,191,36,.04)';
+    ctx.beginPath(); ctx.ellipse(lw/2,lh/2,130,110,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(lw/2,lh/2,80,68,0,0,Math.PI*2); ctx.fill();
+    inner.forEach(function(p){ctx.fillStyle='#60a5fa';ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();});
+    outer.forEach(function(p){ctx.fillStyle='#f87171';ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();});
+    ctx.fillStyle='#fbbf24'; ctx.font='10px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText('RBF Boundary (non-linear)',lw/2,20); ctx.textAlign='left';
+  }
+}
+document.getElementById('svm-kernel').addEventListener('change', drawSVM);
+drawSVM();
+
+})();
+</script>
+</section>

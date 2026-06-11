@@ -1,0 +1,586 @@
+<section class="cs p2" id="aif2">
+<div class="fase-intro" id="aifi2">
+<div class="sh">
+  <div class="sbadge">02</div>
+  <div>
+    <div class="stitle">Neural Networks — Otak Buatan dari Nol</div>
+    <div class="sdesc">Neural Network adalah fondasi Deep Learning. Pelajari bagaimana neuron tiruan bekerja, apa itu activation function, bagaimana backpropagation menyebarkan error ke seluruh jaringan, dan visualisasikan ANN memisahkan kelas secara interaktif.</div>
+    <div class="smeta"><span class="mc">~60 menit</span><span class="mc">4 topik</span><span class="mc">4 visualisasi</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#aif2a">Neuron Tiruan</a>
+  <a class="snavi" href="#aif2b">Activation Functions</a>
+  <a class="snavi" href="#aif2c">Backpropagation</a>
+  <a class="snavi" href="#aif2d">ANN Interaktif</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">4 topik · ~60 menit</div>
+      <div class="topic-nav-title">Mulai dari: 2.1 Neuron Tiruan</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('aifi1')">← Fase 1</button>
+      <button class="tnbtn primary" onclick="goTo(9)">Mulai →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2A: Neuron -->
+<div class="sub" id="aif2a">
+<div class="subtit"><span class="ac">2.1</span> Neuron Tiruan — Unit Komputasi Dasar <span class="subid">// terinspirasi otak, bukan salinannya</span></div>
+<div class="prose">
+<p>Otak manusia punya ~86 miliar neuron. Setiap neuron menerima sinyal dari neuron lain, memprosesnya, dan memutuskan apakah akan meneruskan sinyal tersebut. Neural network tiruan meniru prinsip ini dengan matematis sederhana.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Satu Neuron: Geser Bobot &amp; Bias</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">x₁: <input type="range" id="n-x1" min="-2" max="2" step="0.1" value="1" style="width:80px;"> <span id="n-x1-v" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);width:28px;">1.0</span></label>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">x₂: <input type="range" id="n-x2" min="-2" max="2" step="0.1" value="0.5" style="width:80px;"> <span id="n-x2-v" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);width:28px;">0.5</span></label>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">w₁: <input type="range" id="n-w1" min="-2" max="2" step="0.1" value="0.8" style="width:80px;"> <span id="n-w1-v" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);width:28px;">0.8</span></label>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">w₂: <input type="range" id="n-w2" min="-2" max="2" step="0.1" value="0.6" style="width:80px;"> <span id="n-w2-v" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);width:28px;">0.6</span></label>
+      <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px;">bias: <input type="range" id="n-b" min="-2" max="2" step="0.1" value="0.1" style="width:80px;"> <span id="n-b-v" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--coral);width:28px;">0.1</span></label>
+    </div>
+    <canvas id="neuronCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="neuron-formula" style="text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Rumus Neuron</h4>
+<p>Setiap neuron melakukan dua langkah:</p>
+<ul>
+  <li><strong>Langkah 1 — Weighted Sum:</strong> <code>z = w₁x₁ + w₂x₂ + ... + b</code></li>
+  <li><strong>Langkah 2 — Activation:</strong> <code>a = f(z)</code> — fungsi nonlinear yang memutuskan "seberapa aktif" neuron ini</li>
+</ul>
+<p><strong>Kenapa butuh bias?</strong> Bias seperti konstanta yang membuat model bisa "bergeser" — tanpa bias, semua garis keputusan harus melewati titik (0,0), yang sangat membatasi.</p>
+<p><strong>Kenapa bobot (weight) penting?</strong> Bobot menentukan seberapa kuat setiap input mempengaruhi output. Training = menemukan bobot terbaik.</p>
+</div>
+</div>
+
+<!-- 2B: Activation Functions -->
+<div class="sub" id="aif2b">
+<div class="subtit"><span class="ac">2.2</span> Activation Functions <span class="subid">// mengapa non-linearitas adalah segalanya</span></div>
+<div class="prose">
+<p>Tanpa activation function, neural network sedalam apapun hanya akan menjadi operasi linear — setara dengan satu layer saja. Activation function memasukkan <strong>non-linearitas</strong> yang memungkinkan model mempelajari pola kompleks dunia nyata.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Bandingkan 4 Activation Functions</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn active-af" data-af="sigmoid" style="font-size:11px;padding:5px 12px;">Sigmoid</button>
+      <button class="tnbtn active-af" data-af="tanh" style="font-size:11px;padding:5px 12px;">Tanh</button>
+      <button class="tnbtn active-af" data-af="relu" style="font-size:11px;padding:5px 12px;">ReLU</button>
+      <button class="tnbtn active-af" data-af="leaky" style="font-size:11px;padding:5px 12px;">Leaky ReLU</button>
+    </div>
+    <canvas id="afCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="af-info" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13px;color:var(--text2);line-height:1.6;"></div>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead><tr><th>Function</th><th>Range</th><th>Kelebihan</th><th>Kekurangan</th><th>Digunakan di</th></tr></thead>
+  <tbody>
+    <tr><td>Sigmoid</td><td>(0, 1)</td><td>Output probabilitas</td><td>Vanishing gradient</td><td>Output layer (binary)</td></tr>
+    <tr><td>Tanh</td><td>(-1, 1)</td><td>Zero-centered</td><td>Masih vanishing gradient</td><td>Hidden layer (RNN)</td></tr>
+    <tr><td>ReLU</td><td>[0, ∞)</td><td>Cepat, no saturation</td><td>Dying ReLU</td><td>Hidden layer (CNN, DNN)</td></tr>
+    <tr><td>Leaky ReLU</td><td>(-∞, ∞)</td><td>Tidak ada dying neuron</td><td>Extra hyperparameter</td><td>Alternatif ReLU</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- 2C: Backpropagation -->
+<div class="sub" id="aif2c">
+<div class="subtit"><span class="ac">2.3</span> Backpropagation <span class="subid">// bagaimana error mengalir mundur</span></div>
+<div class="prose">
+<p>Ini adalah algoritma paling penting dalam Deep Learning. Setelah model membuat prediksi dan dihitung errornya, backpropagation menyebarkan error itu <em>mundur</em> melalui seluruh lapisan — menghitung kontribusi setiap bobot terhadap error, lalu memperbaikinya menggunakan <strong>Gradient Descent</strong>.</p>
+</div>
+
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><div class="ctxt"><strong>Analogi: Siapa yang Salah?</strong><p style="margin:6px 0 0">Bayangkan sebuah tim membuat kesalahan. Backpropagation seperti manajer yang menelusuri siapa yang berkontribusi pada kesalahan — direktur ke manajer ke karyawan — lalu memberikan "koreksi" proporsional kepada setiap orang. Karyawan yang paling bertanggung jawab atas kesalahan mendapat koreksi terbesar.</p></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Forward Pass &amp; Backward Pass</div>
+  <div class="viz-body" style="padding:20px;">
+    <canvas id="bpCanvas" style="width:100%;max-width:560px;height:260px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+      <button class="tnbtn primary" id="bp-forward" style="font-size:12px;">→ Forward Pass</button>
+      <button class="tnbtn" id="bp-backward" style="font-size:12px;" disabled>← Backward Pass</button>
+      <button class="tnbtn" id="bp-reset" style="font-size:12px;">↺ Reset</button>
+    </div>
+    <div id="bp-msg" style="text-align:center;font-size:12px;color:var(--text3);margin-top:10px;font-family:'IBM Plex Mono',monospace;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Langkah Backpropagation</h4>
+<ul>
+  <li><strong>1. Forward Pass</strong> — input mengalir maju, tiap layer menghitung aktivasinya.</li>
+  <li><strong>2. Hitung Loss</strong> — bandingkan output dengan target menggunakan loss function.</li>
+  <li><strong>3. Backward Pass</strong> — gunakan chain rule kalkulus untuk menghitung gradient setiap bobot.</li>
+  <li><strong>4. Update Bobot</strong> — <code>w = w - lr × ∂Loss/∂w</code> (learning rate × gradient).</li>
+</ul>
+<p>Proses ini diulangi ribuan kali hingga model konvergen ke solusi yang baik.</p>
+</div>
+</div>
+
+<!-- 2D: ANN Interactive -->
+<div class="sub" id="aif2d">
+<div class="subtit"><span class="ac">2.4</span> ANN Interaktif — Klasifikasi Biner Visual <span class="subid">// lihat jaringan "berpikir" secara real-time</span></div>
+<div class="prose">
+<p>Sekarang kita gabungkan semua konsep. Di bawah ini ada ANN mini yang mencoba memisahkan dua kelas di bidang 2D. Kamu bisa tambahkan titik data, pilih arsitektur jaringan, dan lihat decision boundary berubah secara real-time.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — ANN Decision Boundary (2D)</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;align-items:center;">
+      <span style="font-size:12px;color:var(--text2);">Dataset:</span>
+      <button class="tnbtn ann-dataset" data-ds="xor" style="font-size:11px;padding:5px 10px;">XOR</button>
+      <button class="tnbtn ann-dataset" data-ds="circle" style="font-size:11px;padding:5px 10px;">Lingkaran</button>
+      <button class="tnbtn ann-dataset" data-ds="spiral" style="font-size:11px;padding:5px 10px;">Spiral</button>
+      <span style="font-size:12px;color:var(--text2);">Hidden layer:</span>
+      <select id="ann-hidden" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:4px 8px;border-radius:4px;font-size:12px;">
+        <option value="4">4 neuron</option>
+        <option value="8" selected>8 neuron</option>
+        <option value="16">16 neuron</option>
+      </select>
+      <button class="tnbtn primary" id="ann-train-btn" style="font-size:11px;padding:5px 12px;">▶ Train</button>
+      <button class="tnbtn" id="ann-stop-btn" style="font-size:11px;padding:5px 12px;" disabled>⏹ Stop</button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <div>
+        <canvas id="annCanvas" style="width:260px;height:260px;display:block;border-radius:8px;background:#0a0a0d;cursor:crosshair;"></canvas>
+        <p style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px;">Data &amp; Decision Boundary</p>
+      </div>
+      <div>
+        <canvas id="annNetCanvas" style="width:260px;height:260px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
+        <p style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px;">Arsitektur Jaringan</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;flex-wrap:wrap;">
+      <span>Epoch: <span id="ann-epoch" style="color:var(--text);">0</span></span>
+      <span>Loss: <span id="ann-loss" style="color:var(--coral);">—</span></span>
+      <span>Akurasi: <span id="ann-acc" style="color:var(--green);">—</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- TENSORFLOW PLAYGROUND -->
+<div class="sub" id="aif2e">
+<div class="subtit"><span class="ac">🧪</span> Coba Sendiri — TensorFlow Neural Network Playground <span class="subid">// eksperimen langsung di browser</span></div>
+<div class="prose">
+<p>Sekarang saatnya kamu bereksperimen sendiri! Di bawah ini adalah <strong>TensorFlow Playground</strong> — tools interaktif buatan Google yang memungkinkan kamu mengubah arsitektur neural network, learning rate, activation function, dan melihat bagaimana decision boundary berubah secara <em>real-time</em>. Tidak perlu install apapun.</p>
+<p><strong>Tips eksplorasi:</strong></p>
+<ul>
+  <li>Coba dataset "Spiral" dengan 1 hidden layer vs 4 hidden layer — perhatikan perbedaannya</li>
+  <li>Ubah learning rate dari 0.03 ke 0.3 lalu ke 3 — lihat apa yang terjadi</li>
+  <li>Bandingkan activation function ReLU vs Tanh vs Sigmoid</li>
+  <li>Tambah neuron di hidden layer — apakah selalu lebih baik?</li>
+</ul>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">🧠 TensorFlow Playground — Neural Network Interaktif</div>
+  <div class="viz-body" style="padding:0;">
+    <iframe 
+      src="https://playground.tensorflow.org/"
+      style="width:100%;height:620px;border:none;border-radius:0 0 12px 12px;"
+      loading="lazy"
+      allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      title="TensorFlow Playground">
+    </iframe>
+  </div>
+</div>
+</div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 2 — Neural Networks</strong><p style="margin:6px 0 0">Kamu sudah memahami neuron tiruan (weighted sum + activation), empat fungsi aktivasi utama (Sigmoid/Tanh/ReLU/Leaky ReLU), mekanisme backpropagation (forward → loss → backward → update), dan melihat ANN bekerja secara interaktif. Fase berikutnya: CNN — bagaimana neural network "melihat" gambar.</p></div></div>
+</div>
+
+<style>
+.viz-block{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;}
+.viz-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);padding:10px 16px;letter-spacing:.04em;}
+.viz-body{padding:20px;}
+</style>
+
+<script>
+(function(){
+
+/* ── Neuron Viz ─────────────────────────── */
+function updateNeuron(){
+  var x1=parseFloat(document.getElementById('n-x1').value);
+  var x2=parseFloat(document.getElementById('n-x2').value);
+  var w1=parseFloat(document.getElementById('n-w1').value);
+  var w2=parseFloat(document.getElementById('n-w2').value);
+  var b=parseFloat(document.getElementById('n-b').value);
+  ['x1','x2','w1','w2','b'].forEach(function(id){
+    document.getElementById('n-'+id+'-v').textContent=parseFloat(document.getElementById('n-'+id).value).toFixed(1);
+  });
+  var z=w1*x1+w2*x2+b;
+  var a=1/(1+Math.exp(-z));
+  var c=document.getElementById('neuronCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=220;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var cx=lw/2, cy=lh/2;
+  // input nodes
+  var inputs=[{lbl:'x₁='+x1.toFixed(1),y:cy-55,w:w1},{lbl:'x₂='+x2.toFixed(1),y:cy+55,w:w2}];
+  inputs.forEach(function(inp){
+    var alpha=Math.abs(inp.w)/2;
+    ctx.strokeStyle='rgba(96,165,250,'+Math.min(1,alpha+.2)+')'; ctx.lineWidth=Math.max(1,Math.abs(inp.w)*2);
+    ctx.beginPath(); ctx.moveTo(80,inp.y); ctx.lineTo(cx-35,cy); ctx.stroke();
+    ctx.fillStyle='#1e3a5f'; ctx.beginPath(); ctx.arc(80,inp.y,22,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#60a5fa'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#60a5fa'; ctx.font='11px IBM Plex Mono,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(inp.lbl,80,inp.y);
+    // weight label
+    ctx.fillStyle='#fbbf24'; ctx.font='10px IBM Plex Mono,monospace';
+    ctx.fillText('w='+inp.w.toFixed(1),(80+cx-35)/2,(inp.y+cy)/2-5);
+  });
+  // neuron body
+  var neuronColor = a > 0.5 ? 'rgba(74,222,128,.9)' : 'rgba(124,109,250,.9)';
+  ctx.fillStyle=a>0.5?'rgba(74,222,128,.12)':'rgba(124,109,250,.12)';
+  ctx.beginPath(); ctx.arc(cx,cy,35,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=neuronColor; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,35,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle=neuronColor; ctx.font='bold 11px IBM Plex Mono,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('σ(z)',cx,cy-8);
+  ctx.fillText('a='+a.toFixed(3),cx,cy+8);
+  // output
+  ctx.strokeStyle=neuronColor; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(cx+35,cy); ctx.lineTo(lw-20,cy); ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.08)'; ctx.beginPath(); ctx.arc(lw-25,cy,22,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=neuronColor; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle=neuronColor; ctx.font='11px IBM Plex Mono,monospace';
+  ctx.fillText(a.toFixed(2),lw-25,cy);
+  // bias label
+  ctx.fillStyle='#f87171'; ctx.font='10px IBM Plex Mono,monospace';
+  ctx.fillText('bias='+b.toFixed(1),cx,cy+52);
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  document.getElementById('neuron-formula').innerHTML =
+    'z = ('+w1.toFixed(1)+'×'+x1.toFixed(1)+') + ('+w2.toFixed(1)+'×'+x2.toFixed(1)+') + '+b.toFixed(1)+' = <span style="color:var(--amber)">'+z.toFixed(3)+'</span> &nbsp;→&nbsp; a = σ('+z.toFixed(2)+') = <span style="color:var(--green)">'+a.toFixed(4)+'</span>';
+}
+['n-x1','n-x2','n-w1','n-w2','n-b'].forEach(function(id){document.getElementById(id).addEventListener('input',updateNeuron);});
+updateNeuron();
+
+/* ── Activation Functions ─────────────────────────── */
+var activeAFs=['sigmoid','tanh','relu','leaky'];
+var afInfo={
+  sigmoid:{fn:function(x){return 1/(1+Math.exp(-x));},color:'#7c6dfa',label:'Sigmoid: f(x) = 1/(1+e⁻ˣ)',desc:'Output selalu antara 0–1. Bagus untuk probabilitas di output layer. <strong>Masalah: Vanishing gradient</strong> — saat |x| besar, gradient mendekati 0 sehingga layer awal berhenti belajar.'},
+  tanh:{fn:function(x){return Math.tanh(x);},color:'#2dd4bf',label:'Tanh: f(x) = (eˣ-e⁻ˣ)/(eˣ+e⁻ˣ)',desc:'Output antara -1 dan 1, zero-centered (lebih baik dari sigmoid). Masih mengalami vanishing gradient di ujung-ujung kurva.'},
+  relu:{fn:function(x){return Math.max(0,x);},color:'#4ade80',label:'ReLU: f(x) = max(0, x)',desc:'Paling populer. Sangat sederhana dan cepat. <strong>Masalah: Dying ReLU</strong> — neuron bisa "mati" jika inputnya selalu negatif (output selalu 0, gradient selalu 0).'},
+  leaky:{fn:function(x){return x>0?x:0.01*x;},color:'#f59e0b',label:'Leaky ReLU: f(x) = max(0.01x, x)',desc:'Solusi untuk Dying ReLU: untuk x negatif, outputnya bukan 0 tapi nilai kecil (0.01x). Neuron tidak pernah benar-benar "mati".'}
+};
+function drawAF(){
+  var c=document.getElementById('afCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=220;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var pad=35, W=lw-pad*2, H=lh-pad*2;
+  // axes
+  ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,pad+H); ctx.lineTo(pad+W,pad+H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad,pad+H/2); ctx.lineTo(pad+W,pad+H/2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad+W/2,pad); ctx.lineTo(pad+W/2,pad+H); ctx.stroke();
+  ctx.fillStyle='#475569'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('-5',pad,pad+H+12); ctx.fillText('0',pad+W/2,pad+H+12); ctx.fillText('+5',pad+W,pad+H+12);
+  ctx.textAlign='right';
+  ctx.fillText('1',pad-3,pad+H/4+4); ctx.fillText('0',pad-3,pad+H/2+4); ctx.fillText('-1',pad-3,pad*3/4+H/2+4);
+  ctx.textAlign='left';
+  activeAFs.forEach(function(name){
+    var af=afInfo[name];
+    ctx.beginPath(); ctx.strokeStyle=af.color; ctx.lineWidth=2;
+    for(var i=0;i<=W;i++){
+      var xv=(i/W)*10-5;
+      var yv=af.fn(xv);
+      var cx2=pad+i, cy2=pad+H*(0.5-yv*0.45);
+      i===0?ctx.moveTo(cx2,cy2):ctx.lineTo(cx2,cy2);
+    }
+    ctx.stroke();
+    // legend dot
+    ctx.fillStyle=af.color;
+  });
+  // legend
+  var lx=pad+8, ly=pad+8;
+  activeAFs.forEach(function(name,i){
+    var af=afInfo[name];
+    ctx.fillStyle=af.color; ctx.fillRect(lx,ly+i*14,10,3);
+    ctx.fillStyle='#94a3b8'; ctx.font='9px DM Sans,sans-serif';
+    ctx.fillText(name.charAt(0).toUpperCase()+name.slice(1),lx+14,ly+i*14+4);
+  });
+  // update info panel
+  var infoText=activeAFs.map(function(n){return '<strong style="color:'+afInfo[n].color+'">'+afInfo[n].label+'</strong><br>'+afInfo[n].desc;}).join('<hr style="border-color:var(--border);margin:8px 0;">');
+  document.getElementById('af-info').innerHTML=infoText;
+}
+document.querySelectorAll('.active-af').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var af=this.dataset.af;
+    var idx=activeAFs.indexOf(af);
+    if(idx>=0){activeAFs.splice(idx,1);this.style.opacity='.5';}
+    else{activeAFs.push(af);this.style.opacity='1';}
+    drawAF();
+  });
+});
+drawAF();
+
+/* ── Backpropagation viz ─────────────────────────── */
+var bpPhase=0;
+var bpLayers=[[{y:80},{y:140},{y:200}],[{y:80},{y:140},{y:200}],[{y:110},{y:170}],[{y:140}]];
+var bpXs=[60,180,320,440];
+function drawBP(phase){
+  var c=document.getElementById('bpCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-32), lh=260;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var scaleX=lw/560;
+  var layerNames=['Input','Hidden 1','Hidden 2','Output'];
+  layerNames.forEach(function(name,li){
+    ctx.fillStyle='#334155'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(name,bpXs[li]*scaleX,24);
+  });
+  // connections
+  bpLayers.forEach(function(layer,li){
+    if(li>=bpLayers.length-1) return;
+    layer.forEach(function(n1){
+      bpLayers[li+1].forEach(function(n2){
+        var isForward = phase>=1;
+        var isBackward = phase>=2;
+        var fwdAlpha = isForward ? 0.6 : 0.1;
+        var bwdColor = isBackward ? '#f87171' : null;
+        ctx.strokeStyle = bwdColor || ('rgba(124,109,250,'+fwdAlpha+')');
+        ctx.lineWidth = isBackward ? 1.5 : 1;
+        if(isBackward){ ctx.setLineDash([4,3]); } else { ctx.setLineDash([]); }
+        ctx.beginPath(); ctx.moveTo(bpXs[li]*scaleX,n1.y); ctx.lineTo(bpXs[li+1]*scaleX,n2.y); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    });
+  });
+  // nodes
+  bpLayers.forEach(function(layer,li){
+    layer.forEach(function(n){
+      var isActive = phase>=1;
+      var isBack = phase>=2 && li>0;
+      ctx.fillStyle=isBack?'rgba(248,113,113,.2)':(isActive?'rgba(124,109,250,.2)':'rgba(255,255,255,.04)');
+      ctx.beginPath(); ctx.arc(bpXs[li]*scaleX,n.y,16,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle=isBack?'#f87171':(isActive?'#7c6dfa':'#334155');
+      ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle=isActive?'#e2e8f0':'#475569'; ctx.font='8px IBM Plex Mono,monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(isActive?(isBack?'∂L':'σ(z)'):'',bpXs[li]*scaleX,n.y);
+      ctx.textBaseline='alphabetic';
+    });
+  });
+  // arrows for flow
+  if(phase>=1){
+    ctx.fillStyle='#7c6dfa'; ctx.font='16px sans-serif';
+    ctx.fillText('→',bpXs[1]*scaleX-8,250);
+    ctx.fillText('→',bpXs[2]*scaleX-8,250);
+  }
+  if(phase>=2){
+    ctx.fillStyle='#f87171'; ctx.font='16px sans-serif';
+    ctx.fillText('←',bpXs[2]*scaleX-16,240);
+    ctx.fillText('←',bpXs[1]*scaleX-16,240);
+  }
+  var msgs=['Jaringan siap. Klik Forward Pass untuk mulai.','→ Forward Pass: Input mengalir maju, setiap neuron hitung z dan a.','← Backward Pass: Error mengalir mundur, gradient dihitung tiap layer.','✅ Update bobot: w = w - lr × ∂L/∂w. Iterasi selesai!'];
+  document.getElementById('bp-msg').textContent=msgs[phase]||'';
+}
+document.getElementById('bp-forward').addEventListener('click',function(){bpPhase=1;drawBP(1);this.disabled=true;document.getElementById('bp-backward').disabled=false;});
+document.getElementById('bp-backward').addEventListener('click',function(){bpPhase=2;drawBP(2);this.disabled=true;setTimeout(function(){bpPhase=3;drawBP(3);},800);});
+document.getElementById('bp-reset').addEventListener('click',function(){bpPhase=0;drawBP(0);document.getElementById('bp-forward').disabled=false;document.getElementById('bp-backward').disabled=true;});
+drawBP(0);
+
+/* ── ANN Interactive ─────────────────────────── */
+var annData=[], annDataset='xor', annTraining=false, annTimer=null, annEpoch=0;
+var annW1, annB1, annW2, annB2;
+
+function sigmoid(x){return 1/(1+Math.exp(-x));}
+function relu(x){return Math.max(0,x);}
+
+function genDataset(name){
+  annData=[];
+  var seed=12;
+  function rand(){seed=(seed*1664525+1013904223)&0xffffffff;return(seed>>>0)/0xffffffff;}
+  if(name==='xor'){
+    for(var i=0;i<60;i++){
+      var x=rand()*2-1, y=rand()*2-1;
+      var lbl=(x>0&&y>0)||(x<0&&y<0)?0:1;
+      annData.push([x,y,lbl]);
+    }
+  } else if(name==='circle'){
+    for(var i=0;i<60;i++){
+      var x=rand()*2-1, y=rand()*2-1;
+      var r=Math.sqrt(x*x+y*y);
+      annData.push([x,y,r<0.6?1:0]);
+    }
+  } else {
+    for(var i=0;i<60;i++){
+      var lbl=i%2, t=(i/30)*Math.PI*3;
+      var r=t/(Math.PI*3)*0.9+rand()*.1;
+      var a=t+(lbl*Math.PI);
+      annData.push([Math.cos(a)*r,Math.sin(a)*r,lbl]);
+    }
+  }
+}
+
+function initWeights(){
+  var h=parseInt(document.getElementById('ann-hidden').value);
+  function randn(){return (Math.random()+Math.random()+Math.random()-1.5)*0.8;}
+  annW1=Array.from({length:h},function(){return [randn(),randn()];});
+  annB1=Array.from({length:h},function(){return 0;});
+  annW2=Array.from({length:h},function(){return randn();});
+  annB2=0;
+}
+
+function annForward(x,y){
+  var h=annW1.length, h1=[], h1r=[];
+  for(var i=0;i<h;i++){
+    var z=annW1[i][0]*x+annW1[i][1]*y+annB1[i];
+    h1.push(z); h1r.push(Math.tanh(z));
+  }
+  var z2=0; for(var i=0;i<h;i++) z2+=annW2[i]*h1r[i]; z2+=annB2;
+  return {h1:h1,h1r:h1r,out:sigmoid(z2)};
+}
+
+function annPredict(x,y){ return annForward(x,y).out; }
+
+function annStep(){
+  var lr=0.05, h=annW1.length;
+  var loss=0, correct=0;
+  annData.forEach(function(d){
+    var fwd=annForward(d[0],d[1]);
+    var o=fwd.out, lbl=d[2];
+    loss+=-lbl*Math.log(o+1e-7)-(1-lbl)*Math.log(1-o+1e-7);
+    if((o>0.5?1:0)===lbl) correct++;
+    var dL=o-lbl;
+    // update W2
+    for(var i=0;i<h;i++){
+      annW2[i]-=lr*dL*fwd.h1r[i];
+    }
+    annB2-=lr*dL;
+    // update W1
+    for(var i=0;i<h;i++){
+      var dh=dL*annW2[i]*(1-fwd.h1r[i]*fwd.h1r[i]);
+      annW1[i][0]-=lr*dh*d[0];
+      annW1[i][1]-=lr*dh*d[1];
+      annB1[i]-=lr*dh;
+    }
+  });
+  return {loss:loss/annData.length,acc:correct/annData.length};
+}
+
+function drawANN(){
+  var c=document.getElementById('annCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, sz=260;
+  c.width=sz*dpr; c.height=sz*dpr; c.style.width=sz+'px'; c.style.height=sz+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  // decision boundary heatmap
+  if(annW1){
+    var res=40;
+    for(var ix=0;ix<res;ix++){
+      for(var iy=0;iy<res;iy++){
+        var xv=(ix/res)*2.2-1.1, yv=(iy/res)*2.2-1.1;
+        var p=annPredict(xv,yv);
+        ctx.fillStyle='rgba('+(p>0.5?'96,165,250':'248,113,113')+','+Math.abs(p-0.5)*0.6+')';
+        ctx.fillRect(ix*(sz/res),iy*(sz/res),sz/res+1,sz/res+1);
+      }
+    }
+  } else {
+    ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,sz,sz);
+  }
+  // data points
+  annData.forEach(function(d){
+    var px=(d[0]+1.1)/2.2*sz, py=(d[1]+1.1)/2.2*sz;
+    ctx.fillStyle=d[2]===1?'#60a5fa':'#f87171';
+    ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.lineWidth=1; ctx.stroke();
+  });
+}
+
+function drawANNNet(){
+  var c=document.getElementById('annNetCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, sz=260;
+  c.width=sz*dpr; c.height=sz*dpr; c.style.width=sz+'px'; c.style.height=sz+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,sz,sz);
+  var h=annW1?annW1.length:8;
+  var layers=[2,Math.min(h,8),1];
+  var xs=[40,sz/2,sz-40];
+  var lNames=['Input','Hidden','Output'];
+  layers.forEach(function(n,li){
+    var ys=Array.from({length:n},function(_,i){return sz/(n+1)*(i+1);});
+    ctx.fillStyle='#475569'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(lNames[li],xs[li],16);
+    if(li<layers.length-1){
+      var nys=Array.from({length:layers[li+1]},function(_,i){return sz/(layers[li+1]+1)*(i+1);});
+      ys.forEach(function(y1){nys.forEach(function(y2){
+        var w=1;
+        if(annW1&&li===0) w=Math.abs(annW1[Math.floor(Math.random()*h)][0]);
+        ctx.strokeStyle='rgba(124,109,250,'+Math.min(0.6,w*0.4+0.1)+')';
+        ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(xs[li],y1); ctx.lineTo(xs[li+1],y2); ctx.stroke();
+      });});
+    }
+    ys.forEach(function(y){
+      ctx.fillStyle=li===1?'rgba(45,212,191,.2)':'rgba(124,109,250,.2)';
+      ctx.beginPath(); ctx.arc(xs[li],y,li===1?10:12,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle=li===1?'#2dd4bf':'#7c6dfa'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  });
+  ctx.textAlign='left';
+}
+
+document.querySelectorAll('.ann-dataset').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    annDataset=this.dataset.ds;
+    genDataset(annDataset);
+    annW1=null; annEpoch=0;
+    document.getElementById('ann-epoch').textContent='0';
+    document.getElementById('ann-loss').textContent='—';
+    document.getElementById('ann-acc').textContent='—';
+    drawANN(); drawANNNet();
+  });
+});
+document.getElementById('ann-train-btn').addEventListener('click',function(){
+  if(annTraining) return;
+  if(!annW1) initWeights();
+  annTraining=true; this.disabled=true; document.getElementById('ann-stop-btn').disabled=false;
+  annTimer=setInterval(function(){
+    for(var i=0;i<5;i++) annStep();
+    annEpoch+=5;
+    var res=annStep();
+    document.getElementById('ann-epoch').textContent=annEpoch;
+    document.getElementById('ann-loss').textContent=res.loss.toFixed(4);
+    document.getElementById('ann-acc').textContent=(res.acc*100).toFixed(0)+'%';
+    drawANN();
+    if(annEpoch>=500){
+      clearInterval(annTimer); annTraining=false;
+      document.getElementById('ann-train-btn').disabled=false;
+      document.getElementById('ann-stop-btn').disabled=true;
+    }
+  },50);
+});
+document.getElementById('ann-stop-btn').addEventListener('click',function(){
+  clearInterval(annTimer); annTraining=false;
+  document.getElementById('ann-train-btn').disabled=false;
+  this.disabled=true;
+});
+
+genDataset('xor');
+drawANN();
+drawANNNet();
+
+})();
+</script>
+</section>

@@ -1,0 +1,417 @@
+<section class="cs p5" id="aif5">
+<div class="fase-intro" id="aifi5">
+<div class="sh">
+  <div class="sbadge">05</div>
+  <div>
+    <div class="stitle">Transformer, LLM &amp; Model Modern</div>
+    <div class="sdesc">Dari "Attention is All You Need" hingga ChatGPT, GPT-4, dan era Generative AI. Pahami Attention Mechanism, arsitektur Transformer, bagaimana LLM dilatih (pre-training + RLHF), dan peta lengkap model-model AI yang ada saat ini.</div>
+    <div class="smeta"><span class="mc">~65 menit</span><span class="mc">5 topik</span><span class="mc">4 visualisasi</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#aif5a">Attention Mechanism</a>
+  <a class="snavi" href="#aif5b">Transformer</a>
+  <a class="snavi" href="#aif5c">LLM &amp; Pre-training</a>
+  <a class="snavi" href="#aif5d">Peta Model Modern</a>
+  <a class="snavi" href="#aif5e">Mulai Belajar AI</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · ~65 menit</div>
+      <div class="topic-nav-title">Mulai dari: 5.1 Attention Mechanism</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('aifi4')">← Fase 4</button>
+      <button class="tnbtn primary" onclick="goTo(20)">Mulai →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5A: Attention -->
+<div class="sub" id="aif5a">
+<div class="subtit"><span class="ac">5.1</span> Attention Mechanism <span class="subid">// setiap kata memperhatikan kata lainnya</span></div>
+<div class="prose">
+<p>Masalah dengan Seq2Seq: semua informasi input harus muat dalam satu vektor context. Solusinya radikal — <strong>biarkan decoder melihat langsung ke setiap bagian input sesuai kebutuhan</strong>, dengan bobot perhatian yang berbeda.</p>
+<p>Attention menghitung skor "seberapa relevan" setiap token input terhadap token output yang sedang dihasilkan, lalu membuat weighted sum dari semua input berdasarkan skor tersebut.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Attention Heatmap</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="margin-bottom:10px;text-align:center;font-size:12px;color:var(--text3);">Klik kata output untuk lihat mana kata input yang paling diperhatikan</div>
+    <canvas id="attentionCanvas" style="width:100%;max-width:500px;height:300px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;cursor:pointer;"></canvas>
+    <div id="att-msg" style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;min-height:16px;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Query, Key, Value — Formula Attention</h4>
+<p>Attention dihitung dengan:</p>
+<ul>
+  <li><strong>Query (Q)</strong> — "Apa yang aku cari?" (dari token saat ini)</li>
+  <li><strong>Key (K)</strong> — "Apa yang aku tawarkan?" (dari semua token)</li>
+  <li><strong>Value (V)</strong> — "Apa isinya?" (dari semua token)</li>
+  <li><strong>Score = softmax(QK^T / √d_k) × V</strong></li>
+</ul>
+<p>Pembagian dengan √d_k mencegah dot product menjadi terlalu besar (yang membuat softmax menjadi one-hot dan gradient hilang).</p>
+</div>
+</div>
+
+<!-- 5B: Transformer -->
+<div class="sub" id="aif5b">
+<div class="subtit"><span class="ac">5.2</span> Arsitektur Transformer <span class="subid">// attention is all you need</span></div>
+<div class="prose">
+<p>Paper "Attention is All You Need" (Vaswani et al., 2017) membuang RNN sepenuhnya dan membangun model hanya dari attention. Hasilnya jauh lebih paralel (lebih cepat dilatih) dan menangkap dependensi jangka panjang lebih baik.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Arsitektur Transformer (Klik Komponen)</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <canvas id="transformerCanvas" style="width:240px;height:360px;display:block;border-radius:8px;background:#0a0a0d;cursor:pointer;flex-shrink:0;"></canvas>
+      <div id="transformer-info" style="flex:1;min-width:200px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;color:var(--text2);line-height:1.65;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);margin-bottom:8px;">← Klik komponen</div>
+        <p>Transformer terdiri dari Encoder (kiri) dan Decoder (kanan). Klik bagian-bagian di diagram untuk penjelasan detail.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Multi-Head Attention</h4>
+<p>Daripada satu mekanisme attention, Transformer menggunakan <strong>multi-head attention</strong> — beberapa "kepala" attention yang berjalan paralel, masing-masing belajar memperhatikan aspek yang berbeda (sintaks, semantik, koreference, dll). Hasilnya digabung dan diproyeksikan kembali.</p>
+<h4>Positional Encoding</h4>
+<p>Attention tidak punya konsep urutan bawaan (tidak seperti RNN). Transformer menambahkan <em>positional encoding</em> — sinyal sinusoidal yang memberi tahu model posisi setiap token dalam sekuens.</p>
+</div>
+</div>
+
+<!-- 5C: LLM -->
+<div class="sub" id="aif5c">
+<div class="subtit"><span class="ac">5.3</span> LLM — Large Language Models <span class="subid">// dari Transformer ke ChatGPT</span></div>
+<div class="prose">
+<p>LLM adalah Transformer yang dilatih pada data teks skala masif — triliunan token dari internet, buku, kode, dll. Proses pelatihannya terdiri dari dua tahap utama.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Tahapan Training LLM</div>
+  <div class="viz-body" style="padding:20px;">
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <div class="llm-stage" id="llms-0">
+        <div class="llms-num">1</div>
+        <div class="llms-content">
+          <div class="llms-title">Pre-training (Self-Supervised)</div>
+          <div class="llms-desc">Model dilatih untuk memprediksi token berikutnya dari triliunan teks. Tidak butuh label manual — data internet sudah cukup. Ini mengajarkan bahasa, fakta, reasoning, kode, dan banyak lagi secara implisit.</div>
+          <div class="llms-meta"><span class="mc">~trillions tokens</span><span class="mc">bulan komputasi</span><span class="mc">ribuan GPU</span></div>
+        </div>
+      </div>
+      <div class="llms-connector"></div>
+      <div class="llm-stage" id="llms-1">
+        <div class="llms-num">2</div>
+        <div class="llms-content">
+          <div class="llms-title">Supervised Fine-Tuning (SFT)</div>
+          <div class="llms-desc">Model di-fine-tune pada contoh percakapan berkualitas tinggi — "instruksi + respons ideal" yang dibuat manusia. Mengubah model bahasa mentah menjadi model yang bisa mengikuti instruksi.</div>
+          <div class="llms-meta"><span class="mc">~10K–100K contoh</span><span class="mc">jam–hari</span></div>
+        </div>
+      </div>
+      <div class="llms-connector"></div>
+      <div class="llm-stage" id="llms-2">
+        <div class="llms-num">3</div>
+        <div class="llms-content">
+          <div class="llms-title">RLHF — Reinforcement Learning from Human Feedback</div>
+          <div class="llms-desc">Human rater membandingkan dua respons model. Sebuah Reward Model dilatih dari preferensi ini. Lalu PPO (algoritma RL) digunakan untuk mengoptimasi LLM agar menghasilkan respons yang lebih disukai manusia.</div>
+          <div class="llms-meta"><span class="mc">reward model</span><span class="mc">PPO optimization</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Mengapa LLM Bisa "Melakukan" Banyak Hal?</h4>
+<p>Pre-training pada data masif membuat LLM menyerap representasi dunia yang kaya. Meski para peneliti masih memperdebatkan apakah LLM benar-benar "memahami" atau melakukan pattern matching canggih, yang jelas model belajar representasi abstrak yang memungkinkan <em>generalisasi</em> ke tugas baru yang belum pernah dilihat saat training — jauh melampaui sekadar menghafal.</p>
+<ul>
+  <li><strong>In-context learning</strong> — berikan beberapa contoh di prompt, model langsung bisa melakukan tugas baru tanpa training ulang.</li>
+  <li><strong>Emergent abilities</strong> — kemampuan seperti multi-step reasoning muncul tiba-tiba saat model mencapai skala tertentu.</li>
+  <li><strong>Chain-of-Thought</strong> — minta model "berpikir langkah demi langkah" secara dramatis meningkatkan akurasi reasoning.</li>
+</ul>
+</div>
+</div>
+
+<!-- 5D: Model Map -->
+<div class="sub" id="aif5d">
+<div class="subtit"><span class="ac">5.4</span> Peta Model AI Modern <span class="subid">// ekosistem yang terus berkembang</span></div>
+<div class="prose">
+<p>Dunia AI saat ini penuh dengan berbagai model untuk berbagai tugas. Berikut peta lengkapnya:</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Kategorisasi Model AI</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="tnbtn model-cat-btn active" data-cat="all" style="font-size:11px;padding:5px 10px;">Semua</button>
+      <button class="tnbtn model-cat-btn" data-cat="llm" style="font-size:11px;padding:5px 10px;">💬 LLM / Text</button>
+      <button class="tnbtn model-cat-btn" data-cat="image" style="font-size:11px;padding:5px 10px;">🖼️ Image Gen</button>
+      <button class="tnbtn model-cat-btn" data-cat="vision" style="font-size:11px;padding:5px 10px;">👁️ Vision</button>
+      <button class="tnbtn model-cat-btn" data-cat="multimodal" style="font-size:11px;padding:5px 10px;">🌐 Multimodal</button>
+    </div>
+    <div id="model-map-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;"></div>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead><tr><th>Kategori</th><th>Contoh Model</th><th>Kegunaan</th></tr></thead>
+  <tbody>
+    <tr><td>LLM General</td><td>GPT-4, Claude, Gemini, Llama</td><td>Chat, coding, analisis, writing</td></tr>
+    <tr><td>Code LLM</td><td>GitHub Copilot, DeepSeek Coder</td><td>Autocomplete, debug, generate code</td></tr>
+    <tr><td>Image Generation</td><td>DALL-E 3, Stable Diffusion, Midjourney</td><td>Text-to-image, image editing</td></tr>
+    <tr><td>Image Understanding</td><td>GPT-4V, Claude Vision, LLaVA</td><td>OCR, VQA, chart analysis</td></tr>
+    <tr><td>Speech</td><td>Whisper (ASR), ElevenLabs (TTS)</td><td>Transcription, voice synthesis</td></tr>
+    <tr><td>Video</td><td>Sora, Runway, Pika</td><td>Text-to-video, video editing</td></tr>
+    <tr><td>Embedding</td><td>text-embedding-3, BGE, E5</td><td>Semantic search, RAG, clustering</td></tr>
+    <tr><td>Reasoning</td><td>o1, o3, DeepSeek-R1</td><td>Math, science, complex problems</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- 5E: Learning Path -->
+<div class="sub" id="aif5e">
+<div class="subtit"><span class="ac">5.5</span> Dari Sini, Ke Mana? <span class="subid">// peta jalan belajar AI</span></div>
+<div class="prose">
+<p>Kamu telah menyelesaikan kurikulum fondasi AI. Berikut jalur lanjutan yang bisa kamu ambil sesuai minat:</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:16px 0;">
+  <div style="background:var(--bg2);border:1px solid rgba(45,212,191,.25);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;" onclick="openCurriculum('language-model')">
+    <div style="font-size:24px;margin-bottom:8px;">📖</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Kurikulum 01</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:6px;">Language Model Fundamentals</div>
+    <div style="font-size:12px;color:var(--text3);line-height:1.5;">Dari NLP klasik hingga Transformer modern. Deep dive tokenisasi, embedding, BERT, GPT, dan cara kerja LLM dari dalam.</div>
+    <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);">Buka →</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(124,109,250,.25);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;" onclick="openCurriculum('agentic-ai')">
+    <div style="font-size:24px;margin-bottom:8px;">🤖</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Kurikulum 02</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:6px;">Agentic AI Mastery</div>
+    <div style="font-size:12px;color:var(--text3);line-height:1.5;">Bangun AI agent yang sesungguhnya bekerja: harness, memory, multi-agent, observability, dan deployment production.</div>
+    <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);">Buka →</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;" onclick="openCurriculum('mlops')">
+    <div style="font-size:24px;margin-bottom:8px;">⚙️</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Kurikulum 03</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:6px;">MLOps & Deployment</div>
+    <div style="font-size:12px;color:var(--text3);line-height:1.5;">Pipeline training, experiment tracking, model registry, serving, monitoring, dan CI/CD untuk sistem ML production.</div>
+    <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);">Buka →</div>
+  </div>
+</div>
+
+<!-- ETIKA & LIMITASI -->
+<div class="sub" id="aif5e1">
+<div class="subtit"><span class="ac">⚠️</span> Etika &amp; Limitasi AI <span class="subid">// yang perlu kamu tahu sebelum terjun</span></div>
+<div class="prose">
+<p>AI adalah alat yang sangat powerful — tapi bukan tanpa risiko. Sebagai seseorang yang memahami fondasi AI, penting untuk tahu batasan dan tanggung jawab etisnya.</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin:16px 0;">
+  <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
+    <div style="font-size:20px;margin-bottom:6px;">🎭</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Bias Data</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;">AI belajar dari data yang dibuat manusia — dan data manusia penuh bias. Model rekrutmen bisa diskriminatif gender, model kredit bisa bias ras. <strong>AI tidak netral</strong> — ia merefleksikan bias dalam data trainingnya.</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
+    <div style="font-size:20px;margin-bottom:6px;">🌀</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Halusinasi LLM</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;">LLM seperti ChatGPT bisa "mengarang" fakta dengan sangat meyakinkan. Model tidak tahu mana yang benar — ia hanya memprediksi token yang "masuk akal" secara statistik. <strong>Selalu verifikasi</strong> output LLM.</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
+    <div style="font-size:20px;margin-bottom:6px;">🔒</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Privasi &amp; Data</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;">Model AI bisa "mengingat" data pribadi dari training. Jangan pernah memasukkan data sensitif (password, data pelanggan, rahasia perusahaan) ke layanan AI publik. Gunakan model lokal untuk data sensitif.</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
+    <div style="font-size:20px;margin-bottom:6px;">🎬</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Deepfake &amp; Misinformasi</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;">AI bisa menghasilkan gambar, video, dan suara palsu yang sulit dibedakan dari aslinya. Gunakan AI secara bertanggung jawab — jangan membuat konten yang menipu atau merugikan orang lain.</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:16px;">
+    <div style="font-size:20px;margin-bottom:6px;">💼</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--coral);margin-bottom:6px;">Dampak Pekerjaan</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;">AI akan mengotomasi banyak tugas — tapi juga menciptakan peran baru. Kuncinya: <strong>belajar beradaptasi</strong>. Pahami AI sebagai alat yang memperkuat kemampuanmu, bukan menggantikanmu sepenuhnya.</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:16px;">
+    <div style="font-size:20px;margin-bottom:6px;">✅</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--green);margin-bottom:6px;">Prinsip Dasar</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;"><strong>1.</strong> Transparansi — jelaskan saat kamu menggunakan AI<br><strong>2.</strong> Akuntabilitas — kamu bertanggung jawab atas output<br><strong>3.</strong> Fairness — periksa bias sebelum deploy<br><strong>4.</strong> Privacy — jaga data pengguna</div>
+  </div>
+</div>
+</div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>🎉 Selamat! Kurikulum 00 Selesai</strong><p style="margin:6px 0 0">Kamu telah menguasai fondasi lengkap AI: dari definisi dan sejarah, algoritma ML klasik (Linear Regression, Logistic Regression, Decision Tree, Random Forest, SVM), Neural Networks dengan backpropagation, CNN untuk computer vision, RNN/LSTM untuk sequence modeling, hingga Transformer dan ekosistem LLM modern. Fondasi ini adalah modal yang solid untuk melanjutkan ke topik apapun di atas.</p></div></div>
+</div>
+
+<style>
+.viz-block{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;}
+.viz-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);padding:10px 16px;letter-spacing:.04em;}
+.viz-body{padding:20px;}
+.llm-stage{display:flex;gap:16px;align-items:flex-start;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:16px;}
+.llms-connector{width:2px;height:20px;background:var(--border2);margin:0 22px;}
+.llms-num{width:28px;height:28px;border-radius:50%;background:var(--accent-glow);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);flex-shrink:0;}
+.llms-title{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.llms-desc{font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:8px;}
+.llms-meta{display:flex;gap:8px;flex-wrap:wrap;}
+</style>
+
+<script>
+(function(){
+
+/* ── Attention Heatmap ─────────────────────── */
+var src=['Aku','suka','makan','nasi','goreng'];
+var tgt=['I','like','eating','fried','rice'];
+var attMat=[
+  [0.9,0.05,0.02,0.02,0.01],
+  [0.1,0.8,0.05,0.03,0.02],
+  [0.05,0.1,0.7,0.1,0.05],
+  [0.02,0.03,0.05,0.8,0.1],
+  [0.02,0.02,0.05,0.15,0.76]
+];
+var activeRow=-1;
+function drawAttention(){
+  var c=document.getElementById('attentionCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(500,c.parentElement.offsetWidth-20), lh=300;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var pad=60, n=src.length, cw=(lw-pad)/(n+0.5), ch=(lh-pad)/(n+0.5);
+  // labels
+  ctx.fillStyle='#94a3b8'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='center';
+  src.forEach(function(w,i){ctx.fillText(w,pad+i*cw+cw/2,lh-8);});
+  ctx.textAlign='right';
+  tgt.forEach(function(w,i){ctx.fillText(w,pad-8,pad+i*ch+ch/2+4);});
+  // heatmap cells
+  tgt.forEach(function(tw,ti){
+    src.forEach(function(sw,si){
+      var v=attMat[ti][si];
+      var alpha=ti===activeRow?0.9:0.5;
+      var intense=ti===activeRow?v:v*0.4;
+      ctx.fillStyle='rgba(124,109,250,'+intense*alpha*2+')';
+      ctx.fillRect(pad+si*cw+1,pad+ti*ch+1,cw-2,ch-2);
+      if(ti===activeRow){
+        ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='10px IBM Plex Mono,monospace'; ctx.textAlign='center';
+        ctx.fillText((v*100).toFixed(0)+'%',pad+si*cw+cw/2,pad+ti*ch+ch/2+4);
+      }
+    });
+  });
+  ctx.textAlign='left';
+  ctx.fillStyle='#475569'; ctx.font='9px IBM Plex Mono,monospace';
+  ctx.fillText('Sumber (Input)',pad+(n-1)*cw/2,lh-24);
+  ctx.save(); ctx.translate(12,pad+(n-1)*ch/2); ctx.rotate(-Math.PI/2);
+  ctx.textAlign='center'; ctx.fillText('Target (Output)',0,0); ctx.restore();
+}
+document.getElementById('attentionCanvas').addEventListener('click',function(e){
+  var c=this, r=c.getBoundingClientRect();
+  var lw=c.offsetWidth, lh=c.offsetHeight, n=src.length;
+  var pad=60, ch=(lh-pad)/(n+0.5);
+  var y=(e.clientY-r.top);
+  var row=Math.floor((y-pad)/ch);
+  if(row>=0&&row<n){
+    activeRow=row;
+    document.getElementById('att-msg').textContent='Output "'+tgt[row]+'" paling memperhatikan input "'+src[attMat[row].indexOf(Math.max.apply(null,attMat[row]))]+'"';
+  } else { activeRow=-1; document.getElementById('att-msg').textContent=''; }
+  drawAttention();
+});
+drawAttention();
+
+/* ── Transformer Architecture ─────────────────────── */
+var tfComponents=[
+  {label:'Input\nEmbedding',x:120,y:320,w:100,h:28,color:'#334155',info:'Mengubah token ID menjadi dense vector (embedding). Dimensi biasanya 512–2048.'},
+  {label:'Positional\nEncoding',x:120,y:285,w:100,h:28,color:'#334155',info:'Menambahkan sinyal posisi ke embedding. Tanpa ini, Transformer tidak tahu urutan token.'},
+  {label:'Multi-Head\nAttention',x:120,y:235,w:100,h:38,color:'rgba(124,109,250,.5)',info:'Beberapa kepala attention paralel. Setiap kepala belajar aspek berbeda (sintaks, semantik, dll). Output digabung dan diproyeksikan.'},
+  {label:'Add &\nNorm',x:120,y:200,w:100,h:24,color:'rgba(245,158,11,.4)',info:'Residual connection (Add) + Layer Normalization. Mencegah vanishing gradient, menstabilkan training pada jaringan sangat dalam.'},
+  {label:'Feed\nForward',x:120,y:160,w:100,h:28,color:'rgba(74,222,128,.4)',info:'Dua fully-connected layer dengan ReLU di tengah. Setiap posisi diproses independen. Menambahkan kapasitas non-linear.'},
+  {label:'Add &\nNorm',x:120,y:125,w:100,h:24,color:'rgba(245,158,11,.4)',info:'Residual + Norm kedua. Di-stack N kali (biasanya 6–96 layer untuk model modern).'},
+  {label:'Output\nLinear+Softmax',x:120,y:85,w:100,h:30,color:'rgba(248,113,113,.4)',info:'Proyeksikan ke dimensi vocabulary (~50K). Softmax menghasilkan distribusi probabilitas token berikutnya.'}
+];
+function drawTransformer(highlightIdx){
+  var c=document.getElementById('transformerCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=240, lh=360;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  // bracket for repeated layers
+  ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.strokeRect(108,115,122,152); ctx.setLineDash([]);
+  ctx.fillStyle='#334155'; ctx.font='8px IBM Plex Mono,monospace'; ctx.textAlign='right';
+  ctx.fillText('×N',228,190);
+  tfComponents.forEach(function(comp,i){
+    var active=i===highlightIdx;
+    ctx.fillStyle=active?comp.color:'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.roundRect(comp.x-comp.w/2,comp.y,comp.w,comp.h,5); ctx.fill();
+    ctx.strokeStyle=active?comp.color:'#1e293b'; ctx.lineWidth=active?2:1; ctx.stroke();
+    ctx.fillStyle=active?'#e2e8f0':'#475569'; ctx.font='8px DM Sans,sans-serif'; ctx.textAlign='center';
+    comp.label.split('\n').forEach(function(line,li){ctx.fillText(line,comp.x,comp.y+comp.h*.5+(li-0.5)*10);});
+    // arrows between
+    if(i<tfComponents.length-1){
+      ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(comp.x,comp.y); ctx.lineTo(tfComponents[i+1].x,tfComponents[i+1].y+tfComponents[i+1].h); ctx.stroke();
+    }
+  });
+  ctx.textAlign='left';
+}
+document.getElementById('transformerCanvas').addEventListener('click',function(e){
+  var c=this, r=c.getBoundingClientRect();
+  var y=(e.clientY-r.top)*(c.offsetHeight/r.height);
+  var hit=-1;
+  tfComponents.forEach(function(comp,i){if(y>=comp.y&&y<=comp.y+comp.h) hit=i;});
+  if(hit>=0){
+    drawTransformer(hit);
+    document.getElementById('transformer-info').innerHTML='<div style="font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--accent);margin-bottom:8px;">'+tfComponents[hit].label.replace('\n',' ')+'</div>'+tfComponents[hit].info;
+  }
+});
+drawTransformer(-1);
+
+/* ── Model Map ─────────────────────── */
+var models=[
+  {name:'GPT-4o',cat:'llm',org:'OpenAI',color:'#10a37f',desc:'Flagship multimodal LLM'},
+  {name:'Claude 3.5',cat:'llm',org:'Anthropic',color:'#d97757',desc:'Kuat di coding & analysis'},
+  {name:'Gemini 2',cat:'llm',org:'Google',color:'#4285f4',desc:'Multimodal native'},
+  {name:'Llama 3',cat:'llm',org:'Meta',color:'#0082fb',desc:'Open source SOTA'},
+  {name:'DeepSeek V3',cat:'llm',org:'DeepSeek',color:'#5e6ad2',desc:'Efisien & powerful'},
+  {name:'DALL-E 3',cat:'image',org:'OpenAI',color:'#10a37f',desc:'Text-to-image premium'},
+  {name:'SD 3.5',cat:'image',org:'Stability',color:'#7c3aed',desc:'Open source image gen'},
+  {name:'Midjourney',cat:'image',org:'MJ',color:'#0052cc',desc:'Artisti terbaik'},
+  {name:'Flux',cat:'image',org:'BlackForest',color:'#374151',desc:'Open source, detail tinggi'},
+  {name:'GPT-4V',cat:'vision',org:'OpenAI',color:'#10a37f',desc:'Analisis gambar+teks'},
+  {name:'LLaVA',cat:'vision',org:'OpenSource',color:'#16a34a',desc:'Open multimodal model'},
+  {name:'Qwen-VL',cat:'vision',org:'Alibaba',color:'#ff6900',desc:'Vision language model'},
+  {name:'GPT-4o',cat:'multimodal',org:'OpenAI',color:'#10a37f',desc:'Text+Image+Audio'},
+  {name:'Gemini Ultra',cat:'multimodal',org:'Google',color:'#4285f4',desc:'Natively multimodal'},
+  {name:'Claude Vision',cat:'multimodal',org:'Anthropic',color:'#d97757',desc:'Dokumen & gambar'},
+];
+var activeCat='all';
+function renderModels(){
+  var grid=document.getElementById('model-map-grid');
+  grid.innerHTML='';
+  models.filter(function(m){return activeCat==='all'||m.cat===activeCat;}).forEach(function(m){
+    var d=document.createElement('div');
+    d.style.cssText='background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;';
+    d.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:'+m.color+';margin-bottom:6px;display:inline-block;"></div>'
+      +'<div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:600;color:var(--text);">'+m.name+'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+m.org+'</div>'
+      +'<div style="font-size:10px;color:var(--text2);margin-top:4px;line-height:1.4;">'+m.desc+'</div>';
+    grid.appendChild(d);
+  });
+}
+document.querySelectorAll('.model-cat-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.model-cat-btn').forEach(function(b){b.classList.remove('active');});
+    this.classList.add('active'); activeCat=this.dataset.cat; renderModels();
+  });
+});
+renderModels();
+
+})();
+</script>
+</section>

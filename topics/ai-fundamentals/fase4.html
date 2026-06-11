@@ -1,0 +1,368 @@
+<section class="cs p4" id="aif4">
+<div class="fase-intro" id="aifi4">
+<div class="sh">
+  <div class="sbadge">04</div>
+  <div>
+    <div class="stitle">RNN, LSTM &amp; Sequence Models</div>
+    <div class="sdesc">Bagaimana mesin memahami urutan — teks, suara, time series? Neural network biasa memproses setiap input secara independen. RNN dan LSTM menambahkan dimensi baru: memori terhadap konteks sebelumnya. Visualisasikan bagaimana informasi mengalir melalui waktu.</div>
+    <div class="smeta"><span class="mc">~50 menit</span><span class="mc">3 topik</span><span class="mc">3 visualisasi</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#aif4a">RNN & Masalahnya</a>
+  <a class="snavi" href="#aif4b">LSTM — Memory Cell</a>
+  <a class="snavi" href="#aif4c">Seq2Seq & Aplikasi</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">3 topik · ~50 menit</div>
+      <div class="topic-nav-title">Mulai dari: 4.1 RNN & Vanishing Gradient</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('aifi3')">← Fase 3</button>
+      <button class="tnbtn primary" onclick="goTo(17)">Mulai →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4A: RNN -->
+<div class="sub" id="aif4a">
+<div class="subtit"><span class="ac">4.1</span> Recurrent Neural Network (RNN) <span class="subid">// jaringan yang punya ingatan</span></div>
+<div class="prose">
+<p>Saat kamu membaca kalimat <em>"Bank tersebut di tepi sungai..."</em> — kamu tidak memproses setiap kata secara independen. Kata "bank" diinterpretasikan berdasarkan konteks sebelumnya. Otak kamu ingat kata-kata sebelumnya.</p>
+<p>Neural network biasa tidak bisa melakukan ini. RNN menambahkan satu komponen kunci: <strong>hidden state</strong> — sebuah vektor "memori" yang diteruskan dari satu timestep ke timestep berikutnya.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Animasi — RNN Unrolled Through Time</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="margin-bottom:12px;text-align:center;">
+      <input type="text" id="rnn-input-text" value="Aku suka makan" placeholder="Masukkan teks..." style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:6px;font-size:13px;width:200px;">
+      <button class="tnbtn primary" id="rnn-run-btn" style="font-size:12px;margin-left:8px;">▶ Jalankan RNN</button>
+    </div>
+    <canvas id="rnnCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="rnn-msg" style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;min-height:16px;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Masalah: Vanishing Gradient</h4>
+<p>RNN punya masalah fundamental: saat kamu membaca <em>"The cat that sat on the mat..."</em> dan tiba di kata kerja di akhir kalimat, RNN sudah "lupa" bahwa subjeknya adalah kucing (tunggal, bukan jamak). Gradien dari timestep awal menghilang saat backpropagation melalui banyak timestep.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Vanishing Gradient Problem</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="vanishCanvas" style="width:100%;max-width:560px;height:180px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;">Semakin jauh timestep dari output, gradient makin kecil → layer awal berhenti belajar</p>
+  </div>
+</div>
+</div>
+
+<!-- 4B: LSTM -->
+<div class="sub" id="aif4b">
+<div class="subtit"><span class="ac">4.2</span> LSTM — Long Short-Term Memory <span class="subid">// memory cell dengan gerbang kendali</span></div>
+<div class="prose">
+<p>LSTM (1997, Hochreiter &amp; Schmidhuber) menyelesaikan masalah vanishing gradient dengan cara yang elegan: tambahkan <strong>cell state</strong> — semacam "conveyor belt" yang membawa informasi jangka panjang tanpa banyak modifikasi — dikontrol oleh tiga <em>gerbang (gate)</em>.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — LSTM Cell: Tiga Gerbang</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn lstm-gate-btn active" data-gate="forget" style="font-size:11px;padding:5px 12px;">🗑️ Forget Gate</button>
+      <button class="tnbtn lstm-gate-btn" data-gate="input" style="font-size:11px;padding:5px 12px;">📥 Input Gate</button>
+      <button class="tnbtn lstm-gate-btn" data-gate="output" style="font-size:11px;padding:5px 12px;">📤 Output Gate</button>
+    </div>
+    <canvas id="lstmCanvas" style="width:100%;max-width:560px;height:260px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="lstm-gate-info" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13px;color:var(--text2);line-height:1.6;"></div>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead><tr><th>Gate</th><th>Fungsi</th><th>Analogi</th></tr></thead>
+  <tbody>
+    <tr><td>Forget Gate (f)</td><td>Tentukan informasi lama mana yang dibuang dari cell state</td><td>"Aku tidak perlu ingat nama pembicara sebelumnya sekarang"</td></tr>
+    <tr><td>Input Gate (i)</td><td>Tentukan informasi baru mana yang ditambahkan ke cell state</td><td>"Nama pembicara baru ini penting, simpan!"</td></tr>
+    <tr><td>Output Gate (o)</td><td>Tentukan bagian cell state mana yang dikeluarkan sebagai hidden state</td><td>"Dari semua yang aku ingat, ini yang relevan sekarang"</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="prose">
+<h4>GRU — Versi Lebih Ringan</h4>
+<p>GRU (Gated Recurrent Unit, 2014) menyederhanakan LSTM menjadi hanya dua gerbang (Reset Gate dan Update Gate). Lebih efisien komputasi, sering performa setara LSTM untuk sekuens pendek-menengah.</p>
+</div>
+</div>
+
+<!-- 4C: Seq2Seq -->
+<div class="sub" id="aif4c">
+<div class="subtit"><span class="ac">4.3</span> Seq2Seq &amp; Aplikasi <span class="subid">// encoder mengompresi, decoder menghasilkan</span></div>
+<div class="prose">
+<p>Banyak tugas NLP melibatkan transformasi satu sekuens ke sekuens lain: penerjemahan, ringkasan, tanya-jawab. Arsitektur <strong>Seq2Seq</strong> (2014) menyelesaikan ini dengan dua komponen: <em>Encoder</em> yang membaca input dan membuat representasi konteks, dan <em>Decoder</em> yang menghasilkan output berdasarkan konteks tersebut.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Animasi — Penerjemahan Seq2Seq</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="seq2seqCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="tnbtn primary" id="s2s-btn" style="font-size:12px;">▶ Animasikan Terjemahan</button>
+    </div>
+    <div id="s2s-msg" style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;min-height:16px;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Keterbatasan Seq2Seq → Solusi: Attention</h4>
+<p>Masalah Seq2Seq klasik: seluruh kalimat input harus dikompresi menjadi <em>satu vektor context</em> — bottleneck! Kalimat panjang kehilangan informasi awal.</p>
+<p>Solusinya adalah <strong>Attention Mechanism</strong> (2015) — decoder bisa "melihat kembali" ke semua hidden state encoder, bukan hanya state terakhir. Inilah fondasi dari Transformer yang akan dipelajari di fase berikutnya.</p>
+</div>
+
+<div class="prose">
+<h4>Aplikasi RNN/LSTM di Dunia Nyata</h4>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:12px 0;">
+  <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+    <div style="font-size:20px;margin-bottom:6px;">🌍</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">Machine Translation</div>
+    <div style="font-size:12px;color:var(--text3);">Google Translate awal menggunakan Seq2Seq LSTM sebelum beralih ke Transformer.</div>
+  </div>
+  <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+    <div style="font-size:20px;margin-bottom:6px;">🎵</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">Music Generation</div>
+    <div style="font-size:12px;color:var(--text3);">LSTM bisa menghasilkan melodi baru dengan gaya yang dipelajari dari data musik.</div>
+  </div>
+  <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+    <div style="font-size:20px;margin-bottom:6px;">📈</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">Time Series Forecasting</div>
+    <div style="font-size:12px;color:var(--text3);">Prediksi harga saham, cuaca, traffic jaringan menggunakan pola historis.</div>
+  </div>
+  <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+    <div style="font-size:20px;margin-bottom:6px;">🎤</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">Speech Recognition</div>
+    <div style="font-size:12px;color:var(--text3);">LSTM digunakan di Siri, Google Voice sebelum era Transformer.</div>
+  </div>
+</div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 4 — RNN &amp; LSTM</strong><p style="margin:6px 0 0">RNN memproses sekuens dengan hidden state yang diteruskan antarwaktu, namun menderita vanishing gradient untuk sekuens panjang. LSTM menyelesaikannya dengan cell state dan tiga gerbang (forget, input, output). Seq2Seq memungkinkan transformasi sekuens ke sekuens. Keterbatasan bottleneck melahirkan Attention — fondasi fase terakhir: Transformer &amp; model modern.</p></div></div>
+</div>
+
+<style>
+.viz-block{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin:20px 0;}
+.viz-title{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);background:rgba(124,109,250,.06);border-bottom:1px solid var(--border);padding:10px 16px;letter-spacing:.04em;}
+.viz-body{padding:20px;}
+</style>
+
+<script>
+(function(){
+
+/* ── RNN Viz ─────────────────────────── */
+function drawRNN(words, activeStep){
+  var c=document.getElementById('rnnCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-20), lh=220;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var n=Math.min(words.length,5), step=lw/(n+1), cy=lh/2;
+  for(var i=0;i<n;i++){
+    var x=(i+1)*step, active=i<=activeStep;
+    // hidden state arrow
+    if(i>0){
+      ctx.strokeStyle=active?'rgba(124,109,250,.8)':'rgba(255,255,255,.08)';
+      ctx.lineWidth=active?2.5:1;
+      ctx.beginPath(); ctx.moveTo(x-step+30,cy-5); ctx.lineTo(x-30,cy-5); ctx.stroke();
+      if(active){
+        ctx.fillStyle='rgba(124,109,250,.8)';
+        ctx.beginPath(); ctx.moveTo(x-30,cy-5); ctx.lineTo(x-38,cy-10); ctx.lineTo(x-38,cy); ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle='#475569'; ctx.font='8px IBM Plex Mono,monospace'; ctx.textAlign='center';
+      ctx.fillText('h_'+(i-1),x-step/2,cy-16);
+    }
+    // input arrow
+    ctx.strokeStyle=active?'rgba(45,212,191,.7)':'rgba(255,255,255,.08)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x,lh-20); ctx.lineTo(x,cy+28); ctx.stroke();
+    // cell
+    ctx.fillStyle=i===activeStep?'rgba(124,109,250,.25)':(active?'rgba(124,109,250,.12)':'rgba(255,255,255,.04)');
+    ctx.beginPath(); ctx.roundRect(x-28,cy-28,56,56,8); ctx.fill();
+    ctx.strokeStyle=i===activeStep?'#7c6dfa':(active?'rgba(124,109,250,.5)':'#1e293b');
+    ctx.lineWidth=i===activeStep?2:1; ctx.stroke();
+    ctx.fillStyle=active?'#e2e8f0':'#334155'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText('RNN',x,cy+4);
+    // word label
+    ctx.fillStyle=i===activeStep?'#2dd4bf':(active?'#64748b':'#334155');
+    ctx.font='11px DM Sans,sans-serif';
+    ctx.fillText(words[i]||'',x,lh-6);
+  }
+  ctx.textAlign='left';
+}
+document.getElementById('rnn-run-btn').addEventListener('click',function(){
+  var text=document.getElementById('rnn-input-text').value||'Aku suka makan';
+  var words=text.trim().split(/\s+/).slice(0,5);
+  var step=-1;
+  drawRNN(words,-1);
+  var t=setInterval(function(){
+    step++;
+    drawRNN(words,step);
+    document.getElementById('rnn-msg').textContent='Timestep '+(step+1)+': memproses "'+words[step]+'" — hidden state diperbarui';
+    if(step>=words.length-1){clearInterval(t);document.getElementById('rnn-msg').textContent='✅ Selesai. Hidden state terakhir berisi "ingatan" seluruh kalimat.';}
+  },700);
+});
+drawRNN(['Aku','suka','makan'],-1);
+
+/* ── Vanishing Gradient ─────────────────────── */
+function drawVanish(){
+  var c=document.getElementById('vanishCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-20), lh=180;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var n=8, step=lw/(n+1);
+  for(var i=0;i<n;i++){
+    var x=(n-i)*step, grad=Math.pow(0.6,i);
+    var r=Math.round(248*grad), g=Math.round(113*grad+50*(1-grad)), b=Math.round(113*grad+220*(1-grad));
+    ctx.fillStyle='rgba('+r+','+g+','+b+','+(0.15+grad*0.7)+')';
+    ctx.beginPath(); ctx.roundRect(x-22,lh/2-22,44,44,6); ctx.fill();
+    ctx.strokeStyle='rgba('+r+','+g+','+b+','+(0.3+grad*0.5)+')';
+    ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,'+(0.3+grad*0.7)+')'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText('t'+(n-i),x,lh/2+4);
+    ctx.fillText((grad*100).toFixed(0)+'%',x,lh/2+52);
+    ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font='8px DM Sans,sans-serif';
+    ctx.fillText('grad',x,lh/2+42);
+    if(i<n-1){
+      ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x-22,lh/2); ctx.lineTo(x-step+22,lh/2); ctx.stroke();
+    }
+  }
+  ctx.fillStyle='#f87171'; ctx.font='bold 10px IBM Plex Mono,monospace'; ctx.textAlign='right';
+  ctx.fillText('← gradient mengecil (vanish)',lw-8,lh-8);
+  ctx.textAlign='left';
+}
+drawVanish();
+
+/* ── LSTM Gate Viz ─────────────────────── */
+var activeGate='forget';
+var gateInfo={
+  forget:{color:'#f87171',desc:'<strong style="color:#f87171">Forget Gate:</strong> f_t = σ(W_f·[h_{t-1}, x_t] + b_f)<br>Output 0 = lupakan segalanya dari cell state, Output 1 = ingat segalanya. Contoh: setelah subjek berganti, lupakan gender subjek lama.'},
+  input:{color:'#4ade80',desc:'<strong style="color:#4ade80">Input Gate:</strong> i_t = σ(...) × tanh(...)<br>Pertama, tentukan nilai baru mana yang penting (input gate). Kedua, buat vektor nilai kandidat (tanh). Keduanya dikombinasikan untuk update cell state.'},
+  output:{color:'#7c6dfa',desc:'<strong style="color:#7c6dfa">Output Gate:</strong> o_t = σ(W_o·[h_{t-1}, x_t] + b_o); h_t = o_t × tanh(C_t)<br>Dari seluruh cell state, tentukan bagian mana yang relevan untuk hidden state saat ini (output saat ini).'}
+};
+function drawLSTM(){
+  var c=document.getElementById('lstmCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-20), lh=260;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var cx=lw/2, cy=lh/2;
+  // Cell state highway (top line)
+  ctx.strokeStyle='rgba(251,191,36,.6)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(20,50); ctx.lineTo(lw-20,50); ctx.stroke();
+  ctx.fillStyle='#fbbf24'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='left';
+  ctx.fillText('Cell State C_t (long-term memory)',24,44);
+  // gates
+  var gates=[
+    {x:lw*.22,y:cy+20,label:'f',name:'Forget\nGate',color:'#f87171',active:activeGate==='forget'},
+    {x:lw*.48,y:cy+20,label:'i',name:'Input\nGate',color:'#4ade80',active:activeGate==='input'},
+    {x:lw*.74,y:cy+20,label:'o',name:'Output\nGate',color:'#7c6dfa',active:activeGate==='output'}
+  ];
+  gates.forEach(function(g){
+    // vertical line to cell state
+    ctx.strokeStyle=g.active?g.color:'rgba(255,255,255,.1)'; ctx.lineWidth=g.active?2:1; ctx.setLineDash(g.active?[]:[4,4]);
+    ctx.beginPath(); ctx.moveTo(g.x,50); ctx.lineTo(g.x,g.y-20); ctx.stroke(); ctx.setLineDash([]);
+    // gate circle
+    ctx.fillStyle=g.active?g.color+'33':'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.arc(g.x,g.y,22,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=g.active?g.color:'#334155'; ctx.lineWidth=g.active?2.5:1; ctx.stroke();
+    ctx.fillStyle=g.active?g.color:'#475569'; ctx.font='bold 14px IBM Plex Mono,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(g.label,g.x,g.y);
+    ctx.fillStyle=g.active?'#e2e8f0':'#475569'; ctx.font='9px DM Sans,sans-serif'; ctx.textBaseline='alphabetic';
+    g.name.split('\n').forEach(function(line,i){ctx.fillText(line,g.x,g.y+30+i*12);});
+    // x_t and h_t-1 inputs
+    ctx.strokeStyle='rgba(45,212,191,.4)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(g.x-15,lh-20); ctx.lineTo(g.x-15,g.y+22); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(g.x+15,lh-20); ctx.lineTo(g.x+15,g.y+22); ctx.stroke();
+  });
+  ctx.fillStyle='#2dd4bf'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  ctx.fillText('x_t (input)',lw*.22,lh-6);
+  ctx.fillText('x_t / h_{t-1}',lw*.48,lh-6);
+  ctx.fillText('x_t',lw*.74,lh-6);
+  ctx.textAlign='left';
+  document.getElementById('lstm-gate-info').innerHTML=gateInfo[activeGate].desc;
+}
+document.querySelectorAll('.lstm-gate-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.lstm-gate-btn').forEach(function(b){b.classList.remove('active');});
+    this.classList.add('active'); activeGate=this.dataset.gate; drawLSTM();
+  });
+});
+drawLSTM();
+
+/* ── Seq2Seq ─────────────────────────── */
+var s2sStep=-1, s2sTimer=null;
+var inputWords=['Aku','suka','makan'], outputWords=['I','like','to','eat'];
+function drawS2S(step){
+  var c=document.getElementById('seq2seqCanvas');
+  if(!c) return;
+  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-20), lh=220;
+  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+  var encW=lw*.42, decStart=lw*.58;
+  // labels
+  ctx.fillStyle='#475569'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('ENCODER',encW/2,18);
+  ctx.fillText('DECODER',(lw-decStart)/2+decStart,18);
+  // divider
+  ctx.strokeStyle='rgba(251,191,36,.3)'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
+  ctx.beginPath(); ctx.moveTo(lw/2,25); ctx.lineTo(lw/2,lh-10); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24'; ctx.font='8px IBM Plex Mono,monospace';
+  ctx.fillText('Context',lw/2-20,lh/2);
+  // encoder cells
+  inputWords.forEach(function(w,i){
+    var x=(i+1)*encW/(inputWords.length+1), active=step>=i&&step<inputWords.length;
+    ctx.fillStyle=active?'rgba(45,212,191,.2)':'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.roundRect(x-24,lh/2-22,48,44,6); ctx.fill();
+    ctx.strokeStyle=active?'#2dd4bf':'#1e293b'; ctx.lineWidth=active?2:1; ctx.stroke();
+    ctx.fillStyle=active?'#2dd4bf':'#475569'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(w,x,lh/2+6);
+    if(i>0){ctx.strokeStyle='rgba(45,212,191,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-24,lh/2);ctx.lineTo(x-encW/(inputWords.length+1)+24,lh/2);ctx.stroke();}
+  });
+  // context vector
+  var ctxActive=step>=inputWords.length;
+  ctx.fillStyle=ctxActive?'rgba(251,191,36,.2)':'rgba(255,255,255,.04)';
+  ctx.beginPath(); ctx.roundRect(lw/2-18,lh/2-16,36,32,6); ctx.fill();
+  ctx.strokeStyle=ctxActive?'#fbbf24':'#334155'; ctx.lineWidth=ctxActive?2:1; ctx.stroke();
+  ctx.fillStyle=ctxActive?'#fbbf24':'#475569'; ctx.font='8px IBM Plex Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('ctx',lw/2,lh/2+4);
+  // decoder cells
+  outputWords.forEach(function(w,i){
+    var idx=i+inputWords.length+1;
+    var x=decStart+(i+1)*(lw-decStart)/(outputWords.length+1), active=step>=idx;
+    ctx.fillStyle=active?'rgba(124,109,250,.2)':'rgba(255,255,255,.04)';
+    ctx.beginPath(); ctx.roundRect(x-24,lh/2-22,48,44,6); ctx.fill();
+    ctx.strokeStyle=active?'#7c6dfa':'#1e293b'; ctx.lineWidth=active?2:1; ctx.stroke();
+    ctx.fillStyle=active?'#a78bfa':'#475569'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(w,x,lh/2+6);
+  });
+  ctx.textAlign='left';
+}
+document.getElementById('s2s-btn').addEventListener('click',function(){
+  s2sStep=-1; clearInterval(s2sTimer); drawS2S(-1); this.disabled=true;
+  var msgs=['Memproses "Aku"...','Memproses "suka"...','Memproses "makan"...','Context vector siap!','Decoder: "I"','Decoder: "like"','Decoder: "to"','Decoder: "eat"','✅ Terjemahan selesai!'];
+  s2sTimer=setInterval(function(){
+    s2sStep++;
+    drawS2S(s2sStep);
+    document.getElementById('s2s-msg').textContent=msgs[s2sStep]||'';
+    if(s2sStep>=inputWords.length+outputWords.length){clearInterval(s2sTimer);document.getElementById('s2s-btn').disabled=false;}
+  },700);
+});
+drawS2S(-1);
+
+})();
+</script>
+</section>

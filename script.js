@@ -34,6 +34,17 @@ var MLOPS_FASE_CONTAINERS = {
   'mlopsi4':'mlopsfase4-container','mlopsi5':'mlopsfase5-container'
 };
 
+// ── Lazy-load (AI Fundamentals) ──────────────────────────────────────────────
+var AIF_FASE_FILES = {
+  'aifi0':'topics/ai-fundamentals/fase0.html', 'aifi1':'topics/ai-fundamentals/fase1.html',
+  'aifi2':'topics/ai-fundamentals/fase2.html', 'aifi3':'topics/ai-fundamentals/fase3.html',
+  'aifi4':'topics/ai-fundamentals/fase4.html', 'aifi5':'topics/ai-fundamentals/fase5.html'
+};
+var AIF_FASE_CONTAINERS = {
+  'aifi0':'aiffase0-container','aifi1':'aiffase1-container','aifi2':'aiffase2-container',
+  'aifi3':'aiffase3-container','aifi4':'aiffase4-container','aifi5':'aiffase5-container'
+};
+
 // ── Lazy-load (Language Model) ────────────────────────────────────────────────
 var LM_FASE_FILES = {
   'lmi1':'topics/language-model/fase1.html', 'lmi2':'topics/language-model/fase2.html',
@@ -52,8 +63,8 @@ function loadFase(faseId) {
   var files = (activeCurriculum === 'language-model') ? LM_FASE_FILES : FASE_FILES;
   var containers = (activeCurriculum === 'language-model') ? LM_FASE_CONTAINERS : FASE_CONTAINERS;
   // cek kedua map karena faseId bisa dari salah satu
-  var file = MLOPS_FASE_FILES[faseId] || LM_FASE_FILES[faseId] || FASE_FILES[faseId];
-  var containerId = MLOPS_FASE_CONTAINERS[faseId] || LM_FASE_CONTAINERS[faseId] || FASE_CONTAINERS[faseId];
+  var file = AIF_FASE_FILES[faseId] || MLOPS_FASE_FILES[faseId] || LM_FASE_FILES[faseId] || FASE_FILES[faseId];
+  var containerId = AIF_FASE_CONTAINERS[faseId] || MLOPS_FASE_CONTAINERS[faseId] || LM_FASE_CONTAINERS[faseId] || FASE_CONTAINERS[faseId];
   if (!file || !containerId) return Promise.resolve();
   var container = document.getElementById(containerId);
   if (!container) return Promise.resolve();
@@ -93,10 +104,13 @@ function toggleSB(){
 
 // ── Curriculum open/close ─────────────────────────────────────────────────────
 function openCurriculum(id) {
-  var label = id === 'language-model' ? 'Language Model Fundamentals' : id === 'mlops' ? 'MLOps & Model Deployment' : 'Agentic AI Mastery';
+  var label = id === 'language-model' ? 'Language Model Fundamentals'
+    : id === 'mlops' ? 'MLOps & Model Deployment'
+    : id === 'ai-fundamentals' ? 'AI Fundamentals dari Nol'
+    : 'Agentic AI Mastery';
   enterCurriculum(id, label);
-  var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : 'i0';
-  var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : 'fi0';
+  var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : id === 'ai-fundamentals' ? 'aifi0' : 'i0';
+  var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : id === 'ai-fundamentals' ? 'aifi0' : 'fi0';
   loadFase(firstFase).then(function(){ goToPage(startPage); });
 }
 
@@ -123,7 +137,48 @@ function showLanding() {
 // ── Sidebar dinamis ───────────────────────────────────────────────────────────
 function renderSidebar(curriculum) {
   var sc = document.getElementById('sidebar-content');
-  if (curriculum === 'agentic-ai') {
+  if (curriculum === 'ai-fundamentals') {
+    sc.innerHTML = [
+      '<div class="sidebar-topic-label">AI Fundamentals dari Nol</div>',
+      sbPhase('aifi0','Fase 0 — Pengenalan AI','aifi0',[
+        ['aif0a','0.1 Apa itu AI?'],
+        ['aif0b','0.2 AI vs ML vs Deep Learning'],
+        ['aif0c','0.3 Cara Mesin Belajar'],
+        ['aif0d','0.4 Tiga Jenis Pembelajaran']
+      ]),
+      sbPhase('aifi1','Fase 1 — ML Klasik','aifi1',[
+        ['aif1a','1.1 Linear Regression'],
+        ['aif1b','1.2 Logistic Regression'],
+        ['aif1c','1.3 Decision Tree'],
+        ['aif1d','1.4 Random Forest'],
+        ['aif1e','1.5 SVM']
+      ]),
+      sbPhase('aifi2','Fase 2 — Neural Networks','aifi2',[
+        ['aif2a','2.1 Neuron Tiruan'],
+        ['aif2b','2.2 Activation Functions'],
+        ['aif2c','2.3 Backpropagation'],
+        ['aif2d','2.4 ANN Interaktif']
+      ]),
+      sbPhase('aifi3','Fase 3 — CNN','aifi3',[
+        ['aif3a','3.1 Konvolusi & Filter'],
+        ['aif3b','3.2 Feature Maps'],
+        ['aif3c','3.3 Pooling'],
+        ['aif3d','3.4 Arsitektur CNN']
+      ]),
+      sbPhase('aifi4','Fase 4 — RNN & LSTM','aifi4',[
+        ['aif4a','4.1 RNN & Vanishing Gradient'],
+        ['aif4b','4.2 LSTM Memory Cell'],
+        ['aif4c','4.3 Seq2Seq & Aplikasi']
+      ]),
+      sbPhase('aifi5','Fase 5 — Transformer & LLM','aifi5',[
+        ['aif5a','5.1 Attention Mechanism'],
+        ['aif5b','5.2 Arsitektur Transformer'],
+        ['aif5c','5.3 LLM & Pre-training'],
+        ['aif5d','5.4 Peta Model Modern'],
+        ['aif5e','5.5 Dari Sini, Ke Mana?']
+      ])
+    ].join('');
+  } else if (curriculum === 'agentic-ai') {
     sc.innerHTML = [
       '<div class="sidebar-topic-label">Agentic AI Mastery</div>',
       sbPhase('i0','Fase 0 — Mulai Cepat','fi0',[
@@ -291,7 +346,7 @@ function renderSidebar(curriculum) {
     a.addEventListener('click', function(e){
       e.preventDefault();
       var id = a.getAttribute('href').replace('#','');
-      var allTopics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : TOPICS;
+      var allTopics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPICS : TOPICS;
       var idx = allTopics.indexOf(id);
       if (idx >= 0) goTo(idx);
       document.getElementById('sidebar').classList.remove('open');
@@ -315,6 +370,38 @@ function sbPhase(id, label, fi, items) {
 function sbGlossary() {
   return '<div style="padding:4px 16px 2px;"><a class="sit" style="display:block;padding:5px 0;font-size:11px;color:var(--text3);" href="#glossary" onclick="goToPage(\'glossary\');return false;">📖 Glosarium</a></div>';
 }
+
+// ── AI FUNDAMENTALS Topics ────────────────────────────────────────────────────
+var AIF_TOPICS = [
+  'aif0a','aif0b','aif0c','aif0d',
+  'aif1a','aif1b','aif1c','aif1d','aif1e',
+  'aif2a','aif2b','aif2c','aif2d',
+  'aif3a','aif3b','aif3c','aif3d',
+  'aif4a','aif4b','aif4c',
+  'aif5a','aif5b','aif5c','aif5d','aif5e'
+];
+var AIF_TOPIC_LABELS = {
+  'aif0a':'0.1 Apa itu AI?','aif0b':'0.2 AI vs ML vs Deep Learning','aif0c':'0.3 Cara Mesin Belajar','aif0d':'0.4 Tiga Jenis Pembelajaran',
+  'aif1a':'1.1 Linear Regression','aif1b':'1.2 Logistic Regression','aif1c':'1.3 Decision Tree','aif1d':'1.4 Random Forest','aif1e':'1.5 SVM',
+  'aif2a':'2.1 Neuron Tiruan','aif2b':'2.2 Activation Functions','aif2c':'2.3 Backpropagation','aif2d':'2.4 ANN Interaktif',
+  'aif3a':'3.1 Konvolusi & Filter','aif3b':'3.2 Feature Maps','aif3c':'3.3 Pooling','aif3d':'3.4 Arsitektur CNN',
+  'aif4a':'4.1 RNN & Vanishing Gradient','aif4b':'4.2 LSTM Memory Cell','aif4c':'4.3 Seq2Seq & Aplikasi',
+  'aif5a':'5.1 Attention Mechanism','aif5b':'5.2 Arsitektur Transformer','aif5c':'5.3 LLM & Pre-training','aif5d':'5.4 Peta Model Modern','aif5e':'5.5 Dari Sini, Ke Mana?'
+};
+var AIF_PHASE_MAP = {
+  'aif0a':'aifi0','aif0b':'aifi0','aif0c':'aifi0','aif0d':'aifi0',
+  'aif1a':'aifi1','aif1b':'aifi1','aif1c':'aifi1','aif1d':'aifi1','aif1e':'aifi1',
+  'aif2a':'aifi2','aif2b':'aifi2','aif2c':'aifi2','aif2d':'aifi2',
+  'aif3a':'aifi3','aif3b':'aifi3','aif3c':'aifi3','aif3d':'aifi3',
+  'aif4a':'aifi4','aif4b':'aifi4','aif4c':'aifi4',
+  'aif5a':'aifi5','aif5b':'aifi5','aif5c':'aifi5','aif5d':'aifi5','aif5e':'aifi5'
+};
+var AIF_PHASE_NUMS = {'aifi0':'0','aifi1':'1','aifi2':'2','aifi3':'3','aifi4':'4','aifi5':'5'};
+var AIF_PHASE_LAST  = {3:'aifi1', 8:'aifi2', 12:'aifi3', 16:'aifi4', 19:'aifi5'};
+var AIF_PHASE_FIRST = {0:'aifhome', 4:'aifi1', 9:'aifi2', 13:'aifi3', 17:'aifi4', 20:'aifi5'};
+var AIF_PAGE_LABELS = {'aifhome':'Beranda AI Fundamentals','aifi0':'Fase 0 — Pengenalan AI','aifi1':'Fase 1 — ML Klasik','aifi2':'Fase 2 — Neural Networks','aifi3':'Fase 3 — CNN','aifi4':'Fase 4 — RNN & LSTM','aifi5':'Fase 5 — Transformer & LLM'};
+var AIF_PHASE_INTRO_MAP = {'aifi0':'aifi0','aifi1':'aifi1','aifi2':'aifi2','aifi3':'aifi3','aifi4':'aifi4','aifi5':'aifi5'};
+var AIF_PAGES = ['aifi0','aifi1','aifi2','aifi3','aifi4','aifi5'];
 
 // ── AGENTIC AI Topics ─────────────────────────────────────────────────────────
 var TOPICS = [
@@ -421,6 +508,8 @@ function injectNavBars() {
     topics = LM_TOPICS; phaseLastMap = LM_PHASE_LAST; phaseFirstMap = LM_PHASE_FIRST; pageLabels = LM_PAGE_LABELS;
   } else if (activeCurriculum === 'mlops') {
     topics = MLOPS_TOPICS; phaseLastMap = MLOPS_PHASE_LAST; phaseFirstMap = MLOPS_PHASE_FIRST; pageLabels = MLOPS_PAGE_LABELS;
+  } else if (activeCurriculum === 'ai-fundamentals') {
+    topics = AIF_TOPICS; phaseLastMap = AIF_PHASE_LAST; phaseFirstMap = AIF_PHASE_FIRST; pageLabels = AIF_PAGE_LABELS;
   } else {
     topics = TOPICS; phaseLastMap = PHASE_LAST; phaseFirstMap = PHASE_FIRST; pageLabels = PAGE_LABELS;
   }
@@ -440,12 +529,12 @@ function injectNavBars() {
       nextLabel = pageLabels[nextPageId] || nextPageId;
       nextBtn = '<button class="tnbtn primary" onclick="goToPage(\''+nextPageId+'\')">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     } else {
-      nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : activeCurriculum === 'mlops' ? MLOPS_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
+      nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : activeCurriculum === 'mlops' ? MLOPS_TOPIC_LABELS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
       nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="'+idx+'">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     }
 
     var prevBtn;
-    if (prevPageId === 'home' || prevPageId === 'lmhome' || prevPageId === 'mlopshome') {
+    if (prevPageId === 'home' || prevPageId === 'lmhome' || prevPageId === 'mlopshome' || prevPageId === 'aifhome') {
       prevBtn = '<button class="tnbtn" onclick="showLanding()">← '+(t('sidebar.back')||'Semua Topik')+'</button>';
     } else if (prevPageId) {
       prevBtn = '<button class="tnbtn" onclick="goToPage(\''+prevPageId+'\')">'+(t('nav.prev')||'← Sebelumnya')+'</button>';
@@ -473,12 +562,12 @@ var LM_PAGES = ['lmfi1','lmfi2','lmfi3','lmfi4','lmfi5'];
 var MLOPS_PAGES = ['mlopsfi1','mlopsfi2','mlopsfi3','mlopsfi4','mlopsfi5'];
 
 function hideAll() {
-  var allPageIds = AA_PAGES.concat(LM_PAGES).concat(MLOPS_PAGES);
+  var allPageIds = AA_PAGES.concat(LM_PAGES).concat(MLOPS_PAGES).concat(AIF_PAGES);
   allPageIds.forEach(function(id){
     var el = document.getElementById(id);
     if (el) { el.classList.remove('page-home--active'); el.classList.remove('fase-intro--active'); }
   });
-  TOPICS.concat(LM_TOPICS).concat(MLOPS_TOPICS).forEach(function(id){
+  TOPICS.concat(LM_TOPICS).concat(MLOPS_TOPICS).concat(AIF_TOPICS).forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.classList.remove('sub--active');
   });
@@ -494,6 +583,7 @@ function goToPage(pageId, skipPush) {
   Object.keys(PHASE_INTRO_MAP).forEach(function(k){ if (PHASE_INTRO_MAP[k] === pageId) faseId = k; });
   Object.keys(MLOPS_PHASE_INTRO_MAP).forEach(function(k){ if (MLOPS_PHASE_INTRO_MAP[k] === pageId) faseId = faseId || k; });
   Object.keys(LM_PHASE_INTRO_MAP).forEach(function(k){ if (LM_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
+  Object.keys(AIF_PHASE_INTRO_MAP).forEach(function(k){ if (AIF_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
 
   if (faseId) {
     loadFase(faseId).then(function(){ _showPage(pageId, skipPush); });
@@ -520,10 +610,10 @@ function _showPage(pageId, skipPush) {
 
 // ── goTo ──────────────────────────────────────────────────────────────────────
 function goTo(idx, skipPush) {
-  var topics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : TOPICS;
-  var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_MAP : PHASE_MAP;
-  var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : activeCurriculum === 'mlops' ? MLOPS_PHASE_NUMS : PHASE_NUMS;
-  var phaseIntroMap = activeCurriculum === 'language-model' ? LM_PHASE_INTRO_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_INTRO_MAP : PHASE_INTRO_MAP;
+  var topics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPICS : TOPICS;
+  var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_MAP : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_MAP : PHASE_MAP;
+  var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : activeCurriculum === 'mlops' ? MLOPS_PHASE_NUMS : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_NUMS : PHASE_NUMS;
+  var phaseIntroMap = activeCurriculum === 'language-model' ? LM_PHASE_INTRO_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_INTRO_MAP : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_INTRO_MAP : PHASE_INTRO_MAP;
 
   if (idx < 0 || idx >= topics.length) return;
   var nextId = topics[idx];
@@ -592,11 +682,21 @@ function enterCurriculum(id, label) {
   var lmTopicIdx = LM_TOPICS.indexOf(hash);
   var aaTopicIdx = TOPICS.indexOf(hash);
   var mlopsTopicIdx = MLOPS_TOPICS.indexOf(hash);
+  var aifTopicIdx = AIF_TOPICS.indexOf(hash);
 
   if (!hash || hash === 'landing') {
     document.getElementById('landing').classList.add('landing--active');
     document.getElementById('sidebar').classList.add('sidebar--hidden');
     var ham = document.querySelector('.ham'); if (ham) ham.classList.remove('ham--visible');
+  } else if (aifTopicIdx >= 0) {
+    enterCurriculum('ai-fundamentals','AI Fundamentals dari Nol');
+    goTo(aifTopicIdx, true);
+  } else if (AIF_PAGES.indexOf(hash) >= 0) {
+    enterCurriculum('ai-fundamentals','AI Fundamentals dari Nol');
+    var aifFaseId = null;
+    Object.keys(AIF_PHASE_INTRO_MAP).forEach(function(k){ if (AIF_PHASE_INTRO_MAP[k]===hash) aifFaseId=k; });
+    if (aifFaseId) loadFase(aifFaseId).then(function(){ goToPage(hash, true); });
+    else goToPage(hash, true);
   } else if (lmTopicIdx >= 0) {
     enterCurriculum('language-model','Language Model Fundamentals');
     goTo(lmTopicIdx, true);
@@ -632,8 +732,11 @@ function enterCurriculum(id, label) {
   window.addEventListener('popstate', function() {
     var h = location.hash.replace('#','');
     if (!h || h === 'landing') { showLanding(); return; }
-    var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h);
-    if (lmIdx >= 0) {
+    var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h), aifIdx = AIF_TOPICS.indexOf(h);
+    if (aifIdx >= 0) {
+      if (activeCurriculum !== 'ai-fundamentals') enterCurriculum('ai-fundamentals','AI Fundamentals dari Nol');
+      goTo(aifIdx, true);
+    } else if (lmIdx >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
       goTo(lmIdx, true);
     } else if (aaIdx >= 0) {
@@ -642,6 +745,9 @@ function enterCurriculum(id, label) {
     } else if (mlIdx >= 0) {
       if (activeCurriculum !== 'mlops') enterCurriculum('mlops','MLOps & Model Deployment');
       goTo(mlIdx, true);
+    } else if (AIF_PAGES.indexOf(h) >= 0) {
+      if (activeCurriculum !== 'ai-fundamentals') enterCurriculum('ai-fundamentals','AI Fundamentals dari Nol');
+      goToPage(h, true);
     } else if (LM_PAGES.indexOf(h) >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
       goToPage(h, true);
