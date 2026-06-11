@@ -5,17 +5,19 @@
   <div>
     <div class="stitle">RNN, LSTM &amp; Sequence Models</div>
     <div class="sdesc">Bagaimana mesin memahami urutan — teks, suara, time series? Neural network biasa memproses setiap input secara independen. RNN dan LSTM menambahkan dimensi baru: memori terhadap konteks sebelumnya. Visualisasikan bagaimana informasi mengalir melalui waktu.</div>
-    <div class="smeta"><span class="mc">~50 menit</span><span class="mc">3 topik</span><span class="mc">3 visualisasi</span></div>
+    <div class="smeta"><span class="mc">~65 menit</span><span class="mc">5 topik</span><span class="mc">5 visualisasi</span></div>
   </div>
 </div>
 <div class="snav">
   <a class="snavi" href="#aif4a">RNN & Masalahnya</a>
   <a class="snavi" href="#aif4b">LSTM — Memory Cell</a>
+  <a class="snavi" href="#aif4d">GRU</a>
   <a class="snavi" href="#aif4c">Seq2Seq & Aplikasi</a>
+  <a class="snavi" href="#aif4e">Attention vs Seq2Seq</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">3 topik · ~50 menit</div>
+      <div class="topic-nav-counter">5 topik · ~65 menit</div>
       <div class="topic-nav-title">Mulai dari: 4.1 RNN & Vanishing Gradient</div>
     </div>
     <div class="topic-nav-btns">
@@ -30,7 +32,9 @@
 <ul>
 <li><strong>4.1 RNN & Vanishing Gradient</strong> — Animasi word-by-word processing dengan input teks custom. Visualisasi RNN unrolled dengan gradient flow mundur yang makin memudar.</li>
 <li><strong>4.2 LSTM Memory Cell</strong> — 3 gate interaktif (Forget, Input, Output). Klik setiap gate dan pahami apa yang diingat, apa yang dilupakan, apa yang dikirim ke output.</li>
-<li><strong>4.3 Seq2Seq & Aplikasi</strong> — Animasi encoder-decoder untuk translasi: lihat bagaimana kalimat Indonesia diubah ke representasi vektor, lalu di-decode ke bahasa Inggris.</li>
+<li><strong>4.3 GRU</strong> — Visualisasi interaktif dua gerbang GRU. Bandingkan kompleksitas vs LSTM.</li>
+<li><strong>4.4 Seq2Seq & Aplikasi</strong> — Animasi encoder-decoder untuk translasi: lihat bagaimana kalimat Indonesia diubah ke representasi vektor, lalu di-decode ke bahasa Inggris.</li>
+<li><strong>4.5 Attention vs tanpa Attention</strong> — Bandingkan langsung kualitas terjemahan kalimat panjang dengan dan tanpa attention mechanism.</li>
 </ul></div>
 
 <div class="callout info" style="margin:12px 60px 20px;">
@@ -114,6 +118,39 @@
 </div>
 </div>
 
+<!-- 4D: GRU -->
+<div class="sub" id="aif4d">
+<div class="subtit"><span class="ac">4.3</span> GRU — Gated Recurrent Unit <span class="subid">// LSTM yang lebih ramping</span></div>
+<div class="prose">
+<p>GRU (2014, Cho et al.) adalah penyederhanaan LSTM: dari tiga gerbang menjadi dua, dan tidak ada <em>cell state</em> terpisah. Hasilnya lebih ringan dan lebih cepat dilatih, dengan performa yang sering setara untuk kalimat pendek hingga menengah.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — GRU vs LSTM: Perbandingan Gerbang</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn gru-view active" data-v="gru" style="font-size:11px;padding:5px 12px;">GRU</button>
+      <button class="tnbtn gru-view" data-v="lstm" style="font-size:11px;padding:5px 12px;">LSTM (untuk perbandingan)</button>
+    </div>
+    <canvas id="gruCanvas" style="width:100%;max-width:560px;height:240px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="gru-info" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6;"></div>
+  </div>
+</div>
+
+<div class="table-wrap">
+<table class="data-table">
+  <thead><tr><th>Aspek</th><th>LSTM</th><th>GRU</th></tr></thead>
+  <tbody>
+    <tr><td>Jumlah gerbang</td><td>3 (Forget, Input, Output)</td><td>2 (Reset, Update)</td></tr>
+    <tr><td>Cell state</td><td>Ya, terpisah dari hidden state</td><td>Tidak, digabung jadi satu</td></tr>
+    <tr><td>Parameter</td><td>Lebih banyak (~4× hidden size²)</td><td>Lebih sedikit (~3× hidden size²)</td></tr>
+    <tr><td>Kecepatan training</td><td>Lebih lambat</td><td>Lebih cepat</td></tr>
+    <tr><td>Cocok untuk</td><td>Sekuens sangat panjang, konteks jauh</td><td>Sekuens menengah, resource terbatas</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
 <!-- 4C: Seq2Seq -->
 <div class="sub" id="aif4c">
 <div class="subtit"><span class="ac">4.3</span> Seq2Seq &amp; Aplikasi <span class="subid">// encoder mengompresi, decoder menghasilkan</span></div>
@@ -162,6 +199,33 @@
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--text);margin-bottom:4px;">Speech Recognition</div>
     <div style="font-size:12px;color:var(--text3);">LSTM digunakan di Siri, Google Voice sebelum era Transformer.</div>
   </div>
+</div>
+
+<!-- 4E: Attention vs tanpa Attention -->
+<div class="sub" id="aif4e">
+<div class="subtit"><span class="ac">4.5</span> Attention vs tanpa Attention — Perbandingan Langsung <span class="subid">// mengapa kalimat panjang butuh attention</span></div>
+<div class="prose">
+<p>Perbedaan terbesar antara Seq2Seq klasik dan Seq2Seq + Attention terlihat jelas pada kalimat panjang. Tanpa attention, decoder hanya punya satu ringkasan kecil dari seluruh input. Dengan attention, decoder bisa "melihat kembali" ke setiap kata input kapanpun dibutuhkan.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Seq2Seq Tanpa vs Dengan Attention (Kalimat Panjang)</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+      <button class="tnbtn att-compare active" data-c="noatt" style="font-size:11px;padding:5px 12px;">Tanpa Attention</button>
+      <button class="tnbtn att-compare" data-c="att" style="font-size:11px;padding:5px 12px;">Dengan Attention</button>
+    </div>
+    <canvas id="attCompCanvas" style="width:100%;max-width:560px;height:260px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="tnbtn primary" id="attcomp-run" style="font-size:12px;">▶ Animasikan Terjemahan</button>
+    </div>
+    <div id="attcomp-msg" style="text-align:center;font-size:12px;color:var(--text3);margin-top:8px;min-height:36px;line-height:1.5;font-family:'IBM Plex Mono',monospace;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<p>Untuk kalimat pendek (3–4 kata), kedua pendekatan memberikan hasil yang serupa. Perbedaan nyata muncul di kalimat panjang — inilah motivasi lahirnya Attention Mechanism pada 2015, yang kemudian menjadi fondasi arsitektur Transformer di 2017.</p>
+</div>
 </div>
 
 <div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 4 — RNN &amp; LSTM</strong><p style="margin:6px 0 0">RNN memproses sekuens dengan hidden state yang diteruskan antarwaktu, namun menderita vanishing gradient untuk sekuens panjang. LSTM menyelesaikannya dengan cell state dan tiga gerbang (forget, input, output). Seq2Seq memungkinkan transformasi sekuens ke sekuens. Keterbatasan bottleneck melahirkan Attention — fondasi fase terakhir: Transformer &amp; model modern.</p></div></div>
@@ -454,7 +518,7 @@ function drawS2S(step){
   ctx.beginPath(); ctx.roundRect(lw/2-18,lh/2-16,36,32,6); ctx.fill();
   ctx.strokeStyle=ctxActive?'#fbbf24':'#334155'; ctx.lineWidth=ctxActive?2:1; ctx.stroke();
   ctx.fillStyle=ctxActive?'#fbbf24':'#475569'; ctx.font='8px IBM Plex Mono,monospace'; ctx.textAlign='center';
-  ctx.fillText('ctx',lw/2,lh/2+4);
+  ctx.fillText('context',lw/2,lh/2+4);
   // decoder cells
   outputWords.forEach(function(w,i){
     var idx=i+inputWords.length+1;
@@ -478,6 +542,256 @@ document.getElementById('s2s-btn').addEventListener('click',function(){
   },700);
 });
 drawS2S(-1);
+
+/* ── GRU Viz ─────────────────────────── */
+(function(){
+  var gruView = 'gru';
+  var gruInfos = {
+    gru: '<strong style="color:#2dd4bf">GRU (Gated Recurrent Unit)</strong> — 2 gerbang saja:<br>'
+       + '<strong>Reset Gate (r)</strong>: tentukan seberapa banyak hidden state lama yang "dilupakan" saat menghitung kandidat baru. Nilai mendekati 0 → lupakan hampir segalanya.<br>'
+       + '<strong>Update Gate (z)</strong>: tentukan seberapa banyak hidden state lama yang dipertahankan vs diganti dengan info baru. Satu gerbang melakukan peran Forget + Input LSTM sekaligus.<br>'
+       + '<em>Tidak ada cell state terpisah</em> — hidden state saja yang dibawa antarwaktu.',
+    lstm: '<strong style="color:#7c6dfa">LSTM (Long Short-Term Memory)</strong> — 3 gerbang + cell state:<br>'
+        + '<strong>Forget Gate (f)</strong>: berapa banyak cell state lama yang dihapus.<br>'
+        + '<strong>Input Gate (i)</strong>: informasi baru mana yang ditambahkan ke cell state.<br>'
+        + '<strong>Output Gate (o)</strong>: bagian mana dari cell state yang dikirim sebagai hidden state.<br>'
+        + '<em>Cell state terpisah</em> berfungsi sebagai "jalan tol" informasi jangka panjang yang lebih stabil.'
+  };
+
+  function drawGRU(){
+    var c = document.getElementById('gruCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 240);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var cx = lw / 2, cy = lh / 2 + 10;
+
+    if(gruView === 'gru'){
+      // hidden state highway
+      ctx.strokeStyle = 'rgba(45,212,191,.6)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(20, 45); ctx.lineTo(lw-20, 45); ctx.stroke();
+      ctx.fillStyle = '#2dd4bf'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'left';
+      ctx.fillText('Hidden State h_t', 24, 39);
+
+      // 2 gates
+      var gates = [
+        {x:lw*.3, label:'r', name:'Reset\nGate', color:'#f87171'},
+        {x:lw*.65, label:'z', name:'Update\nGate', color:'#2dd4bf'},
+      ];
+      gates.forEach(function(g){
+        ctx.strokeStyle = g.color; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(g.x, 45); ctx.lineTo(g.x, cy-22); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = g.color + '33';
+        ctx.beginPath(); ctx.arc(g.x, cy, 22, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = g.color; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = g.color; ctx.font = 'bold 15px IBM Plex Mono,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(g.label, g.x, cy);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '9px DM Sans,sans-serif'; ctx.textBaseline = 'alphabetic';
+        g.name.split('\n').forEach(function(line, li){ ctx.fillText(line, g.x, cy+28+li*12); });
+        ctx.strokeStyle = 'rgba(45,212,191,.4)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(g.x, lh-20); ctx.lineTo(g.x, cy+22); ctx.stroke();
+      });
+      ctx.fillStyle = '#2dd4bf'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('x_t / h_{t-1}', lw*.3, lh-6);
+      ctx.fillText('x_t / h_{t-1}', lw*.65, lh-6);
+
+    } else {
+      // LSTM comparison — 3 gates + cell state
+      ctx.strokeStyle = 'rgba(251,191,36,.6)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(20, 45); ctx.lineTo(lw-20, 45); ctx.stroke();
+      ctx.fillStyle = '#fbbf24'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'left';
+      ctx.fillText('Cell State C_t + Hidden State h_t', 24, 39);
+
+      var gates3 = [
+        {x:lw*.2, label:'f', name:'Forget\nGate', color:'#f87171'},
+        {x:lw*.5, label:'i', name:'Input\nGate', color:'#4ade80'},
+        {x:lw*.8, label:'o', name:'Output\nGate', color:'#7c6dfa'},
+      ];
+      gates3.forEach(function(g){
+        ctx.strokeStyle = g.color; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(g.x, 45); ctx.lineTo(g.x, cy-22); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = g.color + '33';
+        ctx.beginPath(); ctx.arc(g.x, cy, 22, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = g.color; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = g.color; ctx.font = 'bold 13px IBM Plex Mono,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(g.label, g.x, cy);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '9px DM Sans,sans-serif'; ctx.textBaseline = 'alphabetic';
+        g.name.split('\n').forEach(function(line, li){ ctx.fillText(line, g.x, cy+28+li*12); });
+        ctx.strokeStyle = 'rgba(251,191,36,.4)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(g.x, lh-20); ctx.lineTo(g.x, cy+22); ctx.stroke();
+      });
+    }
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    document.getElementById('gru-info').innerHTML = gruInfos[gruView];
+  }
+
+  document.querySelectorAll('.gru-view').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.gru-view').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      gruView = this.dataset.v;
+      drawGRU();
+    });
+  });
+  drawGRU();
+})();
+
+/* ── Attention vs no-Attention comparison ─────────────────────────── */
+(function(){
+  var attMode = 'noatt';
+  var attTimer = null, attStep = -1;
+  var inputWords = ['Kucing','yang','sangat','manja','itu','duduk','di','atas','tikar','merah'];
+  var outputWords = ['The','very','spoiled','cat','sat','on','the','red','mat'];
+  // attention weights per output word — which input word it focuses on
+  var attWeights = [
+    [0,0,0,0,0,0,0,0,0,0],     // The → distributes poorly without attention
+    [0,0,0.9,0.05,0.05,0,0,0,0,0], // very → sangat
+    [0,0,0,0.9,0,0,0,0,0,0],   // spoiled → manja
+    [0.85,0,0,0,0,0,0,0,0,0],  // cat → Kucing
+    [0,0,0,0,0,0.85,0,0,0,0],  // sat → duduk
+    [0,0,0,0,0,0,0.8,0,0,0],   // on → di
+    [0,0,0,0,0,0,0,0.1,0.85,0],// the → tikar area
+    [0,0,0,0,0,0,0,0,0,0.9],   // red → merah
+    [0,0,0,0,0,0,0,0.85,0,0],  // mat → tikar
+  ];
+
+  function drawAttComp(step){
+    var c = document.getElementById('attCompCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 260);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var nIn = inputWords.length, nOut = outputWords.length;
+    var pad = 16, rowH = 45, topY = 28, botY = lh - 28;
+    var inStep = (lw - pad*2) / nIn;
+    var outStep = (lw - pad*2) / nOut;
+
+    // top row: input words
+    inputWords.forEach(function(w, i){
+      var x = pad + i*inStep + inStep/2;
+      var isActive = step >= 0 && attMode === 'att' && step < nOut && attWeights[step][i] > 0.3;
+      ctx.fillStyle = isActive ? 'rgba(251,191,36,.2)' : 'rgba(255,255,255,.04)';
+      ctx.beginPath(); ctx.roundRect(x-20, topY, 40, 24, 4); ctx.fill();
+      ctx.strokeStyle = isActive ? '#fbbf24' : '#1e293b'; ctx.lineWidth = isActive ? 1.5 : 1; ctx.stroke();
+      ctx.fillStyle = isActive ? '#fbbf24' : '#64748b'; ctx.font = '9px DM Sans,sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(w, x, topY+16);
+    });
+
+    // center context box or attention lines
+    if(attMode === 'noatt'){
+      // bottleneck context vector
+      var ctxX = lw/2, ctxY = lh/2;
+      var filled = step >= nIn;
+      ctx.fillStyle = filled ? 'rgba(251,191,36,.25)' : 'rgba(255,255,255,.04)';
+      ctx.beginPath(); ctx.roundRect(ctxX-35, ctxY-18, 70, 36, 6); ctx.fill();
+      ctx.strokeStyle = filled ? '#fbbf24' : '#334155'; ctx.lineWidth = filled ? 2 : 1; ctx.stroke();
+      ctx.fillStyle = filled ? '#fbbf24' : '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      ctx.fillText('context', ctxX, ctxY-3); ctx.fillText('vector', ctxX, ctxY+11);
+      // lines from input to context
+      if(step >= 0 && step < nIn){
+        for(var i = 0; i <= step; i++){
+          var ix = pad + i*inStep + inStep/2;
+          ctx.strokeStyle = 'rgba(45,212,191,.25)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(ix, topY+24); ctx.lineTo(ctxX, ctxY-18); ctx.stroke();
+        }
+      }
+      // lines from context to output
+      if(step >= nIn){
+        var oi = step - nIn;
+        for(var i2 = 0; i2 <= oi && i2 < nOut; i2++){
+          var ox = pad + i2*outStep + outStep/2;
+          ctx.strokeStyle = 'rgba(124,109,250,.3)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(ctxX, ctxY+18); ctx.lineTo(ox, botY-24); ctx.stroke();
+        }
+      }
+    } else {
+      // attention: draw weighted lines from current output word to input words
+      if(step >= nIn && step - nIn < nOut){
+        var oi = step - nIn;
+        var ox = pad + oi*outStep + outStep/2;
+        inputWords.forEach(function(_, i){
+          var wt = attWeights[oi][i];
+          if(wt < 0.05) return;
+          var ix = pad + i*inStep + inStep/2;
+          ctx.strokeStyle = 'rgba(251,191,36,'+wt+')';
+          ctx.lineWidth = wt * 3;
+          ctx.beginPath(); ctx.moveTo(ix, topY+24); ctx.lineTo(ox, botY-24); ctx.stroke();
+        });
+      }
+    }
+
+    // bottom row: output words
+    outputWords.forEach(function(w, i){
+      var x = pad + i*outStep + outStep/2;
+      var isActive = step >= nIn && (step - nIn) >= i;
+      var isCurrent = step >= nIn && (step - nIn) === i;
+      ctx.fillStyle = isCurrent ? 'rgba(124,109,250,.35)' : (isActive ? 'rgba(124,109,250,.15)' : 'rgba(255,255,255,.04)');
+      ctx.beginPath(); ctx.roundRect(x-20, botY-24, 40, 24, 4); ctx.fill();
+      ctx.strokeStyle = isCurrent ? '#7c6dfa' : (isActive ? 'rgba(124,109,250,.4)' : '#1e293b'); ctx.lineWidth = isCurrent ? 2 : 1; ctx.stroke();
+      ctx.fillStyle = isCurrent ? '#a78bfa' : (isActive ? '#7c6dfa' : '#475569'); ctx.font = '9px DM Sans,sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(w, x, botY-8);
+    });
+
+    // labels
+    ctx.fillStyle = '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Input (Indonesia) →', pad, topY-8);
+    ctx.fillText('Output (English) ←', pad, botY+16);
+    ctx.fillStyle = attMode === 'noatt' ? '#f87171' : '#4ade80';
+    ctx.textAlign = 'right';
+    ctx.fillText(attMode === 'noatt' ? 'Tanpa Attention — bottleneck!' : 'Dengan Attention — lihat koneksi langsung', lw-pad, topY-8);
+    ctx.textAlign = 'left';
+  }
+
+  function attCompStep(){
+    attStep++;
+    var nIn = inputWords.length, nOut = outputWords.length;
+    var msg = document.getElementById('attcomp-msg');
+    if(attStep < nIn){
+      msg.textContent = 'Encoder: "'+inputWords[attStep]+'" diproses...';
+      msg.style.color = 'var(--teal)';
+    } else if(attStep < nIn + nOut){
+      var oi = attStep - nIn;
+      if(attMode === 'noatt'){
+        msg.textContent = 'Decoder: menghasilkan "'+outputWords[oi]+'" dari context vector saja.'+
+          (oi > 4 ? ' Kata-kata awal sudah terlupakan!' : '');
+        msg.style.color = oi > 4 ? 'var(--coral)' : 'var(--text3)';
+      } else {
+        var bestI = attWeights[oi].indexOf(Math.max.apply(null, attWeights[oi]));
+        msg.textContent = 'Decoder: "'+outputWords[oi]+'" — paling memperhatikan "'+inputWords[bestI]+'"';
+        msg.style.color = 'var(--amber)';
+      }
+    } else {
+      msg.textContent = attMode === 'noatt'
+        ? 'Selesai. Perhatikan: kata-kata panjang di awal kalimat bisa hilang!'
+        : 'Selesai. Attention langsung membaca kata yang relevan di setiap langkah.';
+      msg.style.color = attMode === 'noatt' ? 'var(--coral)' : 'var(--green)';
+      clearInterval(attTimer); document.getElementById('attcomp-run').disabled = false;
+      return;
+    }
+    drawAttComp(attStep);
+  }
+
+  document.querySelectorAll('.att-compare').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.att-compare').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      attMode = this.dataset.c;
+      clearInterval(attTimer); attStep = -1;
+      drawAttComp(-1);
+      document.getElementById('attcomp-msg').textContent = '';
+      document.getElementById('attcomp-run').disabled = false;
+    });
+  });
+
+  document.getElementById('attcomp-run').addEventListener('click', function(){
+    clearInterval(attTimer); attStep = -1; this.disabled = true;
+    attTimer = setInterval(attCompStep, 500);
+  });
+
+  drawAttComp(-1);
+})();
 
 // redraw on resize
 var resizeTimer;

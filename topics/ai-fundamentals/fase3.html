@@ -5,7 +5,7 @@
   <div>
     <div class="stitle">CNN — Bagaimana Mesin Melihat Gambar</div>
     <div class="sdesc">Convolutional Neural Network (CNN) adalah arsitektur revolusioner yang memungkinkan komputer "melihat". Pelajari cara kerja filter/kernel, pooling, feature maps — dengan visualisasi animasi filter CNN yang melewati gambar, persis seperti yang kamu bayangkan.</div>
-    <div class="smeta"><span class="mc">~55 menit</span><span class="mc">4 topik</span><span class="mc">4 visualisasi animasi</span></div>
+    <div class="smeta"><span class="mc">~70 menit</span><span class="mc">5 topik</span><span class="mc">5 visualisasi</span></div>
   </div>
 </div>
 <div class="snav">
@@ -13,10 +13,11 @@
   <a class="snavi" href="#aif3b">Feature Maps</a>
   <a class="snavi" href="#aif3c">Pooling</a>
   <a class="snavi" href="#aif3d">Arsitektur CNN</a>
+  <a class="snavi" href="#aif3e">Transfer Learning</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">4 topik · ~55 menit</div>
+      <div class="topic-nav-counter">5 topik · ~70 menit</div>
       <div class="topic-nav-title">Mulai dari: 3.1 Konvolusi & Filter</div>
     </div>
     <div class="topic-nav-btns">
@@ -33,6 +34,7 @@
 <li><strong>3.2 Feature Maps</strong> — Visualisasi hierarki fitur: tepi → tekstur → pola → objek. Pahami mengapa CNN belajar representasi secara bertahap.</li>
 <li><strong>3.3 Pooling</strong> — Bandingkan Max Pooling vs Average Pooling secara visual pada grid 4×4 berwarna.</li>
 <li><strong>3.4 Arsitektur CNN</strong> — Blok animasi arsitektur CNN lengkap: dari input image hingga classification output.</li>
+<li><strong>3.5 Transfer Learning</strong> — Visualisasi layer mana yang "dibekukan" vs dilatih ulang. Pahami mengapa melatih dari nol seringkali tidak perlu.</li>
 </ul></div>
 
 <div class="callout info" style="margin:12px 60px 20px;">
@@ -215,7 +217,54 @@
 </table>
 </div>
 
-<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 3 — CNN</strong><p style="margin:6px 0 0">CNN bekerja dengan menyapu gambar menggunakan filter-filter kecil yang <em>dipelajari otomatis</em>, membangun hierarki fitur dari tepi sederhana hingga objek kompleks, kemudian mengurangi ukuran dengan pooling. Fase berikutnya: RNN &amp; LSTM — bagaimana mesin memproses data berurutan seperti teks dan suara.</p></div></div>
+<!-- 3E: Transfer Learning -->
+<div class="sub" id="aif3e">
+<div class="subtit"><span class="ac">3.5</span> Transfer Learning — Berdiri di Atas Bahu Raksasa <span class="subid">// jangan mulai dari nol kalau tidak perlu</span></div>
+<div class="prose">
+<p>Melatih CNN besar dari nol membutuhkan jutaan gambar dan berminggu-minggu komputasi. <strong>Transfer Learning</strong> memotong jalan: ambil model yang sudah dilatih pada dataset besar (seperti ImageNet dengan 14 juta gambar), lalu adaptasi untuk tugasmu.</p>
+<p>Ide dasarnya elegan: layer awal CNN sudah mahir mendeteksi tepi, tekstur, dan pola umum — kemampuan ini berlaku untuk <em>semua</em> jenis gambar, bukan hanya gambar training aslinya. Yang perlu dilatih ulang hanyalah layer terakhir yang spesifik ke tugas baru.</p>
+</div>
+
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><div class="ctxt"><strong>Analogi</strong><p style="margin:6px 0 0">Seorang dokter radiologi yang terlatih membaca X-ray paru-paru bisa lebih cepat belajar membaca X-ray tulang dibanding orang awam — karena kemampuan membaca gambar medis sudah ada. Transfer Learning melakukan hal yang sama untuk model CNN.</p></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Layer Frozen vs Fine-tuned</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
+      <button class="tnbtn tl-mode active" data-m="feature" style="font-size:11px;padding:5px 12px;">Feature Extraction</button>
+      <button class="tnbtn tl-mode" data-m="partial" style="font-size:11px;padding:5px 12px;">Fine-tuning Sebagian</button>
+      <button class="tnbtn tl-mode" data-m="full" style="font-size:11px;padding:5px 12px;">Fine-tuning Penuh</button>
+      <button class="tnbtn tl-mode" data-m="scratch" style="font-size:11px;padding:5px 12px;">Dari Nol</button>
+    </div>
+    <canvas id="tlCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div id="tl-info" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6;min-height:48px;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Strategi Transfer Learning</h4>
+<div class="table-wrap" style="margin-top:0;">
+<table class="data-table">
+  <thead><tr><th>Strategi</th><th>Layer Frozen</th><th>Kapan Digunakan</th><th>Data yang Dibutuhkan</th></tr></thead>
+  <tbody>
+    <tr><td>Feature Extraction</td><td>Semua kecuali classifier</td><td>Dataset baru mirip ImageNet, data sedikit</td><td>Ratusan gambar</td></tr>
+    <tr><td>Fine-tuning Sebagian</td><td>Layer awal saja</td><td>Dataset berbeda tapi data cukup</td><td>Ribuan gambar</td></tr>
+    <tr><td>Fine-tuning Penuh</td><td>Tidak ada</td><td>Dataset sangat berbeda (misal X-ray medis)</td><td>Puluhan ribu gambar</td></tr>
+    <tr><td>Dari Nol</td><td>N/A</td><td>Sangat spesifik, data sangat banyak</td><td>Jutaan gambar</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Model Pre-trained Populer</h4>
+<ul>
+  <li><strong>ResNet-50/101</strong> — pilihan aman untuk sebagian besar tugas computer vision</li>
+  <li><strong>EfficientNet</strong> — trade-off accuracy vs kecepatan terbaik</li>
+  <li><strong>ViT (Vision Transformer)</strong> — state-of-the-art untuk dataset besar</li>
+  <li><strong>CLIP</strong> — dilatih pada pasangan gambar-teks, bisa zero-shot classification</li>
+</ul>
+</div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Rangkuman Fase 3 — CNN</strong><p style="margin:6px 0 0">CNN bekerja dengan menyapu gambar menggunakan filter yang dipelajari otomatis, membangun hierarki fitur dari tepi ke objek kompleks, dikompres dengan pooling. Transfer Learning memungkinkan adaptasi model besar ke tugas baru dengan sedikit data. Fase berikutnya: RNN &amp; LSTM — bagaimana mesin memproses data berurutan seperti teks dan suara.</p></div></div>
 </div>
 
 <style>
@@ -561,12 +610,128 @@ document.getElementById('arch-animate').addEventListener('click',function(){
 });
 drawArch(-1);
 
+/* ── Transfer Learning Viz ─────────────────────────── */
+(function(){
+  var tlMode = 'feature';
+  var layers = [
+    {label:'Conv Block 1\n(Tepi & Gradien)', group:'early'},
+    {label:'Conv Block 2\n(Tekstur)', group:'early'},
+    {label:'Conv Block 3\n(Pola Kompleks)', group:'mid'},
+    {label:'Conv Block 4\n(Bagian Objek)', group:'mid'},
+    {label:'Conv Block 5\n(Objek Utuh)', group:'late'},
+    {label:'Global Pool\n+ Flatten', group:'head'},
+    {label:'Classifier\n(Tugas Baru)', group:'new'},
+  ];
+
+  var modeConfig = {
+    feature: {
+      frozen: [0,1,2,3,4,5], trained: [6],
+      info: '<strong>Feature Extraction</strong> — Semua layer CNN asli dibekukan (tidak dilatih). Hanya classifier baru di ujung yang dilatih. Sangat cepat, butuh data sedikit. Cocok jika tugasmu mirip dengan data pre-training.',
+      dataNeeded: 'Ratusan gambar', time: '~menit', accuracy: 72
+    },
+    partial: {
+      frozen: [0,1,2], trained: [3,4,5,6],
+      info: '<strong>Fine-tuning Sebagian</strong> — Layer awal (fitur primitif) dibekukan, layer akhir dilatih ulang dengan learning rate kecil. Keseimbangan yang baik antara kecepatan dan akurasi.',
+      dataNeeded: 'Ribuan gambar', time: '~jam', accuracy: 85
+    },
+    full: {
+      frozen: [], trained: [0,1,2,3,4,5,6],
+      info: '<strong>Fine-tuning Penuh</strong> — Semua layer dilatih ulang dengan learning rate sangat kecil. Paling fleksibel, bagus untuk domain yang sangat berbeda (misal gambar medis vs foto alam). Butuh lebih banyak data dan waktu.',
+      dataNeeded: 'Puluhan ribu gambar', time: '~hari', accuracy: 91
+    },
+    scratch: {
+      frozen: [], trained: [0,1,2,3,4,5,6],
+      info: '<strong>Dari Nol</strong> — Semua bobot diinisialisasi acak dan dilatih dari awal. Membutuhkan data sangat banyak dan waktu lama. Jarang dibutuhkan untuk tugas umum — transfer learning hampir selalu lebih baik.',
+      dataNeeded: 'Jutaan gambar', time: 'minggu', accuracy: 55
+    }
+  };
+
+  function drawTL(){
+    var c = document.getElementById('tlCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 220);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var cfg = modeConfig[tlMode];
+    var n = layers.length;
+    var pad = 20, bw = (lw - pad*2) / n - 8, bh = 80;
+    var by = (lh - bh) / 2;
+
+    layers.forEach(function(layer, i){
+      var bx = pad + i * ((lw-pad*2)/n) + 4;
+      var isFrozen = cfg.frozen.indexOf(i) >= 0;
+      var isTrained = cfg.trained.indexOf(i) >= 0;
+      var isNew = layer.group === 'new';
+
+      if(isFrozen){
+        ctx.fillStyle = 'rgba(71,85,105,.3)';
+        ctx.strokeStyle = '#334155';
+      } else if(isNew){
+        ctx.fillStyle = 'rgba(74,222,128,.2)';
+        ctx.strokeStyle = '#4ade80';
+      } else {
+        ctx.fillStyle = 'rgba(124,109,250,.25)';
+        ctx.strokeStyle = '#7c6dfa';
+      }
+      ctx.lineWidth = isNew ? 2 : 1.5;
+      ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 6); ctx.fill(); ctx.stroke();
+
+      // frozen lock icon
+      if(isFrozen){
+        ctx.fillStyle = '#475569'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('🔒', bx+bw/2, by+22);
+      } else {
+        ctx.fillStyle = isTrained ? (isNew ? '#4ade80' : '#7c6dfa') : '#475569';
+        ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(isNew ? '✦' : '▶', bx+bw/2, by+20);
+      }
+
+      // label
+      ctx.fillStyle = isFrozen ? '#475569' : (isNew ? '#4ade80' : '#a78bfa');
+      ctx.font = '8px DM Sans,sans-serif'; ctx.textAlign = 'center';
+      layer.label.split('\n').forEach(function(line, li){
+        ctx.fillText(line, bx+bw/2, by+bh-22+(li-0.5)*11);
+      });
+
+      // connector
+      if(i < n-1){
+        ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(bx+bw, lh/2); ctx.lineTo(bx+bw+8, lh/2); ctx.stroke();
+      }
+    });
+
+    // legend
+    ctx.fillStyle = '#475569'; ctx.fillRect(pad, lh-22, 12, 10);
+    ctx.fillStyle = '#64748b'; ctx.font = '9px DM Sans,sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('Dibekukan (frozen)', pad+16, lh-13);
+    ctx.fillStyle = 'rgba(124,109,250,.5)'; ctx.fillRect(pad+140, lh-22, 12, 10);
+    ctx.fillStyle = '#64748b'; ctx.fillText('Dilatih ulang', pad+156, lh-13);
+    ctx.fillStyle = 'rgba(74,222,128,.5)'; ctx.fillRect(pad+255, lh-22, 12, 10);
+    ctx.fillStyle = '#64748b'; ctx.fillText('Layer baru', pad+271, lh-13);
+
+    document.getElementById('tl-info').innerHTML = cfg.info
+      + ' <span style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text3);">'
+      + '| Data: '+cfg.dataNeeded+' | Waktu training: '+cfg.time+'</span>';
+  }
+
+  document.querySelectorAll('.tl-mode').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tl-mode').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      tlMode = this.dataset.m;
+      drawTL();
+    });
+  });
+  drawTL();
+})();
+
 // redraw on resize for responsive canvases
 var resizeTimer;
 window.addEventListener('resize', function(){
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(function(){
-    drawArch(-1); drawInput(); drawOutputFull(false); drawPooling();
+    drawArch(-1); drawInput(); drawOutputFull(false); drawPooling(); drawTL && drawTL();
   }, 200);
 });
 

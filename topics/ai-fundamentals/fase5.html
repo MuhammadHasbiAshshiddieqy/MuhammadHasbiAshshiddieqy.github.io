@@ -5,19 +5,21 @@
   <div>
     <div class="stitle">Transformer, LLM &amp; Model Modern</div>
     <div class="sdesc">Dari "Attention is All You Need" hingga ChatGPT, GPT-4, dan era Generative AI. Pahami Attention Mechanism, arsitektur Transformer, bagaimana LLM dilatih (pre-training + RLHF), dan peta lengkap model-model AI yang ada saat ini.</div>
-    <div class="smeta"><span class="mc">~65 menit</span><span class="mc">5 topik</span><span class="mc">4 visualisasi</span></div>
+    <div class="smeta"><span class="mc">~85 menit</span><span class="mc">7 topik</span><span class="mc">6 visualisasi</span></div>
   </div>
 </div>
 <div class="snav">
   <a class="snavi" href="#aif5a">Attention Mechanism</a>
   <a class="snavi" href="#aif5b">Transformer</a>
   <a class="snavi" href="#aif5c">LLM &amp; Pre-training</a>
+  <a class="snavi" href="#aif5f">Tokenisasi</a>
+  <a class="snavi" href="#aif5g">Temperature Sampling</a>
   <a class="snavi" href="#aif5d">Peta Model Modern</a>
   <a class="snavi" href="#aif5e">Mulai Belajar AI</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">5 topik · ~65 menit</div>
+      <div class="topic-nav-counter">7 topik · ~85 menit</div>
       <div class="topic-nav-title">Mulai dari: 5.1 Attention Mechanism</div>
     </div>
     <div class="topic-nav-btns">
@@ -33,7 +35,9 @@
 <li><strong>5.1 Attention Mechanism</strong> — Heatmap attention interaktif 5×5. Klik setiap kata dan lihat bagaimana model "memperhatikan" kata lain dalam kalimat.</li>
 <li><strong>5.2 Arsitektur Transformer</strong> — Diagram klikable: klik setiap komponen (Encoder, Decoder, Multi-Head Attention, FFN) dan baca penjelasannya.</li>
 <li><strong>5.3 LLM & Pre-training</strong> — Visualisasi 3-tahap training: pre-training → supervised fine-tuning → RLHF alignment.</li>
-<li><strong>5.4 Peta Model Modern</strong> — Filter grid model berdasarkan kategori: LLM, Image Generation, Vision, Multimodal.</li>
+<li><strong>5.4 Tokenisasi Interaktif</strong> — Ketik kalimat, lihat bagaimana teks dipotong menjadi token. Pahami mengapa "tokenisasi" adalah langkah pertama yang krusial sebelum LLM bisa memproses teks.</li>
+<li><strong>5.5 Temperature Sampling</strong> — Slider temperature 0→2, lihat distribusi probabilitas kata berikutnya berubah dari deterministik ke kreatif ke acak total.</li>
+<li><strong>5.6 Peta Model Modern</strong> — Filter grid model berdasarkan kategori: LLM, Image Generation, Vision, Multimodal.</li>
 <li><strong>5.5 Dari Sini, Ke Mana?</strong> — Rekomendasi jalur lanjutan ke kurikulum lain (Language Model, Agentic AI, MLOps).</li>
 </ul></div>
 
@@ -148,6 +152,91 @@
   <li><strong>Kemampuan yang muncul tiba-tiba</strong> — saat model menjadi sangat besar, kemampuan baru seperti penalaran multi-langkah muncul secara mengejutkan, bukan karena diprogram.</li>
   <li><strong>Chain-of-Thought (rantai pemikiran)</strong> — meminta model menjelaskan langkah-langkah berpikirnya secara dramatis meningkatkan keakuratan jawaban untuk masalah kompleks.</li>
 </ul>
+</div>
+</div>
+
+<!-- 5F: Tokenisasi -->
+<div class="sub" id="aif5f">
+<div class="subtit"><span class="ac">5.4</span> Tokenisasi — Bagaimana LLM Membaca Teks <span class="subid">// teks dipotong jadi potongan kecil sebelum diproses</span></div>
+<div class="prose">
+<p>LLM tidak memproses teks karakter per karakter, dan tidak juga kata per kata. LLM memproses <strong>token</strong> — potongan teks yang bisa berupa kata utuh, bagian kata, atau bahkan satu karakter. Proses memotong teks menjadi token disebut <strong>tokenisasi</strong>.</p>
+<p>Metode paling umum adalah <strong>BPE (Byte-Pair Encoding)</strong>: mulai dari karakter tunggal, lalu gabungkan pasangan yang paling sering muncul berulang kali sampai mencapai ukuran vocabulary yang diinginkan (biasanya 50.000–100.000 token).</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Tokenisasi Teks</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="margin-bottom:12px;">
+      <input type="text" id="tok-input" value="Kecerdasan buatan mengubah dunia." placeholder="Ketik kalimat..." style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;width:100%;box-sizing:border-box;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="tnbtn tok-example" data-t="Kecerdasan buatan mengubah dunia." style="font-size:11px;padding:4px 10px;">Contoh 1</button>
+      <button class="tnbtn tok-example" data-t="ChatGPT adalah LLM yang sangat populer." style="font-size:11px;padding:4px 10px;">Contoh 2</button>
+      <button class="tnbtn tok-example" data-t="Transformers are revolutionizing AI." style="font-size:11px;padding:4px 10px;">Contoh bahasa Inggris</button>
+      <button class="tnbtn tok-example" data-t="print('Hello, World!')" style="font-size:11px;padding:4px 10px;">Contoh kode</button>
+    </div>
+    <div id="tok-output" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;min-height:60px;line-height:2;word-break:break-all;"></div>
+    <div style="display:flex;gap:24px;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);flex-wrap:wrap;">
+      <span>Token: <span id="tok-count" style="color:var(--teal);">0</span></span>
+      <span>Karakter: <span id="tok-chars" style="color:var(--text2);">0</span></span>
+      <span>Rasio: <span id="tok-ratio" style="color:var(--amber);">—</span> karakter/token</span>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px;font-size:12px;color:var(--text2);line-height:1.6;" id="tok-note"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Mengapa Ini Penting?</h4>
+<ul>
+  <li><strong>Biaya &amp; batas konteks</strong> — API LLM ditagih per token, bukan per karakter. GPT-4 punya batas 128K token. Satu halaman teks ≈ 500–700 token.</li>
+  <li><strong>Bahasa berbeda, token berbeda</strong> — Bahasa Inggris rata-rata 1 token per kata. Bahasa Indonesia, Arab, atau Cina bisa 2–3× lebih banyak token per kata karena vocabulary model lebih bias ke bahasa Inggris.</li>
+  <li><strong>Kata jarang dipecah</strong> — "unhappiness" → ["un", "happiness"] atau ["un", "happ", "iness"]. Ini mengapa model bisa memahami kata baru.</li>
+  <li><strong>Angka dan kode</strong> — Angka sering dipotong per digit ("1234" → ["12","34"] atau ["1","2","3","4"]), yang berkontribusi pada kesulitan aritmatika LLM.</li>
+</ul>
+</div>
+</div>
+
+<!-- 5G: Temperature Sampling -->
+<div class="sub" id="aif5g">
+<div class="subtit"><span class="ac">5.5</span> Temperature &amp; Sampling — Kreativitas vs Ketepatan <span class="subid">// kenapa ChatGPT bisa jawab berbeda tiap kali</span></div>
+<div class="prose">
+<p>Setelah LLM menghitung probabilitas semua token yang mungkin muncul selanjutnya, bagaimana model memilih satu? Ini bukan selalu memilih yang paling mungkin — ada parameter yang disebut <strong>temperature</strong> yang mengontrol seberapa "berani" model dalam pilihannya.</p>
+</div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Temperature &amp; Distribusi Token Berikutnya</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Konteks: <em>"Langit hari ini berwarna..."</em></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="tnbtn tok-ctx active" data-ctx="langit" style="font-size:11px;padding:4px 10px;">"Langit hari ini..."</button>
+        <button class="tnbtn tok-ctx" data-ctx="cerita" style="font-size:11px;padding:4px 10px;">"Dahulu kala ada..."</button>
+        <button class="tnbtn tok-ctx" data-ctx="kode" style="font-size:11px;padding:4px 10px;">"def calculate_sum(..."</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text2);">Temperature:</span>
+      <input type="range" id="temp-slider" min="0" max="2" step="0.05" value="0.7" style="width:180px;">
+      <span id="temp-val" style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--accent);width:36px;">0.70</span>
+      <span id="temp-label" style="font-size:11px;color:var(--text3);"></span>
+    </div>
+    <canvas id="tempCanvas" style="width:100%;max-width:560px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="tnbtn primary" id="temp-sample" style="font-size:12px;">Sample Token</button>
+    </div>
+    <div id="temp-msg" style="text-align:center;font-size:12px;margin-top:8px;min-height:18px;color:var(--text3);font-family:'IBM Plex Mono',monospace;"></div>
+  </div>
+</div>
+
+<div class="prose">
+<h4>Panduan Temperature</h4>
+<ul>
+  <li><strong>Temperature = 0</strong> — selalu pilih token dengan probabilitas tertinggi. Deterministik, konsisten, tapi membosankan. Cocok untuk kode dan jawaban faktual.</li>
+  <li><strong>Temperature = 0.7</strong> — default umum. Seimbang antara konsistensi dan variasi. Untuk chatbot dan penulisan umum.</li>
+  <li><strong>Temperature = 1.0</strong> — pilih sesuai distribusi asli model. Kreatif, bervariasi. Untuk brainstorming dan penulisan kreatif.</li>
+  <li><strong>Temperature &gt; 1.5</strong> — terlalu acak, sering menghasilkan teks yang tidak koheren. Berguna untuk eksplorasi atau humor.</li>
+</ul>
+<p>Selain temperature, ada juga <strong>Top-P (nucleus sampling)</strong> — hanya pertimbangkan token-token yang secara kumulatif mencapai probabilitas P (misal 90%), lalu pilih dari situ. Ini menghindari token yang sangat improbable tanpa temperature tinggi.</p>
 </div>
 </div>
 
@@ -439,6 +528,220 @@ document.querySelectorAll('.model-cat-btn').forEach(function(btn){
   });
 });
 renderModels();
+
+/* ── Tokenizer Viz ─────────────────────────── */
+(function(){
+  var tokenColors = ['rgba(124,109,250,.25)','rgba(45,212,191,.2)','rgba(245,158,11,.2)','rgba(248,113,113,.2)','rgba(74,222,128,.2)','rgba(167,139,250,.2)'];
+  var tokenBorders = ['#7c6dfa','#2dd4bf','#f59e0b','#f87171','#4ade80','#a78bfa'];
+
+  // Simplified BPE-like tokenizer (approximation for visualization)
+  var vocab = {
+    // common Indonesian subwords/words
+    'kecerdasan':1,'buatan':1,'mengubah':1,'dunia':1,'adalah':1,'yang':1,'sangat':1,
+    'populer':1,'chat':1,'gpt':1,'transformer':1,'revolution':1,'izing':1,'ai':1,
+    'print':1,'hello':1,'world':1,'def':1,'calculate':1,'sum':1,
+    'langit':1,'hari':1,'ini':1,'berwarna':1,'merah':1,'biru':1,'cerah':1,
+    'dan':1,'di':1,'ke':1,'dari':1,'untuk':1,'pada':1,'dengan':1,
+    'the':1,'is':1,'are':1,'of':1,'in':1,'to':1,'a':1,'an':1,
+    'trans':1,'form':1,'ers':1,'re':1,'volu':1,'tion':1,'riz':1,
+    'ke':1,'cer':1,'das':1,'an':1,'bu':1,'at':1,'meng':1,'ubah':1,
+  };
+
+  function tokenize(text){
+    if(!text.trim()) return [];
+    var tokens = [];
+    var remaining = text;
+    var colorIdx = 0;
+    // Simple greedy longest-match tokenizer
+    while(remaining.length > 0){
+      var found = false;
+      // try longest match first (up to 12 chars)
+      for(var len = Math.min(12, remaining.length); len >= 1; len--){
+        var sub = remaining.slice(0, len).toLowerCase();
+        var orig = remaining.slice(0, len);
+        // Match on common patterns
+        if(len >= 3 && vocab[sub]){
+          tokens.push({text: orig, color: colorIdx % tokenColors.length});
+          remaining = remaining.slice(len);
+          colorIdx++;
+          found = true;
+          break;
+        }
+        // Common punctuation/whitespace
+        if(len === 1 && /[\s.,!?'"()[\]{};:\/\\]/.test(orig)){
+          if(/\s/.test(orig)){
+            if(tokens.length > 0) tokens[tokens.length-1].text += orig;
+          } else {
+            tokens.push({text: orig, color: colorIdx % tokenColors.length});
+            colorIdx++;
+          }
+          remaining = remaining.slice(1);
+          found = true;
+          break;
+        }
+      }
+      if(!found){
+        // single char fallback
+        tokens.push({text: remaining[0], color: colorIdx % tokenColors.length});
+        remaining = remaining.slice(1);
+        colorIdx++;
+      }
+    }
+    // merge short tokens into slightly larger chunks for better viz
+    var merged = [];
+    for(var i = 0; i < tokens.length; i++){
+      if(merged.length > 0 && merged[merged.length-1].text.length < 3 && tokens[i].text.length < 3 && !/ /.test(merged[merged.length-1].text) && !/ /.test(tokens[i].text)){
+        merged[merged.length-1].text += tokens[i].text;
+      } else {
+        merged.push(tokens[i]);
+      }
+    }
+    return merged;
+  }
+
+  function renderTokens(text){
+    var tokens = tokenize(text || '');
+    var out = document.getElementById('tok-output');
+    out.innerHTML = tokens.map(function(t){
+      var ci = t.color;
+      return '<span style="display:inline-block;padding:2px 6px;margin:2px 1px;border-radius:4px;border:1px solid '+tokenBorders[ci]+';background:'+tokenColors[ci]+';font-family:IBM Plex Mono,monospace;font-size:12px;color:var(--text);">'+
+        t.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span>';
+    }).join('');
+    document.getElementById('tok-count').textContent = tokens.length;
+    document.getElementById('tok-chars').textContent = text.length;
+    var ratio = tokens.length > 0 ? (text.length / tokens.length).toFixed(1) : '—';
+    document.getElementById('tok-ratio').textContent = ratio;
+    var note = '';
+    var lang = /[a-zA-Z]{4,}/.test(text) && !/[aeiu]{2}/.test(text.toLowerCase()) ? 'en' : 'id';
+    if(tokens.length === 0) note = '';
+    else if(text.includes('def ') || text.includes('print(')) note = 'Kode: keyword dan tanda kurung biasanya satu token. Nama variabel bisa dipecah per bagian.';
+    else if(/[0-9]{4,}/.test(text)) note = 'Angka panjang sering dipotong per 2 digit. Ini salah satu alasan LLM tidak bagus dalam aritmatika langsung.';
+    else note = 'Kata umum biasanya satu token. Kata jarang atau panjang dipecah menjadi subword. Spasi biasanya digabung ke token berikutnya.';
+    document.getElementById('tok-note').textContent = note;
+  }
+
+  document.getElementById('tok-input').addEventListener('input', function(){ renderTokens(this.value); });
+  document.querySelectorAll('.tok-example').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.getElementById('tok-input').value = this.dataset.t;
+      renderTokens(this.dataset.t);
+    });
+  });
+  renderTokens(document.getElementById('tok-input').value);
+})();
+
+/* ── Temperature Sampling ─────────────────────────── */
+(function(){
+  var tempCtx = 'langit';
+  var contexts = {
+    langit: {
+      prompt: '"Langit hari ini berwarna..."',
+      candidates: ['biru','merah','abu-abu','cerah','gelap','indah','orange','putih'],
+      rawProbs: [0.35, 0.18, 0.15, 0.12, 0.10, 0.05, 0.03, 0.02]
+    },
+    cerita: {
+      prompt: '"Dahulu kala ada..."',
+      candidates: ['seorang','sebuah','seekor','dua','tiga','sang','putri','raja'],
+      rawProbs: [0.30, 0.25, 0.18, 0.08, 0.06, 0.05, 0.04, 0.04]
+    },
+    kode: {
+      prompt: '"def calculate_sum(..."',
+      candidates: ['a,','x,','n,','num','lst','arr','val','numbers'],
+      rawProbs: [0.40, 0.22, 0.15, 0.08, 0.06, 0.05, 0.02, 0.02]
+    }
+  };
+
+  function softmaxWithTemp(probs, temp){
+    if(temp <= 0.01){
+      // argmax
+      var maxI = probs.indexOf(Math.max.apply(null, probs));
+      return probs.map(function(_, i){ return i === maxI ? 1.0 : 0.0; });
+    }
+    var logits = probs.map(function(p){ return Math.log(p + 1e-9) / temp; });
+    var maxL = Math.max.apply(null, logits);
+    var exps = logits.map(function(l){ return Math.exp(l - maxL); });
+    var sum = exps.reduce(function(a,b){ return a+b; }, 0);
+    return exps.map(function(e){ return e / sum; });
+  }
+
+  function drawTemp(){
+    var c = document.getElementById('tempCanvas');
+    if(!c) return;
+    var sz = fitCanvas(c, 560, 220);
+    var lw = sz[0], lh = sz[1], dpr = sz[2];
+    var ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, lw, lh);
+    var temp = parseFloat(document.getElementById('temp-slider').value);
+    var data = contexts[tempCtx];
+    var probs = softmaxWithTemp(data.rawProbs, temp);
+    var n = probs.length;
+    var pad = 40, W = lw-pad*2, H = lh-pad-24;
+    var bw = W/n - 6;
+    probs.forEach(function(p, i){
+      var bh = p * H;
+      var bx = pad + i*(W/n) + 3;
+      var by = pad + H - bh;
+      var hue = temp <= 0.3 ? '#7c6dfa' : temp <= 0.8 ? '#2dd4bf' : temp <= 1.2 ? '#f59e0b' : '#f87171';
+      ctx.fillStyle = hue + '22'; ctx.fillRect(bx, pad, bw, H);
+      if(p > 0.001){ ctx.fillStyle = hue; ctx.fillRect(bx, by, bw, bh); }
+      ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 10px IBM Plex Mono,monospace'; ctx.textAlign = 'center';
+      if(bh > 14) ctx.fillText((p*100).toFixed(0)+'%', bx+bw/2, by-3);
+      else if(p > 0.005) ctx.fillText((p*100).toFixed(0)+'%', bx+bw/2, by-3);
+      ctx.fillStyle = '#64748b'; ctx.font = '9px DM Sans,sans-serif';
+      ctx.fillText(data.candidates[i], bx+bw/2, lh-6);
+    });
+    // y axis
+    ctx.fillStyle = '#1e293b'; ctx.fillRect(pad, pad, W, 1);
+    ctx.fillStyle = '#475569'; ctx.font = '9px IBM Plex Mono,monospace'; ctx.textAlign = 'right';
+    ctx.fillText('100%', pad-4, pad+4); ctx.fillText('50%', pad-4, pad+H/2+4); ctx.fillText('0%', pad-4, pad+H+4);
+    ctx.textAlign = 'left';
+  }
+
+  function updateTemp(){
+    var temp = parseFloat(document.getElementById('temp-slider').value);
+    document.getElementById('temp-val').textContent = temp.toFixed(2);
+    var label = temp <= 0.1 ? '→ Deterministik (selalu sama)' :
+                temp <= 0.5 ? '→ Konservatif (konsisten)' :
+                temp <= 1.0 ? '→ Seimbang (default)' :
+                temp <= 1.5 ? '→ Kreatif (bervariasi)' :
+                              '→ Acak (tidak koheren)';
+    document.getElementById('temp-label').textContent = label;
+    document.getElementById('temp-label').style.color = temp <= 0.5 ? 'var(--accent)' : temp <= 1.0 ? 'var(--teal)' : temp <= 1.5 ? 'var(--amber)' : 'var(--coral)';
+    drawTemp();
+    document.getElementById('temp-msg').textContent = '';
+  }
+
+  document.getElementById('temp-slider').addEventListener('input', updateTemp);
+
+  document.querySelectorAll('.tok-ctx').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tok-ctx').forEach(function(b){ b.classList.remove('active'); });
+      this.classList.add('active');
+      tempCtx = this.dataset.ctx;
+      document.querySelector('[data-ctx="'+tempCtx+'"]').previousElementSibling && null;
+      var prompt = contexts[tempCtx].prompt;
+      drawTemp();
+      document.getElementById('temp-msg').textContent = '';
+    });
+  });
+
+  document.getElementById('temp-sample').addEventListener('click', function(){
+    var temp = parseFloat(document.getElementById('temp-slider').value);
+    var data = contexts[tempCtx];
+    var probs = softmaxWithTemp(data.rawProbs, temp);
+    // sample from distribution
+    var r = Math.random(), cumul = 0, chosen = data.candidates[0];
+    for(var i = 0; i < probs.length; i++){
+      cumul += probs[i];
+      if(r <= cumul){ chosen = data.candidates[i]; break; }
+    }
+    var msg = document.getElementById('temp-msg');
+    msg.textContent = 'Dipilih: "' + chosen + '" (prob=' + (probs[data.candidates.indexOf(chosen)]*100).toFixed(1) + '%)';
+    msg.style.color = temp <= 0.5 ? 'var(--teal)' : temp <= 1.2 ? 'var(--amber)' : 'var(--coral)';
+  });
+
+  updateTemp();
+})();
 
 // redraw on resize
 var resizeTimer;
