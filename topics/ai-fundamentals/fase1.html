@@ -25,9 +25,8 @@
       <button class="tnbtn primary" onclick="goTo(4)">Mulai →</button>
     </div>
   </div>
-</div><!-- /aifi1 -->
 
-<div class="cc" style="border-color:rgba(124,109,250,.3);background:rgba(124,109,250,.04);margin:16px 60px 0;"><h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Apa yang Akan Kamu Pelajari</h3>
+<div class="cc" style="border-color:rgba(124,109,250,.3);background:rgba(124,109,250,.04);margin:20px 0 0;"><h3><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Apa yang Akan Kamu Pelajari</h3>
 <p>Fase 1 mencakup algoritma Machine Learning klasik yang masih digunakan di industri setiap hari. Setiap algoritma punya <strong>visualisasi interaktif</strong> — kamu bisa bereksperimen langsung dan melihat bagaimana model bereaksi terhadap data.</p>
 <ul>
 <li><strong>1.1 Linear Regression</strong> — Drag titik data, lihat garis bergerak secara real-time. Pahami R² dan MSE secara intuitif.</li>
@@ -37,10 +36,11 @@
 <li><strong>1.5 SVM</strong> — Lihat hyperplane dan margin secara visual, bandingkan kernel linear vs RBF.</li>
 </ul></div>
 
-<div class="callout info" style="margin:12px 60px 20px;">
+<div class="callout info" style="margin:12px 0 4px;">
 <span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
 <div class="ctxt"><strong>Prasyarat</strong> — Sudah selesai Fase 0 atau sudah punya intuisi dasar tentang apa itu AI dan ML. Tidak perlu coding — semua visualisasi berjalan di browser.</div>
 </div>
+</div><!-- /aifi1 -->
 
 <!-- 1A: Linear Regression -->
 <div class="sub" id="aif1a">
@@ -223,6 +223,20 @@
 
 <script>
 (function(){
+
+/* ── Canvas Helper ─────────────────────────── */
+function fitCanvas(c, defW, defH){
+  if(!c) return [defW||560, defH||280, 1];
+  var dpr = window.devicePixelRatio || 1;
+  var parentW = c.parentElement ? c.parentElement.clientWidth : defW||560;
+  var w = Math.min(defW||560, Math.max(200, parentW - 32));
+  var h = defH || 280;
+  c.width = Math.round(w * dpr);
+  c.height = Math.round(h * dpr);
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  return [w, h, dpr];
+}
 
 /* ── Linear Regression ─────────────────────────── */
 var lrPoints=[], lrDragging=-1;
@@ -533,6 +547,15 @@ function drawSVM(){
 }
 document.getElementById('svm-kernel').addEventListener('change', drawSVM);
 drawSVM();
+
+// redraw on resize
+var resizeTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){
+    drawLR(); drawLogit(); drawDTree(); drawSVM();
+  }, 200);
+});
 
 })();
 </script>
