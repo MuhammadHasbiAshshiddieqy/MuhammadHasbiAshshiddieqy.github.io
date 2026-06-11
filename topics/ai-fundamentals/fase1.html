@@ -46,8 +46,8 @@
 <div class="sub" id="aif1a">
 <div class="subtit"><span class="ac">1.1</span> Linear Regression <span class="subid">// garis terbaik melalui data</span></div>
 <div class="prose">
-<p>Algoritma ML paling sederhana: temukan garis lurus yang paling cocok menggambarkan hubungan antara dua variabel. Cocok untuk memprediksi <em>nilai numerik kontinu</em>.</p>
-<p><strong>Rumus:</strong> <code>y = wx + b</code> — model mencari nilai <em>w</em> (kemiringan) dan <em>b</em> (intercept) yang meminimalkan total error terhadap semua data.</p>
+<p>Algoritma ML paling sederhana: temukan garis lurus yang paling cocok menggambarkan hubungan antara dua variabel. Cocok untuk memprediksi <em>nilai numerik</em> seperti harga atau suhu.</p>
+<p><strong>Cara kerjanya:</strong> <code>y = wx + b</code> — model mencari nilai <em>w</em> (kemiringan garis) dan <em>b</em> (titik potong sumbu) yang membuat garis sedekat mungkin ke semua titik data.</p>
 </div>
 
 <div class="viz-block">
@@ -67,12 +67,12 @@
 </div>
 
 <div class="prose">
-<h4>Cara Kerja — Gradient Descent</h4>
-<p>Model tidak langsung "tahu" garis terbaik. Ia mulai dari garis acak, lalu perlahan-lahan menggeser bobot <em>w</em> dan <em>b</em> ke arah yang mengurangi error. Proses ini disebut <strong>Gradient Descent</strong>.</p>
+<h4>Cara Model Menemukan Garis Terbaik</h4>
+<p>Model tidak langsung "tahu" garis terbaik. Ia mulai dari garis acak, lalu perlahan-lahan menggeser posisinya ke arah yang mengurangi kesalahan — seperti menuruni bukit sedikit demi sedikit. Proses ini disebut <strong>Gradient Descent</strong> (turun mengikuti lereng).</p>
 <ul>
-  <li><strong>MSE (Mean Squared Error)</strong> — ukuran error: rata-rata kuadrat selisih prediksi vs kenyataan.</li>
-  <li><strong>R² (R-squared)</strong> — seberapa baik model menjelaskan variasi data (0–1, makin dekat 1 makin baik).</li>
-  <li><strong>Overfitting</strong> — model terlalu "hafal" data training, gagal di data baru. Solusi: lebih banyak data atau regularisasi.</li>
+  <li><strong>MSE (Mean Squared Error)</strong> — angka yang mengukur seberapa jauh prediksi dari kenyataan. Semakin kecil, semakin akurat model.</li>
+  <li><strong>R² (R-squared)</strong> — skor 0–1 yang menunjukkan seberapa baik garis menjelaskan pola data. Nilai 0.9 artinya 90% pola sudah terjelas oleh model.</li>
+  <li><strong>Overfitting</strong> — model terlalu "hafal" data latihan sampai ia tidak bisa bekerja di data baru. Seperti siswa yang menghafal soal, bukan memahami konsepnya.</li>
 </ul>
 <p><strong>Kapan digunakan:</strong> Prediksi harga rumah, estimasi penjualan, analisis tren.</p>
 </div>
@@ -82,8 +82,8 @@
 <div class="sub" id="aif1b">
 <div class="subtit"><span class="ac">1.2</span> Logistic Regression <span class="subid">// klasifikasi dengan probabilitas</span></div>
 <div class="prose">
-<p>Nama "regression" sedikit menyesatkan — ini sebenarnya algoritma <strong>klasifikasi</strong>. Alih-alih garis lurus, ia menggunakan kurva berbentuk S (<em>sigmoid</em>) untuk memprediksi probabilitas suatu kelas: apakah email ini spam? apakah tumor ini ganas?</p>
-<p><strong>Output:</strong> Angka antara 0 dan 1 (probabilitas). Jika > 0.5 → kelas positif, jika ≤ 0.5 → kelas negatif.</p>
+<p>Nama "regression" sedikit menyesatkan — ini sebenarnya algoritma <strong>klasifikasi</strong> (ya/tidak, spam/bukan spam). Alih-alih garis lurus, ia menggunakan kurva berbentuk S (<em>sigmoid</em>) yang mengubah angka apapun menjadi nilai antara 0 dan 1 — yaitu probabilitas.</p>
+<p><strong>Contoh:</strong> Input nilai ujian → output 0.83 → artinya "83% kemungkinan lulus". Jika di atas 0.5, prediksi "ya". Jika di bawah 0.5, prediksi "tidak".</p>
 </div>
 
 <div class="viz-block">
@@ -105,8 +105,8 @@
 <ul>
   <li>Sederhana, cepat, mudah diinterpretasi</li>
   <li>Menghasilkan probabilitas, bukan hanya label</li>
-  <li>Tanpa feature engineering tambahan, hanya bisa memisahkan kelas yang <em>linearly separable</em></li>
-  <li>Tidak bisa menangkap pola kompleks non-linear</li>
+  <li>Hanya bisa memisahkan dua kelas dengan garis lurus — tidak cocok jika pola datanya melingkar atau berliku</li>
+  <li>Tidak bisa menangkap pola yang lebih kompleks tanpa modifikasi tambahan</li>
 </ul>
 <p><strong>Kapan digunakan:</strong> Deteksi spam, prediksi churn pelanggan, diagnosis medis dasar, credit scoring.</p>
 </div>
@@ -133,11 +133,11 @@
 <div class="prose">
 <h4>Konsep Penting</h4>
 <ul>
-  <li><strong>Gini Impurity / Entropy</strong> — ukuran seberapa "campur" data di sebuah node. Pertanyaan terbaik = yang paling mengurangi impurity.</li>
-  <li><strong>Depth (kedalaman)</strong> — semakin dalam pohon, semakin "hafal" data training → risiko overfitting tinggi.</li>
-  <li><strong>Pruning</strong> — memangkas cabang yang tidak berguna untuk mengurangi overfitting.</li>
+  <li><strong>Gini Impurity / Entropy</strong> — ukuran seberapa "campur aduk" data di satu titik percabangan. Model memilih pertanyaan yang paling efektif memisahkan data menjadi kelompok yang bersih.</li>
+  <li><strong>Depth (kedalaman pohon)</strong> — semakin banyak percabangan, model makin "hafal" data latihan tapi makin buruk di data baru.</li>
+  <li><strong>Pruning (pemangkasan)</strong> — sengaja menghapus cabang-cabang yang terlalu spesifik agar model lebih umum dan akurat di data baru.</li>
 </ul>
-<p><strong>Kelebihan:</strong> Mudah dipahami manusia, tidak perlu normalisasi data, bisa handle data kategorikal. <strong>Kekurangan:</strong> Sangat rentan overfitting jika pohon terlalu dalam.</p>
+<p><strong>Kelebihan:</strong> Mudah dibaca dan dipahami manusia — kamu bisa lihat alasan di balik setiap prediksi. <strong>Kekurangan:</strong> Jika pohon terlalu dalam, ia menghafal data latihan dan gagal di data baru.</p>
 </div>
 </div>
 
@@ -169,9 +169,9 @@
 <div class="prose">
 <h4>Mengapa Lebih Baik dari Single Tree?</h4>
 <ul>
-  <li><strong>Bagging (Bootstrap Aggregating)</strong> — tiap pohon dilatih pada subset data acak, mengurangi variance.</li>
-  <li><strong>Feature randomness</strong> — tiap split hanya mempertimbangkan subset fitur acak, memastikan diversitas pohon.</li>
-  <li><strong>Out-of-bag error</strong> — data yang tidak dipakai tiap pohon bisa digunakan sebagai validation gratis.</li>
+  <li><strong>Bagging</strong> — setiap pohon dilatih pada sampel data yang berbeda-beda secara acak, sehingga tidak semua pohon membuat kesalahan yang sama.</li>
+  <li><strong>Fitur acak</strong> — setiap percabangan hanya mempertimbangkan sebagian fitur, memaksa pohon-pohon menjadi beragam dan tidak saling mirip.</li>
+  <li><strong>Out-of-bag error</strong> — data yang tidak dipakai satu pohon otomatis bisa dipakai untuk menguji pohon itu — validasi gratis tanpa dataset terpisah.</li>
 </ul>
 <p><strong>Kapan digunakan:</strong> Hampir semua masalah tabular (data berbentuk tabel). Sangat populer di kompetisi data science. Tahan terhadap outlier dan missing values.</p>
 </div>
@@ -182,7 +182,7 @@
 <div class="subtit"><span class="ac">1.5</span> Support Vector Machine (SVM) <span class="subid">// garis pemisah dengan margin terlebar</span></div>
 <div class="prose">
 <p>SVM tidak hanya mencari <em>sembarang</em> garis yang memisahkan dua kelas — ia mencari garis dengan <strong>margin terlebar</strong> antara kelas-kelas tersebut. Semakin lebar margin, semakin "yakin" model dalam prediksinya.</p>
-<p>Yang membuat SVM istimewa: dengan <strong>kernel trick</strong>, ia bisa memisahkan data yang tidak bisa dipisahkan oleh garis lurus — dengan cara "memproyeksikan" data ke dimensi yang lebih tinggi.</p>
+<p>Yang membuat SVM istimewa: dengan <strong>kernel trick</strong>, ia bisa memisahkan data yang tidak bisa dipisahkan oleh garis lurus — dengan cara matematika yang mengubah ruang data sehingga pola yang tadinya melingkar bisa dipisahkan oleh bidang datar.</p>
 </div>
 
 <div class="viz-block">
@@ -205,9 +205,9 @@
 <div class="prose">
 <h4>Kernel Trick — Sihir SVM</h4>
 <ul>
-  <li><strong>Linear kernel</strong> — separasi langsung di dimensi asli. Cepat, baik untuk data high-dimensional seperti teks.</li>
-  <li><strong>RBF (Radial Basis Function)</strong> — memproyeksikan ke dimensi tak terbatas. Bisa memisahkan data dengan batas non-linear kompleks.</li>
-  <li><strong>Support Vectors</strong> — titik-titik data yang paling dekat dengan hyperplane. Hanya ini yang menentukan posisi garis pemisah.</li>
+  <li><strong>Kernel Linear</strong> — memisahkan data dengan garis lurus. Cepat dan efektif untuk data berupa teks (ribuan kata sebagai fitur).</li>
+  <li><strong>Kernel RBF (Radial)</strong> — memisahkan data dengan batas lengkung kompleks, cocok jika pola tidak bisa dipisahkan garis lurus.</li>
+  <li><strong>Support Vectors</strong> — hanya titik data yang paling dekat ke garis pemisah yang menentukan posisi garis. Titik lain tidak berpengaruh sama sekali.</li>
 </ul>
 <p><strong>Kapan digunakan:</strong> Klasifikasi teks (dengan linear kernel), pengenalan gambar tradisional, dataset ukuran sedang dengan batas keputusan kompleks.</p>
 </div>

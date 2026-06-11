@@ -46,8 +46,8 @@
 <div class="sub" id="aif5a">
 <div class="subtit"><span class="ac">5.1</span> Attention Mechanism <span class="subid">// setiap kata memperhatikan kata lainnya</span></div>
 <div class="prose">
-<p>Masalah dengan Seq2Seq: semua informasi input harus muat dalam satu vektor context. Solusinya radikal — <strong>biarkan decoder melihat langsung ke setiap bagian input sesuai kebutuhan</strong>, dengan bobot perhatian yang berbeda.</p>
-<p>Attention menghitung skor "seberapa relevan" setiap token input terhadap token output yang sedang dihasilkan, lalu membuat weighted sum dari semua input berdasarkan skor tersebut.</p>
+<p>Masalah dengan Seq2Seq: semua informasi input harus dipadatkan dalam satu ringkasan kecil. Solusinya radikal — <strong>biarkan model melihat langsung ke setiap kata input kapanpun dibutuhkan</strong>, dengan tingkat "perhatian" yang berbeda untuk setiap kata.</p>
+<p>Attention menghitung skor "seberapa relevan" setiap kata input saat menghasilkan kata output tertentu, lalu menggabungkan semua kata input secara berbobot berdasarkan skor relevansi itu.</p>
 </div>
 
 <div class="viz-block">
@@ -60,15 +60,14 @@
 </div>
 
 <div class="prose">
-<h4>Query, Key, Value — Formula Attention</h4>
-<p>Attention dihitung dengan:</p>
+<h4>Query, Key, Value — Cara Kerja Attention</h4>
+<p>Analoginya seperti pencarian di perpustakaan:</p>
 <ul>
-  <li><strong>Query (Q)</strong> — "Apa yang aku cari?" (dari token saat ini)</li>
-  <li><strong>Key (K)</strong> — "Apa yang aku tawarkan?" (dari semua token)</li>
-  <li><strong>Value (V)</strong> — "Apa isinya?" (dari semua token)</li>
-  <li><strong>Score = softmax(QK^T / √d_k) × V</strong></li>
+  <li><strong>Query (Q)</strong> — pertanyaan yang kamu ajukan: "Aku sedang butuh informasi tentang apa?"</li>
+  <li><strong>Key (K)</strong> — label di setiap buku: "Buku ini berisi tentang apa?"</li>
+  <li><strong>Value (V)</strong> — isi buku yang sebenarnya</li>
 </ul>
-<p>Pembagian dengan √d_k mencegah dot product menjadi terlalu besar (yang membuat softmax menjadi one-hot dan gradient hilang).</p>
+<p>Model mencocokkan Query dengan setiap Key, menghitung skor kesesuaian, lalu mengambil kombinasi Value berdasarkan skor itu. Buku yang paling relevan mendapat bobot lebih besar dalam hasilnya.</p>
 </div>
 </div>
 
@@ -76,7 +75,7 @@
 <div class="sub" id="aif5b">
 <div class="subtit"><span class="ac">5.2</span> Arsitektur Transformer <span class="subid">// attention is all you need</span></div>
 <div class="prose">
-<p>Paper "Attention is All You Need" (Vaswani et al., 2017) membuang RNN sepenuhnya dan membangun model hanya dari attention. Hasilnya jauh lebih paralel (lebih cepat dilatih) dan menangkap dependensi jangka panjang lebih baik.</p>
+<p>Paper "Attention is All You Need" (Vaswani et al., 2017) membuang RNN sepenuhnya dan membangun model hanya dari mekanisme attention. Hasilnya jauh lebih bisa diparalelkan (semua kata diproses bersamaan, bukan satu per satu) dan jauh lebih baik dalam memahami hubungan antara kata yang jauh satu sama lain.</p>
 </div>
 
 <div class="viz-block">
@@ -93,10 +92,10 @@
 </div>
 
 <div class="prose">
-<h4>Multi-Head Attention</h4>
-<p>Daripada satu mekanisme attention, Transformer menggunakan <strong>multi-head attention</strong> — beberapa "kepala" attention yang berjalan paralel, masing-masing belajar memperhatikan aspek yang berbeda (sintaks, semantik, koreference, dll). Hasilnya digabung dan diproyeksikan kembali.</p>
-<h4>Positional Encoding</h4>
-<p>Attention tidak punya konsep urutan bawaan (tidak seperti RNN). Transformer menambahkan <em>positional encoding</em> — sinyal sinusoidal yang memberi tahu model posisi setiap token dalam sekuens.</p>
+<h4>Multi-Head Attention — Banyak Sudut Pandang Sekaligus</h4>
+<p>Daripada satu mekanisme attention, Transformer menggunakan beberapa "kepala" attention yang bekerja paralel — masing-masing fokus ke aspek yang berbeda. Satu kepala mungkin memperhatikan hubungan tata bahasa, kepala lain memperhatikan makna kata, kepala lain lagi memperhatikan siapa yang dirujuk pronoun. Semua hasilnya digabung menjadi satu representasi kaya.</p>
+<h4>Positional Encoding — Memberi Tahu Urutan Kata</h4>
+<p>Karena attention memproses semua kata sekaligus (bukan satu per satu seperti RNN), model tidak otomatis tahu mana kata pertama, kedua, dan seterusnya. Transformer menambahkan sinyal posisi (<em>positional encoding</em>) ke setiap kata agar model tahu urutannya.</p>
 </div>
 </div>
 
@@ -104,7 +103,7 @@
 <div class="sub" id="aif5c">
 <div class="subtit"><span class="ac">5.3</span> LLM — Large Language Models <span class="subid">// dari Transformer ke ChatGPT</span></div>
 <div class="prose">
-<p>LLM adalah Transformer yang dilatih pada data teks skala masif — triliunan token dari internet, buku, kode, dll. Proses pelatihannya terdiri dari dua tahap utama.</p>
+<p>LLM (Large Language Model / Model Bahasa Besar) adalah Transformer yang dilatih pada data teks skala masif — ratusan miliar hingga triliunan kata dari internet, buku, kode, dan lain-lain. Proses pelatihannya terdiri dari tiga tahap.</p>
 </div>
 
 <div class="viz-block">
@@ -132,9 +131,9 @@
       <div class="llm-stage" id="llms-2">
         <div class="llms-num">3</div>
         <div class="llms-content">
-          <div class="llms-title">RLHF — Reinforcement Learning from Human Feedback</div>
-          <div class="llms-desc">Human rater membandingkan dua respons model. Sebuah Reward Model dilatih dari preferensi ini. Lalu PPO (algoritma RL) digunakan untuk mengoptimasi LLM agar menghasilkan respons yang lebih disukai manusia.</div>
-          <div class="llms-meta"><span class="mc">reward model</span><span class="mc">PPO optimization</span></div>
+          <div class="llms-title">RLHF — Belajar dari Preferensi Manusia</div>
+          <div class="llms-desc">Manusia membandingkan dua respons model dan memilih mana yang lebih baik. Preferensi ini dipakai untuk melatih model "penilai" yang tahu respons mana yang disukai. Model utama kemudian dioptimasi agar menghasilkan respons yang mendapat nilai tinggi dari penilai ini.</div>
+          <div class="llms-meta"><span class="mc">preferensi manusia</span><span class="mc">model penilai otomatis</span></div>
         </div>
       </div>
     </div>
@@ -145,9 +144,9 @@
 <h4>Mengapa LLM Bisa "Melakukan" Banyak Hal?</h4>
 <p>Pre-training pada data masif membuat LLM menyerap representasi dunia yang kaya. Meski para peneliti masih memperdebatkan apakah LLM benar-benar "memahami" atau melakukan pattern matching canggih, yang jelas model belajar representasi abstrak yang memungkinkan <em>generalisasi</em> ke tugas baru yang belum pernah dilihat saat training — jauh melampaui sekadar menghafal.</p>
 <ul>
-  <li><strong>In-context learning</strong> — berikan beberapa contoh di prompt, model langsung bisa melakukan tugas baru tanpa training ulang.</li>
-  <li><strong>Emergent abilities</strong> — kemampuan seperti multi-step reasoning muncul tiba-tiba saat model mencapai skala tertentu.</li>
-  <li><strong>Chain-of-Thought</strong> — minta model "berpikir langkah demi langkah" secara dramatis meningkatkan akurasi reasoning.</li>
+  <li><strong>Belajar dari contoh di prompt</strong> — berikan 2–3 contoh di dalam pertanyaan, model langsung bisa mengikuti pola tanpa dilatih ulang.</li>
+  <li><strong>Kemampuan yang muncul tiba-tiba</strong> — saat model menjadi sangat besar, kemampuan baru seperti penalaran multi-langkah muncul secara mengejutkan, bukan karena diprogram.</li>
+  <li><strong>Chain-of-Thought (rantai pemikiran)</strong> — meminta model menjelaskan langkah-langkah berpikirnya secara dramatis meningkatkan keakuratan jawaban untuk masalah kompleks.</li>
 </ul>
 </div>
 </div>

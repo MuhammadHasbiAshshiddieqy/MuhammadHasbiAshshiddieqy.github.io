@@ -43,7 +43,7 @@
 <div class="subtit"><span class="ac">4.1</span> Recurrent Neural Network (RNN) <span class="subid">// jaringan yang punya ingatan</span></div>
 <div class="prose">
 <p>Saat kamu membaca kalimat <em>"Bank tersebut di tepi sungai..."</em> — kamu tidak memproses setiap kata secara independen. Kata "bank" diinterpretasikan berdasarkan konteks sebelumnya. Otak kamu ingat kata-kata sebelumnya.</p>
-<p>Neural network biasa tidak bisa melakukan ini. RNN menambahkan satu komponen kunci: <strong>hidden state</strong> — sebuah vektor "memori" yang diteruskan dari satu timestep ke timestep berikutnya.</p>
+<p>Neural network biasa memproses setiap kata seolah kata-kata lain tidak ada. RNN menambahkan satu komponen kunci: <strong>hidden state</strong> — semacam "catatan kecil" berisi ringkasan konteks sebelumnya yang dibawa dari satu kata ke kata berikutnya.</p>
 </div>
 
 <div class="viz-block">
@@ -59,8 +59,8 @@
 </div>
 
 <div class="prose">
-<h4>Masalah: Vanishing Gradient</h4>
-<p>RNN punya masalah fundamental: saat kamu membaca <em>"The cat that sat on the mat..."</em> dan tiba di kata kerja di akhir kalimat, RNN sudah "lupa" bahwa subjeknya adalah kucing (tunggal, bukan jamak). Gradien dari timestep awal menghilang saat backpropagation melalui banyak timestep.</p>
+<h4>Masalah: Memori Jangka Pendek (Vanishing Gradient)</h4>
+<p>RNN punya masalah fundamental: saat memproses kalimat panjang, informasi dari awal kalimat makin lama makin "memudar". Di kalimat <em>"The cat that sat on the mat..."</em>, saat RNN sampai di kata kerja, ia sudah hampir lupa bahwa subjeknya adalah kucing (tunggal). Sinyal koreksi saat belajar juga menghilang makin jauh ke belakang — layer awal hampir tidak belajar sama sekali. Fenomena ini disebut <em>vanishing gradient</em>.</p>
 </div>
 
 <div class="viz-block">
@@ -81,7 +81,7 @@
 <div class="sub" id="aif4b">
 <div class="subtit"><span class="ac">4.2</span> LSTM — Long Short-Term Memory <span class="subid">// memory cell dengan gerbang kendali</span></div>
 <div class="prose">
-<p>LSTM (1997, Hochreiter &amp; Schmidhuber) menyelesaikan masalah vanishing gradient dengan cara yang elegan: tambahkan <strong>cell state</strong> — semacam "conveyor belt" yang membawa informasi jangka panjang tanpa banyak modifikasi — dikontrol oleh tiga <em>gerbang (gate)</em>.</p>
+<p>LSTM (1997, Hochreiter &amp; Schmidhuber) menyelesaikan masalah memori jangka pendek dengan cara yang elegan: tambahkan <strong>cell state</strong> — semacam "ban berjalan" yang membawa informasi penting sepanjang waktu tanpa banyak gangguan — dikontrol oleh tiga <em>gerbang (gate)</em> yang menentukan informasi mana yang disimpan, ditambahkan, atau dikeluarkan.</p>
 </div>
 
 <div class="viz-block">
@@ -109,8 +109,8 @@
 </div>
 
 <div class="prose">
-<h4>GRU — Versi Lebih Ringan</h4>
-<p>GRU (Gated Recurrent Unit, 2014) menyederhanakan LSTM menjadi hanya dua gerbang (Reset Gate dan Update Gate). Lebih efisien komputasi, sering performa setara LSTM untuk sekuens pendek-menengah.</p>
+<h4>GRU — Versi Lebih Ringan dari LSTM</h4>
+<p>GRU (Gated Recurrent Unit, 2014) menyederhanakan LSTM menjadi hanya dua gerbang. Lebih ringan dan cepat dilatih, dengan performa yang sering setara dengan LSTM untuk kalimat atau sekuens yang tidak terlalu panjang.</p>
 </div>
 </div>
 
@@ -118,7 +118,7 @@
 <div class="sub" id="aif4c">
 <div class="subtit"><span class="ac">4.3</span> Seq2Seq &amp; Aplikasi <span class="subid">// encoder mengompresi, decoder menghasilkan</span></div>
 <div class="prose">
-<p>Banyak tugas NLP melibatkan transformasi satu sekuens ke sekuens lain: penerjemahan, ringkasan, tanya-jawab. Arsitektur <strong>Seq2Seq</strong> (2014) menyelesaikan ini dengan dua komponen: <em>Encoder</em> yang membaca input dan membuat representasi konteks, dan <em>Decoder</em> yang menghasilkan output berdasarkan konteks tersebut.</p>
+<p>Banyak tugas AI melibatkan transformasi satu urutan kata ke urutan kata lain: penerjemahan bahasa, meringkas artikel, tanya-jawab. Arsitektur <strong>Seq2Seq</strong> (2014) menyelesaikan ini dengan dua komponen: <em>Encoder</em> yang membaca seluruh input dan merangkumnya, serta <em>Decoder</em> yang menghasilkan output kata per kata berdasarkan rangkuman tersebut.</p>
 </div>
 
 <div class="viz-block">
@@ -134,8 +134,8 @@
 
 <div class="prose">
 <h4>Keterbatasan Seq2Seq → Solusi: Attention</h4>
-<p>Masalah Seq2Seq klasik: seluruh kalimat input harus dikompresi menjadi <em>satu vektor context</em> — bottleneck! Kalimat panjang kehilangan informasi awal.</p>
-<p>Solusinya adalah <strong>Attention Mechanism</strong> (2015) — decoder bisa "melihat kembali" ke semua hidden state encoder, bukan hanya state terakhir. Inilah fondasi dari Transformer yang akan dipelajari di fase berikutnya.</p>
+<p>Masalah Seq2Seq klasik: seluruh kalimat input harus "diperas" menjadi satu ringkasan kecil — seperti meringkas novel 500 halaman menjadi satu kalimat lalu meminta orang menerjemahkannya. Kalimat panjang kehilangan banyak detail.</p>
+<p>Solusinya adalah <strong>Attention Mechanism</strong> (Mekanisme Perhatian, 2015) — saat menghasilkan setiap kata output, decoder bisa "melihat kembali" ke seluruh kata input dan memilih mana yang paling relevan saat ini. Inilah fondasi dari Transformer yang akan dipelajari di fase berikutnya.</p>
 </div>
 
 <div class="prose">

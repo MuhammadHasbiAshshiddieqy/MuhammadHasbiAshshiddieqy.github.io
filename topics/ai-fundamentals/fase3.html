@@ -45,7 +45,7 @@
 <div class="subtit"><span class="ac">3.1</span> Konvolusi &amp; Filter <span class="subid">// jendela kecil yang menyapu gambar</span></div>
 <div class="prose">
 <p>Bayangkan kamu ingin mendeteksi tepi vertikal pada gambar. Dengan neural network biasa, kamu harus memproses semua pixel sekaligus — sangat tidak efisien untuk gambar 1000×1000 pixel.</p>
-<p>CNN menggunakan pendekatan yang lebih cerdas: <strong>filter</strong> (atau <em>kernel</em>) — sebuah matriks kecil (biasanya 3×3 atau 5×5) yang <em>menyapu</em> seluruh gambar, mendeteksi satu jenis pola di setiap posisi.</p>
+<p>CNN menggunakan pendekatan yang lebih cerdas: <strong>filter</strong> (atau <em>kernel</em>) — sebuah kotak kecil angka (biasanya 3×3 pixel) yang bergerak menyapu seluruh gambar, mendeteksi satu jenis pola di setiap posisi yang dilewatinya.</p>
 </div>
 
 <div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><div class="ctxt"><strong>Analogi</strong><p style="margin:6px 0 0">Filter CNN seperti kacamata khusus: kacamata deteksi tepi, kacamata deteksi warna, kacamata deteksi tekstur. Setiap filter "melihat" gambar dengan cara yang berbeda dan merespons kuat hanya terhadap pola yang ia deteksi.</p></div></div>
@@ -88,10 +88,10 @@
 <h4>Operasi Konvolusi</h4>
 <p>Di setiap posisi, filter melakukan operasi ini:</p>
 <ul>
-  <li>Tempatkan filter di atas 3×3 pixel input</li>
-  <li>Kalikan setiap nilai filter dengan pixel yang sesuai (element-wise)</li>
-  <li>Jumlahkan semua 9 hasil perkalian → satu nilai output</li>
-  <li>Geser filter ke posisi berikutnya (stride = 1 atau 2)</li>
+  <li>Letakkan filter (kotak 3×3) di atas area 3×3 pixel gambar</li>
+  <li>Kalikan setiap angka filter dengan nilai pixel di posisi yang sama</li>
+  <li>Jumlahkan semua 9 hasil perkalian → hasilnya satu angka yang menunjukkan "seberapa kuat" pola ini ditemukan di area itu</li>
+  <li>Geser filter ke posisi berikutnya dan ulangi sampai seluruh gambar tersapu</li>
 </ul>
 <p><strong>Yang membuat CNN revolusioner:</strong> Bobot filter ini <em>dipelajari otomatis</em> selama training. Model sendiri yang menemukan filter paling berguna untuk tugas tertentu — kita tidak perlu mendesain filter secara manual.</p>
 </div>
@@ -101,7 +101,7 @@
 <div class="sub" id="aif3b">
 <div class="subtit"><span class="ac">3.2</span> Feature Maps &amp; Hierarki Fitur <span class="subid">// dari tepi ke wajah ke objek</span></div>
 <div class="prose">
-<p>Setiap filter menghasilkan satu <strong>feature map</strong> — gambaran di mana saja dalam input filter tersebut "beresonansi". CNN dalam umumnya menggunakan 32, 64, hingga 512 filter berbeda secara bersamaan.</p>
+<p>Setiap filter menghasilkan satu <strong>feature map</strong> — peta yang menunjukkan di mana dalam gambar pola tersebut ditemukan dan seberapa kuat. CNN biasanya menggunakan puluhan hingga ratusan filter berbeda secara bersamaan, masing-masing mencari pola yang berbeda.</p>
 <p>Yang lebih menakjubkan: CNN belajar <strong>secara hierarkis</strong>. Layer awal mendeteksi fitur sederhana, layer dalam mendeteksi fitur makin kompleks.</p>
 </div>
 
@@ -146,8 +146,8 @@
 <div class="sub" id="aif3c">
 <div class="subtit"><span class="ac">3.3</span> Pooling — Compression yang Cerdas <span class="subid">// ambil yang penting, buang sisanya</span></div>
 <div class="prose">
-<p>Setelah konvolusi, feature map masih besar. <strong>Pooling</strong> mengurangi ukurannya dengan cara yang cerdas: ambil nilai paling representatif dari setiap region kecil.</p>
-<p>Ini membuat jaringan lebih efisien dan membuatnya <em>invariant terhadap translasi</em> — model tidak terganggu jika objek sedikit bergeser posisinya.</p>
+<p>Setelah konvolusi, hasilnya masih berukuran besar dan berat. <strong>Pooling</strong> mengurangi ukurannya dengan cara yang cerdas: dari setiap area kecil, ambil hanya satu nilai yang paling mewakili.</p>
+<p>Ini membuat komputasi lebih ringan, dan sekaligus membuat model lebih tangguh — jika objek sedikit bergeser posisinya dalam gambar, model tetap mengenalinya.</p>
 </div>
 
 <div class="viz-block">
@@ -176,16 +176,16 @@
 <div class="prose">
 <h4>Mengapa Max Pooling Lebih Populer?</h4>
 <ul>
-  <li><strong>Max Pooling</strong> — ambil nilai maksimum. Menangkap: "apakah fitur ini ADA di region ini?" Bagus untuk fitur sparse (ada atau tidak ada).</li>
-  <li><strong>Average Pooling</strong> — ambil rata-rata. Menangkap: "seberapa kuat fitur ini secara rata-rata?" Bagus untuk fitur yang tersebar merata.</li>
-  <li><strong>Global Average Pooling</strong> — rata-rata seluruh feature map menjadi satu nilai. Sering digunakan di lapisan terakhir CNN modern.</li>
+  <li><strong>Max Pooling</strong> — ambil nilai terbesar dari setiap area. Menangkap: "apakah pola ini ADA di sini?" — cocok untuk fitur yang ingin dideteksi kehadirannya.</li>
+  <li><strong>Average Pooling</strong> — ambil rata-rata dari setiap area. Menangkap: "seberapa kuat pola ini secara keseluruhan?" — cocok untuk fitur yang tersebar merata.</li>
+  <li><strong>Global Average Pooling</strong> — ambil rata-rata seluruh peta fitur menjadi satu angka. Sering dipakai di lapisan terakhir CNN untuk meringkas sebelum klasifikasi akhir.</li>
 </ul>
 </div>
 </div>
 
 <!-- 3D: CNN Architecture -->
 <div class="sub" id="aif3d">
-<div class="subtit"><span class="ac">3.4</span> Arsitektur CNN — Dari Pixel ke Prediksi <span class="subid">// aliran data end-to-end</span></div>
+<div class="subtit"><span class="ac">3.4</span> Arsitektur CNN — Dari Pixel ke Prediksi <span class="subid">// bagaimana semua bagian bekerja bersama</span></div>
 <div class="prose">
 <p>CNN lengkap terdiri dari beberapa tahap yang tersusun berulang, diikuti oleh beberapa fully connected layer di akhir untuk klasifikasi.</p>
 </div>

@@ -76,9 +76,9 @@
 
 <!-- 2B: Activation Functions -->
 <div class="sub" id="aif2b">
-<div class="subtit"><span class="ac">2.2</span> Activation Functions <span class="subid">// mengapa non-linearitas adalah segalanya</span></div>
+<div class="subtit"><span class="ac">2.2</span> Activation Functions <span class="subid">// tombol on/off yang membuat jaringan bisa belajar pola kompleks</span></div>
 <div class="prose">
-<p>Tanpa activation function, neural network sedalam apapun hanya akan menjadi operasi linear — setara dengan satu layer saja. Activation function memasukkan <strong>non-linearitas</strong> yang memungkinkan model mempelajari pola kompleks dunia nyata.</p>
+<p>Bayangkan setiap neuron punya "saklar" yang menentukan seberapa kuat ia merespons inputnya. Tanpa saklar ini (<em>activation function</em>), jutaan neuron yang digabungkan tetap hanya akan menghasilkan perhitungan garis lurus — tidak ada gunanya menambah lebih banyak layer. <em>Activation function</em> inilah yang memberi kemampuan jaringan untuk mempelajari pola lengkung dan kompleks di dunia nyata.</p>
 </div>
 
 <div class="viz-block">
@@ -97,12 +97,12 @@
 
 <div class="table-wrap">
 <table class="data-table">
-  <thead><tr><th>Function</th><th>Range</th><th>Kelebihan</th><th>Kekurangan</th><th>Digunakan di</th></tr></thead>
+  <thead><tr><th>Fungsi</th><th>Output</th><th>Kelebihan</th><th>Kekurangan</th><th>Digunakan di</th></tr></thead>
   <tbody>
-    <tr><td>Sigmoid</td><td>(0, 1)</td><td>Output probabilitas</td><td>Vanishing gradient</td><td>Output layer (binary)</td></tr>
-    <tr><td>Tanh</td><td>(-1, 1)</td><td>Zero-centered</td><td>Masih vanishing gradient</td><td>Hidden layer (RNN)</td></tr>
-    <tr><td>ReLU</td><td>[0, ∞)</td><td>Cepat, no saturation</td><td>Dying ReLU</td><td>Hidden layer (CNN, DNN)</td></tr>
-    <tr><td>Leaky ReLU</td><td>(-∞, ∞)</td><td>Tidak ada dying neuron</td><td>Extra hyperparameter</td><td>Alternatif ReLU</td></tr>
+    <tr><td>Sigmoid</td><td>0 sampai 1</td><td>Hasilnya bisa dibaca sebagai probabilitas</td><td>Gradien mengecil di nilai ekstrem — layer awal berhenti belajar</td><td>Layer output (klasifikasi ya/tidak)</td></tr>
+    <tr><td>Tanh</td><td>-1 sampai 1</td><td>Output berpusat di nol, lebih stabil</td><td>Masih punya masalah gradien mengecil</td><td>Layer tersembunyi di RNN</td></tr>
+    <tr><td>ReLU</td><td>0 atau positif</td><td>Sangat cepat, tidak jenuh di nilai besar</td><td>Neuron bisa "mati" dan berhenti belajar jika nilainya selalu negatif</td><td>Layer tersembunyi di CNN dan jaringan dalam</td></tr>
+    <tr><td>Leaky ReLU</td><td>Semua nilai</td><td>Neuron tidak bisa mati — nilai negatif tetap diloloskan sedikit</td><td>Ada satu parameter tambahan yang perlu ditentukan</td><td>Alternatif ReLU</td></tr>
   </tbody>
 </table>
 </div>
@@ -112,7 +112,7 @@
 <div class="sub" id="aif2c">
 <div class="subtit"><span class="ac">2.3</span> Backpropagation <span class="subid">// bagaimana error mengalir mundur</span></div>
 <div class="prose">
-<p>Ini adalah algoritma paling penting dalam Deep Learning. Setelah model membuat prediksi dan dihitung errornya, backpropagation menyebarkan error itu <em>mundur</em> melalui seluruh lapisan — menghitung kontribusi setiap bobot terhadap error, lalu memperbaikinya menggunakan <strong>Gradient Descent</strong>.</p>
+<p>Ini adalah algoritma paling penting dalam Deep Learning. Setelah model membuat prediksi yang salah, <em>backpropagation</em> menelusuri ke belakang — menghitung seberapa besar "kesalahan" setiap bobot, lalu memperbaiki semuanya sekaligus menggunakan <strong>Gradient Descent</strong> (turun ke arah yang mengurangi kesalahan).</p>
 </div>
 
 <div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span><div class="ctxt"><strong>Analogi: Siapa yang Salah?</strong><p style="margin:6px 0 0">Bayangkan sebuah tim membuat kesalahan. Backpropagation seperti manajer yang menelusuri siapa yang berkontribusi pada kesalahan — direktur ke manajer ke karyawan — lalu memberikan "koreksi" proporsional kepada setiap orang. Karyawan yang paling bertanggung jawab atas kesalahan mendapat koreksi terbesar.</p></div></div>
@@ -133,10 +133,10 @@
 <div class="prose">
 <h4>Langkah Backpropagation</h4>
 <ul>
-  <li><strong>1. Forward Pass</strong> — input mengalir maju, tiap layer menghitung aktivasinya.</li>
-  <li><strong>2. Hitung Loss</strong> — bandingkan output dengan target menggunakan loss function.</li>
-  <li><strong>3. Backward Pass</strong> — gunakan chain rule kalkulus untuk menghitung gradient setiap bobot.</li>
-  <li><strong>4. Update Bobot</strong> — <code>w = w - lr × ∂Loss/∂w</code> (learning rate × gradient).</li>
+  <li><strong>1. Jalan Maju (Forward Pass)</strong> — data masuk dari kiri, tiap layer menghitung dan meneruskan sinyal ke layer berikutnya sampai menghasilkan prediksi.</li>
+  <li><strong>2. Hitung Kesalahan (Loss)</strong> — bandingkan prediksi model dengan jawaban yang benar. Selisihnya adalah "kerugian" yang harus diminimalkan.</li>
+  <li><strong>3. Jalan Mundur (Backward Pass)</strong> — hitung seberapa besar kontribusi setiap bobot terhadap kesalahan, menggunakan aturan rantai kalkulus.</li>
+  <li><strong>4. Perbaiki Bobot</strong> — setiap bobot digeser sedikit ke arah yang mengurangi kesalahan. Besarnya langkah ditentukan oleh <em>learning rate</em> (kecepatan belajar).</li>
 </ul>
 <p>Proses ini diulangi ribuan kali hingga model konvergen ke solusi yang baik.</p>
 </div>
@@ -144,9 +144,9 @@
 
 <!-- 2D: ANN Interactive -->
 <div class="sub" id="aif2d">
-<div class="subtit"><span class="ac">2.4</span> ANN Interaktif — Klasifikasi Biner Visual <span class="subid">// lihat jaringan "berpikir" secara real-time</span></div>
+<div class="subtit"><span class="ac">2.4</span> Neural Network Interaktif — Lihat Jaringan Belajar <span class="subid">// latih langsung di browser, amati batas keputusan terbentuk</span></div>
 <div class="prose">
-<p>Sekarang kita gabungkan semua konsep. Di bawah ini ada ANN mini yang mencoba memisahkan dua kelas di bidang 2D. Kamu bisa tambahkan titik data, pilih arsitektur jaringan, dan lihat decision boundary berubah secara real-time.</p>
+<p>Sekarang kita gabungkan semua konsep. Di bawah ini ada neural network mini yang mencoba memisahkan dua kelompok titik di bidang datar. Tambahkan titik data, pilih jumlah neuron, dan lihat bagaimana <em>batas keputusan</em> (garis pemisah antara dua kelas) terbentuk saat jaringan berlatih.</p>
 </div>
 
 <div class="viz-block">
