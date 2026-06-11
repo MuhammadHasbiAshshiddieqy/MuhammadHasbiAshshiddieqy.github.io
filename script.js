@@ -111,7 +111,7 @@ function openCurriculum(id) {
   enterCurriculum(id, label);
   var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : id === 'ai-fundamentals' ? 'aif0' : 'i0';
   var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : id === 'ai-fundamentals' ? 'aifi0' : 'fi0';
-  loadFase(firstFase).then(function(){ _showPage(startPage); });
+  loadFase(firstFase).then(function(){ goToPage(startPage); });
 }
 
 function showLanding() {
@@ -330,6 +330,7 @@ function renderSidebar(curriculum) {
   document.querySelectorAll('.sph').forEach(function(h){
     h.onclick = function(){
       var items = document.getElementById(h.dataset.target);
+      if (!items) return;
       var fi = h.dataset.fi;
       var wasOpen = items.classList.contains('open');
       document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
@@ -586,7 +587,14 @@ function goToPage(pageId, skipPush) {
   Object.keys(AIF_PHASE_INTRO_MAP).forEach(function(k){ if (AIF_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
 
   if (faseId) {
-    loadFase(faseId).then(function(){ _showPage(pageId, skipPush); });
+    loadFase(faseId).then(function(){
+      _showPage(pageId, skipPush);
+      // Auto-open sidebar submenu for this fase
+      document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
+      document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
+      var grp = document.getElementById(faseId);
+      if (grp) { grp.classList.add('open'); if (grp.previousElementSibling) grp.previousElementSibling.classList.add('active'); }
+    });
   } else {
     _showPage(pageId, skipPush);
   }
@@ -641,7 +649,7 @@ function goTo(idx, skipPush) {
       document.querySelectorAll('.sits').forEach(function(i){i.classList.remove('open');});
       document.querySelectorAll('.sph').forEach(function(p){p.classList.remove('active');});
       var grp = document.getElementById(faseId);
-      if (grp) { grp.classList.add('open'); grp.previousElementSibling.classList.add('active'); }
+      if (grp) { grp.classList.add('open'); if (grp.previousElementSibling) grp.previousElementSibling.classList.add('active'); }
       var pv = document.getElementById('pv');
       if (pv) pv.textContent = phaseNums[faseId]||'1';
     }
