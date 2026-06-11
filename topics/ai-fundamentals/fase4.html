@@ -66,8 +66,13 @@
 <div class="viz-block">
   <div class="viz-title">Visualisasi — Vanishing Gradient Problem</div>
   <div class="viz-body" style="padding:16px;">
-    <canvas id="vanishCanvas" style="width:100%;max-width:560px;height:180px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
-    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;">Semakin jauh timestep dari output, gradient makin kecil → layer awal berhenti belajar</p>
+    <canvas id="vanishCanvas" style="width:100%;max-width:600px;height:220px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="display:flex;gap:20px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;">→ Forward pass (informasi)</span>
+      <span style="font-size:11px;color:#f87171;font-family:'IBM Plex Mono',monospace;">← Backward pass (gradient)</span>
+    </div>
+    <div id="vanish-bar-wrap" style="max-width:600px;margin:14px auto 0;display:grid;grid-template-columns:repeat(6,1fr);gap:6px;"></div>
+    <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:10px;">Gradient di t1 sudah &lt;1% dari sinyal aslinya — layer awal <strong>berhenti belajar</strong></p>
   </div>
 </div>
 </div>
@@ -226,36 +231,120 @@ document.getElementById('rnn-run-btn').addEventListener('click',function(){
 drawRNN(['Aku','suka','makan'],-1);
 
 /* ── Vanishing Gradient ─────────────────────── */
-function drawVanish(){
-  var c=document.getElementById('vanishCanvas');
-  if(!c) return;
-  var dpr=window.devicePixelRatio||1, lw=Math.min(560,c.parentElement.offsetWidth-20), lh=180;
-  c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
-  var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
-  ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
-  var n=8, step=lw/(n+1);
-  for(var i=0;i<n;i++){
-    var x=(n-i)*step, grad=Math.pow(0.6,i);
-    var r=Math.round(248*grad), g=Math.round(113*grad+50*(1-grad)), b=Math.round(113*grad+220*(1-grad));
-    ctx.fillStyle='rgba('+r+','+g+','+b+','+(0.15+grad*0.7)+')';
-    ctx.beginPath(); ctx.roundRect(x-22,lh/2-22,44,44,6); ctx.fill();
-    ctx.strokeStyle='rgba('+r+','+g+','+b+','+(0.3+grad*0.5)+')';
-    ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,'+(0.3+grad*0.7)+')'; ctx.font='9px IBM Plex Mono,monospace'; ctx.textAlign='center';
-    ctx.fillText('t'+(n-i),x,lh/2+4);
-    ctx.fillText((grad*100).toFixed(0)+'%',x,lh/2+52);
-    ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font='8px DM Sans,sans-serif';
-    ctx.fillText('grad',x,lh/2+42);
-    if(i<n-1){
-      ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(x-22,lh/2); ctx.lineTo(x-step+22,lh/2); ctx.stroke();
+(function(){
+  var words=['Kucing','yang','duduk','di','atas','tikar'];
+  var N=words.length;
+  // gradient at each timestep (backprop, exponential decay from right)
+  var grads=words.map(function(_,i){ return Math.pow(0.25,N-1-i); });
+
+  function drawVanish(){
+    var c=document.getElementById('vanishCanvas');
+    if(!c) return;
+    var dpr=window.devicePixelRatio||1;
+    var lw=Math.min(600,c.parentElement.offsetWidth-20), lh=220;
+    c.width=lw*dpr; c.height=lh*dpr; c.style.width=lw+'px'; c.style.height=lh+'px';
+    var ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+    ctx.fillStyle='#0a0a0d'; ctx.fillRect(0,0,lw,lh);
+
+    var pad=28, nodeR=22;
+    var usableW=lw-pad*2;
+    var step=usableW/(N-1);
+    var nodeY=lh/2-10;
+    var xs=words.map(function(_,i){ return pad+i*step; });
+
+    // ── forward arrows (white, all strong)
+    for(var i=0;i<N-1;i++){
+      var x1=xs[i]+nodeR, x2=xs[i+1]-nodeR;
+      ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(x1,nodeY); ctx.lineTo(x2,nodeY); ctx.stroke();
+      // arrowhead
+      ctx.fillStyle='rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.moveTo(x2,nodeY); ctx.lineTo(x2-6,nodeY-4); ctx.lineTo(x2-6,nodeY+4); ctx.closePath(); ctx.fill();
     }
+
+    // ── backward gradient arrows (red, fading)
+    var bY=nodeY+46;
+    for(var i=N-1;i>0;i--){
+      var g=grads[i-1]; // gradient arriving at node i-1 from node i
+      var alpha=Math.max(0.04, g);
+      var x1=xs[i]-nodeR, x2=xs[i-1]+nodeR;
+      ctx.strokeStyle='rgba(248,113,113,'+alpha+')';
+      ctx.lineWidth=Math.max(0.5, g*4);
+      ctx.beginPath(); ctx.moveTo(x1,bY); ctx.lineTo(x2,bY); ctx.stroke();
+      // arrowhead
+      ctx.fillStyle='rgba(248,113,113,'+alpha+')';
+      ctx.beginPath(); ctx.moveTo(x2,bY); ctx.lineTo(x2+6,bY-4); ctx.lineTo(x2+6,bY+4); ctx.closePath(); ctx.fill();
+    }
+
+    // ── nodes
+    for(var i=0;i<N;i++){
+      var g=grads[i];
+      var gPct=Math.round(g*100);
+      // node circle
+      var alpha=0.2+g*0.7;
+      ctx.beginPath(); ctx.arc(xs[i],nodeY,nodeR,0,Math.PI*2);
+      ctx.fillStyle='rgba(45,212,191,'+alpha+')';
+      ctx.fill();
+      ctx.strokeStyle='rgba(45,212,191,'+(0.4+g*0.5)+')';
+      ctx.lineWidth=1.5; ctx.stroke();
+
+      // label inside: t1..t6
+      ctx.fillStyle='rgba(255,255,255,'+(0.5+g*0.5)+')';
+      ctx.font='bold 10px IBM Plex Mono,monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('t'+(i+1), xs[i], nodeY);
+
+      // word below node
+      ctx.fillStyle='rgba(255,255,255,'+(0.3+g*0.5)+')';
+      ctx.font='10px DM Sans,sans-serif';
+      ctx.fillText(words[i], xs[i], nodeY+nodeR+13);
+
+      // gradient % below backward row
+      ctx.font='9px IBM Plex Mono,monospace';
+      ctx.fillStyle='rgba(248,113,113,'+(0.3+g*0.6)+')';
+      ctx.fillText(gPct+'%', xs[i], bY+16);
+    }
+
+    // ── labels
+    ctx.textBaseline='alphabetic';
+    ctx.textAlign='left';
+    ctx.font='9px IBM Plex Mono,monospace';
+    ctx.fillStyle='rgba(255,255,255,0.25)';
+    ctx.fillText('forward →', pad, nodeY-nodeR-10);
+    ctx.fillStyle='rgba(248,113,113,0.6)';
+    ctx.fillText('← gradient', pad, bY-8);
+
+    // ── output label (Loss)
+    ctx.textAlign='center';
+    ctx.font='bold 9px IBM Plex Mono,monospace';
+    ctx.fillStyle='#facc15';
+    ctx.fillText('LOSS', xs[N-1], nodeY-nodeR-10);
+    ctx.font='8px DM Sans,sans-serif';
+    ctx.fillStyle='rgba(250,204,21,0.5)';
+    ctx.fillText('100%', xs[N-1], bY+16);
   }
-  ctx.fillStyle='#f87171'; ctx.font='bold 10px IBM Plex Mono,monospace'; ctx.textAlign='right';
-  ctx.fillText('← gradient mengecil (vanish)',lw-8,lh-8);
-  ctx.textAlign='left';
-}
-drawVanish();
+
+  drawVanish();
+  window.addEventListener('resize', drawVanish);
+
+  // ── bar chart bawah
+  var wrap=document.getElementById('vanish-bar-wrap');
+  if(wrap){
+    var labels=['t1','t2','t3','t4','t5','t6 (Loss)'];
+    wrap.innerHTML=words.map(function(_,i){
+      var g=grads[i], pct=Math.max(1,Math.round(g*100));
+      var col=i===N-1?'#facc15':'#f87171';
+      var alpha=0.2+g*0.8;
+      return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
+        +'<div style="font-size:9px;color:rgba(248,113,113,'+alpha+');font-family:\'IBM Plex Mono\',monospace;">'+pct+'%</div>'
+        +'<div style="width:100%;background:rgba(255,255,255,0.06);border-radius:4px;height:48px;display:flex;align-items:flex-end;">'
+        +'<div style="width:100%;height:'+pct+'%;min-height:2px;background:'+col+';opacity:'+(0.3+g*0.7)+';border-radius:3px;transition:height .3s;"></div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:\'IBM Plex Mono\',monospace;">'+labels[i]+'</div>'
+        +'</div>';
+    }).join('');
+  }
+})();
 
 /* ── LSTM Gate Viz ─────────────────────── */
 var activeGate='forget';
