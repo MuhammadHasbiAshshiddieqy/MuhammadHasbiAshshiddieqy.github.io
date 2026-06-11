@@ -183,11 +183,12 @@
       </select>
       <button class="tnbtn primary" id="ann-train-btn" style="font-size:11px;padding:5px 12px;">▶ Train</button>
       <button class="tnbtn" id="ann-stop-btn" style="font-size:11px;padding:5px 12px;" disabled>⏹ Stop</button>
+      <button class="tnbtn" id="ann-reset-btn" style="font-size:11px;padding:5px 12px;">↺ Reset</button>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
       <div>
         <canvas id="annCanvas" style="width:260px;height:260px;display:block;border-radius:8px;background:#0a0a0d;cursor:crosshair;"></canvas>
-        <p style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px;">Data &amp; Decision Boundary</p>
+        <p style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px;">Data &amp; Decision Boundary<br><span style="color:var(--purple);">Klik kiri = biru · Klik kanan = merah</span></p>
       </div>
       <div>
         <canvas id="annNetCanvas" style="width:260px;height:260px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
@@ -721,6 +722,35 @@ document.getElementById('ann-stop-btn').addEventListener('click',function(){
   document.getElementById('ann-train-btn').disabled=false;
   this.disabled=true;
 });
+
+document.getElementById('ann-reset-btn').addEventListener('click',function(){
+  clearInterval(annTimer); annTraining=false;
+  annW1=null; annEpoch=0;
+  genDataset(annDataset);
+  document.getElementById('ann-epoch').textContent='0';
+  document.getElementById('ann-loss').textContent='—';
+  document.getElementById('ann-acc').textContent='—';
+  document.getElementById('ann-train-btn').disabled=false;
+  document.getElementById('ann-stop-btn').disabled=true;
+  drawANN(); drawANNNet();
+});
+
+(function(){
+  var c=document.getElementById('annCanvas');
+  function addPoint(evt){
+    if(annTraining) return;
+    evt.preventDefault();
+    var rect=c.getBoundingClientRect();
+    var cx=(evt.clientX-rect.left), cy=(evt.clientY-rect.top);
+    var sz=260;
+    var xv=cx/sz*2.2-1.1, yv=cy/sz*2.2-1.1;
+    var lbl=evt.button===2?0:1;
+    annData.push([xv,yv,lbl]);
+    drawANN();
+  }
+  c.addEventListener('click',function(evt){ addPoint(evt); });
+  c.addEventListener('contextmenu',function(evt){ addPoint(evt); });
+})();
 
 genDataset('xor');
 drawANN();
