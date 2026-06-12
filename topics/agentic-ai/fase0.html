@@ -142,6 +142,88 @@ TOOL_REGISTRY = {
 
 <div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Coba sendiri dulu sebelum lanjut</strong>Simpan file di atas, jalankan dengan <code>python first_agent.py</code>. Perhatikan output-nya — agent akan memanggil kedua tools dan merangkai jawaban. Coba ubah pertanyaan di baris terakhir dan lihat bagaimana agent bereaksi berbeda.</div></div>
 
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/></svg></span><div class="ctxt"><strong>Mau coba tanpa bayar? Gunakan OpenRouter + model gratis</strong><p style="margin:6px 0 4px">Contoh di atas memakai Anthropic API (berbayar). Jika kamu ingin eksplorasi dulu <strong>tanpa biaya</strong>, pakai <a href="https://openrouter.ai" target="_blank" rel="noopener">OpenRouter</a> — agregator model yang menyediakan beberapa model gratis termasuk dari Nous Research. OpenRouter kompatibel dengan OpenAI Python SDK, jadi cukup ganti base URL dan model ID.</p>
+<details style="margin-top:8px;">
+<summary style="cursor:pointer;font-size:12px;color:var(--purple);list-style:none;">▶ Lihat versi OpenRouter (gratis)</summary>
+<div style="margin-top:10px;">
+<div class="cb" style="margin-top:0">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">bash</span><span class="cf">setup OpenRouter</span></div>
+<div class="cbb"><pre><span class="cm"># Ganti anthropic dengan openai SDK (kompatibel dengan OpenRouter)</span>
+pip install openai
+
+<span class="cm"># Daftar di openrouter.ai → Dashboard → Keys → Create Key (gratis)</span>
+<span class="kw">export</span> OPENROUTER_API_KEY=<span class="st">"sk-or-..."</span></pre></div></div>
+<div class="cb" style="margin-top:8px">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">first_agent_openrouter.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+<span class="kw">import</span> json, datetime, os
+
+<span class="cm"># OpenRouter menerima OpenAI SDK — cukup ganti base_url dan api_key</span>
+client = <span class="fn">OpenAI</span>(
+    base_url=<span class="st">"https://openrouter.ai/api/v1"</span>,
+    api_key=os.environ[<span class="st">"OPENROUTER_API_KEY"</span>],
+)
+
+<span class="cm"># ── Tools (sama persis, format OpenAI function calling) ───────────────</span>
+<span class="kw">def</span> <span class="fn">get_current_time</span>() -> <span class="tp">str</span>:
+    <span class="kw">return</span> datetime.datetime.<span class="fn">now</span>().<span class="fn">strftime</span>(<span class="st">"%Y-%m-%d %H:%M:%S"</span>)
+
+<span class="kw">def</span> <span class="fn">calculate</span>(expression: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    <span class="kw">try</span>:
+        <span class="kw">return</span> <span class="fn">str</span>(<span class="fn">eval</span>(expression, {<span class="st">"__builtins__"</span>: {}}))
+    <span class="kw">except Exception as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="st">"Error: {e}"</span>
+
+TOOLS = [
+    {<span class="st">"type"</span>: <span class="st">"function"</span>, <span class="st">"function"</span>: {
+        <span class="st">"name"</span>: <span class="st">"get_current_time"</span>,
+        <span class="st">"description"</span>: <span class="st">"Mendapatkan waktu saat ini"</span>,
+        <span class="st">"parameters"</span>: {<span class="st">"type"</span>: <span class="st">"object"</span>, <span class="st">"properties"</span>: {}, <span class="st">"required"</span>: []}
+    }},
+    {<span class="st">"type"</span>: <span class="st">"function"</span>, <span class="st">"function"</span>: {
+        <span class="st">"name"</span>: <span class="st">"calculate"</span>,
+        <span class="st">"description"</span>: <span class="st">"Menghitung ekspresi matematika"</span>,
+        <span class="st">"parameters"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {<span class="st">"expression"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>}},
+            <span class="st">"required"</span>: [<span class="st">"expression"</span>]
+        }
+    }},
+]
+TOOL_REGISTRY = {<span class="st">"get_current_time"</span>: <span class="fn">get_current_time</span>, <span class="st">"calculate"</span>: <span class="fn">calculate</span>}
+
+<span class="cm"># ── Agent loop ───────────────────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">run_agent</span>(user_input: <span class="tp">str</span>) -> <span class="tp">str</span>:
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: user_input}]
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">10</span>):
+        response = client.chat.completions.<span class="fn">create</span>(
+            model=<span class="st">"nousresearch/hermes-3-llama-3.1-405b:free"</span>,
+            messages=messages,
+            tools=TOOLS,
+        )
+        msg = response.choices[<span class="nm">0</span>].message
+        finish = response.choices[<span class="nm">0</span>].finish_reason
+
+        <span class="kw">if</span> finish == <span class="st">"stop"</span> <span class="kw">or not</span> msg.tool_calls:
+            <span class="kw">return</span> msg.content <span class="kw">or</span> <span class="st">"(selesai tanpa teks)"</span>
+
+        messages.<span class="fn">append</span>(msg)  <span class="cm"># tambahkan response model ke history</span>
+        <span class="kw">for</span> tc <span class="kw">in</span> msg.tool_calls:
+            result = TOOL_REGISTRY.<span class="fn">get</span>(tc.function.name, <span class="kw">lambda</span> **_: <span class="st">"Tool tidak ada"</span>)(
+                **json.<span class="fn">loads</span>(tc.function.arguments)
+            )
+            messages.<span class="fn">append</span>({
+                <span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: tc.id, <span class="st">"content"</span>: result
+            })
+    <span class="kw">return</span> <span class="st">"Agent berhenti tanpa jawaban final"</span>
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">print</span>(<span class="fn">run_agent</span>(<span class="st">"Jam berapa sekarang? Dan berapa 15% dari 847?"</span>))</pre></div></div>
+<div class="callout warn" style="margin-top:8px;"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><div class="ctxt"><strong>Model gratis bisa berubah sewaktu-waktu</strong><p style="margin:4px 0 0">Daftar model gratis di OpenRouter berubah tiap minggu tergantung sponsor/provider. Cek <code>openrouter.ai/models?q=free</code> untuk model gratis terbaru. Untuk tool calling, pilih model yang support function calling — Hermes 3, Llama 3.3 70B, dan Qwen3 umumnya mendukung. Untuk production, tetap gunakan model berbayar yang lebih stabil dan kapabilitasnya terjamin.</p></div></div>
+</div>
+</details>
+</div></div>
+
 <div class="cc"><h3>Apa yang terjadi di balik layar?</h3><ul>
 <li><strong>Iterasi 1</strong>: Model menerima pesan user → memutuskan perlu memanggil <code>get_current_time</code> dan <code>calculate</code> → <code>stop_reason == "tool_use"</code></li>
 <li><strong>Harness</strong>: Eksekusi kedua fungsi Python, inject hasilnya ke <code>messages</code> sebagai <code>tool_result</code></li>
