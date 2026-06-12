@@ -62,11 +62,11 @@ var CV_FASE_CONTAINERS = {
 var LM_FASE_FILES = {
   'lmi1':'topics/language-model/fase1.html', 'lmi2':'topics/language-model/fase2.html',
   'lmi3':'topics/language-model/fase3.html', 'lmi4':'topics/language-model/fase4.html',
-  'lmi5':'topics/language-model/fase5.html'
+  'lmi5':'topics/language-model/fase5.html', 'lmi6':'topics/language-model/fase6.html'
 };
 var LM_FASE_CONTAINERS = {
   'lmi1':'lmfase1-container','lmi2':'lmfase2-container','lmi3':'lmfase3-container',
-  'lmi4':'lmfase4-container','lmi5':'lmfase5-container'
+  'lmi4':'lmfase4-container','lmi5':'lmfase5-container','lmi6':'lmfase6-container'
 };
 
 var loadedFases = {};
@@ -392,6 +392,14 @@ function renderSidebar(curriculum) {
         ['lm5d','5.4 Multimodal LLM'],
         ['lm5e','5.5 Memilih LLM yang Tepat'],
         ['lm5f','5.6 Distributed Training']
+      ]),
+      sbPhase('lmi6','Fase 6 — Generative AI in Practice','lmfi6',[
+        ['lm6a','6.1 Prompt Engineering'],
+        ['lm6b','6.2 RAG'],
+        ['lm6c','6.3 Function Calling'],
+        ['lm6d','6.4 LLM Application Dev'],
+        ['lm6e','6.5 Guardrails & Eval'],
+        ['lm6f','6.6 LLM in Production']
       ])
     ].join('');
   }
@@ -543,7 +551,8 @@ var LM_TOPICS = [
   'lm2a','lm2b','lm2c','lm2d','lm2e','lm2f',
   'lm3a','lm3b','lm3c','lm3d','lm3e',
   'lm4z','lm4a','lm4b','lm4c','lm4d','lm4e','lm4f',
-  'lm5a','lm5b','lm5c','lm5d','lm5e','lm5f'
+  'lm5a','lm5b','lm5c','lm5d','lm5e','lm5f',
+  'lm6a','lm6b','lm6c','lm6d','lm6e','lm6f'
 ];
 
 var LM_TOPIC_LABELS = {
@@ -552,7 +561,8 @@ var LM_TOPIC_LABELS = {
   'lm3a':'3.1 Attention Mechanism','lm3b':'3.2 Self-Attention','lm3c':'3.3 Multi-Head & Positional Encoding','lm3d':'3.4 Arsitektur Transformer','lm3e':'3.5 Varian Transformer',
   'lm4z':'4.0 Data Curation untuk Pre-training',
   'lm4a':'4.1 Pre-training LLM','lm4b':'4.2 BERT — Encoder LLM','lm4c':'4.3 GPT — Decoder LLM','lm4d':'4.4 Fine-tuning Strategies','lm4e':'4.5 RLHF & Alignment','lm4f':'4.6 LLM Evaluation',
-  'lm5a':'5.1 Scaling Laws','lm5b':'5.2 Mixture of Experts','lm5c':'5.3 Inference Optimization','lm5d':'5.4 Multimodal LLM','lm5e':'5.5 Memilih LLM yang Tepat','lm5f':'5.6 Distributed Training'
+  'lm5a':'5.1 Scaling Laws','lm5b':'5.2 Mixture of Experts','lm5c':'5.3 Inference Optimization','lm5d':'5.4 Multimodal LLM','lm5e':'5.5 Memilih LLM yang Tepat','lm5f':'5.6 Distributed Training',
+  'lm6a':'6.1 Prompt Engineering','lm6b':'6.2 RAG','lm6c':'6.3 Function Calling','lm6d':'6.4 LLM Application Dev','lm6e':'6.5 Guardrails & Eval','lm6f':'6.6 LLM in Production'
 };
 
 var LM_PHASE_MAP = {
@@ -561,13 +571,15 @@ var LM_PHASE_MAP = {
   'lm3a':'lmi3','lm3b':'lmi3','lm3c':'lmi3','lm3d':'lmi3','lm3e':'lmi3',
   'lm4z':'lmi4',
   'lm4a':'lmi4','lm4b':'lmi4','lm4c':'lmi4','lm4d':'lmi4','lm4e':'lmi4','lm4f':'lmi4',
-  'lm5a':'lmi5','lm5b':'lmi5','lm5c':'lmi5','lm5d':'lmi5','lm5e':'lmi5','lm5f':'lmi5'
+  'lm5a':'lmi5','lm5b':'lmi5','lm5c':'lmi5','lm5d':'lmi5','lm5e':'lmi5','lm5f':'lmi5',
+  'lm6a':'lmi6','lm6b':'lmi6','lm6c':'lmi6','lm6d':'lmi6','lm6e':'lmi6','lm6f':'lmi6'
 };
-var LM_PHASE_NUMS = {'lmi1':'1','lmi2':'2','lmi3':'3','lmi4':'4','lmi5':'5'};
-var LM_PHASE_LAST  = {5:'lmfi2', 11:'lmfi3', 16:'lmfi4', 23:'lmfi5'};
-var LM_PHASE_FIRST = {0:'lmhome', 6:'lmfi2', 12:'lmfi3', 17:'lmfi4', 24:'lmfi5'};
-var LM_PAGE_LABELS = {'lmhome':'Beranda LM','lmfi1':'Fase 1 — NLP Klasik','lmfi2':'Fase 2 — Neural Network','lmfi3':'Fase 3 — Transformer','lmfi4':'Fase 4 — LLM','lmfi5':'Fase 5 — Scaling & Produksi'};
-var LM_PHASE_INTRO_MAP = {'lmi1':'lmfi1','lmi2':'lmfi2','lmi3':'lmfi3','lmi4':'lmfi4','lmi5':'lmfi5'};
+var LM_PHASE_NUMS = {'lmi1':'1','lmi2':'2','lmi3':'3','lmi4':'4','lmi5':'5','lmi6':'6'};
+// idx 0-5=lm1(6), 6-11=lm2(6), 12-16=lm3(5), 17-23=lm4(7), 24-29=lm5(6), 30-35=lm6(6)
+var LM_PHASE_LAST  = {5:'lmfi2', 11:'lmfi3', 16:'lmfi4', 23:'lmfi5', 29:'lmfi6'};
+var LM_PHASE_FIRST = {0:'lmhome', 6:'lmfi2', 12:'lmfi3', 17:'lmfi4', 24:'lmfi5', 30:'lmfi6'};
+var LM_PAGE_LABELS = {'lmhome':'Beranda LM','lmfi1':'Fase 1 — NLP Klasik','lmfi2':'Fase 2 — Neural Network','lmfi3':'Fase 3 — Transformer','lmfi4':'Fase 4 — LLM','lmfi5':'Fase 5 — Scaling & Produksi','lmfi6':'Fase 6 — Generative AI in Practice'};
+var LM_PHASE_INTRO_MAP = {'lmi1':'lmfi1','lmi2':'lmfi2','lmi3':'lmfi3','lmi4':'lmfi4','lmi5':'lmfi5','lmi6':'lmfi6'};
 
 // ── COMPUTER VISION Topics ────────────────────────────────────────────────────
 var CV_TOPICS = [
@@ -667,7 +679,7 @@ function injectNavBars() {
 
 // ── hideAll ───────────────────────────────────────────────────────────────────
 var AA_PAGES = ['glossary','fi0','fi1','fi2','fi3','fi4','fi5'];
-var LM_PAGES = ['lmfi1','lmfi2','lmfi3','lmfi4','lmfi5'];
+var LM_PAGES = ['lmfi1','lmfi2','lmfi3','lmfi4','lmfi5','lmfi6'];
 var MLOPS_PAGES = ['mlopsfi1','mlopsfi2','mlopsfi3','mlopsfi4','mlopsfi5'];
 
 function hideAll() {

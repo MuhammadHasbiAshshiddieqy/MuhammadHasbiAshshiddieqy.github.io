@@ -1,0 +1,657 @@
+<section class="cs p6" id="lmfase6">
+<div class="fase-intro" id="lmfi6">
+<div class="sh">
+  <div class="sbadge">06</div>
+  <div>
+    <div class="stitle">Fase 6 — Generative AI in Practice</div>
+    <div class="sdesc">Dari model ke produk: prompt engineering, RAG, function calling, LLM application development, guardrails, dan strategi produksi. Fase ini menghubungkan teori LLM ke engineering nyata.</div>
+    <div class="smeta"><span class="mc">Minggu 13–16</span><span class="mc">OpenAI API · LangChain · LlamaIndex</span><span class="mc">Prerequisite: Fase 4</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#lm6a">Prompt Engineering</a>
+  <a class="snavi" href="#lm6b">RAG</a>
+  <a class="snavi" href="#lm6c">Function Calling</a>
+  <a class="snavi" href="#lm6d">LLM Apps</a>
+  <a class="snavi" href="#lm6e">Guardrails &amp; Eval</a>
+  <a class="snavi" href="#lm6f">LLM in Production</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">6 topik · Minggu 13–16</div>
+      <div class="topic-nav-title">Mulai dari: 6.1 Prompt Engineering</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('lmfi5')">← Fase 5</button>
+      <button class="tnbtn primary" onclick="goTo(30)">Mulai Fase 6 →</button>
+    </div>
+  </div>
+</div><!-- /lmfi6 -->
+
+<!-- 6A -->
+<div class="sub" id="lm6a">
+<div class="subtit"><span class="ac">6.1</span> Prompt Engineering <span class="subid">// instruksi yang tepat, output yang berguna</span></div>
+<div class="prose">
+<p>Prompt engineering adalah seni dan sains merancang input ke LLM untuk mendapatkan output yang diinginkan secara konsisten. Meskipun terdengar sederhana, perbedaan antara prompt yang buruk dan baik bisa berarti perbedaan antara aplikasi yang tidak berguna dan produk yang mengesankan. Dengan model modern, prompt sering lebih penting dari fine-tuning — dan jauh lebih murah.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Zero-shot vs Few-shot</h4>
+<p><strong>Zero-shot</strong>: langsung instruksikan task tanpa contoh. Bekerja untuk task sederhana yang sudah banyak ada di training data. "Klasifikasikan sentimen kalimat berikut: ..."<br><br><strong>Few-shot (ICL)</strong>: berikan 2–5 contoh input→output sebelum query sebenarnya. Drastis meningkatkan konsistensi format dan akurasi untuk task non-standar. Rule of thumb: mulai zero-shot, jika inkonsisten tambah contoh.</p>
+</div>
+<div class="gc"><h4>Chain-of-Thought (CoT)</h4>
+<p>Minta model "berpikir langkah demi langkah" sebelum menjawab. CoT terbukti meningkatkan akurasi reasoning (matematika, logika, multi-step) secara signifikan. Variannya: <strong>Zero-shot CoT</strong> — tambahkan "Let's think step by step". <strong>Few-shot CoT</strong> — berikan contoh dengan reasoning eksplisit. <strong>Tree-of-Thought</strong> — eksplorasi beberapa jalur reasoning paralel.</p>
+</div>
+<div class="gc"><h4>Struktur prompt efektif</h4>
+<p><strong>System</strong>: definisikan role dan constraint ("Kamu adalah asisten yang menjawab singkat dan faktual"). <strong>Context</strong>: berikan latar belakang relevan. <strong>Instruction</strong>: task yang jelas dan spesifik. <strong>Format</strong>: tentukan output format (JSON, bullet points, tabel). <strong>Constraints</strong>: batasi panjang, bahasa, atau scope.</p>
+</div>
+<div class="gc"><h4>ReAct &amp; Agentic Prompting</h4>
+<p><strong>ReAct</strong> (Reason + Act): model diminta bergantian antara Thought (reasoning), Action (panggil tool), Observation (hasil tool), sampai dapat jawaban final. Ini fondasi dari LLM agents. Prompt ReAct sangat structured: loop eksplisit dengan label Thought/Action/Observation di setiap iterasi.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">prompt_techniques.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+client = OpenAI()
+
+<span class="cm"># Zero-shot</span>
+<span class="kw">def</span> <span class="fn">classify_sentiment</span>(text):
+    resp = client.chat.completions.<span class="fn">create</span>(
+        model=<span class="st">"gpt-4o-mini"</span>,
+        messages=[
+            {<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"Kamu classifier sentimen. Jawab hanya: POSITIF, NEGATIF, atau NETRAL."</span>},
+            {<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: text}
+        ], temperature=<span class="nm">0</span>
+    )
+    <span class="kw">return</span> resp.choices[<span class="nm">0</span>].message.content
+
+<span class="cm"># Chain-of-Thought</span>
+cot_prompt = <span class="st">"""Selesaikan soal ini langkah demi langkah.
+
+Soal: Jika sebuah toko menjual 3 jenis produk dengan harga Rp12.000, Rp8.500,
+dan Rp15.000, dan pelanggan membeli masing-masing 2 unit, berapa total belanja?
+
+Langkah-langkah:"""</span>
+
+<span class="cm"># Few-shot dengan format konsisten</span>
+few_shot = <span class="st">"""Ekstrak entitas dari teks. Format: {"orang": [], "tempat": [], "tanggal": []}
+
+Teks: "Budi bertemu Sari di Bandung pada 5 Januari"
+Output: {"orang": ["Budi", "Sari"], "tempat": ["Bandung"], "tanggal": ["5 Januari"]}
+
+Teks: "Presiden Jokowi meresmikan tol Cipali di Subang tahun 2015"
+Output: {"orang": ["Jokowi"], "tempat": ["Cipali", "Subang"], "tanggal": ["2015"]}
+
+Teks: "{input}"
+Output:"""</span></pre></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Prompt Technique Comparison</div>
+  <div class="viz-body" style="padding:16px;">
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;" id="lmPromptBtns"></div>
+    <canvas id="lmPromptCanvas" style="width:100%;height:300px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;" id="lmPromptDesc"></div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('lmPromptCanvas');
+if(!c)return;
+var techniques={
+  'zero-shot':{
+    label:'Zero-shot',color:'#38bdf8',
+    desc:'Instruksi langsung tanpa contoh — cepat, tapi output bisa inkonsisten untuk task kompleks',
+    blocks:[
+      {t:'System',s:'Kamu classifier sentimen.',col:'#7c6dfa'},
+      {t:'User',s:'"Produk ini luar biasa!"',col:'#38bdf8'},
+      {t:'→ Output',s:'POSITIF',col:'#4ade80',bold:true}
+    ]
+  },
+  'few-shot':{
+    label:'Few-shot',color:'#a78bfa',
+    desc:'2–5 contoh input→output membuat model paham format dan nuansa task spesifik',
+    blocks:[
+      {t:'System',s:'Kamu classifier sentimen.',col:'#7c6dfa'},
+      {t:'Contoh 1',s:'"Bagus sekali!" → POSITIF',col:'#64748b'},
+      {t:'Contoh 2',s:'"Mengecewakan." → NEGATIF',col:'#64748b'},
+      {t:'User',s:'"Produk ini luar biasa!"',col:'#38bdf8'},
+      {t:'→ Output',s:'POSITIF (konsisten)',col:'#4ade80',bold:true}
+    ]
+  },
+  'cot':{
+    label:'Chain-of-Thought',color:'#f59e0b',
+    desc:'Model "berpikir keras" sebelum menjawab — drastis meningkatkan reasoning multi-step',
+    blocks:[
+      {t:'User',s:'Soal: 3 item × 2 unit. Harga Rp12k, Rp8.5k, Rp15k. Total?\nJawab langkah demi langkah:',col:'#38bdf8'},
+      {t:'Thought',s:'Item 1: 12.000×2 = 24.000\nItem 2: 8.500×2 = 17.000\nItem 3: 15.000×2 = 30.000',col:'#f59e0b'},
+      {t:'→ Output',s:'Total: Rp71.000',col:'#4ade80',bold:true}
+    ]
+  },
+  'react':{
+    label:'ReAct',color:'#f87171',
+    desc:'Reason+Act: model loop antara Thought → Action (tool call) → Observation sampai selesai',
+    blocks:[
+      {t:'Thought',s:'Perlu cari harga saham BBCA hari ini',col:'#f59e0b'},
+      {t:'Action',s:'search("harga saham BBCA")',col:'#f87171'},
+      {t:'Observation',s:'BBCA: Rp9.275 (+0.8%)',col:'#64748b'},
+      {t:'Thought',s:'Sudah dapat data, bisa jawab',col:'#f59e0b'},
+      {t:'→ Output',s:'Harga BBCA: Rp9.275',col:'#4ade80',bold:true}
+    ]
+  }
+};
+var active='zero-shot';
+function fitC(canvas,maxW,H){
+  var dpr=window.devicePixelRatio||1;
+  var W=Math.min(maxW,Math.max(300,canvas.parentElement?canvas.parentElement.clientWidth:600));
+  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return{ctx:ctx,W:W,H:H};
+}
+function draw(){
+  var sz=fitC(c,700,300);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var tech=techniques[active];var blocks=tech.blocks;
+  var PAD=20,GAP=10,BH=46,totalH=blocks.length*(BH+GAP)-GAP;
+  var startY=Math.floor((H-totalH)/2);
+  var BW=W-PAD*2;
+  blocks.forEach(function(b,i){
+    var y=startY+i*(BH+GAP);
+    var grad=ctx.createLinearGradient(PAD,y,PAD,y+BH);
+    grad.addColorStop(0,b.col+'28');grad.addColorStop(1,b.col+'0a');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(PAD,y,BW,BH,6);ctx.fill();
+    ctx.strokeStyle=b.col+(b.bold?'cc':'55');ctx.lineWidth=b.bold?1.5:1;ctx.stroke();
+    ctx.fillStyle=b.col;ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(b.t.toUpperCase(),PAD+10,y+14);
+    var lines=b.s.split('\n');
+    ctx.fillStyle=b.bold?'#e2e8f0':'#94a3b8';
+    ctx.font=(b.bold?'bold ':'')+'10px DM Sans,sans-serif';
+    if(lines.length===1){
+      ctx.fillText(b.s,PAD+10,y+BH/2+9);
+    } else {
+      lines.forEach(function(ln,li){ctx.fillText(ln,PAD+10,y+20+li*13);});
+    }
+    if(i<blocks.length-1){
+      var ax=PAD+BW/2,ay1=y+BH+2,ay2=y+BH+GAP-2;
+      ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(ax,ay1);ctx.lineTo(ax,ay2);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.15)';
+      ctx.beginPath();ctx.moveTo(ax,ay2+1);ctx.lineTo(ax-4,ay2-4);ctx.lineTo(ax+4,ay2-4);ctx.closePath();ctx.fill();
+    }
+  });
+  document.getElementById('lmPromptDesc').textContent=tech.desc;
+}
+var btns=document.getElementById('lmPromptBtns');
+Object.keys(techniques).forEach(function(key){
+  var t=techniques[key];
+  var b=document.createElement('button');b.textContent=t.label;b.className='tnbtn';
+  b.style.cssText='font-size:11px;padding:5px 13px;'+(key===active?'border-color:'+t.color+';color:'+t.color+';background:rgba(255,255,255,.04);':'');
+  b.onclick=function(){
+    active=key;draw();
+    document.querySelectorAll('#lmPromptBtns .tnbtn').forEach(function(bb){bb.style.borderColor='';bb.style.color='';bb.style.background='';});
+    b.style.borderColor=t.color;b.style.color=t.color;b.style.background='rgba(255,255,255,.04)';
+  };
+  btns.appendChild(b);
+});
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+</div><!-- /lm6a -->
+
+<div class="divider"></div>
+
+<!-- 6B -->
+<div class="sub" id="lm6b">
+<div class="subtit"><span class="ac">6.2</span> RAG — Retrieval-Augmented Generation <span class="subid">// knowledge yang selalu up-to-date</span></div>
+<div class="prose">
+<p>LLM punya dua masalah fundamental untuk aplikasi enterprise: <em>knowledge cutoff</em> (tidak tahu event setelah training) dan <em>hallucination</em> (mengarang fakta dengan percaya diri). RAG (Lewis et al., 2020) memecahkan keduanya: alih-alih mengandalkan "memori" model, kita berikan dokumen relevan secara real-time sebagai konteks. Model hanya perlu <em>membaca dan merangkum</em>, bukan <em>mengingat</em>.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Pipeline RAG dasar</h4>
+<ol style="margin:0;padding-left:16px;font-size:13px;line-height:1.7;">
+<li><strong>Indexing</strong>: chunk dokumen → embed → simpan di vector DB</li>
+<li><strong>Retrieval</strong>: embed query → similarity search → ambil top-K chunks</li>
+<li><strong>Augmentation</strong>: inject chunks ke prompt sebagai context</li>
+<li><strong>Generation</strong>: LLM jawab berdasarkan context, bukan memory</li>
+</ol>
+</div>
+<div class="gc"><h4>Chunking strategy</h4>
+<p><strong>Fixed-size</strong>: potong setiap N token — simple tapi bisa memotong di tengah kalimat. <strong>Sentence/paragraph</strong>: respek batas semantik — lebih baik untuk retrieval. <strong>Recursive</strong>: coba split by paragraph → sentence → word secara hierarki. <strong>Semantic chunking</strong>: embed setiap kalimat, split di mana cosine similarity turun drastis (boundary semantik alami).</p>
+</div>
+<div class="gc"><h4>Vector Database</h4>
+<p>Menyimpan embedding dan mendukung approximate nearest neighbor (ANN) search. Pilihan: <strong>Chroma</strong> (local, gratis, cocok dev), <strong>Pinecone</strong> (managed, scalable), <strong>Weaviate</strong> (hybrid search), <strong>pgvector</strong> (Postgres extension, familiar). ANN algorithm: HNSW (kecepatan tinggi) atau IVF (memory-efficient).</p>
+</div>
+<div class="gc"><h4>Advanced RAG</h4>
+<p><strong>Hybrid search</strong>: kombinasikan semantic (embedding) + keyword (BM25) — saling melengkapi. <strong>Re-ranking</strong>: setelah retrieval top-K, gunakan cross-encoder untuk re-rank lebih akurat sebelum masuk LLM. <strong>HyDE</strong>: generate hypothetical answer dulu, lalu gunakan itu sebagai query embedding. <strong>Parent-child chunking</strong>: index chunks kecil tapi kirim parent chunk ke LLM.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">rag_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> RecursiveCharacterTextSplitter
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> OpenAIEmbeddings, ChatOpenAI
+<span class="kw">from</span> langchain_chroma <span class="kw">import</span> Chroma
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> RetrievalQA
+
+<span class="cm"># 1. Indexing</span>
+splitter = RecursiveCharacterTextSplitter(chunk_size=<span class="nm">512</span>, chunk_overlap=<span class="nm">64</span>)
+chunks = splitter.<span class="fn">create_documents</span>(docs)
+
+embeddings = <span class="fn">OpenAIEmbeddings</span>(model=<span class="st">"text-embedding-3-small"</span>)
+vectordb = Chroma.<span class="fn">from_documents</span>(chunks, embeddings, persist_directory=<span class="st">"./db"</span>)
+
+<span class="cm"># 2. Retrieval + Generation</span>
+retriever = vectordb.<span class="fn">as_retriever</span>(search_type=<span class="st">"mmr"</span>, search_kwargs={<span class="st">"k"</span>: <span class="nm">5</span>})
+llm = <span class="fn">ChatOpenAI</span>(model=<span class="st">"gpt-4o-mini"</span>, temperature=<span class="nm">0</span>)
+
+qa_chain = RetrievalQA.<span class="fn">from_chain_type</span>(
+    llm=llm, retriever=retriever,
+    return_source_documents=<span class="kw">True</span>
+)
+
+result = qa_chain.<span class="fn">invoke</span>({<span class="st">"query"</span>: <span class="st">"Apa kebijakan refund produk?"</span>})
+<span class="fn">print</span>(result[<span class="st">"result"</span>])
+<span class="fn">print</span>(<span class="st">"Sources:"</span>, [d.metadata[<span class="st">"source"</span>] <span class="kw">for</span> d <span class="kw">in</span> result[<span class="st">"source_documents"</span>]])</pre></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — RAG Pipeline</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="lmRagCanvas" style="width:100%;height:280px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;">Klik pada tahap untuk detail</div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('lmRagCanvas');
+if(!c)return;
+var selected=null;
+var stages=[
+  {id:'query',label:'Query',sub:'User input',col:'#38bdf8',detail:'User mengetik pertanyaan. Query di-embed menjadi vektor menggunakan embedding model yang sama dengan indexing.'},
+  {id:'embed',label:'Embed',sub:'text→vector',col:'#7c6dfa',detail:'Embedding model (misal text-embedding-3-small) mengubah query menjadi dense vector [0.12, -0.34, 0.87, ...] ~1536 dimensi.'},
+  {id:'search',label:'Search',sub:'ANN top-K',col:'#a78bfa',detail:'Vector DB melakukan Approximate Nearest Neighbor search. Cosine similarity atau dot product digunakan untuk menemukan K chunk paling relevan.'},
+  {id:'chunks',label:'Chunks',sub:'top-5 docs',col:'#f59e0b',detail:'5 chunk dokumen paling relevan diambil dari vector DB. Re-ranker opsional bisa digunakan untuk memperbaiki urutan.'},
+  {id:'prompt',label:'Augment',sub:'inject context',col:'#f87171',detail:'Chunk-chunk digabung ke dalam prompt: "Berdasarkan konteks berikut: [chunk1][chunk2]... Jawab pertanyaan: [query]"'},
+  {id:'llm',label:'LLM',sub:'generate',col:'#4ade80',detail:'LLM membaca konteks dan menghasilkan jawaban berdasarkan informasi yang diberikan, bukan memory training-nya.'}
+];
+function fitC(canvas,maxW,H){
+  var dpr=window.devicePixelRatio||1;
+  var W=Math.min(maxW,Math.max(300,canvas.parentElement?canvas.parentElement.clientWidth:660));
+  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return{ctx:ctx,W:W,H:H};
+}
+var rects=[];
+function draw(){
+  var sz=fitC(c,700,280);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var n=stages.length,PAD=16,GAP=8,ARROW=10,BH=54;
+  var avail=W-PAD*2,BW=Math.floor((avail-(n-1)*(GAP+ARROW))/n);
+  var startX=PAD,cy=Math.floor(H/2)-10;
+  rects=[];
+  stages.forEach(function(s,i){
+    var x=startX+i*(BW+GAP+ARROW);
+    rects.push({x:x,y:cy-BH/2,w:BW,h:BH,s:s});
+    var isSel=selected===s.id;
+    var grad=ctx.createLinearGradient(x,cy-BH/2,x,cy+BH/2);
+    grad.addColorStop(0,s.col+(isSel?'44':'22'));grad.addColorStop(1,s.col+(isSel?'18':'0a'));
+    ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,cy-BH/2,BW,BH,6);ctx.fill();
+    ctx.strokeStyle=s.col+(isSel?'dd':'66');ctx.lineWidth=isSel?2:1;ctx.stroke();
+    ctx.fillStyle=s.col;ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(s.label,x+BW/2,cy-4);
+    ctx.fillStyle='#64748b';ctx.font='8px DM Sans,sans-serif';
+    ctx.fillText(s.sub,x+BW/2,cy+10);
+    if(i<n-1){
+      var ax=x+BW+2,ay=cy;
+      ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+ARROW-3,ay);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.2)';
+      ctx.beginPath();ctx.moveTo(ax+ARROW,ay);ctx.lineTo(ax+ARROW-5,ay-3);ctx.lineTo(ax+ARROW-5,ay+3);ctx.closePath();ctx.fill();
+    }
+  });
+  if(selected){
+    var st=stages.find(function(s){return s.id===selected;});
+    if(st){
+      var ty=cy+BH/2+14,tw=W-PAD*2;
+      ctx.fillStyle='rgba(255,255,255,.04)';ctx.beginPath();ctx.roundRect(PAD,ty,tw,54,6);ctx.fill();
+      ctx.strokeStyle=st.col+'44';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='#94a3b8';ctx.font='10px DM Sans,sans-serif';ctx.textAlign='left';
+      var words=st.detail.split(' '),line='',maxW2=tw-16,lineY=ty+16;
+      words.forEach(function(w){
+        var test=line+w+' ';
+        if(ctx.measureText(test).width>maxW2&&line){ctx.fillText(line.trim(),PAD+8,lineY);line=w+' ';lineY+=14;}
+        else line=test;
+      });
+      if(line)ctx.fillText(line.trim(),PAD+8,lineY);
+    }
+  } else {
+    ctx.fillStyle='#334155';ctx.font='10px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText('Klik tahap untuk melihat detail',W/2,cy+BH/2+28);
+  }
+}
+c.addEventListener('click',function(e){
+  var rect=c.getBoundingClientRect();
+  var scaleX=c.width/(rect.width*(window.devicePixelRatio||1));
+  var scaleY=c.height/(rect.height*(window.devicePixelRatio||1));
+  var mx=(e.clientX-rect.left)*(window.devicePixelRatio||1)*scaleX;
+  var my=(e.clientY-rect.top)*(window.devicePixelRatio||1)*scaleY;
+  var hit=null;
+  rects.forEach(function(r){if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h)hit=r.s.id;});
+  selected=(hit===selected)?null:hit;draw();
+});
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+</div><!-- /lm6b -->
+
+<div class="divider"></div>
+
+<!-- 6C -->
+<div class="sub" id="lm6c">
+<div class="subtit"><span class="ac">6.3</span> Function Calling &amp; Structured Output <span class="subid">// LLM sebagai orchestrator</span></div>
+<div class="prose">
+<p>Function calling (atau tool use) memungkinkan LLM untuk memanggil fungsi eksternal — database query, API call, calculator, web search — secara terstruktur. Model tidak benar-benar menjalankan fungsi; ia menghasilkan JSON yang berisi nama fungsi dan argumen yang tepat, lalu aplikasi yang menjalankannya dan mengembalikan hasilnya. Ini fondasi dari LLM agents yang bisa berinteraksi dengan dunia nyata.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Alur function calling</h4>
+<ol style="margin:0;padding-left:16px;font-size:13px;line-height:1.7;">
+<li>Definisikan tool schema (nama, deskripsi, parameter)</li>
+<li>Kirim ke LLM bersama user message</li>
+<li>LLM putuskan apakah perlu memanggil tool</li>
+<li>Jika ya: LLM return <code>tool_call</code> JSON</li>
+<li>Aplikasi eksekusi fungsi nyata</li>
+<li>Return hasil ke LLM sebagai <code>tool</code> message</li>
+<li>LLM generate respons final</li>
+</ol>
+</div>
+<div class="gc"><h4>Structured Output</h4>
+<p>Selain tool calling, kamu bisa paksa model output JSON sesuai schema yang ditentukan menggunakan <strong>response_format</strong> atau Pydantic model. Berguna untuk: ekstraksi data dari teks tak terstruktur, klasifikasi dengan confidence score, parsing dokumen ke database record. OpenAI dan banyak provider mendukung JSON mode atau strict schema enforcement.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">function_calling.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+<span class="kw">import</span> json
+client = OpenAI()
+
+<span class="cm"># Definisikan tools</span>
+tools = [{
+    <span class="st">"type"</span>: <span class="st">"function"</span>,
+    <span class="st">"function"</span>: {
+        <span class="st">"name"</span>: <span class="st">"get_weather"</span>,
+        <span class="st">"description"</span>: <span class="st">"Ambil cuaca saat ini untuk kota tertentu"</span>,
+        <span class="st">"parameters"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"city"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"description"</span>: <span class="st">"Nama kota"</span>},
+                <span class="st">"unit"</span>: {<span class="st">"type"</span>: <span class="st">"string"</span>, <span class="st">"enum"</span>: [<span class="st">"celsius"</span>, <span class="st">"fahrenheit"</span>]}
+            },
+            <span class="st">"required"</span>: [<span class="st">"city"</span>]
+        }
+    }
+}]
+
+messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"Cuaca Jakarta sekarang gimana?"</span>}]
+response = client.chat.completions.<span class="fn">create</span>(model=<span class="st">"gpt-4o-mini"</span>, messages=messages, tools=tools)
+
+<span class="cm"># Handle tool call</span>
+tool_call = response.choices[<span class="nm">0</span>].message.tool_calls[<span class="nm">0</span>]
+args = json.<span class="fn">loads</span>(tool_call.function.arguments)  <span class="cm"># {"city": "Jakarta"}</span>
+
+<span class="cm"># Eksekusi fungsi nyata</span>
+weather_result = <span class="fn">get_weather</span>(args[<span class="st">"city"</span>])  <span class="cm"># {"temp": 32, "condition": "Sunny"}</span>
+
+<span class="cm"># Kirim hasil kembali ke LLM</span>
+messages += [response.choices[<span class="nm">0</span>].message, {<span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"tool_call_id"</span>: tool_call.id, <span class="st">"content"</span>: json.<span class="fn">dumps</span>(weather_result)}]
+final = client.chat.completions.<span class="fn">create</span>(model=<span class="st">"gpt-4o-mini"</span>, messages=messages)
+<span class="fn">print</span>(final.choices[<span class="nm">0</span>].message.content)
+
+<span class="cm"># Structured Output dengan Pydantic</span>
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+
+<span class="kw">class</span> <span class="fn">ExtractedOrder</span>(BaseModel):
+    product: str; quantity: int; total_price: float; currency: str
+
+result = client.beta.chat.completions.<span class="fn">parse</span>(
+    model=<span class="st">"gpt-4o-mini"</span>,
+    messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"Saya beli 3 buku seharga Rp150.000"</span>}],
+    response_format=ExtractedOrder
+)
+order = result.choices[<span class="nm">0</span>].message.parsed  <span class="cm"># ExtractedOrder(product='buku', quantity=3, ...)</span></pre></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Function Calling Flow</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="lmFnCanvas" style="width:100%;height:300px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;">Alur lengkap function calling satu putaran</div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('lmFnCanvas');
+if(!c)return;
+function fitC(canvas,maxW,H){
+  var dpr=window.devicePixelRatio||1;
+  var W=Math.min(maxW,Math.max(300,canvas.parentElement?canvas.parentElement.clientWidth:660));
+  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return{ctx:ctx,W:W,H:H};
+}
+function arrow(ctx,x1,y1,x2,y2,col,label){
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  var a=Math.atan2(y2-y1,x2-x1);
+  ctx.fillStyle=col;ctx.beginPath();
+  ctx.moveTo(x2,y2);ctx.lineTo(x2-7*Math.cos(a-Math.PI/7),y2-7*Math.sin(a-Math.PI/7));
+  ctx.lineTo(x2-7*Math.cos(a+Math.PI/7),y2-7*Math.sin(a+Math.PI/7));ctx.closePath();ctx.fill();
+  if(label){
+    ctx.fillStyle='#475569';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(label,(x1+x2)/2,(y1+y2)/2-6);
+  }
+}
+function box(ctx,x,y,w,h,label,sub,col){
+  var grad=ctx.createLinearGradient(x,y,x,y+h);
+  grad.addColorStop(0,col+'33');grad.addColorStop(1,col+'0f');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,y,w,h,6);ctx.fill();
+  ctx.strokeStyle=col+'99';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#e2e8f0';ctx.textAlign='center';ctx.font='bold 10px IBM Plex Mono,monospace';
+  ctx.fillText(label,x+w/2,y+h/2-(sub?4:0)+4);
+  if(sub){ctx.fillStyle='#64748b';ctx.font='8px DM Sans,sans-serif';ctx.fillText(sub,x+w/2,y+h/2+10);}
+}
+function draw(){
+  var sz=fitC(c,700,300);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var col={user:'#38bdf8',llm:'#a78bfa',app:'#f59e0b',tool:'#4ade80'};
+  var BW=Math.floor((W-100)/3),BH=52,PAD=20,midY=Math.floor(H/2)-10;
+  var xUser=PAD,xApp=PAD+BW+30,xTool=PAD+2*(BW+30);
+  box(ctx,xUser,midY-BH/2,BW,BH,'User','message',col.user);
+  box(ctx,xApp,midY-BH/2,BW,BH,'App','orchestrator',col.app);
+  box(ctx,xTool,midY-BH/2,BW,BH,'Tool','external fn',col.tool);
+  var llmY=midY-BH/2-70,llmX=xApp,llmW=BW;
+  box(ctx,llmX,llmY,llmW,BH,'LLM','gpt-4o-mini',col.llm);
+  var uc=xUser+BW,ac=xApp+BW/2,tc=xTool+BW/2,lc=llmX+llmW/2;
+  arrow(ctx,uc,midY,xApp,midY,col.user+'cc','1. query');
+  arrow(ctx,ac,midY-BH/2,lc,llmY+BH,col.app+'cc','2. messages+tools');
+  arrow(ctx,lc,llmY+BH,ac,midY-BH/2,col.llm+'cc','3. tool_call JSON');
+  arrow(ctx,xApp+BW,midY-10,xTool,midY-10,col.app+'cc','4. execute');
+  arrow(ctx,xTool,midY+10,xApp+BW,midY+10,col.tool+'cc','5. result');
+  arrow(ctx,ac,midY-BH/2,lc,llmY+BH,col.app+'22','');
+  var lc2=llmX+llmW/2,topY=llmY+BH;
+  ctx.strokeStyle=col.llm+'cc';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(lc2,topY);ctx.lineTo(lc2,topY+16);ctx.lineTo(xApp-30,topY+16);ctx.lineTo(xApp-30,midY+26);ctx.lineTo(xUser+BW/2,midY+26);ctx.lineTo(xUser+BW/2,midY+BH/2);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=col.llm;ctx.beginPath();ctx.moveTo(xUser+BW/2,midY+BH/2+1);ctx.lineTo(xUser+BW/2-4,midY+BH/2-4);ctx.lineTo(xUser+BW/2+4,midY+BH/2-4);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#475569';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('6. final answer',xUser+BW/2-30,midY+BH/2+22);
+}
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+</div><!-- /lm6c -->
+
+<div class="divider"></div>
+
+<!-- 6D -->
+<div class="sub" id="lm6d">
+<div class="subtit"><span class="ac">6.4</span> LLM Application Development <span class="subid">// dari API ke produk</span></div>
+<div class="prose">
+<p>Membangun aplikasi LLM bukan hanya memanggil API. Kamu perlu mengelola conversation state, prompt templates, error handling, retry logic, streaming responses, multi-turn context, dan integrasi dengan berbagai tools. Framework seperti LangChain dan LlamaIndex menyederhanakan ini — tapi penting untuk mengerti apa yang terjadi di balik abstraksi mereka.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>LangChain core concepts</h4>
+<p><strong>Chain</strong>: urutan steps (prompt → LLM → output parser). <strong>Agent</strong>: LLM yang memutuskan sendiri tools apa yang perlu dipanggil dan kapan. <strong>Memory</strong>: simpan conversation history (buffer, summary, entity). <strong>LCEL</strong> (LangChain Expression Language): pipe operator <code>|</code> untuk composable chains yang readable dan streamable.</p>
+</div>
+<div class="gc"><h4>LlamaIndex vs LangChain</h4>
+<p><strong>LlamaIndex</strong>: fokus pada data ingestion dan retrieval — sangat baik untuk RAG, query engine, document Q&A. Abstraksi IndexNode, NodeParser, QueryEngine sangat powerful. <strong>LangChain</strong>: lebih general purpose — chains, agents, tools, memory semua ada. Lebih verbose tapi lebih fleksibel. Pilih: LlamaIndex untuk data-heavy apps, LangChain untuk agentic workflows.</p>
+</div>
+<div class="gc"><h4>Streaming &amp; async</h4>
+<p>User experience jauh lebih baik dengan streaming (karakter muncul satu per satu seperti ChatGPT) dibanding menunggu response penuh. OpenAI SDK mendukung <code>stream=True</code>. Untuk server-side: gunakan Server-Sent Events (SSE) atau WebSocket. FastAPI punya <code>StreamingResponse</code> yang kompatibel.</p>
+</div>
+<div class="gc"><h4>Conversation management</h4>
+<p>LLM stateless — setiap request independen. State harus disimpan di aplikasi. Strategi: <strong>Full history</strong>: kirim semua messages (mahal, ada token limit). <strong>Summary memory</strong>: summarize lama, detail baru. <strong>Vector memory</strong>: retrieve hanya conversation relevan. <strong>Entity memory</strong>: track entitas penting (nama, preferensi user).</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">llm_app.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+<span class="kw">from</span> langchain_core.prompts <span class="kw">import</span> ChatPromptTemplate, MessagesPlaceholder
+<span class="kw">from</span> langchain_core.output_parsers <span class="kw">import</span> StrOutputParser
+<span class="kw">from</span> langchain.memory <span class="kw">import</span> ConversationSummaryBufferMemory
+
+llm = <span class="fn">ChatOpenAI</span>(model=<span class="st">"gpt-4o-mini"</span>, temperature=<span class="nm">0.7</span>, streaming=<span class="kw">True</span>)
+
+prompt = ChatPromptTemplate.<span class="fn">from_messages</span>([
+    (<span class="st">"system"</span>, <span class="st">"Kamu asisten customer service. Jawab ramah dan singkat."</span>),
+    MessagesPlaceholder(<span class="st">"history"</span>),
+    (<span class="st">"human"</span>, <span class="st">"{input}"</span>)
+])
+memory = <span class="fn">ConversationSummaryBufferMemory</span>(llm=llm, max_token_limit=<span class="nm">1000</span>, return_messages=<span class="kw">True</span>)
+
+<span class="cm"># LCEL chain dengan pipe operator</span>
+chain = prompt | llm | <span class="fn">StrOutputParser</span>()
+
+<span class="kw">async def</span> <span class="fn">chat</span>(user_input: str):
+    history = memory.<span class="fn">load_memory_variables</span>({})[<span class="st">"history"</span>]
+    <span class="cm"># Streaming response</span>
+    <span class="kw">async for</span> chunk <span class="kw">in</span> chain.<span class="fn">astream</span>({<span class="st">"input"</span>: user_input, <span class="st">"history"</span>: history}):
+        <span class="fn">yield</span> chunk
+    memory.<span class="fn">save_context</span>({<span class="st">"input"</span>: user_input}, {<span class="st">"output"</span>: <span class="st">"..."</span>})
+
+<span class="cm"># FastAPI endpoint</span>
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+<span class="kw">from</span> fastapi.responses <span class="kw">import</span> StreamingResponse
+app = <span class="fn">FastAPI</span>()
+
+<span class="at">@app.post</span>(<span class="st">"/chat"</span>)
+<span class="kw">async def</span> <span class="fn">chat_endpoint</span>(req: dict):
+    <span class="kw">return</span> <span class="fn">StreamingResponse</span>(<span class="fn">chat</span>(req[<span class="st">"message"</span>]), media_type=<span class="st">"text/event-stream"</span>)</pre></div></div>
+</div><!-- /lm6d -->
+
+<div class="divider"></div>
+
+<!-- 6E -->
+<div class="sub" id="lm6e">
+<div class="subtit"><span class="ac">6.5</span> Guardrails, Safety &amp; Eval Pipeline <span class="subid">// LLM yang bisa dipercaya</span></div>
+<div class="prose">
+<p>LLM di production bisa gagal dengan cara yang tidak terduga: hallucination, prompt injection, output berbahaya, atau bias. Tidak cukup mengandalkan sistem alignment dari model provider — kamu perlu lapisan keamanan sendiri. Guardrails adalah checks yang dijalankan sebelum (input) atau sesudah (output) LLM, dan eval pipeline memastikan kualitas tidak turun saat model atau prompt berubah.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Input guardrails</h4>
+<p><strong>Prompt injection detection</strong>: deteksi upaya user untuk override system prompt ("Abaikan instruksi sebelumnya dan..."). <strong>PII detection</strong>: cegah data sensitif (nomor KTP, nomor kartu kredit) masuk ke LLM. <strong>Topic restriction</strong>: classifier untuk blokir query di luar scope aplikasi. <strong>Rate limiting</strong>: cegah abuse dan cost explosion.</p>
+</div>
+<div class="gc"><h4>Output guardrails</h4>
+<p><strong>Hallucination detection</strong>: verifikasi klaim faktual terhadap sumber (untuk RAG: apakah jawaban ada di retrieved chunks?). <strong>Toxicity filter</strong>: classifier untuk konten berbahaya sebelum dikirim ke user. <strong>Format validation</strong>: pastikan output sesuai schema yang diharapkan. <strong>Confidence thresholding</strong>: jika model tidak yakin, escalate ke human.</p>
+</div>
+<div class="gc"><h4>LLM Evaluation</h4>
+<p><strong>Reference-based</strong>: bandingkan output dengan ground truth (ROUGE, BLEU untuk summarization). <strong>LLM-as-judge</strong>: gunakan LLM lain (biasanya GPT-4) untuk menilai kualitas output secara otomatis. <strong>RAGAs</strong>: framework khusus untuk evaluasi RAG pipeline — faithfulness, answer relevancy, context recall. <strong>Human eval</strong>: untuk task subjektif, masih yang terbaik tapi mahal.</p>
+</div>
+<div class="gc"><h4>Continuous eval pipeline</h4>
+<p>Setiap perubahan prompt atau model harus melewati eval sebelum deploy. Setup: <strong>golden dataset</strong> (100–500 contoh query + expected output), <strong>automated scorer</strong> (LLM judge atau metric), <strong>regression threshold</strong> (blokir deploy jika score turun &gt;5%). Tools: LangSmith, Weights &amp; Biases, PromptFoo.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">guardrails_eval.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> guardrails <span class="kw">import</span> Guard
+<span class="kw">from</span> guardrails.hub <span class="kw">import</span> ToxicLanguage, DetectPII, ValidJson
+
+<span class="cm"># Input + Output guardrails</span>
+guard = <span class="fn">Guard</span>().<span class="fn">use_many</span>(
+    <span class="fn">DetectPII</span>(pii_entities=[<span class="st">"CREDIT_CARD"</span>, <span class="st">"EMAIL_ADDRESS"</span>], on_fail=<span class="st">"exception"</span>),
+    <span class="fn">ToxicLanguage</span>(threshold=<span class="nm">0.5</span>, on_fail=<span class="st">"filter"</span>),
+    <span class="fn">ValidJson</span>(on_fail=<span class="st">"reask"</span>)  <span class="cm"># otomatis re-ask LLM jika output bukan valid JSON</span>
+)
+
+validated_output, *rest = guard(<span class="fn">openai_call</span>, prompt=<span class="st">"..."</span>)
+
+<span class="cm"># LLM-as-judge evaluator</span>
+<span class="kw">from</span> ragas <span class="kw">import</span> evaluate
+<span class="kw">from</span> ragas.metrics <span class="kw">import</span> faithfulness, answer_relevancy, context_recall
+
+dataset = <span class="fn">Dataset</span>.<span class="fn">from_dict</span>({
+    <span class="st">"question"</span>: questions, <span class="st">"answer"</span>: generated_answers,
+    <span class="st">"contexts"</span>: retrieved_chunks, <span class="st">"ground_truth"</span>: reference_answers
+})
+result = <span class="fn">evaluate</span>(dataset, metrics=[faithfulness, answer_relevancy, context_recall])
+<span class="fn">print</span>(result)
+<span class="cm"># {'faithfulness': 0.87, 'answer_relevancy': 0.92, 'context_recall': 0.79}</span></pre></div></div>
+</div><!-- /lm6e -->
+
+<div class="divider"></div>
+
+<!-- 6F -->
+<div class="sub" id="lm6f">
+<div class="subtit"><span class="ac">6.6</span> LLM in Production <span class="subid">// latency, cost, observability</span></div>
+<div class="prose">
+<p>Production LLM apps punya tiga musuh: <em>latency</em> (user menunggu terlalu lama), <em>cost</em> (token mahal, terutama di skala), dan <em>reliability</em> (model down, rate limit, output degradasi). Fase ini membahas strategi konkret untuk ketiga masalah itu, plus observability — karena kamu tidak bisa memperbaiki apa yang tidak bisa kamu ukur.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Cost optimization</h4>
+<p><strong>Model routing</strong>: gunakan model kecil (gpt-4o-mini, Haiku) untuk query sederhana, model besar hanya untuk yang kompleks — bisa hemat 80% cost. <strong>Prompt caching</strong>: provider modern cache prefix prompt — pastikan system prompt di awal dan statis. <strong>Output length control</strong>: set <code>max_tokens</code> eksplisit. <strong>Batch API</strong>: untuk offline workload, batch request 50% lebih murah.</p>
+</div>
+<div class="gc"><h4>Latency optimization</h4>
+<p><strong>Streaming</strong>: time-to-first-token ~200ms, jauh lebih baik dari menunggu full response 5s. <strong>Caching semantik</strong>: untuk query yang mirip, cache response (GPTCache, Redis). <strong>Parallel calls</strong>: jika independen, jalankan beberapa LLM call secara async. <strong>Smaller models</strong>: gpt-4o-mini 5–10× lebih cepat dari gpt-4o. <strong>Prompt compression</strong>: LLMLingua untuk compress context tanpa kehilangan informasi penting.</p>
+</div>
+<div class="gc"><h4>Observability</h4>
+<p>Setiap LLM call harus di-log dengan: input prompt, output, model, latency, token count, cost, user ID, session ID. Tools: <strong>LangSmith</strong> (terintegrasi dengan LangChain), <strong>Langfuse</strong> (open source), <strong>Helicone</strong> (proxy-based). Alert jika: latency p99 &gt; threshold, error rate naik, atau output quality turun.</p>
+</div>
+<div class="gc"><h4>Reliability patterns</h4>
+<p><strong>Retry dengan exponential backoff</strong>: untuk rate limit errors (429). <strong>Fallback chain</strong>: primary → secondary provider jika down. <strong>Circuit breaker</strong>: stop panggil provider yang error rate tinggi. <strong>Timeout</strong>: set request timeout (30s), jangan biarkan hang. <strong>Graceful degradation</strong>: tampilkan cached response atau fallback message jika semua gagal.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">llm_production.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> asyncio, time
+<span class="kw">from</span> openai <span class="kw">import</span> AsyncOpenAI
+<span class="kw">from</span> tenacity <span class="kw">import</span> retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+client = <span class="fn">AsyncOpenAI</span>()
+
+<span class="cm"># Retry otomatis dengan exponential backoff</span>
+<span class="at">@retry</span>(
+    stop=<span class="fn">stop_after_attempt</span>(<span class="nm">3</span>),
+    wait=<span class="fn">wait_exponential</span>(multiplier=<span class="nm">1</span>, min=<span class="nm">2</span>, max=<span class="nm">30</span>),
+    retry=<span class="fn">retry_if_exception_type</span>(Exception)
+)
+<span class="kw">async def</span> <span class="fn">llm_call</span>(messages, model=<span class="st">"gpt-4o-mini"</span>, timeout=<span class="nm">30</span>):
+    <span class="kw">return await</span> asyncio.<span class="fn">wait_for</span>(
+        client.chat.completions.<span class="fn">create</span>(model=model, messages=messages),
+        timeout=timeout
+    )
+
+<span class="cm"># Model router — hemat cost 80%</span>
+<span class="kw">def</span> <span class="fn">route_model</span>(query: str) -> str:
+    <span class="kw">if</span> <span class="fn">len</span>(query) &lt; <span class="nm">200</span> <span class="kw">and</span> <span class="st">"summarize"</span> <span class="kw">not in</span> query.lower():
+        <span class="kw">return</span> <span class="st">"gpt-4o-mini"</span>   <span class="cm"># ~$0.15/1M tokens</span>
+    <span class="kw">return</span> <span class="st">"gpt-4o"</span>           <span class="cm"># ~$2.50/1M tokens</span>
+
+<span class="cm"># Semantic cache sederhana</span>
+<span class="kw">from</span> functools <span class="kw">import</span> lru_cache
+<span class="at">@lru_cache</span>(maxsize=<span class="nm">1000</span>)
+<span class="kw">def</span> <span class="fn">cached_llm</span>(prompt_hash: str, prompt: str): ...  <span class="cm"># hash by semantic similarity</span></pre></div></div>
+
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Latihan Fase 6</strong><ol style="margin:8px 0 0;padding-left:16px;"><li>Buat chatbot sederhana dengan memory menggunakan LangChain + OpenAI API. Bandingkan kualitas jawaban dengan full history vs summary memory setelah 10 turn.</li><li>Implementasikan RAG pipeline untuk dokumen PDF menggunakan LlamaIndex + Chroma. Ukur faithfulness dengan RAGAs sebelum dan sesudah optimasi chunking strategy.</li><li>Tambahkan function calling ke chatbot — minimal 2 tools: get_current_time() dan calculator(). Test dengan query yang membutuhkan kombinasi tools.</li><li>Setup observability dengan Langfuse (free tier). Log semua calls, buat dashboard untuk latency dan cost per query.</li></ol></div></div>
+</div><!-- /lm6f -->
+
+</section><!-- /lmfase6 -->
