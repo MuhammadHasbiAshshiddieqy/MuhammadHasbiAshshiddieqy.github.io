@@ -235,7 +235,10 @@ function renderSidebar(curriculum) {
         ['s5c','5.3 Coding Agent'],
         ['s5d','5.4 Framework Landscape 2026'],
         ['s5f','5.5 Voice & Multimodal'],
-        ['s5e','5.6 Checklist Keahlian']
+        ['s5g','5.6 VLM Reasoning Engine'],
+        ['s5h','5.7 Multimodal Tool Calling'],
+        ['s5i','5.8 Vision Pipeline Orchestration'],
+        ['s5e','5.9 Checklist Keahlian']
       ]),
       sbGlossary()
     ].join('');
@@ -411,7 +414,7 @@ var TOPICS = [
   's2a','s2b','s2c','s2d','s2e','s2f','s2g','s2h','s2i','s2j',
   's3a','s3b','s3c','s3d','s3e','s3f','s3g',
   's4a','s4b','s4c','s4d','s4e','s4f','s4g','s4h','s4i','s4j','s4k',
-  's5a','s5b','s5c','s5d','s5f','s5e'
+  's5a','s5b','s5c','s5d','s5f','s5g','s5h','s5i','s5e'
 ];
 
 var TOPIC_LABELS = {
@@ -420,7 +423,7 @@ var TOPIC_LABELS = {
   's2a':'2.1 Agent Harness & Orchestration Loop','s2b':'2.2 Memory Systems','s2c':'2.3 Tool Registry & Schema Design','s2d':'2.4 Context Management','s2e':'2.5 Planning & Task Decomposition','s2f':'2.6 Structured Output & Robust Parsing','s2g':'2.7 RAG & Semantic Retrieval','s2h':'2.8 Agent Checkpointing & Resume','s2i':'2.9 Streaming Response Handling','s2j':'2.10 Session & Conversation Management',
   's3a':'3.1 Orchestrator-Subagent Pattern','s3b':'3.2 Parallelism & Fan-Out/Fan-In','s3c':'3.3 MCP — Model Context Protocol','s3d':'3.4 Agent Design Patterns','s3e':'3.5 Komunikasi & State Sharing','s3f':'3.6 Agent Handoff & Trust Boundary','s3g':'3.7 Agent-to-Agent Protocol & Negotiation',
   's4a':'4.1 Error Handling & Retry Strategies','s4b':'4.2 Observability & Distributed Tracing','s4c':'4.3 Latency & Cost Optimization','s4d':'4.4 Safety & Guardrails','s4e':'4.5 Testing & Evals Framework','s4f':'4.6 Rate Limiting & Backpressure','s4g':'4.7 Deployment Patterns','s4h':'4.8 Context Engineering','s4i':'4.9 Agent Evaluation Taxonomy','s4j':'4.10 Production Checklist','s4k':'4.11 CI/CD & Prompt Versioning',
-  's5a':'5.1 Bedah Arsitektur OpenClaw','s5b':'5.2 Computer Use Agent','s5c':'5.3 Coding Agent Architecture','s5d':'5.4 Framework Landscape 2026','s5f':'5.5 Voice & Multimodal Agent','s5e':'5.6 Checklist Keahlian Agent Engineer'
+  's5a':'5.1 Bedah Arsitektur OpenClaw','s5b':'5.2 Computer Use Agent','s5c':'5.3 Coding Agent Architecture','s5d':'5.4 Framework Landscape 2026','s5f':'5.5 Voice & Multimodal Agent','s5g':'5.6 VLM sebagai Reasoning Engine','s5h':'5.7 Multimodal Tool Calling','s5i':'5.8 Vision Pipeline Orchestration','s5e':'5.9 Checklist Keahlian Agent Engineer'
 };
 
 var PHASE_MAP = {
@@ -429,7 +432,7 @@ var PHASE_MAP = {
   's2a':'i2','s2b':'i2','s2c':'i2','s2d':'i2','s2e':'i2','s2f':'i2','s2g':'i2','s2h':'i2','s2i':'i2','s2j':'i2',
   's3a':'i3','s3b':'i3','s3c':'i3','s3d':'i3','s3e':'i3','s3f':'i3','s3g':'i3',
   's4a':'i4','s4b':'i4','s4c':'i4','s4d':'i4','s4e':'i4','s4f':'i4','s4g':'i4','s4h':'i4','s4i':'i4','s4j':'i4','s4k':'i4',
-  's5a':'i5','s5b':'i5','s5c':'i5','s5d':'i5','s5f':'i5','s5e':'i5'
+  's5a':'i5','s5b':'i5','s5c':'i5','s5d':'i5','s5f':'i5','s5g':'i5','s5h':'i5','s5i':'i5','s5e':'i5'
 };
 var PHASE_NUMS = {'i0':'0','i1':'1','i2':'2','i3':'3','i4':'4','i5':'5'};
 var PHASE_LAST  = {0:'fi1', 9:'fi2', 19:'fi3', 26:'fi4', 37:'fi5'};

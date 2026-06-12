@@ -13,11 +13,15 @@
   <a class="snavi" href="#s5b">Computer Use</a>
   <a class="snavi" href="#s5c">Coding Agent</a>
   <a class="snavi" href="#s5d">Framework 2026</a>
+  <a class="snavi" href="#s5f">Voice & Multimodal</a>
+  <a class="snavi" href="#s5g">VLM Reasoning</a>
+  <a class="snavi" href="#s5h">Multimodal Tools</a>
+  <a class="snavi" href="#s5i">Vision Pipeline</a>
   <a class="snavi" href="#s5e">Skills Checklist</a>
 </div>
   <div class="topic-nav">
     <div class="topic-nav-info">
-      <div class="topic-nav-counter">6 topik · Minggu 11–16</div>
+      <div class="topic-nav-counter">9 topik · Minggu 11–16</div>
       <div class="topic-nav-title">Mulai dari: 5.1 Bedah Arsitektur OpenClaw</div>
     </div>
     <div class="topic-nav-btns">
@@ -453,9 +457,328 @@ Hindari bullet points, markdown, atau list yang panjang."""</span>,
 
 <div class="divider"></div>
 
-<!-- 5E (renumbered as 5.6) -->
+<!-- 5G -->
+<div class="sub" id="s5g">
+<div class="subtit"><span class="ac">5.6</span> VLM sebagai Reasoning Engine <span class="subid">// model yang melihat dan berpikir</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#38bdf8;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);padding:2px 8px;border-radius:100px;margin-left:8px;vertical-align:middle;">CV</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#e879f9;background:rgba(232,121,249,.08);border:1px solid rgba(232,121,249,.2);padding:2px 8px;border-radius:100px;margin-left:4px;vertical-align:middle;">Multimodal</span>
+</div>
+<div class="prose">
+<p>Vision-Language Model (VLM) bukan hanya "model yang bisa lihat gambar" — ketika dipakai sebagai reasoning engine sebuah agent, VLM memungkinkan agent untuk memahami dunia visual secara mendalam: membaca diagram, menganalisis screenshot UI, menginterpretasi grafik data, dan merespons terhadap perubahan visual di environment. Ini membuka kelas use case yang tidak mungkin dengan teks saja.</p>
+<p>Model seperti Claude claude-opus-4-8, GPT-4o, dan Gemini 1.5 Pro sudah mature untuk production vision reasoning. Open-source alternatif: LLaVA, InternVL2, Qwen-VL — bisa dijalankan lokal via Ollama atau vLLM.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>VLM vs LLM sebagai agent brain</h4>
+<p>LLM murni bergantung pada deskripsi teks dari state dunia. VLM menerima gambar langsung — tidak ada information loss dari konversi visual → teks. Untuk domain seperti UI automation, medical imaging, dan analisis dokumen visual, ini bukan sekadar nyaman: akurasinya secara fundamental lebih tinggi.</p>
+</div>
+<div class="gc"><h4>Token budget untuk gambar</h4>
+<p>Gambar mengkonsumsi token jauh lebih banyak daripada teks setara. Claude menghitung gambar berdasarkan resolusi; GPT-4o menggunakan tile system. Aturan praktis: resize gambar ke resolusi terendah yang masih cukup untuk task, gunakan <code>detail: "low"</code> untuk overview dan <code>detail: "high"</code> hanya ketika detail penting. Untuk agent yang loop banyak, ini bisa beda 10x dalam cost.</p>
+</div>
+<div class="gc"><h4>Grounding: dari piksel ke aksi</h4>
+<p>VLM yang baik bisa melakukan <em>grounding</em> — menghubungkan instruksi teks dengan lokasi spesifik di gambar. "Klik tombol Submit" membutuhkan model yang bisa identify koordinat pixel tombol tersebut. Model khusus seperti SeeClick dan Qwen-VL dioptimasi untuk grounding tugas UI.</p>
+</div>
+<div class="gc"><h4>Multimodal memory</h4>
+<p>Agent dengan VLM bisa menyimpan "visual memory" — screenshot state sebelumnya, diagram arsitektur, atau referensi visual. Ini penting untuk task yang membutuhkan konsistensi visual lintas banyak langkah, seperti form filling kompleks atau visual QA atas dokumen panjang.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">vlm_reasoning_agent.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic, base64, httpx
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="kw">def</span> <span class="fn">encode_image</span>(path_or_url: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+    <span class="st">"""Encode gambar lokal atau URL sebagai Anthropic image block."""</span>
+    <span class="kw">if</span> path_or_url.<span class="fn">startswith</span>(<span class="st">"http"</span>):
+        data = httpx.<span class="fn">get</span>(path_or_url).content
+        media_type = <span class="st">"image/jpeg"</span>
+    <span class="kw">else</span>:
+        data = Path(path_or_url).<span class="fn">read_bytes</span>()
+        ext = Path(path_or_url).suffix.<span class="fn">lower</span>()
+        media_type = {<span class="st">".png"</span>:<span class="st">"image/png"</span>,<span class="st">".jpg"</span>:<span class="st">"image/jpeg"</span>,<span class="st">".webp"</span>:<span class="st">"image/webp"</span>}.<span class="fn">get</span>(ext,<span class="st">"image/png"</span>)
+    <span class="kw">return</span> {
+        <span class="st">"type"</span>: <span class="st">"image"</span>,
+        <span class="st">"source"</span>: {<span class="st">"type"</span>:<span class="st">"base64"</span>, <span class="st">"media_type"</span>:media_type,
+                   <span class="st">"data"</span>:base64.<span class="fn">b64encode</span>(data).<span class="fn">decode</span>()}
+    }
+
+<span class="kw">def</span> <span class="fn">vlm_agent_step</span>(image_path: <span class="tp">str</span>, task: <span class="tp">str</span>, history: <span class="tp">list</span>) -> <span class="tp">str</span>:
+    <span class="st">"""Satu langkah reasoning VLM: lihat gambar → analisis → putuskan aksi."""</span>
+    content = [
+        <span class="fn">encode_image</span>(image_path),
+        {<span class="st">"type"</span>: <span class="st">"text"</span>, <span class="st">"text"</span>: <span class="st">f"Task: {task}\n\nAnalisis gambar ini dan tentukan aksi selanjutnya."</span>}
+    ]
+
+    messages = history + [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: content}]
+
+    response = client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-opus-4-8"</span>,
+        max_tokens=<span class="nm">1024</span>,
+        system=<span class="st">"""Kamu adalah visual reasoning agent. Untuk setiap gambar:
+1. Deskripsikan apa yang kamu lihat secara akurat (UI elements, teks, layout)
+2. Identifikasi elemen yang relevan dengan task
+3. Tentukan aksi spesifik: klik koordinat (x,y), ketik teks, atau scroll
+4. Jika task selesai, jawab dengan DONE: <ringkasan hasil>
+
+Format aksi: ACTION: {"type": "click", "x": 123, "y": 456}
+              ACTION: {"type": "type", "text": "hello"}
+              ACTION: {"type": "scroll", "direction": "down", "amount": 3}"""</span>,
+        messages=messages
+    )
+
+    <span class="kw">return</span> response.content[<span class="nm">0</span>].text
+
+<span class="cm"># Contoh: agent menganalisis screenshot dan memutuskan aksi</span>
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    result = <span class="fn">vlm_agent_step</span>(
+        image_path=<span class="st">"screenshot.png"</span>,
+        task=<span class="st">"Isi form login dengan username 'demo' dan klik tombol Submit"</span>,
+        history=[]
+    )
+    <span class="fn">print</span>(result)</pre></div></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Open-source alternatif yang bisa dijalankan lokal</strong>Jika tidak ingin bergantung pada API berbayar: <strong>LLaVA-1.6</strong> (via Ollama: <code>ollama run llava</code>), <strong>InternVL2-8B</strong>, atau <strong>Qwen2-VL-7B</strong> tersedia via HuggingFace. Untuk grounding khusus UI: coba <strong>SeeClick</strong> atau <strong>CogAgent</strong>. Performa di bawah GPT-4o/Claude untuk complex reasoning, tapi sudah sangat baik untuk task-task spesifik yang sudah di-fine-tune.</div></div>
+</div><!-- /s5g -->
+
+<div class="divider"></div>
+
+<!-- 5H -->
+<div class="sub" id="s5h">
+<div class="subtit"><span class="ac">5.7</span> Multimodal Tool Calling <span class="subid">// agent yang memanggil vision sebagai tool</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--teal);background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);padding:2px 8px;border-radius:100px;margin-left:8px;vertical-align:middle;">LM</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#38bdf8;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);padding:2px 8px;border-radius:100px;margin-left:4px;vertical-align:middle;">CV</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#e879f9;background:rgba(232,121,249,.08);border:1px solid rgba(232,121,249,.2);padding:2px 8px;border-radius:100px;margin-left:4px;vertical-align:middle;">Multimodal</span>
+</div>
+<div class="prose">
+<p>Pola paling fleksibel untuk multimodal agent: LLM teks menjadi orkestrator, dan model vision dipanggil sebagai <em>tool</em>. Agent memutuskan <em>kapan</em> perlu melihat gambar, memanggil vision tool, menerima hasilnya sebagai teks terstruktur, lalu melanjutkan reasoning. Ini memisahkan concerns dengan bersih — orchestrator tidak harus VLM, dan vision model bisa diganti tanpa mengubah arsitektur agent.</p>
+</div>
+<div class="cc"><h3>Tiga pola multimodal tool calling</h3><ul>
+<li><strong>Vision-as-tool</strong> — agent teks memanggil <code>analyze_image(path, question)</code> dan menerima deskripsi terstruktur sebagai tool result. Paling fleksibel, bisa pakai model vision berbeda per task.</li>
+<li><strong>Natively multimodal agent</strong> — agent langsung terima gambar sebagai input message, reasoning visual dilakukan inline. Lebih efisien token tapi kurang modular.</li>
+<li><strong>Specialized vision subagent</strong> — orchestrator mendelegasikan seluruh task visual ke subagent khusus yang equipped dengan vision tools, menerima hasil terstruktur. Cocok untuk complex vision pipeline.</li>
+</ul></div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">multimodal_tool_agent.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic, base64, json
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="cm"># Tool schema: vision sebagai tool untuk LLM teks</span>
+TOOLS = [
+    {
+        <span class="st">"name"</span>: <span class="st">"analyze_image"</span>,
+        <span class="st">"description"</span>: <span class="st">"Analisis gambar dan jawab pertanyaan spesifik tentang isinya. Gunakan untuk membaca teks di gambar, mengidentifikasi objek, atau mendeskripsikan layout UI."</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"image_path"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>, <span class="st">"description"</span>:<span class="st">"Path ke file gambar"</span>},
+                <span class="st">"question"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>, <span class="st">"description"</span>:<span class="st">"Pertanyaan spesifik tentang gambar"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"image_path"</span>, <span class="st">"question"</span>]
+        }
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"extract_structured_data"</span>,
+        <span class="st">"description"</span>: <span class="st">"Ekstrak data terstruktur dari gambar (tabel, form, invoice, chart). Mengembalikan JSON."</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"image_path"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>},
+                <span class="st">"schema"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>, <span class="st">"description"</span>:<span class="st">"JSON schema dari data yang ingin diekstrak"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"image_path"</span>]
+        }
+    }
+]
+
+<span class="kw">def</span> <span class="fn">execute_vision_tool</span>(tool_name: <span class="tp">str</span>, tool_input: <span class="tp">dict</span>) -> <span class="tp">str</span>:
+    <span class="st">"""Eksekusi vision tool — memanggil VLM dengan gambar + pertanyaan."""</span>
+    img_data = base64.<span class="fn">b64encode</span>(Path(tool_input[<span class="st">"image_path"</span>]).<span class="fn">read_bytes</span>()).<span class="fn">decode</span>()
+
+    <span class="kw">if</span> tool_name == <span class="st">"analyze_image"</span>:
+        prompt = tool_input[<span class="st">"question"</span>]
+        system = <span class="st">"Jawab pertanyaan tentang gambar secara singkat dan faktual."</span>
+    <span class="kw">else</span>:  <span class="cm"># extract_structured_data</span>
+        schema_hint = tool_input.<span class="fn">get</span>(<span class="st">"schema"</span>, <span class="st">""</span>)
+        prompt = <span class="st">f"Ekstrak semua data dari gambar ini sebagai JSON.{' Schema: ' + schema_hint if schema_hint else ''}"</span>
+        system = <span class="st">"Ekstrak data dari gambar. Balas HANYA dengan JSON valid, tanpa penjelasan."</span>
+
+    resp = client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-opus-4-8"</span>,
+        max_tokens=<span class="nm">1024</span>,
+        system=system,
+        messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: [
+            {<span class="st">"type"</span>:<span class="st">"image"</span>,<span class="st">"source"</span>:{<span class="st">"type"</span>:<span class="st">"base64"</span>,<span class="st">"media_type"</span>:<span class="st">"image/png"</span>,<span class="st">"data"</span>:img_data}},
+            {<span class="st">"type"</span>:<span class="st">"text"</span>,<span class="st">"text"</span>:prompt}
+        ]}]
+    )
+    <span class="kw">return</span> resp.content[<span class="nm">0</span>].text
+
+<span class="kw">def</span> <span class="fn">run_multimodal_agent</span>(task: <span class="tp">str</span>, max_turns: <span class="tp">int</span> = <span class="nm">10</span>) -> <span class="tp">str</span>:
+    <span class="st">"""Agent teks yang memanggil vision tools saat dibutuhkan."""</span>
+    messages = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: task}]
+
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(max_turns):
+        resp = client.messages.<span class="fn">create</span>(
+            model=<span class="st">"claude-opus-4-8"</span>, max_tokens=<span class="nm">2048</span>, tools=TOOLS, messages=messages
+        )
+
+        <span class="kw">if</span> resp.stop_reason == <span class="st">"end_turn"</span>:
+            <span class="kw">return</span> <span class="fn">next</span>(b.text <span class="kw">for</span> b <span class="kw">in</span> resp.content <span class="kw">if</span> b.type == <span class="st">"text"</span>)
+
+        messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: resp.content})
+        tool_results = []
+        <span class="kw">for</span> block <span class="kw">in</span> resp.content:
+            <span class="kw">if</span> block.type == <span class="st">"tool_use"</span>:
+                result = <span class="fn">execute_vision_tool</span>(block.name, block.input)
+                tool_results.<span class="fn">append</span>({<span class="st">"type"</span>:<span class="st">"tool_result"</span>,<span class="st">"tool_use_id"</span>:block.id,<span class="st">"content"</span>:result})
+
+        messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})
+
+    <span class="kw">return</span> <span class="st">"Max turns reached"</span>
+
+<span class="cm"># Contoh penggunaan</span>
+result = <span class="fn">run_multimodal_agent</span>(
+    <span class="st">"Saya punya invoice di 'invoice.png'. Ekstrak total amount, tanggal, dan nomor invoice-nya."</span>
+)
+<span class="fn">print</span>(result)</pre></div></div>
+<div class="cc"><h3>Kapan pakai mana</h3><ul>
+<li><strong>Vision-as-tool</strong> — ketika agent punya banyak tools lain (search, database, API) dan vision hanya salah satunya. Paling maintainable.</li>
+<li><strong>Natively multimodal</strong> — ketika task-nya visual-first (analisis dokumen, UI testing) dan teks hanya konteks pendukung.</li>
+<li><strong>Vision subagent</strong> — ketika vision pipeline cukup kompleks untuk dipisah: multiple images, banyak pertanyaan berbeda, atau butuh retry logic terpisah.</li>
+</ul></div>
+</div><!-- /s5h -->
+
+<div class="divider"></div>
+
+<!-- 5I -->
+<div class="sub" id="s5i">
+<div class="subtit"><span class="ac">5.8</span> Vision Pipeline Orchestration <span class="subid">// agent yang menggabungkan model CV secara sequential</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#38bdf8;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);padding:2px 8px;border-radius:100px;margin-left:8px;vertical-align:middle;">CV</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#e879f9;background:rgba(232,121,249,.08);border:1px solid rgba(232,121,249,.2);padding:2px 8px;border-radius:100px;margin-left:4px;vertical-align:middle;">Multimodal</span>
+</div>
+<div class="prose">
+<p>Vision pipeline orchestration adalah pola di mana agent mengorkestrasikan beberapa model CV secara sequential atau paralel untuk menyelesaikan task yang lebih kompleks dari yang bisa dilakukan satu model saja. Contoh klasik: <strong>detect → crop → classify → caption</strong> — setiap langkah adalah model berbeda dengan output yang menjadi input langkah berikutnya. Agent memutuskan alur, menangani error, dan merakit hasil akhir.</p>
+</div>
+<div class="fsteps">
+  <div class="fstep"><div class="fsn">1</div><div class="fst">Detect</div><div class="fsd">Object detection (YOLO, DETR) — temukan semua objek relevan dalam gambar, dapatkan bounding boxes.</div></div>
+  <div class="fstep"><div class="fsn">2</div><div class="fst">Crop & Preprocess</div><div class="fsd">Crop region of interest dari bounding box, resize ke ukuran yang dibutuhkan model berikutnya.</div></div>
+  <div class="fstep"><div class="fsn">3</div><div class="fst">Classify / Segment</div><div class="fsd">Klasifikasi tiap crop (ResNet, EfficientNet) atau segmentasi pixel-level (SAM, Mask R-CNN).</div></div>
+  <div class="fstep"><div class="fsn">4</div><div class="fst">Caption / Reason</div><div class="fsd">VLM menghasilkan deskripsi natural language atau menjawab pertanyaan tentang crop yang sudah terklasifikasi.</div></div>
+  <div class="fstep"><div class="fsn">5</div><div class="fst">Synthesize</div><div class="fsd">Agent merakit semua hasil menjadi output final: laporan terstruktur, decision, atau aksi downstream.</div></div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">vision_pipeline_agent.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> anthropic, json
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> typing <span class="kw">import</span> Any
+
+client = anthropic.<span class="fn">Anthropic</span>()
+
+<span class="cm"># Tool schema untuk setiap langkah pipeline</span>
+PIPELINE_TOOLS = [
+    {
+        <span class="st">"name"</span>: <span class="st">"detect_objects"</span>,
+        <span class="st">"description"</span>: <span class="st">"Jalankan object detection pada gambar. Mengembalikan list objek dengan bounding box dan confidence score."</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"image_path"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>},
+                <span class="st">"classes"</span>: {<span class="st">"type"</span>:<span class="st">"array"</span>,<span class="st">"items"</span>:{<span class="st">"type"</span>:<span class="st">"string"</span>},<span class="st">"description"</span>:<span class="st">"Filter kelas objek yang dicari"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"image_path"</span>]
+        }
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"segment_region"</span>,
+        <span class="st">"description"</span>: <span class="st">"Segmentasi pixel-level pada region tertentu menggunakan SAM. Input: bounding box, output: mask dan area percentage."</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"image_path"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>},
+                <span class="st">"bbox"</span>: {<span class="st">"type"</span>:<span class="st">"array"</span>,<span class="st">"description"</span>:<span class="st">"[x1,y1,x2,y2] bounding box"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"image_path"</span>,<span class="st">"bbox"</span>]
+        }
+    },
+    {
+        <span class="st">"name"</span>: <span class="st">"caption_region"</span>,
+        <span class="st">"description"</span>: <span class="st">"Generate natural language caption untuk region gambar menggunakan VLM. Bisa menjawab pertanyaan spesifik tentang region."</span>,
+        <span class="st">"input_schema"</span>: {
+            <span class="st">"type"</span>: <span class="st">"object"</span>,
+            <span class="st">"properties"</span>: {
+                <span class="st">"image_path"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>},
+                <span class="st">"bbox"</span>: {<span class="st">"type"</span>:<span class="st">"array"</span>},
+                <span class="st">"question"</span>: {<span class="st">"type"</span>:<span class="st">"string"</span>,<span class="st">"description"</span>:<span class="st">"Pertanyaan opsional tentang region"</span>}
+            },
+            <span class="st">"required"</span>: [<span class="st">"image_path"</span>,<span class="st">"bbox"</span>]
+        }
+    }
+]
+
+<span class="kw">def</span> <span class="fn">run_vision_pipeline_agent</span>(image_path: <span class="tp">str</span>, task: <span class="tp">str</span>) -> <span class="tp">dict</span>:
+    <span class="st">"""
+    Agent mengorkestrasikan pipeline CV secara otomatis.
+    Dia memutuskan tool mana yang dipanggil dan dalam urutan apa.
+    """</span>
+    messages = [{
+        <span class="st">"role"</span>: <span class="st">"user"</span>,
+        <span class="st">"content"</span>: <span class="st">f"Gambar: {image_path}\nTask: {task}"</span>
+    }]
+
+    results = {}
+
+    <span class="kw">while True</span>:
+        resp = client.messages.<span class="fn">create</span>(
+            model=<span class="st">"claude-opus-4-8"</span>,
+            max_tokens=<span class="nm">2048</span>,
+            tools=PIPELINE_TOOLS,
+            system=<span class="st">"""Kamu adalah vision pipeline orchestrator.
+Gunakan tools secara sequential untuk menganalisis gambar:
+1. Mulai dengan detect_objects untuk menemukan objek relevan
+2. Gunakan segment_region untuk objek yang butuh analisis detail
+3. Gunakan caption_region untuk menghasilkan deskripsi
+4. Sintesis semua hasil menjadi laporan terstruktur JSON"""</span>,
+            messages=messages
+        )
+
+        <span class="kw">if</span> resp.stop_reason == <span class="st">"end_turn"</span>:
+            text = <span class="fn">next</span>((b.text <span class="kw">for</span> b <span class="kw">in</span> resp.content <span class="kw">if</span> b.type==<span class="st">"text"</span>), <span class="st">""</span>)
+            <span class="kw">try</span>:
+                <span class="kw">return</span> json.<span class="fn">loads</span>(text)
+            <span class="kw">except</span>:
+                <span class="kw">return</span> {<span class="st">"summary"</span>: text, <span class="st">"steps"</span>: results}
+
+        messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: resp.content})
+        tool_results = []
+        <span class="kw">for</span> block <span class="kw">in</span> resp.content:
+            <span class="kw">if</span> block.type == <span class="st">"tool_use"</span>:
+                <span class="cm"># Dalam production: panggil model CV sebenarnya (YOLO, SAM, dll)</span>
+                mock_result = {
+                    <span class="st">"detect_objects"</span>: <span class="st">'[{"class":"person","bbox":[10,20,100,200],"conf":0.92}]'</span>,
+                    <span class="st">"segment_region"</span>: <span class="st">'{"area_pct":12.3,"dominant_color":"#3a7bd5"}'</span>,
+                    <span class="st">"caption_region"</span>: <span class="st">"Seorang pria berdiri di depan papan tulis"</span>
+                }.<span class="fn">get</span>(block.name, <span class="st">"{}"</span>)
+                results[block.name] = mock_result
+                tool_results.<span class="fn">append</span>({
+                    <span class="st">"type"</span>:<span class="st">"tool_result"</span>,<span class="st">"tool_use_id"</span>:block.id,<span class="st">"content"</span>:mock_result
+                })
+
+        messages.<span class="fn">append</span>({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: tool_results})</pre></div></div>
+<div class="cc"><h3>Pola paralel vs sequential</h3><ul>
+<li><strong>Sequential</strong> — setiap langkah butuh output dari langkah sebelumnya. Contoh: detect dulu → crop → classify crop. Lebih mudah di-debug, latency adalah jumlah semua langkah.</li>
+<li><strong>Paralel (fan-out)</strong> — ketika banyak objek terdeteksi dan setiap objek bisa dianalisis independen. Kirim semua crops ke classifier secara bersamaan dengan <code>asyncio.gather()</code>. Latency = langkah terlama, bukan jumlah semua langkah.</li>
+<li><strong>Conditional branching</strong> — agent memutuskan langkah berikutnya berdasarkan hasil sebelumnya. Contoh: kalau objek adalah teks → gunakan OCR, kalau objek adalah wajah → gunakan face analysis. Agent yang fleksibel untuk dataset yang heterogen.</li>
+</ul></div>
+<div class="callout warn"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><div class="ctxt"><strong>Error propagation di vision pipeline</strong>Setiap langkah bisa gagal: detection miss, segmentation tidak akurat, atau VLM hallucinate. Implement confidence threshold di setiap langkah — jika confidence di bawah threshold, agent harus bisa fallback (coba model alternatif, minta human review, atau skip langkah itu). Jangan biarkan error satu langkah cascade tanpa pengecekan.</div></div>
+</div><!-- /s5i -->
+
+<div class="divider"></div>
+
+<!-- 5E (renumbered as 5.9) -->
 <div class="sub" id="s5e">
-<div class="subtit"><span class="ac">5.6</span> Checklist Keahlian Agent Engineer <span class="subid">// kapan kamu bisa disebut expert</span></div>
+<div class="subtit"><span class="ac">5.9</span> Checklist Keahlian Agent Engineer <span class="subid">// kapan kamu bisa disebut expert</span></div>
 <div class="prose"><p>Ini bukan checklist yang harus diselesaikan secara linear. Tapi kalau kamu bisa meng-check semua items ini dengan jujur, kamu memang sudah di level yang bisa disebut production agent engineer.</p></div>
 <div class="cc"><h3>Fondasi (Fase 1–2)</h3>
 <ul class="chk">
@@ -491,6 +814,9 @@ Hindari bullet points, markdown, atau list yang panjang."""</span>,
 <li>Bisa build coding agent yang bisa handle real-world repository, run tests, dan iterate sampai selesai</li>
 <li>Bisa implement computer use agent dengan proper vision-action loop dan safety guardrails</li>
 <li>Tahu trade-off setiap major agent framework dan bisa justify pilihan arsitektur ke tim atau stakeholder</li>
+<li>Bisa pakai VLM sebagai reasoning engine agent: encode gambar, manage token budget visual, dan tulis system prompt yang optimal untuk visual reasoning</li>
+<li>Bisa wrap model vision sebagai tool yang dipanggil oleh LLM orchestrator — schema yang baik, hasil yang terstruktur, error handling yang robust</li>
+<li>Bisa design dan implement vision pipeline orchestration: detect → crop → classify → caption, dengan handling paralel, conditional branching, dan confidence threshold</li>
 <li>Sudah punya setidaknya satu production agent yang genuinely dipakai orang lain (bukan demo)</li>
 </ul></div>
 <div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Next step setelah menguasai semua ini</strong>Build sesuatu yang nyata untuk dirimu sendiri — coding assistant pribadi, research agent, atau automation tool untuk workflow sehari-hari. Real usage is the best teacher. Deploy ke GitHub Pages atau VPS, dan share ke komunitas — feedback nyata dari pengguna nyata adalah accelerator terbaik.</div></div>
