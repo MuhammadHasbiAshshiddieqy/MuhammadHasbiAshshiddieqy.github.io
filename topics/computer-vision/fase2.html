@@ -397,4 +397,98 @@ loss = <span class="nm">0.5</span> * bce(pred, target) + <span class="nm">0.5</s
 <div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Latihan Fase 2</strong><ol style="margin:8px 0 0;padding-left:16px;"><li>Fine-tune EfficientNet-B0 pada dataset pilihanmu (Food-101, Flowers102 tersedia via torchvision)</li><li>Bandingkan feature extraction vs full fine-tuning — mana lebih baik dengan 1000 sampel training?</li><li>Tambahkan Albumentations augmentation pipeline dan lihat perubahan validation accuracy setelah 10 epoch</li><li>Plot confusion matrix dan identifikasi pasangan kelas yang paling sering salah diklasifikasikan</li></ol></div></div>
 </div><!-- /cv2f -->
 
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi Interaktif — Confusion Matrix Multi-Class</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="cvCmCanvas" style="width:100%;max-width:440px;height:340px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;margin-top:8px;">
+      <span style="font-size:11px;color:var(--text3);" id="cvCmStats">Accuracy: -- | Precision: -- | Recall: --</span>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:4px;">Klik sel matrix untuk lihat detail per kelas</div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('cvCmCanvas');
+if(!c) return;
+var classes=['Anjing','Kucing','Burung','Mobil'];
+var cm=[[45,3,1,2],[2,38,4,1],[0,3,42,0],[5,1,1,40]];
+var selected=null;
+function fitC(canvas,defW,defH){
+  var dpr=window.devicePixelRatio||1;
+  var pw=canvas.parentElement?canvas.parentElement.clientWidth:defW;
+  var w=Math.min(defW,Math.max(200,pw-32));var h=defH;
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx:ctx,W:w,H:h};
+}
+function draw(){
+  var sz=fitC(c,440,340);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var n=classes.length;
+  var margin=50,cellW=(W-margin-10)/(n+1),cellH=(H-margin-10)/(n+1);
+  var maxVal=0;for(var i=0;i<n;i++)for(var j=0;j<n;j++)maxVal=Math.max(maxVal,cm[i][j]);
+  // Draw cells
+  for(var i=0;i<n;i++){
+    for(var j=0;j<n;j++){
+      var val=cm[i][j],intensity=val/maxVal;
+      var isDiag=(i===j),isSel=(selected&&selected.r===i&&selected.c===j);
+      var r,g,b;
+      if(isDiag){r=Math.floor(45+intensity*40);g=Math.floor(212-intensity*80);b=Math.floor(191-intensity*100);}
+      else{r=Math.floor(248-intensity*100);g=Math.floor(113-intensity*40);b=Math.floor(113-intensity*20);}
+      ctx.fillStyle='rgba('+r+','+g+','+b+','+(0.3+intensity*0.7)+')';
+      var cx=margin+j*cellW,cy=margin+i*cellH;
+      ctx.fillRect(cx,cy,cellW-2,cellH-2);
+      if(isSel){ctx.strokeStyle='#fbbf24';ctx.lineWidth=2.5;ctx.strokeRect(cx,cy,cellW-2,cellH-2);}
+      ctx.fillStyle=val/maxVal>0.5?'#0a0a0d':'#e2e8f0';
+      ctx.font='bold 14px IBM Plex Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(val,cx+cellW/2-1,cy+cellH/2);
+    }
+  }
+  // Labels
+  ctx.fillStyle='#64748b';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+  for(var i2=0;i2<n;i2++){
+    ctx.fillText(classes[i2],margin+i2*cellW+cellW/2-1,margin-10);
+    ctx.save();ctx.translate(margin-14,margin+i2*cellH+cellH/2);ctx.rotate(-Math.PI/2);
+    ctx.fillText(classes[i2],0,0);ctx.restore();
+  }
+  ctx.fillText('Predicted',W/2,margin-24);ctx.fillText('Actual',12,H/2);
+  // Stats
+  if(selected){
+    var tp=cm[selected.r][selected.c],totalPred=0,totalAct=0,totalAll=0;
+    for(var ii=0;ii<n;ii++){
+      totalPred+=cm[ii][selected.c];totalAct+=cm[selected.r][ii];
+      for(var jj=0;jj<n;jj++)totalAll+=cm[ii][jj];
+    }
+    var acc=(totalAll>0?(tp/totalAll*100).toFixed(1):'--');
+    var prec=(totalPred>0?(tp/totalPred*100).toFixed(1):'--');
+    var rec=(totalAct>0?(tp/totalAct*100).toFixed(1):'--');
+    document.getElementById('cvCmStats').innerHTML='<span style="color:var(--teal)">'+classes[selected.r]+' → '+classes[selected.c]+'</span> | Accuracy: '+acc+'% | Precision: '+prec+'% | Recall: '+rec+'%';
+  } else {
+    var correct=0;for(var k=0;k<n;k++)correct+=cm[k][k];
+    var total=0;for(var a=0;a<n;a++)for(var b=0;b<n;b++)total+=cm[a][b];
+    document.getElementById('cvCmStats').innerHTML='Overall Accuracy: <span style="color:var(--green)">'+(correct/total*100).toFixed(1)+'%</span> | Total samples: '+total;
+  }
+}
+c.addEventListener('click',function(e){
+  var rect=c.getBoundingClientRect();
+  var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  var n=classes.length,sz=fitC(c,440,340),W=sz.W,H=sz.H;
+  var margin=50,cellW=(W-margin-10)/(n+1),cellH=(H-margin-10)/(n+1);
+  for(var i=0;i<n;i++)for(var j=0;j<n;j++){
+    var cx=margin+j*cellW,cy=margin+i*cellH;
+    if(mx>=cx&&mx<=cx+cellW&&my>=cy&&my<=cy+cellH){
+      selected=(selected&&selected.r===i&&selected.c===j)?null:{r:i,c:j};
+      draw();return;
+    }
+  }
+  selected=null;draw();
+});
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+
 </section><!-- /cvfase2 -->

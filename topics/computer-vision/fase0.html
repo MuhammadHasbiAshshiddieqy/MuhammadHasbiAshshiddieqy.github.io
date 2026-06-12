@@ -73,6 +73,67 @@
 
 <div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Prerequisites yang disarankan</strong>Kurikulum ini paling efektif jika sudah menyelesaikan <strong>AI Fundamentals Fase 3 (CNN)</strong> — kamu sudah punya intuisi konvolusi dan backpropagation. Belum? Tidak masalah — Fase 1 dan 2 di sini akan membangun fondasi yang diperlukan. Yang dibutuhkan: Python, NumPy dasar, dan familiar dengan konsep array multidimensi.</div></div>
 
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Pipeline Computer Vision: dari Piksel ke Pemahaman</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="cvPipeCanvas" style="width:100%;max-width:600px;height:180px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="display:flex;justify-content:center;margin-top:8px;">
+      <button class="tnbtn primary" id="cvPipeBtn" style="font-size:11px;padding:4px 16px;">▶ Jalankan Pipeline</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('cvPipeCanvas');
+if(!c) return;
+var step=-1,steps=['Input Image','Preprocessing','Feature Extraction','Classification','Output: "Kucing"'];
+var timer=null;
+function fitC(canvas,defW,defH){
+  var dpr=window.devicePixelRatio||1;
+  var pw=canvas.parentElement?canvas.parentElement.clientWidth:defW;
+  var w=Math.min(defW,Math.max(200,pw-32));var h=defH;
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx:ctx,W:w,H:h};
+}
+function draw(){
+  var sz=fitC(c,600,180);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var n=steps.length,boxW=(W-40)/n,boxH=60,topY=H/2-30;
+  for(var i=0;i<n;i++){
+    var x=20+i*boxW,active=i<=step;
+    ctx.fillStyle=active?'rgba(56,189,248,'+(i===step?'.25':'.08')+')':'rgba(255,255,255,.03)';
+    ctx.beginPath();ctx.roundRect(x,topY,boxW-8,boxH,6);ctx.fill();
+    ctx.strokeStyle=i===step?'#38bdf8':active?'rgba(56,189,248,.4)':'#1e293b';
+    ctx.lineWidth=i===step?2:1;ctx.stroke();
+    ctx.fillStyle=active?'#e2e8f0':'#475569';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(steps[i],x+(boxW-8)/2,topY+boxH/2+3);
+    if(i<n-1){
+      ctx.fillStyle=i<step?'#38bdf8':'#334155';
+      ctx.beginPath();ctx.moveTo(x+boxW-4,topY+boxH/2);ctx.lineTo(x+boxW+8,topY+boxH/2);ctx.stroke();
+      ctx.fillStyle=i<step?'#38bdf8':'#334155';ctx.font='14px sans-serif';
+      ctx.fillText('→',x+boxW-1,topY+boxH/2+5);
+    }
+  }
+  if(step>=0){
+    ctx.fillStyle='#38bdf8';ctx.font='11px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Step '+(step+1)+'/'+n, W/2, H-10);
+  }
+}
+document.getElementById('cvPipeBtn').addEventListener('click',function(){
+  step=-1;if(timer)clearInterval(timer);
+  this.disabled=true;draw();
+  timer=setInterval(function(){
+    step++;draw();
+    if(step>=steps.length-1){clearInterval(timer);document.getElementById('cvPipeBtn').disabled=false;}
+  },600);
+});
+draw();
+})();
+</script>
+
 </div><!-- /cv0a -->
 
 </section><!-- /cvfase0 -->

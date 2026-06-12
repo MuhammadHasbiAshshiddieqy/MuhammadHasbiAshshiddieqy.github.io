@@ -355,4 +355,92 @@ IMAGE_BRIGHTNESS  = <span class="fn">Gauge</span>(<span class="st">'cv_image_mea
 
 </div><!-- /cv5e -->
 
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — CV Production System Design</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="cvSysCanvas" style="width:100%;max-width:640px;height:280px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:6px;">Arsitektur referensi: dari kamera ke business insight</div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('cvSysCanvas');
+if(!c) return;
+function fitC(canvas,defW,defH){
+  var dpr=window.devicePixelRatio||1;
+  var pw=canvas.parentElement?canvas.parentElement.clientWidth:defW;
+  var w=Math.min(defW,Math.max(200,pw-32));var h=defH;
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx:ctx,W:w,H:h};
+}
+function drawBox(ctx,x,y,w,h,label,color,sub){
+  ctx.fillStyle=color+'22';ctx.beginPath();ctx.roundRect(x,y,w,h,6);ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#e2e8f0';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(label,x+w/2,y+h/2-2);
+  if(sub){ctx.fillStyle='#64748b';ctx.font='8px DM Sans,sans-serif';ctx.fillText(sub,x+w/2,y+h/2+12);}
+}
+function drawArrow(ctx,x1,y1,x2,y2,color){
+  ctx.strokeStyle=color||'rgba(255,255,255,.2)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  // arrowhead
+  var ang=Math.atan2(y2-y1,x2-x1);
+  ctx.fillStyle=color||'rgba(255,255,255,.2)';
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-8*Math.cos(ang-Math.PI/6),y2-8*Math.sin(ang-Math.PI/6));
+  ctx.lineTo(x2-8*Math.cos(ang+Math.PI/6),y2-8*Math.sin(ang+Math.PI/6));ctx.closePath();ctx.fill();
+}
+function draw(){
+  var sz=fitC(c,640,280);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var bw=100,bh=44,gap=24;
+  // Row 1: Input
+  var y1=16,bx=20;
+  drawBox(ctx,bx,y1,bw,bh,'Kamera','#38bdf8','RTSP/USB');
+  drawArrow(ctx,bx+bw,y1+bh/2,bx+bw+gap,y1+bh/2);
+  bx+=bw+gap;
+  drawBox(ctx,bx,y1,bw,bh,'Frame Sampler','#38bdf8','1-30 fps');
+  drawArrow(ctx,bx+bw,y1+bh/2,bx+bw+gap,y1+bh/2);
+  bx+=bw+gap;
+  drawBox(ctx,bx,y1,bw,bh,'Preprocess','#38bdf8','Resize/Norm');
+  // Row 1→2 arrow
+  drawArrow(ctx,bx+bw/2,y1+bh,bx+bw/2,y1+bh+gap,'rgba(124,109,250,.4)');
+  // Row 2: Inference
+  var y2=y1+bh+gap,bx2=80;
+  drawBox(ctx,bx2,y2,bw,bh,'Triton Server','#7c6dfa','ONNX/TensorRT');
+  drawArrow(ctx,bx2+bw,y2+bh/2,bx2+bw+gap,y2+bh/2);
+  bx2+=bw+gap;
+  drawBox(ctx,bx2,y2,bw,bh,'YOLO/CNN','#7c6dfa','Batch=8');
+  drawArrow(ctx,bx2+bw,y2+bh/2,bx2+bw+gap,y2+bh/2);
+  bx2+=bw+gap;
+  drawBox(ctx,bx2,y2,bw,bh,'Postprocess','#7c6dfa','NMS/Decode');
+  // Row 2→3 arrow
+  drawArrow(ctx,bx2+bw/2,y2+bh,bx2+bw/2,y2+bh+gap,'rgba(245,158,11,.4)');
+  // Row 3: Output
+  var y3=y2+bh+gap,bx3=120;
+  drawBox(ctx,bx3,y3,bw,bh,'Event Bus','#f59e0b','Kafka/Redis');
+  drawArrow(ctx,bx3+bw,y3+bh/2,bx3+bw+gap,y3+bh/2);
+  bx3+=bw+gap;
+  drawBox(ctx,bx3,y3,bw,bh,'DB Writer','#f59e0b','TimescaleDB');
+  drawArrow(ctx,bx3+bw,y3+bh/2,bx3+bw+gap,y3+bh/2);
+  bx3+=bw+gap;
+  drawBox(ctx,bx3,y3,bw,bh,'Dashboard','#f59e0b','Grafana');
+  // Labels
+  ctx.fillStyle='#475569';ctx.font='9px IBM Plex Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('INPUT',10,y1+bh/2+4);
+  ctx.fillText('INFERENCE',10,y2+bh/2+4);
+  ctx.fillText('OUTPUT',10,y3+bh/2+4);
+  // Monitoring loop arrow (right side)
+  drawArrow(ctx,W-20,y3+bh/2,W-20,y1+bh/2-10,'rgba(74,222,128,.3)');
+  ctx.fillStyle='#4ade80';ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='right';
+  ctx.fillText('Monitor',W-8,y1+bh/2-30);
+  ctx.fillText('& Alert',W-8,y1+bh/2-18);
+}
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+
 </section><!-- /cvfase5 -->

@@ -588,4 +588,73 @@ pipe_cog.<span class="fn">enable_sequential_cpu_offload</span>()  <span class="c
 pipe_cog.<span class="fn">enable_tiling</span>()</pre></div></div>
 </div><!-- /cv4be -->
 
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Arsitektur CV: dari LeNet ke ViT</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="cvArchCanvas" style="width:100%;max-width:600px;height:200px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;" id="cvArchBtns"></div>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:6px;" id="cvArchInfo"></div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('cvArchCanvas');
+if(!c) return;
+var archs={
+  lenet:{name:'LeNet (1998)',layers:[{w:32,l:'Conv 5x5',c:'#f87171'},{w:28,l:'Pool',c:'#f87171'},{w:14,l:'Conv 5x5',c:'#f87171'},{w:10,l:'Pool',c:'#f87171'},{w:5,l:'FC 120',c:'#fb923c'},{w:1,l:'FC 84',c:'#fb923c'},{w:1,l:'FC 10',c:'#fbbf24'}],info:'7 layer · 60K params · Klasifikasi digit tulisan tangan'},
+  alexnet:{name:'AlexNet (2012)',layers:[{w:11,l:'Conv 11x11',c:'#f87171'},{w:5,l:'Pool',c:'#f87171'},{w:5,l:'Conv 5x5',c:'#f87171'},{w:3,l:'Pool',c:'#f87171'},{w:3,l:'Conv 3x3',c:'#f87171'},{w:3,l:'Conv 3x3',c:'#f87171'},{w:3,l:'Conv 3x3',c:'#f87171'},{w:3,l:'Pool',c:'#f87171'},{w:1,l:'FC 4096',c:'#fb923c'},{w:1,l:'FC 4096',c:'#fb923c'},{w:1,l:'FC 1000',c:'#fbbf24'}],info:'8 layer · 60M params · Pemenang ImageNet, mengawali era deep learning'},
+  resnet:{name:'ResNet-50 (2015)',layers:[{w:7,l:'Conv 7x7',c:'#4ade80'},{w:3,l:'Pool',c:'#4ade80'},{w:1,l:'Bottleneck x3',c:'#4ade80',h:15},{w:1,l:'Bottleneck x4',c:'#4ade80',h:15},{w:1,l:'Bottleneck x6',c:'#4ade80',h:15},{w:1,l:'Bottleneck x3',c:'#4ade80',h:15},{w:1,l:'Pool',c:'#4ade80'},{w:1,l:'FC 1000',c:'#fbbf24'}],info:'50 layer · 25M params · Skip connections menyelesaikan vanishing gradient'},
+  vit:{name:'ViT-B/16 (2020)',layers:[{w:16,l:'Patch Embed',c:'#7c6dfa'},{w:1,l:'+Pos Enc',c:'#7c6dfa'},{w:1,l:'Transformer x12',c:'#a78bfa',h:20},{w:1,l:'MLP Head',c:'#c084fc'}],info:'86M params · Transformer untuk vision, tanpa konvolusi'}
+};
+var active='resnet';
+function fitC(canvas,defW,defH){
+  var dpr=window.devicePixelRatio||1;
+  var pw=canvas.parentElement?canvas.parentElement.clientWidth:defW;
+  var w=Math.min(defW,Math.max(200,pw-32));var h=defH;
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx:ctx,W:w,H:h};
+}
+function draw(){
+  var sz=fitC(c,600,200);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  var arch=archs[active];
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var layers=arch.layers,totalW=0;
+  layers.forEach(function(l){totalW+=l.w+(l.h||0);});
+  var scale=Math.min((W-40)/totalW,1.2);
+  var x=20,y=H/2-25;
+  layers.forEach(function(l,i){
+    var lw=Math.max(16,l.w*scale),lh=Math.min(50,Math.max(24,(l.h||l.w)*scale*0.7));
+    ctx.fillStyle=l.c+'33';
+    ctx.beginPath();ctx.roundRect(x,y,lw,lh,4);ctx.fill();
+    ctx.strokeStyle=l.c;ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle=l.c;ctx.font='8px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(l.l.length>10?l.l.substring(0,9)+'..':l.l,x+lw/2,y+lh/2+3);
+    if(i<layers.length-1){
+      ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x+lw,y+lh/2);ctx.lineTo(x+lw+6,y+lh/2);ctx.stroke();
+    }
+    x+=lw+6;
+  });
+  ctx.fillStyle='#64748b';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(arch.name,W/2,H-10);
+  document.getElementById('cvArchInfo').textContent=arch.info;
+}
+var btns=document.getElementById('cvArchBtns');
+Object.keys(archs).forEach(function(key){
+  var b=document.createElement('button');b.textContent=archs[key].name;b.className='tnbtn';
+  b.style.cssText='font-size:10px;padding:4px 10px;'+(key===active?'border-color:'+archs[key].layers[0].c+';color:'+archs[key].layers[0].c+';':'');
+  b.onclick=function(){active=key;draw();
+    document.querySelectorAll('#cvArchBtns .tnbtn').forEach(function(bb){bb.style.borderColor='';bb.style.color='';});
+    b.style.borderColor=archs[key].layers[0].c;b.style.color=archs[key].layers[0].c;
+  };
+  btns.appendChild(b);
+});
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+
 </section><!-- /cvfase4 -->
