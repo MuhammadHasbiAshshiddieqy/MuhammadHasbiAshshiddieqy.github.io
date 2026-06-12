@@ -55,19 +55,34 @@
 .wip-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);padding:2px 8px;border-radius:100px;margin-left:8px;}
 .landing-footer{padding:32px 60px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:auto;}
 @media(max-width:768px){
-  .landing-hero{padding:56px 24px 40px;}
-  .topics-grid{padding:32px 20px 48px;grid-template-columns:1fr;}
+  .landing-hero{padding:48px 20px 36px;}
+  .topics-grid{padding:24px 20px 40px;grid-template-columns:1fr;}
   .landing-footer{padding:24px 20px;}
   .lp-section-hdr,.lp-section-body{padding-left:20px!important;padding-right:20px!important;}
   .branch-container{padding-left:20px!important;padding-right:20px!important;}
+  /* hide desktop chrome */
   .branch-connector{display:none!important;}
   .branch-label-row{display:none!important;}
-  .branch-mobile-hdr{display:flex!important;}
-  .branch-grid{grid-template-columns:1fr!important;gap:16px!important;margin-top:0!important;}
   .branch-sep{display:none!important;}
+  /* show mobile chrome */
+  .branch-mobile-connector{display:block!important;}
+  .branch-mobile-hdr{display:flex!important;}
+  /* single-column grid */
+  .branch-grid{grid-template-columns:1fr!important;gap:14px!important;margin-top:0!important;}
   .branch-col{border-left:none!important;padding-left:0!important;}
-  .branch-card-tag{display:flex!important;}
+  /* colored left-border accent per track */
+  .branch-col-lm .topic-card{border-left:3px solid rgba(45,212,191,.5)!important;border-radius:0 18px 18px 0!important;}
+  .branch-col-cv .topic-card{border-left:3px solid rgba(56,189,248,.5)!important;border-radius:0 18px 18px 0!important;}
   .landing-section-label{padding-left:20px!important;padding-right:20px!important;}
+  /* hide tech-stack label in CTA — too crowded on narrow screens */
+  .topic-card-cta-label{display:none;}
+  /* show track name in card label on mobile */
+  .branch-col .topic-card-label .lbl-desktop{display:none;}
+  .branch-col .topic-card-label .lbl-mobile{display:inline;}
+}
+@media(min-width:769px){
+  .branch-col .topic-card-label .lbl-mobile{display:none;}
+  .branch-col .topic-card-label .lbl-desktop{display:inline;}
 }
 
 .sidebar-back{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;transition:color .15s;border-bottom:1px solid var(--border);margin-bottom:4px;}
@@ -183,7 +198,7 @@
   <!-- ══ CABANG ══ -->
   <div class="branch-container" style="max-width:1200px;margin:0 auto;width:100%;padding:0 60px;">
 
-    <!-- connector: garis Y dari Fundamentals ke dua jalur -->
+    <!-- desktop connector: garis Y dari Fundamentals ke dua jalur -->
     <div class="branch-connector" style="display:flex;align-items:flex-start;height:48px;position:relative;">
       <div style="position:absolute;left:50%;top:0;width:1px;height:24px;background:var(--border2);transform:translateX(-50%);"></div>
       <div style="position:absolute;left:25%;right:25%;top:23px;height:1px;background:var(--border2);"></div>
@@ -193,14 +208,19 @@
       <div style="position:absolute;left:75%;top:26px;width:1px;height:22px;background:rgba(56,189,248,.3);transform:translateX(-50%);"></div>
     </div>
 
-    <!-- mobile: header "Pilih Jalur" — only visible on mobile -->
-    <div class="branch-mobile-hdr" style="display:none;align-items:center;gap:12px;margin-bottom:16px;">
+    <!-- mobile connector: garis lurus turun + dot — hidden on desktop -->
+    <div class="branch-mobile-connector" style="display:none;height:32px;position:relative;margin-bottom:2px;">
+      <div style="position:absolute;left:50%;top:0;width:1px;height:100%;background:linear-gradient(180deg,var(--border2),transparent);transform:translateX(-50%);"></div>
+    </div>
+
+    <!-- mobile: section label — hidden on desktop -->
+    <div class="branch-mobile-hdr" style="display:none;align-items:center;gap:10px;margin-bottom:14px;">
       <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border2));"></div>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;">Pilih Jalur Spesialisasi</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;white-space:nowrap;">Pilih jalur spesialisasi</span>
       <div style="flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent);"></div>
     </div>
 
-    <!-- label dua jalur — desktop only -->
+    <!-- desktop: label dua jalur -->
     <div class="branch-label-row" style="display:flex;align-items:flex-start;gap:0;margin-bottom:0;">
       <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;">
         <div style="display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid rgba(45,212,191,.2);border-radius:100px;background:rgba(45,212,191,.04);">
@@ -221,19 +241,14 @@
     <div class="branch-grid" style="display:grid;grid-template-columns:1fr 48px 1fr;gap:0;margin-top:16px;">
 
       <!-- kolom kiri: Language Model -->
-      <div class="branch-col" style="display:flex;flex-direction:column;gap:20px;border-left:1px solid rgba(45,212,191,.15);padding-left:24px;">
-        <div class="topic-card branch-card-lm" style="--tc-color:rgba(45,212,191,.35);--tc-txt:var(--teal);" onclick="openCurriculum('language-model')">
-          <!-- mobile: jalur label strip -->
-          <div class="branch-card-tag branch-card-tag--lm" style="display:none;align-items:center;gap:8px;margin:-28px -28px 0;padding:10px 20px;background:rgba(45,212,191,.06);border-bottom:1px solid rgba(45,212,191,.15);border-radius:18px 18px 0 0;">
-            <div style="width:5px;height:5px;border-radius:50%;background:#2dd4bf;"></div>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;">Jalur Bahasa &amp; Teks</span>
-          </div>
+      <div class="branch-col branch-col-lm" style="display:flex;flex-direction:column;gap:20px;border-left:1px solid rgba(45,212,191,.15);padding-left:24px;">
+        <div class="topic-card" style="--tc-color:rgba(45,212,191,.35);--tc-txt:var(--teal);" onclick="openCurriculum('language-model')">
           <div class="topic-card-head">
             <div class="topic-card-icon" style="background:rgba(45,212,191,.1);border-color:rgba(45,212,191,.25);color:var(--teal);">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div>
-              <div class="topic-card-label" style="color:var(--teal);">Kurikulum 01</div>
+              <div class="topic-card-label" style="color:var(--teal);"><span class="lbl-desktop">Kurikulum 01</span><span class="lbl-mobile">Kurikulum 01 · Jalur Bahasa &amp; Teks</span></div>
               <div class="topic-card-title">Language Model Fundamentals</div>
             </div>
           </div>
@@ -257,19 +272,14 @@
       </div>
 
       <!-- kolom kanan: Computer Vision -->
-      <div class="branch-col" style="display:flex;flex-direction:column;gap:20px;border-left:1px solid rgba(56,189,248,.15);padding-left:24px;">
-        <div class="topic-card branch-card-cv" style="--tc-color:rgba(56,189,248,.35);--tc-txt:#7dd3fc;" onclick="openCurriculum('computer-vision')">
-          <!-- mobile: jalur label strip -->
-          <div class="branch-card-tag branch-card-tag--cv" style="display:none;align-items:center;gap:8px;margin:-28px -28px 0;padding:10px 20px;background:rgba(56,189,248,.06);border-bottom:1px solid rgba(56,189,248,.15);border-radius:18px 18px 0 0;">
-            <div style="width:5px;height:5px;border-radius:50%;background:#38bdf8;"></div>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#38bdf8;text-transform:uppercase;letter-spacing:.1em;">Jalur Gambar &amp; Visual</span>
-          </div>
+      <div class="branch-col branch-col-cv" style="display:flex;flex-direction:column;gap:20px;border-left:1px solid rgba(56,189,248,.15);padding-left:24px;">
+        <div class="topic-card" style="--tc-color:rgba(56,189,248,.35);--tc-txt:#7dd3fc;" onclick="openCurriculum('computer-vision')">
           <div class="topic-card-head">
             <div class="topic-card-icon" style="background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.25);color:#38bdf8;">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             </div>
             <div>
-              <div class="topic-card-label" style="color:#38bdf8;">Kurikulum 01</div>
+              <div class="topic-card-label" style="color:#38bdf8;"><span class="lbl-desktop">Kurikulum 01</span><span class="lbl-mobile">Kurikulum 01 · Jalur Gambar &amp; Visual</span></div>
               <div class="topic-card-title">Computer Vision Mastery</div>
             </div>
           </div>
