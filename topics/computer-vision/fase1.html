@@ -1,0 +1,278 @@
+<section class="cs p1" id="cvfase1">
+<div class="fase-intro" id="cvfi1">
+<div class="sh">
+  <div class="sbadge">01</div>
+  <div>
+    <div class="stitle">Fase 1 — Image Processing &amp; Classical CV</div>
+    <div class="sdesc">Fondasi mutlak sebelum deep learning: bagaimana gambar direpresentasikan sebagai array, filter dan konvolusi manual, edge detection, dan transformasi geometris. Memahami ini membuat model CNN bukan sekadar "magic".</div>
+    <div class="smeta"><span class="mc">Minggu 1–2</span><span class="mc">NumPy + OpenCV</span><span class="mc">Prerequisite: Python, NumPy dasar</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv1a">Piksel & Array</a>
+  <a class="snavi" href="#cv1b">Filter Klasik</a>
+  <a class="snavi" href="#cv1c">Edge Detection</a>
+  <a class="snavi" href="#cv1d">Transformasi</a>
+  <a class="snavi" href="#cv1e">Color Spaces</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 1–2</div>
+      <div class="topic-nav-title">Mulai dari: 1.1 Representasi Gambar & Piksel</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('cvfi0')">← Fase 0</button>
+      <button class="tnbtn primary" onclick="goTo(1)">Mulai Fase 1 →</button>
+    </div>
+  </div>
+</div><!-- /cvfi1 -->
+
+<!-- 1A -->
+<div class="sub" id="cv1a">
+<div class="subtit"><span class="ac">1.1</span> Representasi Gambar &amp; Piksel <span class="subid">// gambar adalah array angka</span></div>
+<div class="prose">
+<p>Sebuah gambar digital adalah array 3 dimensi: <code>(height, width, channels)</code>. Setiap piksel adalah satu atau beberapa angka — untuk grayscale satu nilai 0–255, untuk RGB tiga nilai. Memahami representasi ini adalah fondasi semua operasi CV.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Format gambar dalam NumPy</h4>
+<p>OpenCV membaca gambar sebagai array NumPy dengan format <strong>BGR</strong> (bukan RGB — urutan channel berbeda). Untuk konversi: <code>cv2.cvtColor(img, cv2.COLOR_BGR2RGB)</code>. Nilai default: uint8 (0–255). Saat dikirim ke model neural network, biasanya dinormalisasi ke float32 (0.0–1.0).</p>
+</div>
+<div class="gc"><h4>Channels dan bit depth</h4>
+<p><strong>Grayscale</strong>: shape (H, W) — 1 nilai per piksel. <strong>RGB/BGR</strong>: shape (H, W, 3). <strong>RGBA</strong>: shape (H, W, 4) dengan alpha channel. <strong>16-bit</strong>: medical imaging sering pakai uint16 (0–65535) untuk detail lebih tinggi. Model biasanya bekerja di float32 setelah normalisasi.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">image_basics.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Baca gambar</span>
+img_bgr = cv2.<span class="fn">imread</span>(<span class="st">"foto.jpg"</span>)     <span class="cm"># shape: (H, W, 3), dtype: uint8</span>
+img_rgb = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2RGB)
+img_gray = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2GRAY)  <span class="cm"># shape: (H, W)</span>
+
+<span class="fn">print</span>(img_rgb.shape)    <span class="cm"># (480, 640, 3)</span>
+<span class="fn">print</span>(img_gray.dtype)   <span class="cm"># uint8</span>
+<span class="fn">print</span>(img_rgb.min(), img_rgb.max())  <span class="cm"># 0 255</span>
+
+<span class="cm"># Akses piksel individual</span>
+r, g, b = img_rgb[<span class="nm">100</span>, <span class="nm">200</span>]   <span class="cm"># piksel baris 100, kolom 200</span>
+
+<span class="cm"># Crop region of interest</span>
+roi = img_rgb[<span class="nm">50</span>:<span class="nm">150</span>, <span class="nm">100</span>:<span class="nm">300</span>]   <span class="cm"># [y1:y2, x1:x2]</span>
+
+<span class="cm"># Normalisasi untuk model neural network</span>
+img_float = img_rgb.<span class="fn">astype</span>(np.float32) / <span class="nm">255.0</span>  <span class="cm"># range [0, 1]</span>
+
+<span class="cm"># Normalisasi ImageNet (mean/std per channel)</span>
+mean = np.<span class="fn">array</span>([<span class="nm">0.485</span>, <span class="nm">0.456</span>, <span class="nm">0.406</span>])
+std  = np.<span class="fn">array</span>([<span class="nm">0.229</span>, <span class="nm">0.224</span>, <span class="nm">0.225</span>])
+img_normalized = (img_float - mean) / std</pre></div></div>
+</div><!-- /cv1a -->
+
+<div class="divider"></div>
+
+<!-- 1B -->
+<div class="sub" id="cv1b">
+<div class="subtit"><span class="ac">1.2</span> Filter &amp; Konvolusi Klasik <span class="subid">// operasi matematis di balik CNN</span></div>
+<div class="prose">
+<p>Konvolusi adalah operasi inti yang sama dipakai di CNN dan image processing klasik. Sebuah <em>kernel</em> (matrix kecil) digeser di atas gambar, menghasilkan output berupa fitur tertentu. Gaussian blur, sharpening, emboss — semuanya adalah konvolusi dengan kernel berbeda. CNN hanya belajar kernel-nya secara otomatis dari data.</p>
+</div>
+<div class="cc"><h3>Cara kerja konvolusi 2D</h3>
+<p>Untuk setiap posisi kernel di atas gambar: lakukan element-wise multiplication antara kernel dan patch gambar di bawahnya, lalu jumlahkan hasilnya — satu angka per posisi. Geser kernel satu piksel (stride=1), ulangi. Output: <em>feature map</em> dengan ukuran ≈ input (tergantung padding).</p></div>
+<div class="grid2">
+<div class="gc"><h4>Kernel umum dan efeknya</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Gaussian blur</strong> (5×5) — menghaluskan noise, memburamkan detail</li>
+<li><strong>Laplacian</strong> — mendeteksi tepi (semua arah)</li>
+<li><strong>Sobel X/Y</strong> — gradien horizontal / vertikal</li>
+<li><strong>Sharpen</strong> — mempertajam tepi</li>
+<li><strong>Identity</strong> — output = input (tidak ubah apa pun)</li>
+</ul>
+</div>
+<div class="gc"><h4>Padding dan stride</h4>
+<p><strong>Valid padding</strong>: tidak ada padding, output lebih kecil dari input. <strong>Same padding</strong>: padding dengan nol di tepi sehingga output sama ukurannya dengan input. <strong>Stride</strong>: seberapa jauh kernel bergerak per langkah — stride=2 menghasilkan output setengah ukuran (down-sampling).</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">convolution_filters.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+img = cv2.<span class="fn">imread</span>(<span class="st">"foto.jpg"</span>, cv2.IMREAD_GRAYSCALE)
+
+<span class="cm"># Gaussian blur — mengurangi noise</span>
+blurred = cv2.<span class="fn">GaussianBlur</span>(img, (<span class="nm">5</span>, <span class="nm">5</span>), sigmaX=<span class="nm">0</span>)
+
+<span class="cm"># Sharpening kernel manual</span>
+kernel_sharp = np.<span class="fn">array</span>([[<span class="nm">0</span>,-<span class="nm">1</span>,<span class="nm">0</span>],
+                            [-<span class="nm">1</span>,<span class="nm">5</span>,-<span class="nm">1</span>],
+                            [<span class="nm">0</span>,-<span class="nm">1</span>,<span class="nm">0</span>]], dtype=np.float32)
+sharpened = cv2.<span class="fn">filter2D</span>(img, -<span class="nm">1</span>, kernel_sharp)
+
+<span class="cm"># Median filter — noise removal tanpa blur tepi</span>
+median = cv2.<span class="fn">medianBlur</span>(img, ksize=<span class="nm">5</span>)
+
+<span class="cm"># Implementasi konvolusi manual dengan NumPy (untuk pemahaman)</span>
+<span class="kw">def</span> <span class="fn">convolve2d_manual</span>(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+    kh, kw = kernel.shape
+    pad = kh // <span class="nm">2</span>
+    padded = np.<span class="fn">pad</span>(img, pad, mode=<span class="st">'constant'</span>)
+    out = np.<span class="fn">zeros_like</span>(img, dtype=np.float32)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(img.shape[<span class="nm">0</span>]):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(img.shape[<span class="nm">1</span>]):
+            out[i, j] = (padded[i:i+kh, j:j+kw] * kernel).<span class="fn">sum</span>()
+    <span class="kw">return</span> np.<span class="fn">clip</span>(out, <span class="nm">0</span>, <span class="nm">255</span>).<span class="fn">astype</span>(np.uint8)</pre></div></div>
+</div><!-- /cv1b -->
+
+<div class="divider"></div>
+
+<!-- 1C -->
+<div class="sub" id="cv1c">
+<div class="subtit"><span class="ac">1.3</span> Edge Detection <span class="subid">// menemukan batas antar region</span></div>
+<div class="prose">
+<p>Edge detection menemukan piksel di mana intensitas gambar berubah tajam — batas antara objek dan latar, antara cahaya dan bayangan. Ini adalah salah satu operasi paling fundamental dalam CV klasik dan tetap relevan sebagai preprocessing untuk model modern.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Sobel operator</h4>
+<p>Menghitung gradien gambar di arah X dan Y secara terpisah. Magnitudo gradien: <code>magnitude = sqrt(Gx² + Gy²)</code>. Mendeteksi tepi horizontal (Sobel Y) dan vertikal (Sobel X). Sensitif terhadap noise — biasanya didahului Gaussian blur.</p>
+</div>
+<div class="gc"><h4>Canny edge detector</h4>
+<p>Pipeline lengkap: (1) Gaussian blur, (2) Sobel gradient, (3) Non-maximum suppression (tipiskan tepi), (4) Double threshold (kuat/lemah), (5) Edge tracking by hysteresis. Hasilnya: tepi tipis dan akurat. <code>cv2.Canny(img, low_thresh, high_thresh)</code> adalah standar industri.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">edge_detection.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+img = cv2.<span class="fn">imread</span>(<span class="st">"foto.jpg"</span>, cv2.IMREAD_GRAYSCALE)
+
+<span class="cm"># Sobel — gradien X dan Y</span>
+sobel_x = cv2.<span class="fn">Sobel</span>(img, cv2.CV_64F, dx=<span class="nm">1</span>, dy=<span class="nm">0</span>, ksize=<span class="nm">3</span>)
+sobel_y = cv2.<span class="fn">Sobel</span>(img, cv2.CV_64F, dx=<span class="nm">0</span>, dy=<span class="nm">1</span>, ksize=<span class="nm">3</span>)
+magnitude = np.<span class="fn">sqrt</span>(sobel_x**<span class="nm">2</span> + sobel_y**<span class="nm">2</span>)
+magnitude = np.<span class="fn">uint8</span>(np.<span class="fn">clip</span>(magnitude, <span class="nm">0</span>, <span class="nm">255</span>))
+
+<span class="cm"># Canny — pipeline lengkap, direkomendasikan</span>
+blur = cv2.<span class="fn">GaussianBlur</span>(img, (<span class="nm">5</span>, <span class="nm">5</span>), <span class="nm">0</span>)
+edges = cv2.<span class="fn">Canny</span>(blur, threshold1=<span class="nm">50</span>, threshold2=<span class="nm">150</span>)
+<span class="cm"># threshold1 = lower, threshold2 = upper untuk hysteresis</span>
+
+<span class="cm"># Laplacian — deteksi tepi semua arah sekaligus</span>
+laplacian = cv2.<span class="fn">Laplacian</span>(img, cv2.CV_64F)
+laplacian_abs = np.<span class="fn">uint8</span>(np.<span class="fn">absolute</span>(laplacian))
+
+<span class="cm"># Contour detection dari edges</span>
+contours, _ = cv2.<span class="fn">findContours</span>(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+img_contours = cv2.<span class="fn">drawContours</span>(cv2.<span class="fn">cvtColor</span>(img, cv2.COLOR_GRAY2BGR),
+                                  contours, -<span class="nm">1</span>, (<span class="nm">0</span>,<span class="nm">255</span>,<span class="nm">0</span>), <span class="nm">2</span>)</pre></div></div>
+</div><!-- /cv1c -->
+
+<div class="divider"></div>
+
+<!-- 1D -->
+<div class="sub" id="cv1d">
+<div class="subtit"><span class="ac">1.4</span> Transformasi Geometris <span class="subid">// resize, rotate, warp</span></div>
+<div class="prose">
+<p>Transformasi geometris mengubah posisi piksel dalam gambar. Ini penting untuk: preprocessing (resize ke ukuran model), augmentasi data (rotasi, flip), dan koreksi perspektif (dokumen scanner, lane detection mobil otonom).</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Transformasi affine vs perspektif</h4>
+<p><strong>Affine</strong>: mempertahankan paralelisme garis. Operasi: translate, rotate, scale, shear. Butuh 3 pasang titik korespondensi untuk estimasi matrix. <strong>Perspektif (homography)</strong>: tidak mempertahankan paralelisme. Untuk koreksi "bird-eye view" atau rectifikasi dokumen miring. Butuh 4 pasang titik.</p>
+</div>
+<div class="gc"><h4>Interpolasi saat resize</h4>
+<p><strong>INTER_NEAREST</strong>: cepat, blocky — untuk label mask segmentasi (jangan sampai nilai interpolasi memunculkan kelas baru). <strong>INTER_LINEAR</strong>: bilinear — default yang baik untuk upscaling. <strong>INTER_AREA</strong>: terbaik untuk downscaling. <strong>INTER_LANCZOS4</strong>: kualitas tertinggi, paling lambat.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">geometric_transforms.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+img = cv2.<span class="fn">imread</span>(<span class="st">"foto.jpg"</span>)
+h, w = img.shape[:<span class="nm">2</span>]
+
+<span class="cm"># Resize ke ukuran tetap (untuk input model)</span>
+resized = cv2.<span class="fn">resize</span>(img, (<span class="nm">224</span>, <span class="nm">224</span>), interpolation=cv2.INTER_LINEAR)
+
+<span class="cm"># Rotasi 45 derajat mengelilingi pusat</span>
+M_rot = cv2.<span class="fn">getRotationMatrix2D</span>(center=(w//<span class="nm">2</span>, h//<span class="nm">2</span>), angle=<span class="nm">45</span>, scale=<span class="nm">1.0</span>)
+rotated = cv2.<span class="fn">warpAffine</span>(img, M_rot, (w, h))
+
+<span class="cm"># Horizontal flip (augmentasi data umum)</span>
+flipped = cv2.<span class="fn">flip</span>(img, flipCode=<span class="nm">1</span>)   <span class="cm"># 1=horizontal, 0=vertical, -1=keduanya</span>
+
+<span class="cm"># Koreksi perspektif — contoh dokumen miring</span>
+src_pts = np.<span class="fn">float32</span>([[<span class="nm">50</span>,<span class="nm">50</span>],[<span class="nm">400</span>,<span class="nm">30</span>],[<span class="nm">430</span>,<span class="nm">380</span>],[<span class="nm">20</span>,<span class="nm">400</span>]])
+dst_pts = np.<span class="fn">float32</span>([[<span class="nm">0</span>,<span class="nm">0</span>],[<span class="nm">400</span>,<span class="nm">0</span>],[<span class="nm">400</span>,<span class="nm">400</span>],[<span class="nm">0</span>,<span class="nm">400</span>]])
+M_persp = cv2.<span class="fn">getPerspectiveTransform</span>(src_pts, dst_pts)
+warped = cv2.<span class="fn">warpPerspective</span>(img, M_persp, (<span class="nm">400</span>, <span class="nm">400</span>))
+
+<span class="cm"># Padding gambar ke aspect ratio tertentu tanpa distorsi</span>
+<span class="kw">def</span> <span class="fn">letterbox</span>(img, target_size=<span class="nm">640</span>):
+    h, w = img.shape[:<span class="nm">2</span>]
+    scale = target_size / <span class="fn">max</span>(h, w)
+    nh, nw = <span class="fn">int</span>(h*scale), <span class="fn">int</span>(w*scale)
+    resized = cv2.<span class="fn">resize</span>(img, (nw, nh))
+    top = (target_size - nh) // <span class="nm">2</span>
+    left = (target_size - nw) // <span class="nm">2</span>
+    <span class="kw">return</span> cv2.<span class="fn">copyMakeBorder</span>(resized, top, target_size-nh-top,
+                               left, target_size-nw-left, cv2.BORDER_CONSTANT, value=<span class="nm">114</span>)</pre></div></div>
+</div><!-- /cv1d -->
+
+<div class="divider"></div>
+
+<!-- 1E -->
+<div class="sub" id="cv1e">
+<div class="subtit"><span class="ac">1.5</span> Color Spaces &amp; Histograms <span class="subid">// representasi warna yang tepat untuk setiap task</span></div>
+<div class="prose">
+<p>RGB bukan satu-satunya cara merepresentasikan warna. Color space yang tepat membuat banyak task menjadi jauh lebih mudah: segmentasi kulit lebih mudah di HSV, deteksi cahaya lebih mudah di LAB, dan kompresi gambar lebih efisien di YCbCr.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Color spaces penting</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>RGB/BGR</strong> — standar, natural untuk gambar</li>
+<li><strong>HSV</strong> (Hue, Saturation, Value) — H adalah "warna murni", mudah untuk filter warna (kuning, merah, dll)</li>
+<li><strong>LAB</strong> — perceptually uniform, L=lightness terpisah dari warna — bagus untuk color matching</li>
+<li><strong>YCbCr</strong> — Y=luminance, dipakai di JPEG/video compression</li>
+<li><strong>Grayscale</strong> — satu channel, hemat memori, cukup untuk banyak task texture/edge</li>
+</ul>
+</div>
+<div class="gc"><h4>Histogram gambar</h4>
+<p>Distribusi intensitas piksel per channel. Histogram yang ideal: tersebar merata (kontras baik). <strong>Histogram equalization</strong>: meregangkan distribusi untuk meningkatkan kontras — berguna untuk gambar gelap atau backlit. <strong>CLAHE</strong> (Contrast Limited AHE): local equalization yang lebih robust.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">color_and_histogram.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+img_bgr = cv2.<span class="fn">imread</span>(<span class="st">"foto.jpg"</span>)
+
+<span class="cm"># Konversi color space</span>
+img_hsv  = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2HSV)
+img_lab  = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2Lab)
+img_gray = cv2.<span class="fn">cvtColor</span>(img_bgr, cv2.COLOR_BGR2GRAY)
+
+<span class="cm"># Segmentasi warna kuning via HSV masking</span>
+lower_yellow = np.<span class="fn">array</span>([<span class="nm">20</span>, <span class="nm">100</span>, <span class="nm">100</span>])
+upper_yellow = np.<span class="fn">array</span>([<span class="nm">40</span>, <span class="nm">255</span>, <span class="nm">255</span>])
+mask = cv2.<span class="fn">inRange</span>(img_hsv, lower_yellow, upper_yellow)
+result = cv2.<span class="fn">bitwise_and</span>(img_bgr, img_bgr, mask=mask)
+
+<span class="cm"># Histogram dan equalization</span>
+hist = cv2.<span class="fn">calcHist</span>([img_gray], [<span class="nm">0</span>], <span class="kw">None</span>, [<span class="nm">256</span>], [<span class="nm">0</span>,<span class="nm">256</span>])
+equalized = cv2.<span class="fn">equalizeHist</span>(img_gray)
+
+<span class="cm"># CLAHE — lebih baik untuk gambar natural</span>
+clahe = cv2.<span class="fn">createCLAHE</span>(clipLimit=<span class="nm">2.0</span>, tileGridSize=(<span class="nm">8</span>,<span class="nm">8</span>))
+clahe_result = clahe.<span class="fn">apply</span>(img_gray)
+
+<span class="cm"># Mean & std normalisasi per channel (dipakai sebelum model)</span>
+mean = img_bgr.<span class="fn">mean</span>(axis=(<span class="nm">0</span>,<span class="nm">1</span>))   <span class="cm"># [B_mean, G_mean, R_mean]</span>
+std  = img_bgr.<span class="fn">std</span>(axis=(<span class="nm">0</span>,<span class="nm">1</span>))</pre></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Latihan Fase 1</strong><ol style="margin:8px 0 0;padding-left:16px;"><li>Load gambar, tampilkan channel R, G, B terpisah sebagai grayscale</li><li>Implementasi Gaussian blur dengan kernel size berbeda, amati efeknya</li><li>Deteksi tepi gambar wajah dengan Canny, experiment dengan threshold berbeda</li><li>Segmentasi warna objek (buah, pakaian) menggunakan HSV masking</li><li>Bandingkan hasil resize <code>INTER_NEAREST</code> vs <code>INTER_LANCZOS4</code> pada faktor 8x</li></ol></div></div>
+</div><!-- /cv1e -->
+
+</section><!-- /cvfase1 -->

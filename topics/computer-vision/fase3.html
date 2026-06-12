@@ -1,0 +1,306 @@
+<section class="cs p3" id="cvfase3">
+<div class="fase-intro" id="cvfi3">
+<div class="sh">
+  <div class="sbadge">03</div>
+  <div>
+    <div class="stitle">Fase 3 — Object Detection &amp; Segmentation</div>
+    <div class="sdesc">Dari classification ke localization: YOLO untuk real-time detection, segmentasi semantic dan instance, hingga pose estimation. Ini adalah layer kemampuan yang paling banyak dipakai di industri.</div>
+    <div class="smeta"><span class="mc">Minggu 6–8</span><span class="mc">Ultralytics + PyTorch</span><span class="mc">Prerequisite: Fase 2</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv3a">Detection Fundamentals</a>
+  <a class="snavi" href="#cv3b">YOLO</a>
+  <a class="snavi" href="#cv3c">Semantic Segmentation</a>
+  <a class="snavi" href="#cv3d">Instance Segmentation</a>
+  <a class="snavi" href="#cv3e">Pose Estimation</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 6–8</div>
+      <div class="topic-nav-title">Mulai dari: 3.1 Object Detection Fundamentals</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('cvfi2')">← Fase 2</button>
+      <button class="tnbtn primary" onclick="goTo(12)">Mulai Fase 3 →</button>
+    </div>
+  </div>
+</div><!-- /cvfi3 -->
+
+<!-- 3A -->
+<div class="sub" id="cv3a">
+<div class="subtit"><span class="ac">3.1</span> Object Detection Fundamentals <span class="subid">// menemukan dan melokalisasi objek</span></div>
+<div class="prose">
+<p>Object detection menjawab dua pertanyaan sekaligus: <em>apa</em> yang ada di gambar, dan <em>di mana</em>. Output: kumpulan bounding box (x, y, width, height) + class label + confidence score. Jauh lebih kompleks dari classification karena jumlah objek dan lokasinya tidak diketahui sebelumnya.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Dua paradigma utama</h4>
+<p><strong>Two-stage (R-CNN family)</strong>: tahap 1 propose region candidates, tahap 2 classify dan refine box. Akurat tapi lambat. Faster R-CNN adalah standar dua tahap terbaik.<br><br><strong>One-stage (YOLO, SSD, RetinaNet)</strong>: langsung predict box dan class dari grid gambar dalam satu pass. Lebih cepat, cocok untuk real-time. YOLO adalah raja one-stage.</p>
+</div>
+<div class="gc"><h4>Konsep penting: anchors dan IoU</h4>
+<p><strong>Anchor boxes</strong>: prior shapes yang mewakili ukuran objek umum dalam dataset. Model memprediksi offset dari anchor, bukan koordinat absolut — membuat training lebih stabil. YOLO modern (v8+) sudah anchor-free.<br><br><strong>NMS (Non-Maximum Suppression)</strong>: ketika banyak box mendeteksi objek yang sama, simpan hanya yang tertinggi confidence-nya dan hapus yang overlap (IoU > threshold).</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">detection_basics.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torchvision
+
+<span class="cm"># Hitung IoU antara dua bounding box</span>
+<span class="kw">def</span> <span class="fn">box_iou</span>(box1, box2):
+    <span class="st">"""box format: [x1, y1, x2, y2]"""</span>
+    x1 = <span class="fn">max</span>(box1[<span class="nm">0</span>], box2[<span class="nm">0</span>])
+    y1 = <span class="fn">max</span>(box1[<span class="nm">1</span>], box2[<span class="nm">1</span>])
+    x2 = <span class="fn">min</span>(box1[<span class="nm">2</span>], box2[<span class="nm">2</span>])
+    y2 = <span class="fn">min</span>(box1[<span class="nm">3</span>], box2[<span class="nm">3</span>])
+    intersection = <span class="fn">max</span>(<span class="nm">0</span>, x2-x1) * <span class="fn">max</span>(<span class="nm">0</span>, y2-y1)
+    area1 = (box1[<span class="nm">2</span>]-box1[<span class="nm">0</span>]) * (box1[<span class="nm">3</span>]-box1[<span class="nm">1</span>])
+    area2 = (box2[<span class="nm">2</span>]-box2[<span class="nm">0</span>]) * (box2[<span class="nm">3</span>]-box2[<span class="nm">1</span>])
+    union = area1 + area2 - intersection
+    <span class="kw">return</span> intersection / union <span class="kw">if</span> union > <span class="nm">0</span> <span class="kw">else</span> <span class="nm">0</span>
+
+<span class="cm"># Non-Maximum Suppression manual</span>
+<span class="kw">def</span> <span class="fn">nms</span>(boxes, scores, iou_thresh=<span class="nm">0.5</span>):
+    indices = scores.<span class="fn">argsort</span>(descending=<span class="kw">True</span>)
+    keep = []
+    <span class="kw">while</span> indices.<span class="fn">numel</span>() > <span class="nm">0</span>:
+        i = indices[<span class="nm">0</span>].<span class="fn">item</span>()
+        keep.<span class="fn">append</span>(i)
+        <span class="kw">if</span> indices.<span class="fn">numel</span>() == <span class="nm">1</span>: <span class="kw">break</span>
+        ious = torch.tensor([<span class="fn">box_iou</span>(boxes[i], boxes[j]) <span class="kw">for</span> j <span class="kw">in</span> indices[<span class="nm">1</span>:]])
+        indices = indices[<span class="nm">1</span>:][ious < iou_thresh]
+    <span class="kw">return</span> keep
+
+<span class="cm"># torchvision built-in NMS</span>
+keep = torchvision.ops.<span class="fn">nms</span>(boxes=boxes_tensor, scores=scores_tensor, iou_threshold=<span class="nm">0.5</span>)</pre></div></div>
+</div><!-- /cv3a -->
+
+<div class="divider"></div>
+
+<!-- 3B -->
+<div class="sub" id="cv3b">
+<div class="subtit"><span class="ac">3.2</span> YOLO Family <span class="subid">// you only look once — standar industri real-time</span></div>
+<div class="prose">
+<p>YOLO (You Only Look Once) adalah keluarga model detection yang mendominasi industri karena trade-off speed/accuracy yang unggul. YOLOv8 dan YOLO11 (2024) dari Ultralytics adalah versi paling modern — satu API untuk detection, segmentation, pose estimation, dan classification. Ultralytics Python package membuat training dan inference sangat mudah.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Evolusi YOLO</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>v1-v3</strong>: fondasi arsitektur grid-based one-stage detection</li>
+<li><strong>v5</strong> (Ultralytics): popularisasi ekosistem Python yang mudah, anchor-based</li>
+<li><strong>v8</strong> (2023): anchor-free, unified API untuk semua task, state-of-the-art</li>
+<li><strong>v9</strong>: PGI dan GELAN untuk efisiensi lebih tinggi</li>
+<li><strong>v11 / YOLO11</strong> (2024): arsitektur baru, parameter lebih sedikit, akurasi lebih tinggi</li>
+<li><strong>RT-DETR</strong>: Transformer-based real-time detector dari Baidu, bersaing dengan YOLO</li>
+</ul>
+</div>
+<div class="gc"><h4>Custom training YOLO</h4>
+<p>Untuk custom dataset: (1) siapkan gambar + label YOLO format (<code>x_center y_center width height class</code>, normalized 0-1), (2) buat <code>data.yaml</code> dengan path dan nama kelas, (3) train dengan <code>model.train()</code>. Ultralytics mengurus augmentasi, learning rate schedule, dan evaluasi otomatis. Untuk 100-1000 gambar: fine-tune dari pretrained. Untuk <100 gambar: coba few-shot atau synthetic data.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">yolo_detection.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+
+<span class="cm"># Inference dengan YOLOv8 pretrained (80 kelas COCO)</span>
+model = <span class="fn">YOLO</span>(<span class="st">"yolov8n.pt"</span>)   <span class="cm"># n=nano, s=small, m=medium, l=large, x=xlarge</span>
+results = model.<span class="fn">predict</span>(<span class="st">"foto.jpg"</span>, conf=<span class="nm">0.5</span>, iou=<span class="nm">0.45</span>)
+
+<span class="kw">for</span> r <span class="kw">in</span> results:
+    boxes = r.boxes.xyxy   <span class="cm"># [N, 4] tensor: x1,y1,x2,y2</span>
+    confs = r.boxes.conf   <span class="cm"># [N] confidence scores</span>
+    clss  = r.boxes.cls    <span class="cm"># [N] class indices</span>
+    <span class="kw">for</span> box, conf, cls <span class="kw">in</span> <span class="fn">zip</span>(boxes, confs, clss):
+        <span class="fn">print</span>(<span class="st">f"{model.names[int(cls)]}: {conf:.2f} @ {box.tolist()}"</span>)
+
+<span class="cm"># Custom training</span>
+model = <span class="fn">YOLO</span>(<span class="st">"yolov8n.pt"</span>)   <span class="cm"># mulai dari pretrained</span>
+results = model.<span class="fn">train</span>(
+    data=<span class="st">"data.yaml"</span>,         <span class="cm"># path ke config dataset</span>
+    epochs=<span class="nm">100</span>,
+    imgsz=<span class="nm">640</span>,
+    batch=<span class="nm">16</span>,
+    device=<span class="st">"cuda"</span>,
+    patience=<span class="nm">20</span>,              <span class="cm"># early stopping</span>
+    augment=<span class="kw">True</span>,
+    project=<span class="st">"runs/train"</span>,
+    name=<span class="st">"custom_detector"</span>
+)
+
+<span class="cm"># Evaluasi pada validation set</span>
+metrics = model.<span class="fn">val</span>()
+<span class="fn">print</span>(<span class="st">f"mAP50: {metrics.box.map50:.3f}"</span>)
+<span class="fn">print</span>(<span class="st">f"mAP50-95: {metrics.box.map:.3f}"</span>)
+
+<span class="cm"># Export untuk deployment</span>
+model.<span class="fn">export</span>(format=<span class="st">"onnx"</span>, imgsz=<span class="nm">640</span>, dynamic=<span class="kw">True</span>)
+model.<span class="fn">export</span>(format=<span class="st">"engine"</span>)   <span class="cm"># TensorRT</span></pre></div></div>
+</div><!-- /cv3b -->
+
+<div class="divider"></div>
+
+<!-- 3C -->
+<div class="sub" id="cv3c">
+<div class="subtit"><span class="ac">3.3</span> Semantic Segmentation <span class="subid">// klasifikasi di level piksel</span></div>
+<div class="prose">
+<p>Semantic segmentation mengklasifikasikan setiap piksel gambar ke kelas tertentu. Berbeda dengan detection yang hanya bounding box, segmentasi memberikan boundary yang tepat. Aplikasi: self-driving (aspal, trotoar, pejalan kaki), medical imaging (tumor boundary), satellite imagery (land use).</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Arsitektur segmentasi</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>FCN</strong>: fully convolutional, pertama yang melakukan end-to-end pixel classification</li>
+<li><strong>U-Net</strong>: encoder-decoder dengan skip connections — dominan di medical imaging</li>
+<li><strong>DeepLab v3+</strong>: atrous convolution + ASPP untuk multi-scale context</li>
+<li><strong>SegFormer</strong>: Transformer-based, efficient, state-of-the-art per 2024</li>
+<li><strong>Mask2Former</strong>: unified architecture untuk semantic, instance, dan panoptic segmentation</li>
+</ul>
+</div>
+<div class="gc"><h4>U-Net: kenapa dominan di medical</h4>
+<p>Skip connections dari encoder ke decoder mempertahankan detail spasial yang hilang saat downsampling. Didesain untuk data medis yang terbatas — bekerja baik dengan ratusan gambar. Arsitektur simetris memudahkan implementasi. Decoding path mengupscale feature map dan concatenate dengan encoder features untuk prediksi piksel yang akurat.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">semantic_segmentation.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># U-Net sederhana</span>
+<span class="kw">class</span> <span class="fn">UNet</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch=<span class="nm">3</span>, out_ch=<span class="nm">1</span>):
+        <span class="fn">super</span>().__init__()
+        <span class="kw">def</span> <span class="fn">block</span>(ic, oc):
+            <span class="kw">return</span> nn.<span class="fn">Sequential</span>(
+                nn.<span class="fn">Conv2d</span>(ic, oc, <span class="nm">3</span>, padding=<span class="nm">1</span>), nn.<span class="fn">BatchNorm2d</span>(oc), nn.<span class="fn">ReLU</span>(<span class="kw">True</span>),
+                nn.<span class="fn">Conv2d</span>(oc, oc, <span class="nm">3</span>, padding=<span class="nm">1</span>), nn.<span class="fn">BatchNorm2d</span>(oc), nn.<span class="fn">ReLU</span>(<span class="kw">True</span>),
+            )
+        self.enc1 = <span class="fn">block</span>(in_ch, <span class="nm">64</span>);  self.pool1 = nn.<span class="fn">MaxPool2d</span>(<span class="nm">2</span>)
+        self.enc2 = <span class="fn">block</span>(<span class="nm">64</span>, <span class="nm">128</span>);   self.pool2 = nn.<span class="fn">MaxPool2d</span>(<span class="nm">2</span>)
+        self.bottleneck = <span class="fn">block</span>(<span class="nm">128</span>, <span class="nm">256</span>)
+        self.up2 = nn.<span class="fn">ConvTranspose2d</span>(<span class="nm">256</span>, <span class="nm">128</span>, <span class="nm">2</span>, stride=<span class="nm">2</span>)
+        self.dec2 = <span class="fn">block</span>(<span class="nm">256</span>, <span class="nm">128</span>)   <span class="cm"># 128 (up) + 128 (skip) = 256</span>
+        self.up1 = nn.<span class="fn">ConvTranspose2d</span>(<span class="nm">128</span>, <span class="nm">64</span>, <span class="nm">2</span>, stride=<span class="nm">2</span>)
+        self.dec1 = <span class="fn">block</span>(<span class="nm">128</span>, <span class="nm">64</span>)    <span class="cm"># 64 (up) + 64 (skip) = 128</span>
+        self.out  = nn.<span class="fn">Conv2d</span>(<span class="nm">64</span>, out_ch, <span class="nm">1</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        e1 = self.<span class="fn">enc1</span>(x)
+        e2 = self.<span class="fn">enc2</span>(self.<span class="fn">pool1</span>(e1))
+        b  = self.<span class="fn">bottleneck</span>(self.<span class="fn">pool2</span>(e2))
+        d2 = self.<span class="fn">dec2</span>(torch.<span class="fn">cat</span>([self.<span class="fn">up2</span>(b), e2], dim=<span class="nm">1</span>))
+        d1 = self.<span class="fn">dec1</span>(torch.<span class="fn">cat</span>([self.<span class="fn">up1</span>(d2), e1], dim=<span class="nm">1</span>))
+        <span class="kw">return</span> self.<span class="fn">out</span>(d1)   <span class="cm"># shape: (B, out_ch, H, W)</span>
+
+<span class="cm"># HuggingFace: SegFormer pretrained</span>
+<span class="kw">from</span> transformers <span class="kw">import</span> SegformerForSemanticSegmentation
+seg_model = SegformerForSemanticSegmentation.<span class="fn">from_pretrained</span>(
+    <span class="st">"nvidia/segformer-b2-finetuned-cityscapes-1024-1024"</span>
+)</pre></div></div>
+</div><!-- /cv3c -->
+
+<div class="divider"></div>
+
+<!-- 3D -->
+<div class="sub" id="cv3d">
+<div class="subtit"><span class="ac">3.4</span> Instance Segmentation <span class="subid">// setiap objek punya mask sendiri</span></div>
+<div class="prose">
+<p>Instance segmentation menggabungkan detection dan segmentation: setiap instance objek terdeteksi dengan bounding box DAN mendapat mask piksel individualnya. Dua anjing di gambar = dua mask terpisah. Berbeda dengan semantic segmentation yang semua anjing jadi satu kelas tanpa pemisahan instance.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Mask R-CNN</h4>
+<p>Extend Faster R-CNN dengan branch mask. Untuk setiap proposal region: (1) detect box dan classify seperti biasa, (2) tambahan: predict binary mask (28×28) untuk setiap kelas yang terdeteksi. RoI Align (bukan RoI Pool) untuk alignment piksel yang akurat. Lambat tapi sangat akurat.</p>
+</div>
+<div class="gc"><h4>YOLO segmentation dan SAM</h4>
+<p><strong>YOLOv8-seg / YOLO11-seg</strong>: tambahkan mask prediction head ke YOLO detection. Real-time, mudah pakai, cukup akurat untuk production. <strong>SAM (Segment Anything Model)</strong>: model fondasi dari Meta — bisa segmentasi objek APA PUN dari prompt (titik, box, atau teks). Tidak butuh training, tapi lebih lambat dari YOLO-seg.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">instance_segmentation.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># YOLO instance segmentation</span>
+model = <span class="fn">YOLO</span>(<span class="st">"yolov8n-seg.pt"</span>)
+results = model.<span class="fn">predict</span>(<span class="st">"foto.jpg"</span>)
+
+<span class="kw">for</span> r <span class="kw">in</span> results:
+    <span class="kw">if</span> r.masks <span class="kw">is not None</span>:
+        masks = r.masks.data    <span class="cm"># [N, H, W] binary masks</span>
+        boxes = r.boxes.xyxy   <span class="cm"># [N, 4]</span>
+        <span class="kw">for</span> i, (mask, box) <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="fn">zip</span>(masks, boxes)):
+            mask_np = mask.<span class="fn">cpu</span>().<span class="fn">numpy</span>().<span class="fn">astype</span>(np.uint8) * <span class="nm">255</span>
+            <span class="fn">print</span>(<span class="st">f"Object {i}: mask sum={mask_np.sum()}, box={box.tolist()}"</span>)
+
+<span class="cm"># SAM — Segment Anything (prompt-based)</span>
+<span class="kw">from</span> segment_anything <span class="kw">import</span> SamPredictor, sam_model_registry
+<span class="kw">import</span> cv2
+
+sam = sam_model_registry[<span class="st">"vit_b"</span>](checkpoint=<span class="st">"sam_vit_b.pth"</span>)
+predictor = <span class="fn">SamPredictor</span>(sam)
+
+img = cv2.<span class="fn">imread</span>(<span class="st">"foto.jpg"</span>)
+predictor.<span class="fn">set_image</span>(cv2.<span class="fn">cvtColor</span>(img, cv2.COLOR_BGR2RGB))
+
+<span class="cm"># Segmentasi dari titik prompt (x, y)</span>
+masks, scores, _ = predictor.<span class="fn">predict</span>(
+    point_coords=np.<span class="fn">array</span>([[<span class="nm">300</span>, <span class="nm">200</span>]]),
+    point_labels=np.<span class="fn">array</span>([<span class="nm">1</span>]),   <span class="cm"># 1=foreground, 0=background</span>
+    multimask_output=<span class="kw">True</span>
+)
+best_mask = masks[scores.<span class="fn">argmax</span>()]   <span class="cm"># pilih mask terbaik</span></pre></div></div>
+</div><!-- /cv3d -->
+
+<div class="divider"></div>
+
+<!-- 3E -->
+<div class="sub" id="cv3e">
+<div class="subtit"><span class="ac">3.5</span> Keypoint Detection &amp; Pose Estimation <span class="subid">// memahami struktur tubuh dan objek</span></div>
+<div class="prose">
+<p>Pose estimation mendeteksi keypoint — titik-titik penting pada tubuh (sendi: bahu, siku, lutut) atau objek. Aplikasi: motion capture, fitness tracking, gesture recognition, robot manipulation, analisis biomechanical.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Top-down vs bottom-up</h4>
+<p><strong>Top-down</strong>: detect orang dulu (YOLO/detection), kemudian predict keypoint dalam setiap bounding box. Akurat, tapi lambat ketika banyak orang (N orang = N inference). HRNet, ViTPose.<br><br><strong>Bottom-up</strong>: detect semua keypoint sekaligus, kemudian asosiasikan ke individu. Lebih cepat untuk banyak orang, tapi asosiasi lebih sulit. OpenPose, HigherHRNet.</p>
+</div>
+<div class="gc"><h4>Output format dan post-processing</h4>
+<p>Model biasanya menghasilkan <strong>heatmap</strong> — satu heatmap per keypoint, menunjukkan probabilitas lokasi. Argmax heatmap = koordinat keypoint. Untuk 17-keypoint COCO format: hidung, mata, telinga, bahu, siku, pergelangan tangan, pinggul, lutut, pergelangan kaki. Skeleton digambar dengan menghubungkan pasangan keypoint sesuai definisi.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">pose_estimation.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+<span class="kw">import</span> cv2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># YOLO pose estimation (17 keypoints COCO)</span>
+model = <span class="fn">YOLO</span>(<span class="st">"yolov8n-pose.pt"</span>)
+results = model.<span class="fn">predict</span>(<span class="st">"video.mp4"</span>, stream=<span class="kw">True</span>)
+
+<span class="cm"># COCO skeleton: pasangan keypoint yang dihubungkan</span>
+SKELETON = [
+    [<span class="nm">15</span>,<span class="nm">13</span>],[<span class="nm">13</span>,<span class="nm">11</span>],[<span class="nm">16</span>,<span class="nm">14</span>],[<span class="nm">14</span>,<span class="nm">12</span>],  <span class="cm"># kaki</span>
+    [<span class="nm">11</span>,<span class="nm">12</span>],[<span class="nm">5</span>,<span class="nm">11</span>],[<span class="nm">6</span>,<span class="nm">12</span>],              <span class="cm"># pinggul-bahu</span>
+    [<span class="nm">5</span>,<span class="nm">6</span>],[<span class="nm">5</span>,<span class="nm">7</span>],[<span class="nm">6</span>,<span class="nm">8</span>],[<span class="nm">7</span>,<span class="nm">9</span>],[<span class="nm">8</span>,<span class="nm">10</span>],   <span class="cm"># lengan</span>
+    [<span class="nm">1</span>,<span class="nm">2</span>],[<span class="nm">0</span>,<span class="nm">1</span>],[<span class="nm">0</span>,<span class="nm">2</span>],[<span class="nm">1</span>,<span class="nm">3</span>],[<span class="nm">2</span>,<span class="nm">4</span>],     <span class="cm"># kepala</span>
+    [<span class="nm">3</span>,<span class="nm">5</span>],[<span class="nm">4</span>,<span class="nm">6</span>]                          <span class="cm"># leher</span>
+]
+
+<span class="kw">for</span> r <span class="kw">in</span> results:
+    frame = r.orig_img.<span class="fn">copy</span>()
+    <span class="kw">if</span> r.keypoints <span class="kw">is not None</span>:
+        kps = r.keypoints.xy.<span class="fn">cpu</span>().<span class="fn">numpy</span>()  <span class="cm"># [N_persons, 17, 2]</span>
+        kp_conf = r.keypoints.conf.<span class="fn">cpu</span>().<span class="fn">numpy</span>()  <span class="cm"># [N_persons, 17]</span>
+        <span class="kw">for</span> person_kps, person_conf <span class="kw">in</span> <span class="fn">zip</span>(kps, kp_conf):
+            <span class="cm"># Gambar keypoints</span>
+            <span class="kw">for</span> (x, y), conf <span class="kw">in</span> <span class="fn">zip</span>(person_kps, person_conf):
+                <span class="kw">if</span> conf > <span class="nm">0.5</span>:
+                    cv2.<span class="fn">circle</span>(frame, (<span class="fn">int</span>(x),<span class="fn">int</span>(y)), <span class="nm">4</span>, (<span class="nm">0</span>,<span class="nm">255</span>,<span class="nm">0</span>), -<span class="nm">1</span>)
+            <span class="cm"># Gambar skeleton</span>
+            <span class="kw">for</span> (i, j) <span class="kw">in</span> SKELETON:
+                <span class="kw">if</span> person_conf[i] > <span class="nm">0.5</span> <span class="kw">and</span> person_conf[j] > <span class="nm">0.5</span>:
+                    p1 = (<span class="fn">int</span>(person_kps[i,<span class="nm">0</span>]),<span class="fn">int</span>(person_kps[i,<span class="nm">1</span>]))
+                    p2 = (<span class="fn">int</span>(person_kps[j,<span class="nm">0</span>]),<span class="fn">int</span>(person_kps[j,<span class="nm">1</span>]))
+                    cv2.<span class="fn">line</span>(frame, p1, p2, (<span class="nm">255</span>,<span class="nm">128</span>,<span class="nm">0</span>), <span class="nm">2</span>)</pre></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Latihan Fase 3</strong><ol style="margin:8px 0 0;padding-left:16px;"><li>Train YOLOv8-nano pada dataset custom sederhana (50–200 gambar, 2–3 kelas) dengan Roboflow atau LabelImg untuk anotasi</li><li>Bandingkan inference speed YOLOv8n vs YOLOv8x pada GPU — berapa FPS masing-masing?</li><li>Implementasi U-Net sederhana untuk binary segmentation (foreground vs background)</li><li>Jalankan SAM pada gambar apapun dan eksperimen dengan berbagai jenis prompt (titik, box)</li><li>Visualisasikan pose estimation pada video pendek dengan skeleton overlay</li></ol></div></div>
+</div><!-- /cv3e -->
+
+</section><!-- /cvfase3 -->

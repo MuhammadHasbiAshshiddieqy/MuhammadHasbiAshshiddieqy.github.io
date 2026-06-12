@@ -1,0 +1,400 @@
+<section class="cs p2" id="cvfase2">
+<div class="fase-intro" id="cvfi2">
+<div class="sh">
+  <div class="sbadge">02</div>
+  <div>
+    <div class="stitle">Fase 2 — Deep Learning untuk CV</div>
+    <div class="sdesc">CNN dari dasar, mengapa transfer learning hampir selalu lebih baik dari scratch, Vision Transformer sebagai arsitektur modern, strategi augmentasi data, dan bagaimana mengevaluasi model vision secara benar.</div>
+    <div class="smeta"><span class="mc">Minggu 3–5</span><span class="mc">PyTorch + torchvision</span><span class="mc">Prerequisite: Fase 1, neural network dasar</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv2a">CNN</a>
+  <a class="snavi" href="#cv2b">Transfer Learning</a>
+  <a class="snavi" href="#cv2c">ViT</a>
+  <a class="snavi" href="#cv2d">Augmentasi</a>
+  <a class="snavi" href="#cv2e">Loss Functions</a>
+  <a class="snavi" href="#cv2f">Evaluasi</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">6 topik · Minggu 3–5</div>
+      <div class="topic-nav-title">Mulai dari: 2.1 CNN untuk Vision</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('cvfi1')">← Fase 1</button>
+      <button class="tnbtn primary" onclick="goTo(6)">Mulai Fase 2 →</button>
+    </div>
+  </div>
+</div><!-- /cvfi2 -->
+
+<!-- 2A -->
+<div class="sub" id="cv2a">
+<div class="subtit"><span class="ac">2.1</span> CNN untuk Vision <span class="subid">// arsitektur yang merevolusi computer vision</span></div>
+<div class="prose">
+<p>Convolutional Neural Network (CNN) adalah arsitektur neural network yang dirancang khusus untuk data grid seperti gambar. Keunggulan utamanya: <em>parameter sharing</em> (filter yang sama dipakai di seluruh gambar) dan <em>local connectivity</em> (setiap neuron hanya terhubung ke area lokal). Ini membuat CNN jauh lebih efisien dan efektif daripada fully-connected network untuk vision.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Tiga komponen utama CNN</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Conv layer</strong>: belajar filter/kernel secara otomatis dari data. Layer awal belajar tepi dan warna, layer dalam belajar fitur kompleks (mata, roda, dll)</li>
+<li><strong>Pooling layer</strong>: down-sampling — MaxPool atau AvgPool. Mengurangi ukuran spasial, meningkatkan receptive field, memberikan sedikit translasi-invariance</li>
+<li><strong>FC layer</strong>: di akhir jaringan, menggabungkan semua fitur untuk prediksi final. Sering digantikan Global Average Pooling (GAP) di arsitektur modern</li>
+</ul>
+</div>
+<div class="gc"><h4>Evolusi arsitektur CNN</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>AlexNet (2012)</strong>: pertama dengan deep CNN + GPU, menang ImageNet</li>
+<li><strong>VGG (2014)</strong>: deep dan sederhana, hanya conv 3×3</li>
+<li><strong>ResNet (2015)</strong>: skip connections memungkinkan 100+ layers tanpa vanishing gradient</li>
+<li><strong>EfficientNet (2019)</strong>: compound scaling depth/width/resolution secara seimbang</li>
+<li><strong>ConvNeXt (2022)</strong>: CNN modern yang mencocoki ViT dengan redesign menyeluruh</li>
+</ul>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">cnn_from_scratch.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">SimpleCNN</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes: <span class="tp">int</span> = <span class="nm">10</span>):
+        <span class="fn">super</span>().__init__()
+        self.features = nn.<span class="fn">Sequential</span>(
+            <span class="cm"># Block 1: 3→32 channels, 224→112</span>
+            nn.<span class="fn">Conv2d</span>(<span class="nm">3</span>, <span class="nm">32</span>, kernel_size=<span class="nm">3</span>, padding=<span class="nm">1</span>),
+            nn.<span class="fn">BatchNorm2d</span>(<span class="nm">32</span>),
+            nn.<span class="fn">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="fn">MaxPool2d</span>(<span class="nm">2</span>, <span class="nm">2</span>),
+            <span class="cm"># Block 2: 32→64 channels, 112→56</span>
+            nn.<span class="fn">Conv2d</span>(<span class="nm">32</span>, <span class="nm">64</span>, kernel_size=<span class="nm">3</span>, padding=<span class="nm">1</span>),
+            nn.<span class="fn">BatchNorm2d</span>(<span class="nm">64</span>),
+            nn.<span class="fn">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="fn">MaxPool2d</span>(<span class="nm">2</span>, <span class="nm">2</span>),
+            <span class="cm"># Block 3: 64→128 channels, 56→28</span>
+            nn.<span class="fn">Conv2d</span>(<span class="nm">64</span>, <span class="nm">128</span>, kernel_size=<span class="nm">3</span>, padding=<span class="nm">1</span>),
+            nn.<span class="fn">BatchNorm2d</span>(<span class="nm">128</span>),
+            nn.<span class="fn">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="fn">MaxPool2d</span>(<span class="nm">2</span>, <span class="nm">2</span>),
+        )
+        self.classifier = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">AdaptiveAvgPool2d</span>((<span class="nm">1</span>, <span class="nm">1</span>)),  <span class="cm"># Global Avg Pool: (B,128,H,W) → (B,128,1,1)</span>
+            nn.<span class="fn">Flatten</span>(),
+            nn.<span class="fn">Dropout</span>(<span class="nm">0.3</span>),
+            nn.<span class="fn">Linear</span>(<span class="nm">128</span>, num_classes),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x: torch.Tensor) -> torch.Tensor:
+        <span class="kw">return</span> self.classifier(self.features(x))
+
+<span class="cm"># Training loop minimal</span>
+model = <span class="fn">SimpleCNN</span>(num_classes=<span class="nm">10</span>).<span class="fn">cuda</span>()
+optimizer = torch.optim.<span class="fn">AdamW</span>(model.<span class="fn">parameters</span>(), lr=<span class="nm">1e-3</span>, weight_decay=<span class="nm">1e-4</span>)
+criterion = nn.<span class="fn">CrossEntropyLoss</span>(label_smoothing=<span class="nm">0.1</span>)
+
+<span class="kw">for</span> imgs, labels <span class="kw">in</span> dataloader:
+    imgs, labels = imgs.<span class="fn">cuda</span>(), labels.<span class="fn">cuda</span>()
+    optimizer.<span class="fn">zero_grad</span>()
+    loss = criterion(model(imgs), labels)
+    loss.<span class="fn">backward</span>()
+    optimizer.<span class="fn">step</span>()</pre></div></div>
+</div><!-- /cv2a -->
+
+<div class="divider"></div>
+
+<!-- 2B -->
+<div class="sub" id="cv2b">
+<div class="subtit"><span class="ac">2.2</span> Transfer Learning &amp; Fine-tuning <span class="subid">// jangan train dari nol</span></div>
+<div class="prose">
+<p>Model yang dilatih pada ImageNet (1.2M gambar, 1000 kelas) sudah belajar fitur visual universal: tepi, tekstur, bentuk, objek. Transfer learning memanfaatkan ini — ambil backbone yang sudah terlatih, ganti head classifier, fine-tune untuk task kamu. Hasilnya jauh lebih baik daripada training dari nol, dengan data jauh lebih sedikit.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Strategi fine-tuning</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Feature extraction</strong>: freeze semua layer, hanya train head baru. Cepat, butuh sedikit data. Cocok kalau domain mirip ImageNet</li>
+<li><strong>Partial fine-tuning</strong>: freeze layer awal (low-level features), unfreeze layer akhir + head. Balance antara kecepatan dan adaptasi</li>
+<li><strong>Full fine-tuning</strong>: unfreeze semua layer dengan learning rate lebih kecil. Butuh data lebih banyak, hasil terbaik jika domain sangat berbeda dari ImageNet</li>
+</ul>
+</div>
+<div class="gc"><h4>Learning rate scheduling</h4>
+<p><strong>Layer-wise LR decay</strong>: layer lebih dalam (lebih dekat ke head) mendapat LR lebih besar, layer lebih dangkal mendapat LR sangat kecil. Ini melindungi pretrained features. <strong>Warmup</strong>: mulai dari LR sangat kecil, naikkan perlahan — mencegah shock pada pretrained weights di awal training. <strong>Cosine annealing</strong>: turunkan LR secara smooth hingga akhir training.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">transfer_learning.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torchvision.models <span class="kw">as</span> models
+<span class="kw">from</span> torch <span class="kw">import</span> nn
+
+<span class="cm"># Load pretrained ResNet50</span>
+backbone = models.<span class="fn">resnet50</span>(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+
+<span class="cm"># Strategi 1: feature extraction — freeze backbone</span>
+<span class="kw">for</span> p <span class="kw">in</span> backbone.<span class="fn">parameters</span>():
+    p.requires_grad = <span class="kw">False</span>
+
+<span class="cm"># Ganti head untuk num_classes kita</span>
+num_classes = <span class="nm">5</span>
+in_features = backbone.fc.in_features   <span class="cm"># 2048</span>
+backbone.fc = nn.<span class="fn">Sequential</span>(
+    nn.<span class="fn">Dropout</span>(<span class="nm">0.3</span>),
+    nn.<span class="fn">Linear</span>(in_features, num_classes)
+)
+<span class="cm"># Hanya head yang ter-train</span>
+
+<span class="cm"># Strategi 2: partial fine-tuning — unfreeze layer4 + head</span>
+<span class="kw">for</span> p <span class="kw">in</span> backbone.<span class="fn">parameters</span>():
+    p.requires_grad = <span class="kw">False</span>
+<span class="kw">for</span> p <span class="kw">in</span> backbone.layer4.<span class="fn">parameters</span>():
+    p.requires_grad = <span class="kw">True</span>
+<span class="kw">for</span> p <span class="kw">in</span> backbone.fc.<span class="fn">parameters</span>():
+    p.requires_grad = <span class="kw">True</span>
+
+<span class="cm"># Layer-wise LR decay (learning rate berbeda per layer group)</span>
+optimizer = torch.optim.<span class="fn">AdamW</span>([
+    {<span class="st">'params'</span>: backbone.layer4.<span class="fn">parameters</span>(), <span class="st">'lr'</span>: <span class="nm">1e-4</span>},
+    {<span class="st">'params'</span>: backbone.fc.<span class="fn">parameters</span>(), <span class="st">'lr'</span>: <span class="nm">1e-3</span>},
+], weight_decay=<span class="nm">1e-4</span>)
+
+<span class="cm"># Cosine annealing + warmup</span>
+scheduler = torch.optim.lr_scheduler.<span class="fn">OneCycleLR</span>(
+    optimizer, max_lr=[<span class="nm">1e-4</span>, <span class="nm">1e-3</span>],
+    steps_per_epoch=<span class="fn">len</span>(train_loader), epochs=<span class="nm">20</span>,
+    pct_start=<span class="nm">0.1</span>  <span class="cm"># 10% warmup</span>
+)</pre></div></div>
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Model mana yang dipilih?</strong>Untuk classification umum: <strong>EfficientNet-B0/B3</strong> (ringan-akurat), <strong>ResNet50</strong> (baseline proven), <strong>ConvNeXt-Tiny</strong> (modern, performa tinggi). Untuk mobile/edge: <strong>MobileNetV3</strong> atau <strong>EfficientNet-Lite</strong>. Semua tersedia di <code>torchvision.models</code> dengan pretrained weights.</div></div>
+</div><!-- /cv2b -->
+
+<div class="divider"></div>
+
+<!-- 2C -->
+<div class="sub" id="cv2c">
+<div class="subtit"><span class="ac">2.3</span> Vision Transformer (ViT) <span class="subid">// attention mekanisme datang ke dunia vision</span></div>
+<div class="prose">
+<p>Vision Transformer (ViT, 2020) membuktikan bahwa arsitektur Transformer yang sukses di NLP bisa bekerja langsung untuk gambar — tanpa konvolusi sama sekali. Idenya: potong gambar menjadi patch kecil (16×16 piksel), flatten setiap patch menjadi vektor, lalu proses sebagai sequence token seperti kata dalam kalimat.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Cara ViT memproses gambar</h4>
+<ol style="margin:0;padding-left:16px;font-size:13px;">
+<li>Gambar 224×224 dipotong menjadi patch 16×16 → 196 patch</li>
+<li>Setiap patch di-flatten dan di-project ke embedding dimension (mis. 768)</li>
+<li>Tambahkan positional embedding agar model tahu urutan spasial</li>
+<li>Tambahkan [CLS] token di depan sequence</li>
+<li>Proses dengan Transformer encoder (multi-head self-attention)</li>
+<li>Output [CLS] token dipakai untuk klasifikasi</li>
+</ol>
+</div>
+<div class="gc"><h4>ViT vs CNN: kapan pakai apa?</h4>
+<p><strong>ViT unggul</strong>: data besar (>1M sampel), task butuh long-range dependencies (hubungan antara bagian gambar yang jauh), dan ketika pretrained pada dataset besar (ImageNet-21k, JFT). <strong>CNN unggul</strong>: data kecil-sedang, training dari nol, atau butuh efisiensi tinggi. <strong>Hybrid</strong> (CNN + Transformer): DeiT, Swin Transformer — best of both worlds.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">vit_finetune.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> transformers <span class="kw">import</span> ViTForImageClassification, ViTImageProcessor
+<span class="kw">import</span> torch
+
+<span class="cm"># Load ViT pretrained dari HuggingFace</span>
+model_name = <span class="st">"google/vit-base-patch16-224"</span>
+processor = ViTImageProcessor.<span class="fn">from_pretrained</span>(model_name)
+model = ViTForImageClassification.<span class="fn">from_pretrained</span>(
+    model_name,
+    num_labels=<span class="nm">5</span>,
+    ignore_mismatched_sizes=<span class="kw">True</span>   <span class="cm"># head baru dengan num_labels berbeda</span>
+)
+
+<span class="cm"># Preprocessing gambar sesuai ViT requirements</span>
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+img = Image.<span class="fn">open</span>(<span class="st">"foto.jpg"</span>)
+inputs = processor(images=img, return_tensors=<span class="st">"pt"</span>)
+<span class="cm"># inputs["pixel_values"]: shape (1, 3, 224, 224), normalized</span>
+
+<span class="cm"># Forward pass</span>
+outputs = model(**inputs)
+logits = outputs.logits        <span class="cm"># shape (1, num_labels)</span>
+pred = logits.<span class="fn">argmax</span>(dim=-<span class="nm">1</span>)
+
+<span class="cm"># Alternatif: Swin Transformer (lebih efisien, hierarchical)</span>
+<span class="kw">import</span> torchvision.models <span class="kw">as</span> models
+swin = models.<span class="fn">swin_t</span>(weights=models.Swin_T_Weights.IMAGENET1K_V1)
+<span class="cm"># Ganti head terakhir:</span>
+swin.head = torch.nn.<span class="fn">Linear</span>(swin.head.in_features, num_labels=<span class="nm">5</span>)</pre></div></div>
+</div><!-- /cv2c -->
+
+<div class="divider"></div>
+
+<!-- 2D -->
+<div class="sub" id="cv2d">
+<div class="subtit"><span class="ac">2.4</span> Data Augmentasi <span class="subid">// lebih banyak data dari data yang ada</span></div>
+<div class="prose">
+<p>Augmentasi data adalah teknik meningkatkan variasi data training dengan transformasi yang mempertahankan label. Hasilnya: model lebih robust terhadap variasi real-world (pencahayaan berbeda, angle berbeda, oklusi parsial). Ini adalah salah satu cara paling efektif meningkatkan generalisasi tanpa mengumpulkan data baru.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Augmentasi dasar vs advanced</h4>
+<p><strong>Dasar</strong>: flip horizontal, rotasi kecil, brightness/contrast jitter, crop acak — hampir selalu safe untuk semua task.<br><br><strong>Advanced</strong>: CutMix (gabung dua gambar + label), MixUp (blend dua gambar + soft label), RandAugment (pilih augmentasi secara random dari set besar), Mosaic (YOLO) — gabung 4 gambar. Hasilnya bisa signifikan tapi perlu tuning.</p>
+</div>
+<div class="gc"><h4>Albumentations vs torchvision</h4>
+<p><strong>torchvision.transforms</strong>: simpel, terintegrasi, tapi lambat (CPU only). <strong>Albumentations</strong>: 4–10x lebih cepat, 70+ augmentasi, support joint transform untuk gambar + mask + bounding box (krusial untuk detection dan segmentation). Untuk production: selalu pakai Albumentations.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">augmentation.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> albumentations <span class="kw">as</span> A
+<span class="kw">from</span> albumentations.pytorch <span class="kw">import</span> ToTensorV2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Pipeline augmentasi untuk classification</span>
+train_transform = A.<span class="fn">Compose</span>([
+    A.<span class="fn">RandomResizedCrop</span>(<span class="nm">224</span>, <span class="nm">224</span>, scale=(<span class="nm">0.7</span>, <span class="nm">1.0</span>)),
+    A.<span class="fn">HorizontalFlip</span>(p=<span class="nm">0.5</span>),
+    A.<span class="fn">RandomBrightnessContrast</span>(p=<span class="nm">0.3</span>),
+    A.<span class="fn">HueSaturationValue</span>(p=<span class="nm">0.3</span>),
+    A.<span class="fn">GaussNoise</span>(p=<span class="nm">0.2</span>),
+    A.<span class="fn">Normalize</span>(mean=[<span class="nm">0.485</span>,<span class="nm">0.456</span>,<span class="nm">0.406</span>],
+                std=[<span class="nm">0.229</span>,<span class="nm">0.224</span>,<span class="nm">0.225</span>]),
+    <span class="fn">ToTensorV2</span>(),
+])
+
+<span class="cm"># Pipeline untuk object detection — augmentasi bbox ikut transform!</span>
+det_transform = A.<span class="fn">Compose</span>([
+    A.<span class="fn">RandomResizedCrop</span>(<span class="nm">640</span>, <span class="nm">640</span>),
+    A.<span class="fn">HorizontalFlip</span>(p=<span class="nm">0.5</span>),
+    A.<span class="fn">RandomBrightnessContrast</span>(p=<span class="nm">0.3</span>),
+    A.<span class="fn">Normalize</span>(mean=[<span class="nm">0</span>,<span class="nm">0</span>,<span class="nm">0</span>], std=[<span class="nm">1</span>,<span class="nm">1</span>,<span class="nm">1</span>]),
+    <span class="fn">ToTensorV2</span>(),
+], bbox_params=A.<span class="fn">BboxParams</span>(format=<span class="st">'pascal_voc'</span>, label_fields=[<span class="st">'labels'</span>]))
+
+<span class="cm"># CutMix — advanced, signifikan untuk ImageNet-scale training</span>
+<span class="kw">def</span> <span class="fn">cutmix</span>(imgs, labels, alpha=<span class="nm">1.0</span>):
+    lam = np.random.<span class="fn">beta</span>(alpha, alpha)
+    B = imgs.<span class="fn">size</span>(<span class="nm">0</span>)
+    idx = torch.<span class="fn">randperm</span>(B)
+    h, w = imgs.shape[-<span class="nm">2</span>:]
+    cut_h = <span class="fn">int</span>(h * np.sqrt(<span class="nm">1</span> - lam))
+    cut_w = <span class="fn">int</span>(w * np.sqrt(<span class="nm">1</span> - lam))
+    cx, cy = np.random.<span class="fn">randint</span>(w), np.random.<span class="fn">randint</span>(h)
+    x1, y1 = <span class="fn">max</span>(<span class="nm">0</span>,cx-cut_w//<span class="nm">2</span>), <span class="fn">max</span>(<span class="nm">0</span>,cy-cut_h//<span class="nm">2</span>)
+    x2, y2 = <span class="fn">min</span>(w,cx+cut_w//<span class="nm">2</span>), <span class="fn">min</span>(h,cy+cut_h//<span class="nm">2</span>)
+    imgs[:, :, y1:y2, x1:x2] = imgs[idx, :, y1:y2, x1:x2]
+    lam = <span class="nm">1</span> - (x2-x1)*(y2-y1)/(h*w)
+    <span class="kw">return</span> imgs, labels, labels[idx], lam</pre></div></div>
+</div><!-- /cv2d -->
+
+<div class="divider"></div>
+
+<!-- 2E -->
+<div class="sub" id="cv2e">
+<div class="subtit"><span class="ac">2.5</span> Loss Functions untuk Vision <span class="subid">// sinyal training yang tepat per task</span></div>
+<div class="prose">
+<p>Loss function adalah sinyal yang mengatakan model seberapa salah prediksinya. Pilihan loss yang salah bisa membuat training gagal meski arsitektur dan data sudah benar. Setiap task vision punya karakteristik yang membutuhkan loss khusus.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Classification losses</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>CrossEntropyLoss</strong>: standard untuk multi-class, menggabungkan softmax + NLL</li>
+<li><strong>Label smoothing</strong>: distribusikan sedikit probabilitas ke kelas lain (0.1), mencegah overconfidence</li>
+<li><strong>Focal Loss</strong>: down-weight easy examples, fokus pada hard examples — krusial untuk class imbalance besar (mis. detection: banyak background)</li>
+<li><strong>Binary Cross-entropy</strong>: untuk multi-label (satu gambar bisa punya banyak kelas)</li>
+</ul>
+</div>
+<div class="gc"><h4>Regression dan segmentation losses</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>L1 / Smooth L1 (Huber)</strong>: untuk bounding box regression, robust terhadap outlier</li>
+<li><strong>IoU Loss / GIoU / DIoU</strong>: loss berbasis overlap langsung untuk box regression — lebih baik dari L2 koordinat</li>
+<li><strong>Dice Loss</strong>: untuk segmentasi, mengoptimalkan F1/IoU langsung</li>
+<li><strong>BCE + Dice</strong>: kombinasi umum untuk segmentasi binary</li>
+</ul>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">vision_losses.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="cm"># Focal Loss — untuk class imbalance besar</span>
+<span class="kw">class</span> <span class="fn">FocalLoss</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, alpha=<span class="nm">1.0</span>, gamma=<span class="nm">2.0</span>):
+        <span class="fn">super</span>().__init__()
+        self.alpha, self.gamma = alpha, gamma
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, inputs, targets):
+        ce = F.<span class="fn">cross_entropy</span>(inputs, targets, reduction=<span class="st">'none'</span>)
+        pt = <span class="fn">torch.exp</span>(-ce)
+        <span class="kw">return</span> (self.alpha * (<span class="nm">1</span> - pt)**self.gamma * ce).<span class="fn">mean</span>()
+
+<span class="cm"># Dice Loss — untuk segmentasi</span>
+<span class="kw">class</span> <span class="fn">DiceLoss</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, smooth=<span class="nm">1.0</span>):
+        <span class="fn">super</span>().__init__()
+        self.smooth = smooth
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, pred, target):
+        pred = torch.<span class="fn">sigmoid</span>(pred)
+        intersection = (pred * target).<span class="fn">sum</span>(dim=(<span class="nm">2</span>,<span class="nm">3</span>))
+        dice = (<span class="nm">2</span> * intersection + self.smooth) / (pred.<span class="fn">sum</span>(dim=(<span class="nm">2</span>,<span class="nm">3</span>)) + target.<span class="fn">sum</span>(dim=(<span class="nm">2</span>,<span class="nm">3</span>)) + self.smooth)
+        <span class="kw">return</span> <span class="nm">1</span> - dice.<span class="fn">mean</span>()
+
+<span class="cm"># Kombinasi BCE + Dice untuk segmentasi</span>
+bce = nn.<span class="fn">BCEWithLogitsLoss</span>()
+dice = <span class="fn">DiceLoss</span>()
+loss = <span class="nm">0.5</span> * bce(pred, target) + <span class="nm">0.5</span> * dice(pred, target)</pre></div></div>
+</div><!-- /cv2e -->
+
+<div class="divider"></div>
+
+<!-- 2F -->
+<div class="sub" id="cv2f">
+<div class="subtit"><span class="ac">2.6</span> Model Evaluation &amp; Metrics <span class="subid">// akurasi bukan satu-satunya ukuran</span></div>
+<div class="prose">
+<p>Akurasi saja tidak cukup untuk mengevaluasi model vision. Dataset imbalanced membuat akurasi menyesatkan — model yang selalu prediksi kelas mayoritas bisa dapat akurasi 95% tapi tidak berguna. Setiap task punya metrik yang lebih informatif.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Metrik classification</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Accuracy</strong>: baik hanya untuk balanced dataset</li>
+<li><strong>Precision / Recall / F1</strong>: lebih informatif untuk imbalanced. Precision: dari yang diprediksi positif, berapa yang benar. Recall: dari yang sebenarnya positif, berapa yang terdeteksi</li>
+<li><strong>ROC-AUC</strong>: performance di semua threshold — threshold-agnostic</li>
+<li><strong>Confusion matrix</strong>: lihat error pattern per kelas</li>
+<li><strong>Top-5 accuracy</strong>: dipakai di ImageNet — apakah label benar ada di 5 prediksi teratas</li>
+</ul>
+</div>
+<div class="gc"><h4>Metrik detection & segmentation</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>IoU</strong> (Intersection over Union): overlap antara predicted dan ground truth box. IoU > 0.5 biasanya dianggap "benar"</li>
+<li><strong>mAP</strong> (mean Average Precision): metrik standar detection. mAP@0.5 atau mAP@[0.5:0.95]</li>
+<li><strong>Pixel Accuracy</strong>: fraction piksel yang benar (misleading jika imbalanced)</li>
+<li><strong>Mean IoU (mIoU)</strong>: IoU per kelas kemudian di-average — standar segmentasi</li>
+</ul>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">evaluation.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> sklearn.metrics <span class="kw">import</span> classification_report, confusion_matrix
+<span class="kw">import</span> torch
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Evaluasi classification</span>
+<span class="kw">def</span> <span class="fn">evaluate_classifier</span>(model, dataloader, device):
+    model.<span class="fn">eval</span>()
+    all_preds, all_labels = [], []
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        <span class="kw">for</span> imgs, labels <span class="kw">in</span> dataloader:
+            preds = model(imgs.<span class="fn">to</span>(device)).<span class="fn">argmax</span>(dim=<span class="nm">1</span>).<span class="fn">cpu</span>()
+            all_preds.<span class="fn">extend</span>(preds.<span class="fn">numpy</span>())
+            all_labels.<span class="fn">extend</span>(labels.<span class="fn">numpy</span>())
+    <span class="fn">print</span>(<span class="fn">classification_report</span>(all_labels, all_preds))
+    <span class="kw">return</span> <span class="fn">confusion_matrix</span>(all_labels, all_preds)
+
+<span class="cm"># IoU untuk segmentasi</span>
+<span class="kw">def</span> <span class="fn">compute_miou</span>(pred_masks, gt_masks, num_classes):
+    ious = []
+    <span class="kw">for</span> cls <span class="kw">in</span> <span class="fn">range</span>(num_classes):
+        intersection = ((pred_masks == cls) & (gt_masks == cls)).<span class="fn">sum</span>().<span class="fn">item</span>()
+        union = ((pred_masks == cls) | (gt_masks == cls)).<span class="fn">sum</span>().<span class="fn">item</span>()
+        <span class="kw">if</span> union > <span class="nm">0</span>:
+            ious.<span class="fn">append</span>(intersection / union)
+    <span class="kw">return</span> np.<span class="fn">mean</span>(ious)</pre></div></div>
+<div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Latihan Fase 2</strong><ol style="margin:8px 0 0;padding-left:16px;"><li>Fine-tune EfficientNet-B0 pada dataset pilihanmu (Food-101, Flowers102 tersedia via torchvision)</li><li>Bandingkan feature extraction vs full fine-tuning — mana lebih baik dengan 1000 sampel training?</li><li>Tambahkan Albumentations augmentation pipeline dan lihat perubahan validation accuracy setelah 10 epoch</li><li>Plot confusion matrix dan identifikasi pasangan kelas yang paling sering salah diklasifikasikan</li></ol></div></div>
+</div><!-- /cv2f -->
+
+</section><!-- /cvfase2 -->

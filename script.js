@@ -45,6 +45,17 @@ var AIF_FASE_CONTAINERS = {
   'aif3':'aiffase3-container','aif4':'aiffase4-container','aif5':'aiffase5-container'
 };
 
+// ── Lazy-load (Computer Vision) ──────────────────────────────────────────────
+var CV_FASE_FILES = {
+  'cvi0':'topics/computer-vision/fase0.html', 'cvi1':'topics/computer-vision/fase1.html',
+  'cvi2':'topics/computer-vision/fase2.html', 'cvi3':'topics/computer-vision/fase3.html',
+  'cvi4':'topics/computer-vision/fase4.html', 'cvi5':'topics/computer-vision/fase5.html'
+};
+var CV_FASE_CONTAINERS = {
+  'cvi0':'cvfase0-container','cvi1':'cvfase1-container','cvi2':'cvfase2-container',
+  'cvi3':'cvfase3-container','cvi4':'cvfase4-container','cvi5':'cvfase5-container'
+};
+
 // ── Lazy-load (Language Model) ────────────────────────────────────────────────
 var LM_FASE_FILES = {
   'lmi1':'topics/language-model/fase1.html', 'lmi2':'topics/language-model/fase2.html',
@@ -63,8 +74,8 @@ function loadFase(faseId) {
   var files = (activeCurriculum === 'language-model') ? LM_FASE_FILES : FASE_FILES;
   var containers = (activeCurriculum === 'language-model') ? LM_FASE_CONTAINERS : FASE_CONTAINERS;
   // cek kedua map karena faseId bisa dari salah satu
-  var file = AIF_FASE_FILES[faseId] || MLOPS_FASE_FILES[faseId] || LM_FASE_FILES[faseId] || FASE_FILES[faseId];
-  var containerId = AIF_FASE_CONTAINERS[faseId] || MLOPS_FASE_CONTAINERS[faseId] || LM_FASE_CONTAINERS[faseId] || FASE_CONTAINERS[faseId];
+  var file = AIF_FASE_FILES[faseId] || MLOPS_FASE_FILES[faseId] || LM_FASE_FILES[faseId] || CV_FASE_FILES[faseId] || FASE_FILES[faseId];
+  var containerId = AIF_FASE_CONTAINERS[faseId] || MLOPS_FASE_CONTAINERS[faseId] || LM_FASE_CONTAINERS[faseId] || CV_FASE_CONTAINERS[faseId] || FASE_CONTAINERS[faseId];
   if (!file || !containerId) return Promise.resolve();
   var container = document.getElementById(containerId);
   if (!container) return Promise.resolve();
@@ -107,10 +118,11 @@ function openCurriculum(id) {
   var label = id === 'language-model' ? 'Language Model Fundamentals'
     : id === 'mlops' ? 'MLOps & Model Deployment'
     : id === 'ai-fundamentals' ? 'AI Fundamentals dari Nol'
+    : id === 'computer-vision' ? 'Computer Vision Mastery'
     : 'Agentic AI Mastery';
   enterCurriculum(id, label);
-  var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : id === 'ai-fundamentals' ? 'aif0' : 'i0';
-  var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : id === 'ai-fundamentals' ? 'aifi0' : 'fi0';
+  var firstFase = id === 'language-model' ? 'lmi1' : id === 'mlops' ? 'mlopsi1' : id === 'ai-fundamentals' ? 'aif0' : id === 'computer-vision' ? 'cvi0' : 'i0';
+  var startPage = id === 'language-model' ? 'lmfi1' : id === 'mlops' ? 'mlopsfi1' : id === 'ai-fundamentals' ? 'aifi0' : id === 'computer-vision' ? 'cvfi0' : 'fi0';
   loadFase(firstFase).then(function(){ goToPage(startPage); });
 }
 
@@ -284,6 +296,54 @@ function renderSidebar(curriculum) {
         ['mlops5e','5.5 MLOps Maturity & Checklist']
       ])
     ].join('');
+  } else if (curriculum === 'computer-vision') {
+    sc.innerHTML = [
+      '<div class="sidebar-topic-label">Computer Vision Mastery</div>',
+      sbPhase('cvi0','Fase 0 — Pengenalan CV','cvfi0',[
+        ['cv0a','0.1 Pengenalan Computer Vision']
+      ]),
+      sbPhase('cvi1','Fase 1 — Image Processing','cvfi1',[
+        ['cv1a','1.1 Representasi Gambar & Piksel'],
+        ['cv1b','1.2 Filter & Konvolusi Klasik'],
+        ['cv1c','1.3 Edge Detection'],
+        ['cv1d','1.4 Transformasi Geometris'],
+        ['cv1e','1.5 Color Spaces & Histograms']
+      ]),
+      sbPhase('cvi2','Fase 2 — Deep Learning CV','cvfi2',[
+        ['cv2a','2.1 CNN untuk Vision'],
+        ['cv2b','2.2 Transfer Learning'],
+        ['cv2c','2.3 Vision Transformer (ViT)'],
+        ['cv2d','2.4 Data Augmentation'],
+        ['cv2e','2.5 Loss Functions'],
+        ['cv2f','2.6 Model Evaluation']
+      ]),
+      sbPhase('cvi3','Fase 3 — Detection & Segmentation','cvfi3',[
+        ['cv3a','3.1 Object Detection Fundamentals'],
+        ['cv3b','3.2 YOLO Family'],
+        ['cv3c','3.3 Semantic Segmentation'],
+        ['cv3d','3.4 Instance Segmentation'],
+        ['cv3e','3.5 Keypoint & Pose Estimation']
+      ]),
+      sbPhase('cvi4','Fase 4 — Spesialisasi','cvfi4',[
+        ['cv4aa','4A.1 Model Optimization'],
+        ['cv4ab','4A.2 Quantization & TensorRT'],
+        ['cv4ac','4A.3 ONNX Deployment'],
+        ['cv4ad','4A.4 Edge Deployment'],
+        ['cv4ae','4A.5 Real-time Pipeline'],
+        ['cv4ba','4B.1 CLIP & VLM'],
+        ['cv4bb','4B.2 Diffusion Models'],
+        ['cv4bc','4B.3 Stable Diffusion'],
+        ['cv4bd','4B.4 Image Editing'],
+        ['cv4be','4B.5 Video Generation']
+      ]),
+      sbPhase('cvi5','Fase 5 — Production','cvfi5',[
+        ['cv5a','5.1 CV System Design'],
+        ['cv5b','5.2 Serving Vision Models'],
+        ['cv5c','5.3 Monitoring & Drift'],
+        ['cv5d','5.4 Anotasi & Active Learning'],
+        ['cv5e','5.5 Checklist CV Engineer']
+      ])
+    ].join('');
   } else {
     sc.innerHTML = [
       '<div class="sidebar-topic-label">Language Model Fundamentals</div>',
@@ -350,7 +410,7 @@ function renderSidebar(curriculum) {
     a.addEventListener('click', function(e){
       e.preventDefault();
       var id = a.getAttribute('href').replace('#','');
-      var allTopics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPICS : TOPICS;
+      var allTopics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPICS : activeCurriculum === 'computer-vision' ? CV_TOPICS : TOPICS;
       var idx = allTopics.indexOf(id);
       if (idx >= 0) goTo(idx);
       document.getElementById('sidebar').classList.remove('open');
@@ -503,6 +563,43 @@ var LM_PHASE_FIRST = {0:'lmhome', 6:'lmfi2', 12:'lmfi3', 17:'lmfi4', 24:'lmfi5'}
 var LM_PAGE_LABELS = {'lmhome':'Beranda LM','lmfi1':'Fase 1 — NLP Klasik','lmfi2':'Fase 2 — Neural Network','lmfi3':'Fase 3 — Transformer','lmfi4':'Fase 4 — LLM','lmfi5':'Fase 5 — Scaling & Produksi'};
 var LM_PHASE_INTRO_MAP = {'lmi1':'lmfi1','lmi2':'lmfi2','lmi3':'lmfi3','lmi4':'lmfi4','lmi5':'lmfi5'};
 
+// ── COMPUTER VISION Topics ────────────────────────────────────────────────────
+var CV_TOPICS = [
+  'cv0a',
+  'cv1a','cv1b','cv1c','cv1d','cv1e',
+  'cv2a','cv2b','cv2c','cv2d','cv2e','cv2f',
+  'cv3a','cv3b','cv3c','cv3d','cv3e',
+  'cv4aa','cv4ab','cv4ac','cv4ad','cv4ae',
+  'cv4ba','cv4bb','cv4bc','cv4bd','cv4be',
+  'cv5a','cv5b','cv5c','cv5d','cv5e'
+];
+var CV_TOPIC_LABELS = {
+  'cv0a':'0.1 Pengenalan Computer Vision',
+  'cv1a':'1.1 Representasi Gambar & Piksel','cv1b':'1.2 Filter & Konvolusi Klasik','cv1c':'1.3 Edge Detection','cv1d':'1.4 Transformasi Geometris','cv1e':'1.5 Color Spaces & Histograms',
+  'cv2a':'2.1 CNN untuk Vision','cv2b':'2.2 Transfer Learning & Fine-tuning','cv2c':'2.3 Vision Transformer (ViT)','cv2d':'2.4 Data Augmentation','cv2e':'2.5 Loss Functions untuk Vision','cv2f':'2.6 Model Evaluation & Metrics',
+  'cv3a':'3.1 Object Detection Fundamentals','cv3b':'3.2 YOLO Family','cv3c':'3.3 Semantic Segmentation','cv3d':'3.4 Instance Segmentation (Mask R-CNN)','cv3e':'3.5 Keypoint Detection & Pose Estimation',
+  'cv4aa':'4A.1 Model Optimization & Pruning','cv4ab':'4A.2 Quantization & TensorRT','cv4ac':'4A.3 ONNX & Cross-platform Deployment','cv4ad':'4A.4 Edge Deployment (Jetson, RPi)','cv4ae':'4A.5 Real-time Vision Pipeline',
+  'cv4ba':'4B.1 CLIP & Vision-Language Models','cv4bb':'4B.2 Diffusion Models Fundamentals','cv4bc':'4B.3 Stable Diffusion & Fine-tuning','cv4bd':'4B.4 Image Editing & Inpainting','cv4be':'4B.5 Video Generation & Temporal Models',
+  'cv5a':'5.1 End-to-end CV System Design','cv5b':'5.2 Serving Vision Models (Triton)','cv5c':'5.3 Monitoring & Drift Detection','cv5d':'5.4 Anotasi & Active Learning','cv5e':'5.5 Checklist CV Engineer'
+};
+var CV_PHASE_MAP = {
+  'cv0a':'cvi0',
+  'cv1a':'cvi1','cv1b':'cvi1','cv1c':'cvi1','cv1d':'cvi1','cv1e':'cvi1',
+  'cv2a':'cvi2','cv2b':'cvi2','cv2c':'cvi2','cv2d':'cvi2','cv2e':'cvi2','cv2f':'cvi2',
+  'cv3a':'cvi3','cv3b':'cvi3','cv3c':'cvi3','cv3d':'cvi3','cv3e':'cvi3',
+  'cv4aa':'cvi4','cv4ab':'cvi4','cv4ac':'cvi4','cv4ad':'cvi4','cv4ae':'cvi4',
+  'cv4ba':'cvi4','cv4bb':'cvi4','cv4bc':'cvi4','cv4bd':'cvi4','cv4be':'cvi4',
+  'cv5a':'cvi5','cv5b':'cvi5','cv5c':'cvi5','cv5d':'cvi5','cv5e':'cvi5'
+};
+var CV_PHASE_NUMS = {'cvi0':'0','cvi1':'1','cvi2':'2','cvi3':'3','cvi4':'4','cvi5':'5'};
+// PHASE_LAST: last global index before a phase boundary → page to go to
+// idx 0=cv0a(1 topik), 1-5=cv1(5), 6-11=cv2(6), 12-16=cv3(5), 17-26=cv4(10), 27-31=cv5(5)
+var CV_PHASE_LAST  = {0:'cvfi1', 5:'cvfi2', 11:'cvfi3', 16:'cvfi4', 26:'cvfi5'};
+var CV_PHASE_FIRST = {0:'cvhome', 1:'cvfi1', 6:'cvfi2', 12:'cvfi3', 17:'cvfi4', 27:'cvfi5'};
+var CV_PAGE_LABELS = {'cvhome':'Beranda CV','cvfi0':'Fase 0 — Pengenalan CV','cvfi1':'Fase 1 — Image Processing','cvfi2':'Fase 2 — Deep Learning CV','cvfi3':'Fase 3 — Detection & Segmentation','cvfi4':'Fase 4 — Spesialisasi','cvfi5':'Fase 5 — Production'};
+var CV_PHASE_INTRO_MAP = {'cvi0':'cvfi0','cvi1':'cvfi1','cvi2':'cvfi2','cvi3':'cvfi3','cvi4':'cvfi4','cvi5':'cvfi5'};
+var CV_PAGES = ['cvhome','cvfi0','cvfi1','cvfi2','cvfi3','cvfi4','cvfi5'];
+
 var currentIdx = 0;
 
 // ── Inject nav bars ───────────────────────────────────────────────────────────
@@ -514,6 +611,8 @@ function injectNavBars() {
     topics = MLOPS_TOPICS; phaseLastMap = MLOPS_PHASE_LAST; phaseFirstMap = MLOPS_PHASE_FIRST; pageLabels = MLOPS_PAGE_LABELS;
   } else if (activeCurriculum === 'ai-fundamentals') {
     topics = AIF_TOPICS; phaseLastMap = AIF_PHASE_LAST; phaseFirstMap = AIF_PHASE_FIRST; pageLabels = AIF_PAGE_LABELS;
+  } else if (activeCurriculum === 'computer-vision') {
+    topics = CV_TOPICS; phaseLastMap = CV_PHASE_LAST; phaseFirstMap = CV_PHASE_FIRST; pageLabels = CV_PAGE_LABELS;
   } else {
     topics = TOPICS; phaseLastMap = PHASE_LAST; phaseFirstMap = PHASE_FIRST; pageLabels = PAGE_LABELS;
   }
@@ -533,12 +632,12 @@ function injectNavBars() {
       nextLabel = pageLabels[nextPageId] || nextPageId;
       nextBtn = '<button class="tnbtn primary" onclick="goToPage(\''+nextPageId+'\')">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     } else {
-      nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : activeCurriculum === 'mlops' ? MLOPS_TOPIC_LABELS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
+      nextLabel = (activeCurriculum === 'language-model' ? LM_TOPIC_LABELS : activeCurriculum === 'mlops' ? MLOPS_TOPIC_LABELS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPIC_LABELS : activeCurriculum === 'computer-vision' ? CV_TOPIC_LABELS : TOPIC_LABELS)[topics[idx+1]] || '';
       nextBtn = '<button class="tnbtn primary next-btn-t" data-idx="'+idx+'">'+(t('nav.next')||'Selanjutnya →')+'</button>';
     }
 
     var prevBtn;
-    if (prevPageId === 'home' || prevPageId === 'lmhome' || prevPageId === 'mlopshome' || prevPageId === 'aifhome') {
+    if (prevPageId === 'home' || prevPageId === 'lmhome' || prevPageId === 'mlopshome' || prevPageId === 'aifhome' || prevPageId === 'cvhome') {
       prevBtn = '<button class="tnbtn" onclick="showLanding()">← '+(t('sidebar.back')||'Semua Topik')+'</button>';
     } else if (prevPageId) {
       prevBtn = '<button class="tnbtn" onclick="goToPage(\''+prevPageId+'\')">'+(t('nav.prev')||'← Sebelumnya')+'</button>';
@@ -566,12 +665,12 @@ var LM_PAGES = ['lmfi1','lmfi2','lmfi3','lmfi4','lmfi5'];
 var MLOPS_PAGES = ['mlopsfi1','mlopsfi2','mlopsfi3','mlopsfi4','mlopsfi5'];
 
 function hideAll() {
-  var allPageIds = AA_PAGES.concat(LM_PAGES).concat(MLOPS_PAGES).concat(AIF_PAGES);
+  var allPageIds = AA_PAGES.concat(LM_PAGES).concat(MLOPS_PAGES).concat(AIF_PAGES).concat(CV_PAGES);
   allPageIds.forEach(function(id){
     var el = document.getElementById(id);
     if (el) { el.classList.remove('page-home--active'); el.classList.remove('fase-intro--active'); }
   });
-  TOPICS.concat(LM_TOPICS).concat(MLOPS_TOPICS).concat(AIF_TOPICS).forEach(function(id){
+  TOPICS.concat(LM_TOPICS).concat(MLOPS_TOPICS).concat(AIF_TOPICS).concat(CV_TOPICS).forEach(function(id){
     var el = document.getElementById(id);
     if (el) el.classList.remove('sub--active');
   });
@@ -588,6 +687,7 @@ function goToPage(pageId, skipPush) {
   Object.keys(MLOPS_PHASE_INTRO_MAP).forEach(function(k){ if (MLOPS_PHASE_INTRO_MAP[k] === pageId) faseId = faseId || k; });
   Object.keys(LM_PHASE_INTRO_MAP).forEach(function(k){ if (LM_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
   Object.keys(AIF_PHASE_INTRO_MAP).forEach(function(k){ if (AIF_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
+  Object.keys(CV_PHASE_INTRO_MAP).forEach(function(k){ if (CV_PHASE_INTRO_MAP[k] === pageId) faseId = k; });
 
   if (faseId) {
     loadFase(faseId).then(function(){
@@ -621,10 +721,10 @@ function _showPage(pageId, skipPush) {
 
 // ── goTo ──────────────────────────────────────────────────────────────────────
 function goTo(idx, skipPush) {
-  var topics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPICS : TOPICS;
-  var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_MAP : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_MAP : PHASE_MAP;
-  var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : activeCurriculum === 'mlops' ? MLOPS_PHASE_NUMS : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_NUMS : PHASE_NUMS;
-  var phaseIntroMap = activeCurriculum === 'language-model' ? LM_PHASE_INTRO_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_INTRO_MAP : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_INTRO_MAP : PHASE_INTRO_MAP;
+  var topics = activeCurriculum === 'language-model' ? LM_TOPICS : activeCurriculum === 'mlops' ? MLOPS_TOPICS : activeCurriculum === 'ai-fundamentals' ? AIF_TOPICS : activeCurriculum === 'computer-vision' ? CV_TOPICS : TOPICS;
+  var phaseMap = activeCurriculum === 'language-model' ? LM_PHASE_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_MAP : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_MAP : activeCurriculum === 'computer-vision' ? CV_PHASE_MAP : PHASE_MAP;
+  var phaseNums = activeCurriculum === 'language-model' ? LM_PHASE_NUMS : activeCurriculum === 'mlops' ? MLOPS_PHASE_NUMS : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_NUMS : activeCurriculum === 'computer-vision' ? CV_PHASE_NUMS : PHASE_NUMS;
+  var phaseIntroMap = activeCurriculum === 'language-model' ? LM_PHASE_INTRO_MAP : activeCurriculum === 'mlops' ? MLOPS_PHASE_INTRO_MAP : activeCurriculum === 'ai-fundamentals' ? AIF_PHASE_INTRO_MAP : activeCurriculum === 'computer-vision' ? CV_PHASE_INTRO_MAP : PHASE_INTRO_MAP;
 
   if (idx < 0 || idx >= topics.length) return;
   var nextId = topics[idx];
@@ -695,6 +795,7 @@ function enterCurriculum(id, label) {
   var aaTopicIdx = TOPICS.indexOf(hash);
   var mlopsTopicIdx = MLOPS_TOPICS.indexOf(hash);
   var aifTopicIdx = AIF_TOPICS.indexOf(hash);
+  var cvTopicIdx = CV_TOPICS.indexOf(hash);
 
   if (!hash || hash === 'landing') {
     document.getElementById('landing').classList.add('landing--active');
@@ -708,6 +809,15 @@ function enterCurriculum(id, label) {
     var aifFaseId = null;
     Object.keys(AIF_PHASE_INTRO_MAP).forEach(function(k){ if (AIF_PHASE_INTRO_MAP[k]===hash) aifFaseId=k; });
     if (aifFaseId) loadFase(aifFaseId).then(function(){ goToPage(hash, true); });
+    else goToPage(hash, true);
+  } else if (cvTopicIdx >= 0) {
+    enterCurriculum('computer-vision','Computer Vision Mastery');
+    goTo(cvTopicIdx, true);
+  } else if (CV_PAGES.indexOf(hash) >= 0) {
+    enterCurriculum('computer-vision','Computer Vision Mastery');
+    var cvFaseId = null;
+    Object.keys(CV_PHASE_INTRO_MAP).forEach(function(k){ if (CV_PHASE_INTRO_MAP[k]===hash) cvFaseId=k; });
+    if (cvFaseId) loadFase(cvFaseId).then(function(){ goToPage(hash, true); });
     else goToPage(hash, true);
   } else if (lmTopicIdx >= 0) {
     enterCurriculum('language-model','Language Model Fundamentals');
@@ -744,10 +854,13 @@ function enterCurriculum(id, label) {
   window.addEventListener('popstate', function() {
     var h = location.hash.replace('#','');
     if (!h || h === 'landing') { showLanding(); return; }
-    var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h), aifIdx = AIF_TOPICS.indexOf(h);
+    var lmIdx = LM_TOPICS.indexOf(h), aaIdx = TOPICS.indexOf(h), mlIdx = MLOPS_TOPICS.indexOf(h), aifIdx = AIF_TOPICS.indexOf(h), cvIdx = CV_TOPICS.indexOf(h);
     if (aifIdx >= 0) {
       if (activeCurriculum !== 'ai-fundamentals') enterCurriculum('ai-fundamentals','AI Fundamentals dari Nol');
       goTo(aifIdx, true);
+    } else if (cvIdx >= 0) {
+      if (activeCurriculum !== 'computer-vision') enterCurriculum('computer-vision','Computer Vision Mastery');
+      goTo(cvIdx, true);
     } else if (lmIdx >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');
       goTo(lmIdx, true);
@@ -759,6 +872,9 @@ function enterCurriculum(id, label) {
       goTo(mlIdx, true);
     } else if (AIF_PAGES.indexOf(h) >= 0) {
       if (activeCurriculum !== 'ai-fundamentals') enterCurriculum('ai-fundamentals','AI Fundamentals dari Nol');
+      goToPage(h, true);
+    } else if (CV_PAGES.indexOf(h) >= 0) {
+      if (activeCurriculum !== 'computer-vision') enterCurriculum('computer-vision','Computer Vision Mastery');
       goToPage(h, true);
     } else if (LM_PAGES.indexOf(h) >= 0) {
       if (activeCurriculum !== 'language-model') enterCurriculum('language-model','Language Model Fundamentals');

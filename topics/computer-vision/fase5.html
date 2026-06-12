@@ -1,0 +1,358 @@
+<section class="cs p3" id="cvfase5">
+<div class="fase-intro" id="cvfi5">
+<div class="sh">
+  <div class="sbadge">05</div>
+  <div>
+    <div class="stitle">Fase 5 — Production &amp; Deployment</div>
+    <div class="sdesc">End-to-end CV system design untuk skala produksi: serving model di Triton, monitoring data drift, strategi anotasi dan active learning untuk menjaga model tetap segar seiring waktu.</div>
+    <div class="smeta"><span class="mc">Minggu 13–15</span><span class="mc">Triton + Prometheus + Label Studio</span><span class="mc">Prerequisite: Fase 4</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv5a">CV System Design</a>
+  <a class="snavi" href="#cv5b">Serving Vision Models</a>
+  <a class="snavi" href="#cv5c">Monitoring &amp; Drift</a>
+  <a class="snavi" href="#cv5d">Anotasi &amp; Active Learning</a>
+  <a class="snavi" href="#cv5e">Checklist CV Engineer</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 13–15</div>
+      <div class="topic-nav-title">Mulai dari: 5.1 CV System Design</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('cvfi4')">← Fase 4</button>
+      <button class="tnbtn primary" onclick="goTo(27)">Mulai Fase 5 →</button>
+    </div>
+  </div>
+</div><!-- /cvfi5 -->
+
+<!-- 5A -->
+<div class="sub" id="cv5a">
+<div class="subtit"><span class="ac">5.1</span> CV System Design <span class="subid">// dari gambar input ke business outcome</span></div>
+<div class="prose">
+<p>Membangun sistem CV production bukan hanya tentang memilih model yang terbaik — ini tentang merancang sistem yang reliable, scalable, dan mudah di-maintain. Interview system design untuk CV engineer akan menanyakan pertanyaan seperti: "Desain sistem deteksi anomali untuk pabrik dengan 50 kamera." Kamu harus tahu trade-off di setiap layer.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Layer sistem CV</h4>
+<ol style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Ingestion</strong>: kamera stream (RTSP), video upload, atau batch images. Pertimbangkan bandwidth, latency, storage.</li>
+<li><strong>Preprocessing</strong>: resize, normalize, format conversion. Bisa di CPU atau GPU (DALI, torchvision CUDA).</li>
+<li><strong>Inference</strong>: single model atau ensemble. Batch inference untuk throughput vs streaming untuk latency.</li>
+<li><strong>Post-processing</strong>: NMS, filtering, tracking (DeepSORT), temporal smoothing.</li>
+<li><strong>Storage</strong>: raw images, predictions, metadata. Object storage (S3/GCS) + time-series DB untuk metrics.</li>
+<li><strong>Downstream</strong>: alerting, dashboard, API ke sistem lain, retraining pipeline.</li>
+</ol>
+</div>
+<div class="gc"><h4>Trade-off kritis</h4>
+<p><strong>Latency vs throughput</strong>: batch size tinggi = throughput tinggi tapi latency lebih lama. Untuk real-time alert: batch=1. Untuk analytics pipeline: batch=32–64.<br><br><strong>Accuracy vs speed</strong>: model besar lebih akurat tapi lebih lambat. Gunakan cascaded approach: model cepat dulu untuk filter, model besar hanya untuk confident candidates.<br><br><strong>Cloud vs edge</strong>: edge untuk privasi dan low-latency, cloud untuk heavy processing dan storage. Hybrid: pre-filter di edge, kirim ke cloud hanya event penting.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">cv_system_design.py</span></div>
+<div class="cbb"><pre><span class="cm"># Cascaded detection: fast model untuk filter, akurat untuk classify</span>
+<span class="kw">class</span> <span class="fn">CascadeDetector</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+        self.fast  = <span class="fn">YOLO</span>(<span class="st">"yolov8n.engine"</span>)  <span class="cm"># nano TRT — kecepatan</span>
+        self.accu  = <span class="fn">YOLO</span>(<span class="st">"yolov8x.engine"</span>)  <span class="cm"># xlarge TRT — akurasi</span>
+        self.conf_thresh = <span class="nm">0.3</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, frame):
+        <span class="cm"># Stage 1: fast model — proses semua frame</span>
+        fast_results = self.fast.<span class="fn">predict</span>(frame, conf=self.conf_thresh, verbose=<span class="kw">False</span>)
+        <span class="kw">if not</span> fast_results[<span class="nm">0</span>].boxes: <span class="kw">return</span> []
+        <span class="cm"># Stage 2: only if something detected — crop dan refine</span>
+        crops = [frame[<span class="fn">int</span>(b[<span class="nm">1</span>]):<span class="fn">int</span>(b[<span class="nm">3</span>]),<span class="fn">int</span>(b[<span class="nm">0</span>]):<span class="fn">int</span>(b[<span class="nm">2</span>])] <span class="kw">for</span> b <span class="kw">in</span> fast_results[<span class="nm">0</span>].boxes.xyxy]
+        precise = [self.accu.<span class="fn">predict</span>(c, conf=<span class="nm">0.5</span>, verbose=<span class="kw">False</span>) <span class="kw">for</span> c <span class="kw">in</span> crops]
+        <span class="kw">return</span> precise
+
+<span class="cm"># Multi-camera stream management</span>
+<span class="kw">import</span> asyncio
+
+<span class="kw">async def</span> <span class="fn">process_camera</span>(cam_id, rtsp_url, detector, results_queue):
+    <span class="kw">import</span> cv2
+    cap = cv2.<span class="fn">VideoCapture</span>(rtsp_url)
+    <span class="kw">while True</span>:
+        ret, frame = cap.<span class="fn">read</span>()
+        <span class="kw">if not</span> ret: <span class="kw">break</span>
+        detections = detector.<span class="fn">predict</span>(frame)
+        <span class="kw">if</span> detections:
+            <span class="kw">await</span> results_queue.<span class="fn">put</span>({<span class="st">'cam'</span>: cam_id, <span class="st">'detections'</span>: detections})
+        <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nm">0</span>)  <span class="cm"># yield to other coroutines</span></pre></div></div>
+</div><!-- /cv5a -->
+
+<div class="divider"></div>
+
+<!-- 5B -->
+<div class="sub" id="cv5b">
+<div class="subtit"><span class="ac">5.2</span> Serving Vision Models — Triton Inference Server <span class="subid">// GPU utilization maksimal</span></div>
+<div class="prose">
+<p>NVIDIA Triton Inference Server adalah platform serving model yang dirancang khusus untuk AI workloads. Mendukung PyTorch, TensorRT, ONNX, TensorFlow, Python models, dan custom backends dalam satu server. Dynamic batching, model concurrency, dan pipeline orchestration out-of-the-box.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Fitur kunci Triton</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Dynamic batching</strong>: auto-group incoming requests untuk maximize GPU utilization</li>
+<li><strong>Model concurrency</strong>: jalankan beberapa instance model secara paralel</li>
+<li><strong>Ensemble pipeline</strong>: chain beberapa model (preprocessor → detector → classifier) dalam satu request</li>
+<li><strong>Model repository</strong>: structure folder dengan config.pbtxt untuk setiap model</li>
+<li><strong>gRPC + HTTP</strong>: client library tersedia untuk Python, C++, Java</li>
+</ul>
+</div>
+<div class="gc"><h4>BentoML sebagai alternatif</h4>
+<p>Untuk proyek yang tidak butuh multi-GPU complexity, <strong>BentoML</strong> lebih mudah di-setup: dekorasi class dengan <code>@bentoml.service</code>, define endpoint dengan <code>@bentoml.api</code>, container-ready dengan <code>bentoml containerize</code>. Cocok untuk startup atau tim kecil. Triton untuk skala enterprise dengan SLA ketat dan traffic tinggi.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">triton_client.py</span></div>
+<div class="cbb"><pre><span class="cm"># Triton model repository structure:</span>
+<span class="cm"># models/</span>
+<span class="cm">#   yolov8n/</span>
+<span class="cm">#     config.pbtxt</span>
+<span class="cm">#     1/</span>
+<span class="cm">#       model.onnx  (atau model.plan untuk TensorRT)</span>
+
+<span class="cm"># config.pbtxt minimal untuk ONNX model</span>
+CONFIG = <span class="st">"""
+name: "yolov8n"
+platform: "onnxruntime_onnx"
+max_batch_size: 32
+input [{ name: "images" data_type: TYPE_FP32 dims: [3, 640, 640] }]
+output [{ name: "output0" data_type: TYPE_FP32 dims: [-1, -1] }]
+dynamic_batching { max_queue_delay_microseconds: 100 preferred_batch_size: [8, 16, 32] }
+instance_group [{ count: 2 kind: KIND_GPU }]
+"""</span>
+
+<span class="cm"># Python client</span>
+<span class="kw">import</span> tritonclient.grpc <span class="kw">as</span> grpcclient
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+client = grpcclient.<span class="fn">InferenceServerClient</span>(url=<span class="st">"localhost:8001"</span>)
+
+<span class="kw">def</span> <span class="fn">triton_detect</span>(image_np):
+    <span class="cm"># Preprocess: resize + normalize</span>
+    inp = grpcclient.<span class="fn">InferInput</span>(<span class="st">"images"</span>, image_np.shape, <span class="st">"FP32"</span>)
+    inp.<span class="fn">set_data_from_numpy</span>(image_np)
+    output = grpcclient.<span class="fn">InferRequestedOutput</span>(<span class="st">"output0"</span>)
+    result = client.<span class="fn">infer</span>(<span class="st">"yolov8n"</span>, inputs=[inp], outputs=[output])
+    <span class="kw">return</span> result.<span class="fn">as_numpy</span>(<span class="st">"output0"</span>)
+
+<span class="cm"># Async batch client untuk throughput test</span>
+<span class="kw">import</span> asyncio
+<span class="kw">import</span> tritonclient.grpc.aio <span class="kw">as</span> grpcclient_async
+
+<span class="kw">async def</span> <span class="fn">load_test</span>(n_requests=<span class="nm">1000</span>):
+    <span class="kw">async with</span> grpcclient_async.<span class="fn">InferenceServerClient</span>(<span class="st">"localhost:8001"</span>) <span class="kw">as</span> ac:
+        dummy = np.<span class="fn">random</span>.<span class="fn">rand</span>(<span class="nm">1</span>,<span class="nm">3</span>,<span class="nm">640</span>,<span class="nm">640</span>).<span class="fn">astype</span>(np.float32)
+        tasks = [<span class="fn">triton_detect_async</span>(ac, dummy) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_requests)]
+        results = <span class="kw">await</span> asyncio.<span class="fn">gather</span>(*tasks)</pre></div></div>
+</div><!-- /cv5b -->
+
+<div class="divider"></div>
+
+<!-- 5C -->
+<div class="sub" id="cv5c">
+<div class="subtit"><span class="ac">5.3</span> Monitoring &amp; Data Drift Detection <span class="subid">// model yang bagus hari ini bisa jelek besok</span></div>
+<div class="prose">
+<p>Model CV production bisa degradasi tanpa terlihat. Kamera kotor, perubahan pencahayaan musiman, perubahan produk, atau distribusi traffic yang bergeser — semua bisa menyebabkan penurunan performa tanpa error apapun di sistem. Monitoring yang baik mendeteksi ini sebelum business impact terasa.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Apa yang dimonitor</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Infrastructure</strong>: latency p50/p95/p99, throughput req/s, GPU utilization, memory usage, error rate</li>
+<li><strong>Model performance</strong>: confidence score distribution, class distribution prediction, bounding box size distribution</li>
+<li><strong>Data quality</strong>: image brightness, blur level, aspect ratio — perubahan signifikan = potensi pipeline issue</li>
+<li><strong>Business metrics</strong>: false positive rate di downstream (jika ada human review loop), precision@threshold</li>
+</ul>
+</div>
+<div class="gc"><h4>Drift detection strategies</h4>
+<p><strong>Statistical tests</strong>: KS test atau chi-square untuk distribusi fitur antara training data dan production data. Alat: Evidently AI, Arize, WhyLabs.<br><br><strong>Embedding drift</strong>: bandingkan distribution embedding visual antara window waktu berbeda menggunakan cosine similarity atau MMD. Paling robust untuk image data.<br><br><strong>Shadow model</strong>: jalankan model baru paralel dengan production, bandingkan prediction — deteksi regresi sebelum deploy.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">cv_monitoring.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+<span class="kw">from</span> prometheus_client <span class="kw">import</span> Histogram, Counter, Gauge, start_http_server
+
+<span class="cm"># Prometheus metrics untuk CV service</span>
+INFERENCE_LATENCY = <span class="fn">Histogram</span>(<span class="st">'cv_inference_latency_ms'</span>, <span class="st">'Inference latency in ms'</span>,
+                               buckets=[<span class="nm">5</span>,<span class="nm">10</span>,<span class="nm">20</span>,<span class="nm">50</span>,<span class="nm">100</span>,<span class="nm">200</span>,<span class="nm">500</span>])
+DETECTIONS_COUNT  = <span class="fn">Counter</span>(<span class="st">'cv_detections_total'</span>, <span class="st">'Total detections'</span>, [<span class="st">'class_name'</span>])
+CONF_SCORE        = <span class="fn">Histogram</span>(<span class="st">'cv_confidence_score'</span>, <span class="st">'Detection confidence',
+                               buckets=[.3,.4,.5,.6,.7,.8,.9,.95,.99])</span>
+IMAGE_BRIGHTNESS  = <span class="fn">Gauge</span>(<span class="st">'cv_image_mean_brightness'</span>, <span class="st">'Mean pixel brightness'</span>)
+
+<span class="cm"># Drift detector berbasis statistik</span>
+<span class="kw">class</span> <span class="fn">ConfidenceDriftDetector</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, reference_scores: list, alpha=<span class="nm">0.01</span>):
+        self.reference = np.<span class="fn">array</span>(reference_scores)
+        self.alpha = alpha
+        self.window = []
+        self.window_size = <span class="nm">500</span>
+
+    <span class="kw">def</span> <span class="fn">update</span>(self, score: float) -> <span class="fn">dict</span>:
+        self.window.<span class="fn">append</span>(score)
+        <span class="kw">if</span> <span class="fn">len</span>(self.window) > self.window_size:
+            self.window.<span class="fn">pop</span>(<span class="nm">0</span>)
+        <span class="kw">if</span> <span class="fn">len</span>(self.window) < <span class="nm">100</span>: <span class="kw">return</span> {<span class="st">'drift'</span>: <span class="kw">False</span>}
+        ks_stat, p_val = stats.<span class="fn">ks_2samp</span>(self.reference, np.<span class="fn">array</span>(self.window))
+        <span class="kw">return</span> {<span class="st">'drift'</span>: p_val < self.alpha, <span class="st">'p_value'</span>: p_val, <span class="st">'ks_stat'</span>: ks_stat}
+
+<span class="cm"># Image quality check sebelum inference</span>
+<span class="kw">def</span> <span class="fn">check_image_quality</span>(img_np) -> <span class="fn">dict</span>:
+    brightness = img_np.<span class="fn">mean</span>()
+    blur_var   = cv2.<span class="fn">Laplacian</span>(cv2.<span class="fn">cvtColor</span>(img_np, cv2.COLOR_BGR2GRAY), cv2.CV_64F).<span class="fn">var</span>()
+    IMAGE_BRIGHTNESS.<span class="fn">set</span>(brightness)
+    <span class="kw">return</span> {
+        <span class="st">'ok'</span>: brightness > <span class="nm">30</span> <span class="kw">and</span> blur_var > <span class="nm">100</span>,
+        <span class="st">'brightness'</span>: brightness,
+        <span class="st">'sharpness'</span>: blur_var,
+        <span class="st">'issues'</span>: [
+            <span class="st">'too dark'</span> <span class="kw">if</span> brightness < <span class="nm">30</span> <span class="kw">else</span> <span class="kw">None</span>,
+            <span class="st">'too blurry'</span> <span class="kw">if</span> blur_var < <span class="nm">100</span> <span class="kw">else</span> <span class="kw">None</span>
+        ]
+    }</pre></div></div>
+</div><!-- /cv5c -->
+
+<div class="divider"></div>
+
+<!-- 5D -->
+<div class="sub" id="cv5d">
+<div class="subtit"><span class="ac">5.4</span> Anotasi &amp; Active Learning <span class="subid">// data flywheel untuk model yang terus membaik</span></div>
+<div class="prose">
+<p>Model yang di-deploy menghadapi distribusi data baru yang terus berubah. Untuk mempertahankan performa, perlu retraining — tapi annotate semua data baru mahal. Active learning memilih sampel paling informatif untuk dianotasi: maximal improvement dengan minimal labeling cost.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Pipeline active learning untuk CV</h4>
+<ol style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Collect</strong>: simpan sampel production yang menarik (confidence rendah, kelas langka, edge case)</li>
+<li><strong>Score</strong>: hitung uncertainty score tiap sampel — confidence threshold, entropy, atau committee disagreement</li>
+<li><strong>Sample</strong>: pilih N sampel tertinggi uncertainty + diversity sampling</li>
+<li><strong>Annotate</strong>: tampilkan ke annotator, prioritaskan yang model paling tidak yakin</li>
+<li><strong>Retrain</strong>: tambahkan anotasi baru ke training set, fine-tune model</li>
+<li><strong>Deploy</strong>: eval dulu di holdout set sebelum ganti model production</li>
+</ol>
+</div>
+<div class="gc"><h4>Tools anotasi</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Label Studio</strong>: open-source, mendukung image, video, audio, text. Self-hostable.</li>
+<li><strong>Roboflow</strong>: platform lengkap: anotasi + augmentasi + export ke berbagai format (YOLO, COCO, Pascal VOC)</li>
+<li><strong>CVAT</strong>: open-source, dari Intel, sangat powerful untuk detection dan segmentation</li>
+<li><strong>Scale AI / Labelbox</strong>: enterprise, managed annotation services dengan QA</li>
+<li><strong>SAM-assisted annotation</strong>: gunakan SAM untuk auto-mask suggestion — annotator hanya konfirmasi, bukan gambar manual</li>
+</ul>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">active_learning.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans
+
+<span class="cm"># Uncertainty sampling: pilih sampel dengan confidence paling rendah</span>
+<span class="kw">def</span> <span class="fn">uncertainty_score</span>(detections):
+    <span class="st">"""Aggregate uncertainty dari semua deteksi dalam satu gambar"""</span>
+    <span class="kw">if not</span> detections: <span class="kw">return</span> <span class="nm">1.0</span>  <span class="cm"># no detection = very uncertain</span>
+    confs = [d[<span class="st">'confidence'</span>] <span class="kw">for</span> d <span class="kw">in</span> detections]
+    <span class="kw">return</span> <span class="nm">1.0</span> - np.<span class="fn">mean</span>(confs)
+
+<span class="cm"># Core-set sampling: maximize coverage via clustering</span>
+<span class="kw">def</span> <span class="fn">coreset_sample</span>(embeddings: np.ndarray, n_samples: <span class="fn">int</span>) -> list:
+    <span class="st">"""Pilih diverse subset dari kandidat menggunakan k-means clustering"""</span>
+    kmeans = <span class="fn">KMeans</span>(n_clusters=n_samples, random_state=<span class="nm">42</span>)
+    kmeans.<span class="fn">fit</span>(embeddings)
+    selected = []
+    <span class="kw">for</span> center <span class="kw">in</span> kmeans.cluster_centers_:
+        dists = np.<span class="fn">linalg</span>.<span class="fn">norm</span>(embeddings - center, axis=<span class="nm">1</span>)
+        selected.<span class="fn">append</span>(<span class="fn">int</span>(dists.<span class="fn">argmin</span>()))
+    <span class="kw">return</span> selected
+
+<span class="cm"># SAM-assisted annotation: auto-generate mask proposals</span>
+<span class="kw">from</span> segment_anything <span class="kw">import</span> SamPredictor, sam_model_registry
+<span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+
+<span class="kw">def</span> <span class="fn">auto_annotate</span>(image, detector, sam_predictor):
+    <span class="st">"""Generate detection + mask proposals untuk human review"""</span>
+    det_results = detector.<span class="fn">predict</span>(image, conf=<span class="nm">0.3</span>, verbose=<span class="kw">False</span>)[<span class="nm">0</span>]
+    sam_predictor.<span class="fn">set_image</span>(image)
+    proposals = []
+    <span class="kw">for</span> box, conf, cls <span class="kw">in</span> <span class="fn">zip</span>(det_results.boxes.xyxy, det_results.boxes.conf, det_results.boxes.cls):
+        masks, scores, _ = sam_predictor.<span class="fn">predict</span>(box=box.<span class="fn">cpu</span>().<span class="fn">numpy</span>(), multimask_output=<span class="kw">False</span>)
+        proposals.<span class="fn">append</span>({<span class="st">'box'</span>: box.<span class="fn">tolist</span>(), <span class="st">'class'</span>: <span class="fn">int</span>(cls), <span class="st">'confidence'</span>: <span class="fn">float</span>(conf), <span class="st">'mask'</span>: masks[<span class="nm">0</span>]})
+    <span class="kw">return</span> proposals  <span class="cm"># kirim ke annotation platform untuk review</span></pre></div></div>
+</div><!-- /cv5d -->
+
+<div class="divider"></div>
+
+<!-- 5E — checklist, isVeryLast -->
+<div class="sub" id="cv5e">
+<div class="subtit"><span class="ac">5.5</span> Checklist CV Engineer <span class="subid">// semua yang harus kamu kuasai</span></div>
+<div class="prose">
+<p>Ini adalah checklist komprehensif kemampuan yang diharapkan dari seorang CV Engineer yang siap production. Review ini secara jujur — area mana yang masih perlu penguatan?</p>
+</div>
+
+<div class="cc"><h3>Image Processing &amp; Fondasi</h3>
+<ul class="cl">
+  <li>Representasi gambar sebagai NumPy array, manipulasi channel BGR/RGB/HSV</li>
+  <li>Implementasi filter konvolusi manual dengan numpy (tanpa library CV)</li>
+  <li>Canny edge detection, transformasi geometris, histogram equalization</li>
+  <li>Desain augmentasi pipeline dengan Albumentations untuk classification dan detection</li>
+</ul>
+</div>
+
+<div class="cc"><h3>Deep Learning CV</h3>
+<ul class="cl">
+  <li>Implementasi CNN dengan BatchNorm, skip connections, dan AdaptiveAvgPool dari scratch</li>
+  <li>Fine-tune pretrained model (ResNet, EfficientNet, ViT) dengan layer-wise learning rate</li>
+  <li>Implementasi Focal Loss dan Dice Loss untuk imbalanced dataset</li>
+  <li>Evaluasi model: mAP untuk detection, mIoU untuk segmentation, confusion matrix</li>
+</ul>
+</div>
+
+<div class="cc"><h3>Detection &amp; Segmentation</h3>
+<ul class="cl">
+  <li>Training YOLOv8/v11 pada dataset custom, anotasi dengan LabelImg atau Roboflow</li>
+  <li>Implementasi dan debug pipeline NMS secara manual</li>
+  <li>Semantic segmentation dengan U-Net, evaluasi mIoU</li>
+  <li>Instance segmentation dengan YOLO-seg, penggunaan SAM untuk prompt-based segmentation</li>
+  <li>Pose estimation dengan keypoint visualization dan skeleton overlay</li>
+</ul>
+</div>
+
+<div class="cc"><h3>Spesialisasi &amp; Production</h3>
+<ul class="cl">
+  <li>Export model ke ONNX, verifikasi output konsisten, inference dengan ONNX Runtime</li>
+  <li>Quantization INT8 atau FP16, benchmark latency sebelum dan sesudah</li>
+  <li>Deploy ke edge device (Jetson atau RPi), benchmark FPS real-world</li>
+  <li>Serve model dengan Triton atau BentoML, konfigurasi dynamic batching</li>
+  <li>Setup monitoring Prometheus + Grafana untuk latency dan confidence drift</li>
+  <li>Implementasi active learning pipeline dengan uncertainty sampling</li>
+  <li>Anotasi menggunakan Label Studio atau CVAT, export ke format YOLO/COCO</li>
+</ul>
+</div>
+
+<div class="cc"><h3>Generative CV (Opsional tapi direkomendasikan)</h3>
+<ul class="cl">
+  <li>Zero-shot classification dengan CLIP, image-text similarity search</li>
+  <li>Generate gambar dengan Stable Diffusion, eksperimen dengan CFG scale dan step count</li>
+  <li>Fine-tune SD dengan LoRA pada custom dataset (5–30 gambar)</li>
+  <li>Inpainting dan image editing dengan SD pipeline</li>
+  <li>Generate video pendek dengan AnimateDiff atau CogVideoX</li>
+</ul>
+</div>
+
+<div class="topic-nav" style="margin-top:32px;">
+  <div class="topic-nav-info">
+    <div class="topic-nav-counter">Selesai! Kurikulum Computer Vision</div>
+    <div class="topic-nav-title">32 topik · 6 fase · ~15 minggu</div>
+  </div>
+  <div class="topic-nav-btns">
+    <button class="tnbtn" onclick="goToPage('cvfi4')">← Fase 4</button>
+    <button class="tnbtn primary" onclick="showLanding()">Kembali ke Semua Topik</button>
+  </div>
+</div>
+
+</div><!-- /cv5e -->
+
+</section><!-- /cvfase5 -->

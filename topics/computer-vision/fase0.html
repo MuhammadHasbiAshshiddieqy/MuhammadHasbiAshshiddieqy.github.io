@@ -1,0 +1,78 @@
+<section class="cs p0" id="cvfase0">
+<div class="fase-intro" id="cvfi0">
+<div class="sh">
+  <div class="sbadge">00</div>
+  <div>
+    <div class="stitle">Fase 0 — Pengenalan Computer Vision</div>
+    <div class="sdesc">Apa itu Computer Vision, mengapa ini adalah salah satu bidang AI yang paling berdampak, dan peta jalan pembelajaran dari piksel sederhana hingga sistem vision production-grade.</div>
+    <div class="smeta"><span class="mc">30 Menit</span><span class="mc">Konseptual</span><span class="mc">Tidak butuh kode</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv0a">Pengenalan CV</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">1 topik · 30 menit</div>
+      <div class="topic-nav-title">Mulai dari: 0.1 Pengenalan Computer Vision</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="showLanding()">← Beranda</button>
+      <button class="tnbtn primary" onclick="goTo(0)">Mulai Fase 0 →</button>
+    </div>
+  </div>
+</div><!-- /cvfi0 -->
+
+<!-- 0A -->
+<div class="sub" id="cv0a">
+<div class="subtit"><span class="ac">0.1</span> Pengenalan Computer Vision <span class="subid">// dari piksel ke pemahaman</span></div>
+<div class="prose">
+<p>Computer Vision (CV) adalah bidang AI yang memungkinkan komputer untuk <em>memahami</em> konten visual — gambar, video, dan kamera secara real-time. Bukan sekadar menyimpan piksel, tapi menginterpretasikan: "ini anjing", "mobil di kiri berjalan 60 km/h", "sel tumor terdeteksi di koordinat ini".</p>
+<p>CV adalah salah satu pencapaian terbesar AI modern. Dalam 10 tahun terakhir, akurasi pengenalan gambar melampaui kemampuan manusia di beberapa benchmark. Aplikasinya ada di mana-mana: kamera HP, mobil otonom, diagnosa medis, inspeksi pabrik, hingga AR/VR.</p>
+</div>
+
+<div class="grid2">
+<div class="gc"><h4>Mengapa CV sulit secara historis?</h4>
+<p>Manusia bisa mengenali wajah dari sudut berbeda, cahaya berbeda, dan sebagian tertutup — secara instan. Komputer harus belajar ini dari data. Tantangan utama: <strong>variasi intra-class</strong> (anjing bermacam bentuk), <strong>inter-class similarity</strong> (serigala vs husky), <strong>occlusion</strong> (objek tertutup), dan <strong>viewpoint variation</strong>. Pre-deep learning, pendekatan hand-crafted features (SIFT, HOG) efektif tapi terbatas.</p>
+</div>
+<div class="gc"><h4>Revolusi Deep Learning untuk CV</h4>
+<p>2012 adalah titik balik: AlexNet menang ImageNet dengan margin besar menggunakan CNN. Sejak itu akurasi terus meningkat pesat. 2020: Vision Transformer (ViT) menunjukkan bahwa arsitektur Transformer yang sukses di NLP juga bekerja untuk vision. 2021–2024: CLIP, DALL-E, Stable Diffusion, SAM — model generatif dan multimodal mendefinisikan ulang apa yang mungkin.</p>
+</div>
+<div class="gc"><h4>Task utama dalam CV</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>Classification</strong> — "gambar ini berisi apa?"</li>
+<li><strong>Detection</strong> — "di mana objek X berada?" (bounding box)</li>
+<li><strong>Segmentation</strong> — "piksel mana yang merupakan objek X?"</li>
+<li><strong>Pose Estimation</strong> — "di mana sendi-sendi tubuh?"</li>
+<li><strong>Generation</strong> — "buat gambar yang menggambarkan X"</li>
+<li><strong>Tracking</strong> — "ikuti objek ini lintas frame video"</li>
+</ul>
+</div>
+<div class="gc"><h4>Stack teknologi CV modern</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>PyTorch</strong> — framework utama riset & produksi</li>
+<li><strong>OpenCV</strong> — image processing, preprocessing, classical CV</li>
+<li><strong>torchvision</strong> — datasets, transforms, pretrained models</li>
+<li><strong>Hugging Face</strong> — pretrained vision models (ViT, CLIP, SAM)</li>
+<li><strong>ONNX / TensorRT</strong> — deployment & optimasi</li>
+<li><strong>Albumentations</strong> — augmentasi data cepat</li>
+</ul>
+</div>
+</div>
+
+<div class="cc"><h3>Peta kurikulum ini</h3>
+<div class="fsteps">
+  <div class="fstep"><div class="fsn">1</div><div class="fst">Image Processing Klasik</div><div class="fsd">Fondasi: piksel, filter, konvolusi manual, edge detection, transformasi geometris. Tanpa ini, model deep learning adalah "black box".</div></div>
+  <div class="fstep"><div class="fsn">2</div><div class="fst">Deep Learning untuk CV</div><div class="fsd">CNN dari scratch, transfer learning, Vision Transformer, augmentasi data, loss functions, dan evaluasi model.</div></div>
+  <div class="fstep"><div class="fsn">3</div><div class="fst">Detection & Segmentation</div><div class="fsd">YOLO untuk real-time detection, semantic segmentation, Mask R-CNN untuk instance segmentation, dan pose estimation.</div></div>
+  <div class="fstep"><div class="fsn">4A</div><div class="fst">Vision Systems (Jalur Produksi)</div><div class="fsd">Optimasi model, quantization, ONNX, edge deployment di Jetson/RPi, real-time pipeline production-grade.</div></div>
+  <div class="fstep"><div class="fsn">4B</div><div class="fst">Generative CV (Jalur Kreatif)</div><div class="fsd">CLIP, diffusion models, Stable Diffusion fine-tuning, image editing, dan video generation.</div></div>
+  <div class="fstep"><div class="fsn">5</div><div class="fst">Production & Deployment</div><div class="fsd">End-to-end system design, serving dengan Triton, monitoring drift, anotasi & active learning.</div></div>
+</div>
+</div>
+
+<div class="callout info"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><div class="ctxt"><strong>Prerequisites yang disarankan</strong>Kurikulum ini paling efektif jika sudah menyelesaikan <strong>AI Fundamentals Fase 3 (CNN)</strong> — kamu sudah punya intuisi konvolusi dan backpropagation. Belum? Tidak masalah — Fase 1 dan 2 di sini akan membangun fondasi yang diperlukan. Yang dibutuhkan: Python, NumPy dasar, dan familiar dengan konsep array multidimensi.</div></div>
+
+</div><!-- /cv0a -->
+
+</section><!-- /cvfase0 -->
