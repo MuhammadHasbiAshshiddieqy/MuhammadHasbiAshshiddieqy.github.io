@@ -1,0 +1,448 @@
+<section class="cs p3" id="cvfase4a">
+<div class="fase-intro" id="cvfi4a">
+<div class="sh">
+  <div class="sbadge">04</div>
+  <div>
+    <div class="stitle">Fase 4 — Spesialisasi</div>
+    <div class="sdesc">Dua jalur spesialisasi: <strong>4A Vision Systems</strong> untuk deployment dan optimasi model ke edge/produksi, dan <strong>4B Generative CV</strong> untuk CLIP, diffusion models, dan video generation. Pilih jalur sesuai tujuan karir.</div>
+    <div class="smeta"><span class="mc">Minggu 9–12</span><span class="mc">PyTorch + TensorRT + Diffusers</span><span class="mc">Prerequisite: Fase 3</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv4aa">4A: Model Optimization</a>
+  <a class="snavi" href="#cv4ab">4A: Quantization &amp; TensorRT</a>
+  <a class="snavi" href="#cv4ac">4A: ONNX</a>
+  <a class="snavi" href="#cv4ad">4A: Edge Deployment</a>
+  <a class="snavi" href="#cv4ae">4A: Real-time Pipeline</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 9–10</div>
+      <div class="topic-nav-title">Mulai dari: 4A.1 Model Optimization</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('cvfi3')">← Fase 3</button>
+      <button class="tnbtn primary" onclick="goTo(17)">Mulai Fase 4 →</button>
+    </div>
+  </div>
+</div><!-- /cvfi4a -->
+
+<div class="cc" style="margin:0 0 2px;border-radius:0;border-left:4px solid var(--teal);padding:16px 24px;">
+  <strong style="color:var(--teal);font-size:13px;letter-spacing:.08em;text-transform:uppercase;">Jalur 4A — Vision Systems</strong>
+  <p style="margin:6px 0 0;font-size:13px;color:var(--dim);">Optimasi, quantization, export, edge deployment, dan real-time pipeline untuk CV di production.</p>
+</div>
+
+<!-- 4A.1 -->
+<div class="sub" id="cv4aa">
+<div class="subtit"><span class="ac">4A.1</span> Model Optimization <span class="subid">// lebih cepat, lebih ringan, tanpa kehilangan akurasi</span></div>
+<div class="prose">
+<p>Di production, model yang bagus tapi lambat tidak berguna. Optimasi model vision berfokus pada tiga dimensi: <em>latency</em> (waktu inference satu input), <em>throughput</em> (berapa request per detik), dan <em>memory footprint</em>. Teknik utama: pruning, knowledge distillation, dan architectural efficiency.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Pruning dan sparsity</h4>
+<p><strong>Structured pruning</strong>: hapus seluruh filter/channel yang kontribusinya kecil (diukur dengan magnitude atau gradient). Menghasilkan model lebih kecil yang tetap bisa jalan efisien di hardware biasa.<br><br><strong>Unstructured pruning</strong>: set bobot individual ke nol. Compression ratio tinggi tapi butuh sparse inference support (hardware-specific).<br><br>Setelah pruning: fine-tune beberapa epoch untuk recovery akurasi.</p>
+</div>
+<div class="gc"><h4>Knowledge Distillation</h4>
+<p>Train <em>student</em> model kecil untuk meniru <em>teacher</em> model besar. Student belajar dari "soft labels" (distribusi probabilitas teacher) bukan hard ground truth — membawa informasi lebih kaya tentang similarity antar kelas. Efektif untuk compress model 4–10× dengan kehilangan akurasi minimal. Teknik: response-based (mimic logits), feature-based (mimic intermediate features), relation-based (mimic feature relationships).</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">model_optimization.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.utils.prune <span class="kw">as</span> prune
+
+<span class="cm"># Structured pruning — hapus 20% channel terkecil di Conv layers</span>
+<span class="kw">def</span> <span class="fn">apply_pruning</span>(model, amount=<span class="nm">0.2</span>):
+    <span class="kw">for</span> name, module <span class="kw">in</span> model.<span class="fn">named_modules</span>():
+        <span class="kw">if</span> <span class="fn">isinstance</span>(module, nn.Conv2d):
+            prune.<span class="fn">ln_structured</span>(module, name=<span class="st">'weight'</span>, amount=amount, n=<span class="nm">2</span>, dim=<span class="nm">0</span>)
+    <span class="kw">return</span> model
+
+<span class="cm"># Knowledge Distillation loss</span>
+<span class="kw">def</span> <span class="fn">distillation_loss</span>(student_logits, teacher_logits, labels, T=<span class="nm">4</span>, alpha=<span class="nm">0.7</span>):
+    soft_loss = nn.functional.<span class="fn">kl_div</span>(
+        nn.functional.<span class="fn">log_softmax</span>(student_logits / T, dim=<span class="nm">-1</span>),
+        nn.functional.<span class="fn">softmax</span>(teacher_logits / T, dim=<span class="nm">-1</span>),
+        reduction=<span class="st">'batchmean'</span>
+    ) * (T**<span class="nm">2</span>)
+    hard_loss = nn.functional.<span class="fn">cross_entropy</span>(student_logits, labels)
+    <span class="kw">return</span> alpha * soft_loss + (<span class="nm">1</span> - alpha) * hard_loss
+
+<span class="cm"># Benchmark latency</span>
+<span class="kw">import</span> time
+<span class="kw">def</span> <span class="fn">benchmark</span>(model, input_size=(<span class="nm">1</span>,<span class="nm">3</span>,<span class="nm">224</span>,<span class="nm">224</span>), n=<span class="nm">100</span>):
+    x = torch.<span class="fn">randn</span>(*input_size).cuda()
+    model = model.cuda().<span class="fn">eval</span>()
+    <span class="cm"># Warmup</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(<span class="nm">10</span>): model(x)
+    torch.cuda.<span class="fn">synchronize</span>()
+    t0 = time.<span class="fn">time</span>()
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n): model(x)
+    torch.cuda.<span class="fn">synchronize</span>()
+    ms_per_image = (time.<span class="fn">time</span>() - t0) / n * <span class="nm">1000</span>
+    <span class="fn">print</span>(<span class="st">f"Latency: {ms_per_image:.2f} ms/img ({1000/ms_per_image:.1f} FPS)"</span>)
+</pre></div></div>
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — Arsitektur CV: dari LeNet ke ViT</div>
+  <div class="viz-body" style="padding:16px 20px;">
+    <canvas id="cvArchCanvas" style="width:100%;max-width:720px;height:300px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;" id="cvArchBtns"></div>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;line-height:1.5;" id="cvArchInfo"></div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('cvArchCanvas');
+if(!c) return;
+var archs={
+  lenet:{name:'LeNet-5 (1998)',accentIdx:1,layers:[
+    {l:'Input',sub:'32×32',c:'#64748b',s:.6},
+    {l:'Conv',sub:'5×5',c:'#f87171',s:.9},
+    {l:'Pool',sub:'2×2',c:'#38bdf8',s:.65},
+    {l:'Conv',sub:'5×5',c:'#f87171',s:.85},
+    {l:'Pool',sub:'2×2',c:'#38bdf8',s:.6},
+    {l:'Flatten',sub:'',c:'#64748b',s:.4},
+    {l:'FC',sub:'120',c:'#fbbf24',s:.75},
+    {l:'FC',sub:'84',c:'#fbbf24',s:.65},
+    {l:'Output',sub:'10',c:'#4ade80',s:.8}
+  ],info:'9 layer · 60K params · Klasifikasi digit MNIST · Yann LeCun 1998 · Arsitektur yang membuktikan CNN bisa bekerja end-to-end'},
+  alexnet:{name:'AlexNet (2012)',accentIdx:1,layers:[
+    {l:'Input',sub:'227×227',c:'#64748b',s:.55},
+    {l:'Conv',sub:'11×11 s4',c:'#f87171',s:1},
+    {l:'Pool',sub:'3×3',c:'#38bdf8',s:.55},
+    {l:'Conv',sub:'5×5',c:'#f87171',s:.85},
+    {l:'Conv×3',sub:'3×3',c:'#f87171',s:.8},
+    {l:'Pool',sub:'3×3',c:'#38bdf8',s:.5},
+    {l:'FC+Drop',sub:'4096',c:'#fbbf24',s:.8},
+    {l:'FC+Drop',sub:'4096',c:'#fbbf24',s:.8},
+    {l:'Output',sub:'1000',c:'#4ade80',s:.85}
+  ],info:'8 layer aktif (5 conv + 3 fc) · 60M params · Pemenang ImageNet 2012 dengan gap 10.9% · ReLU + Dropout + Data Aug'},
+  resnet:{name:'ResNet-50 (2015)',accentIdx:3,layers:[
+    {l:'Input',sub:'224×224',c:'#64748b',s:.55},
+    {l:'Conv',sub:'7×7 s2',c:'#f87171',s:.75},
+    {l:'Pool',sub:'3×3',c:'#38bdf8',s:.45},
+    {l:'Stage 1',sub:'×3 blok',c:'#4ade80',s:.85},
+    {l:'Stage 2',sub:'×4 blok',c:'#4ade80',s:.95},
+    {l:'Stage 3',sub:'×6 blok',c:'#4ade80',s:1},
+    {l:'Stage 4',sub:'×3 blok',c:'#4ade80',s:.9},
+    {l:'GAP',sub:'',c:'#38bdf8',s:.4},
+    {l:'Output',sub:'1000',c:'#4ade80',s:.8}
+  ],info:'50 layer · 25.5M params · Skip connections mengatasi vanishing gradient · Kaiming He 2015 · Masih baseline terpopuler'},
+  vit:{name:'ViT-B/16 (2020)',accentIdx:2,layers:[
+    {l:'Input',sub:'224×224',c:'#64748b',s:.55},
+    {l:'Patches',sub:'196×16²',c:'#7c6dfa',s:.8},
+    {l:'Proj+Pos',sub:'768-dim',c:'#7c6dfa',s:.7},
+    {l:'Encoder',sub:'×12 blok',c:'#a78bfa',s:1},
+    {l:'[CLS]',sub:'token',c:'#c084fc',s:.7},
+    {l:'Output',sub:'1000',c:'#4ade80',s:.8}
+  ],info:'86M params · Tidak ada konvolusi — murni attention · Setiap patch "melihat" patch lain · Dosovitskiy et al. 2020'}
+};
+var active='resnet';
+function setCanvas(canvas){
+  var dpr=window.devicePixelRatio||1;
+  var pw=canvas.parentElement?canvas.parentElement.clientWidth:680;
+  var W=Math.min(720,Math.max(300,pw));var H=300;
+  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx:ctx,W:W,H:H};
+}
+function draw(){
+  var sz=setCanvas(c);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  var arch=archs[active];var layers=arch.layers;var n=layers.length;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+  var PAD=12,LEGEND_H=28,FLOW_Y=LEGEND_H+10,FLOW_H=H-FLOW_Y-36;
+  var BASE_H=Math.min(100,FLOW_H*.85);
+  var GAP=5,ARROW=7,avail=W-PAD*2;
+  var blockW=Math.floor((avail-(n-1)*(GAP+ARROW))/n);
+  if(blockW<30){GAP=3;ARROW=5;blockW=Math.floor((avail-(n-1)*(GAP+ARROW))/n);}
+  if(blockW<22){blockW=22;}
+  var totalUsed=n*blockW+(n-1)*(GAP+ARROW);
+  var startX=Math.floor((W-totalUsed)/2);
+  var centerY=FLOW_Y+FLOW_H/2;
+  var legendItems=[{c:'#f87171',l:'Conv'},{c:'#38bdf8',l:'Pool'},{c:'#fbbf24',l:'FC'},{c:'#4ade80',l:'Output'},{c:'#7c6dfa',l:'ViT'},{c:'#64748b',l:'Lain-lain'}];
+  ctx.font='9px DM Sans,sans-serif';
+  var lx=PAD;
+  legendItems.forEach(function(li){
+    ctx.fillStyle=li.c;ctx.beginPath();ctx.arc(lx+4,LEGEND_H/2,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#64748b';ctx.textAlign='left';ctx.fillText(li.l,lx+11,LEGEND_H/2+3);
+    lx+=11+Math.ceil(ctx.measureText(li.l).width)+12;
+    if(lx>W-60){lx=PAD;}
+  });
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(PAD,LEGEND_H+4);ctx.lineTo(W-PAD,LEGEND_H+4);ctx.stroke();
+  var x=startX;
+  layers.forEach(function(l,i){
+    var bh=Math.max(24,BASE_H*l.s);var by=centerY-bh/2;
+    var grad=ctx.createLinearGradient(x,by,x,by+bh);
+    grad.addColorStop(0,l.c+'44');grad.addColorStop(1,l.c+'18');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,by,blockW,bh,5);ctx.fill();
+    ctx.strokeStyle=l.c+'cc';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#e2e8f0';ctx.textAlign='center';
+    var lbl1=l.l,lbl2=l.sub,fs1=blockW<44?8:9,fs2=blockW<44?7:8,maxTxtW=blockW-4;
+    ctx.font='bold '+fs1+'px IBM Plex Mono,monospace';
+    while(ctx.measureText(lbl1).width>maxTxtW&&lbl1.length>2) lbl1=lbl1.slice(0,-1)+'…';
+    if(lbl2){
+      ctx.fillText(lbl1,x+blockW/2,by+bh/2-2);
+      ctx.font=fs2+'px IBM Plex Mono,monospace';ctx.fillStyle='#94a3b8';
+      var lbl2t=lbl2;while(ctx.measureText(lbl2t).width>maxTxtW&&lbl2t.length>2) lbl2t=lbl2t.slice(0,-1)+'…';
+      ctx.fillText(lbl2t,x+blockW/2,by+bh/2+9);
+    } else {
+      ctx.fillText(lbl1,x+blockW/2,by+bh/2+3);
+    }
+    if(i<n-1){
+      var ax=x+blockW+1,ay=centerY;
+      ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax+ARROW-2,ay);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.18)';
+      ctx.beginPath();ctx.moveTo(ax+ARROW,ay);ctx.lineTo(ax+ARROW-4,ay-3);ctx.lineTo(ax+ARROW-4,ay+3);ctx.closePath();ctx.fill();
+    }
+    x+=blockW+GAP+ARROW;
+  });
+  ctx.fillStyle='#475569';ctx.font='10px IBM Plex Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(arch.name,W/2,H-10);
+  document.getElementById('cvArchInfo').textContent=arch.info;
+}
+var btns=document.getElementById('cvArchBtns');
+Object.keys(archs).forEach(function(key){
+  var arch=archs[key];var accentColor=arch.layers[arch.accentIdx].c;
+  var b=document.createElement('button');b.textContent=arch.name;b.className='tnbtn';
+  b.style.cssText='font-size:11px;padding:5px 13px;'+(key===active?'border-color:'+accentColor+';color:'+accentColor+';background:rgba(255,255,255,.04);':'');
+  b.onclick=function(){
+    active=key;draw();
+    document.querySelectorAll('#cvArchBtns .tnbtn').forEach(function(bb){bb.style.borderColor='';bb.style.color='';bb.style.background='';});
+    b.style.borderColor=accentColor;b.style.color=accentColor;b.style.background='rgba(255,255,255,.04)';
+  };
+  btns.appendChild(b);
+});
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
+</div><!-- /cv4aa -->
+
+<div class="divider"></div>
+
+<!-- 4A.2 -->
+<div class="sub" id="cv4ab">
+<div class="subtit"><span class="ac">4A.2</span> Quantization &amp; TensorRT <span class="subid">// float32 → int8 tanpa kehilangan kualitas</span></div>
+<div class="prose">
+<p>Quantization mengubah bobot model dari FP32 (4 byte per nilai) ke INT8 atau FP16 (1–2 byte). Hasil: ukuran model 4× lebih kecil, inference 2–4× lebih cepat, dan penggunaan memori GPU jauh berkurang. TensorRT dari NVIDIA mengoptimalkan model spesifik untuk hardware target dan bisa menggabungkan beberapa layer menjadi satu operasi (layer fusion).</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Post-training quantization (PTQ)</h4>
+<p>Quantize model yang sudah di-train, tanpa training ulang. Butuh sedikit "calibration data" (~100–1000 sampel) untuk mengukur distribusi aktivasi per layer. Dua mode: <strong>static</strong> (calibrate aktivasi di inference time) vs <strong>dynamic</strong> (aktivasi dihitung saat runtime, bobot tetap INT8). Static lebih cepat untuk image models.</p>
+</div>
+<div class="gc"><h4>Quantization-aware training (QAT)</h4>
+<p>Simulasikan quantization selama training — model belajar untuk toleran terhadap precision loss. Hasil akurasi lebih baik dari PTQ, terutama untuk model kecil atau dataset sulit. Butuh training ulang 10–20% epochs dari full training. Digunakan ketika PTQ menghasilkan drop akurasi yang tidak dapat diterima.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">quantization_tensorrt.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">from</span> torch.quantization <span class="kw">import</span> quantize_dynamic
+
+<span class="cm"># Dynamic quantization (paling mudah, untuk Linear/Conv layers)</span>
+model_int8 = <span class="fn">quantize_dynamic</span>(
+    model, {torch.nn.Linear, torch.nn.Conv2d}, dtype=torch.qint8
+)
+<span class="fn">print</span>(<span class="st">f"FP32 size: {sum(p.numel() for p in model.parameters())*4/1e6:.1f} MB"</span>)
+
+<span class="cm"># Static quantization dengan calibration</span>
+<span class="kw">from</span> torch.quantization <span class="kw">import</span> prepare, convert
+
+model.<span class="fn">eval</span>()
+model.qconfig = torch.quantization.get_default_qconfig(<span class="st">'fbgemm'</span>)  <span class="cm"># CPU</span>
+<span class="cm"># model.qconfig = torch.quantization.get_default_qconfig('qnnpack')  # ARM/mobile</span>
+model_prepared = <span class="fn">prepare</span>(model)
+
+<span class="cm"># Calibrate: jalankan beberapa batch untuk mengukur distribusi aktivasi</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    <span class="kw">for</span> img, _ <span class="kw">in</span> calib_loader: model_prepared(img)
+
+model_quant = <span class="fn">convert</span>(model_prepared)
+
+<span class="cm"># TensorRT via torch2trt (high-level wrapper)</span>
+<span class="kw">from</span> torch2trt <span class="kw">import</span> torch2trt
+dummy = torch.<span class="fn">randn</span>(<span class="nm">1</span>, <span class="nm">3</span>, <span class="nm">640</span>, <span class="nm">640</span>).<span class="fn">cuda</span>()
+model_trt = <span class="fn">torch2trt</span>(model, [dummy], fp16_mode=<span class="kw">True</span>, max_batch_size=<span class="nm">8</span>)
+torch.<span class="fn">save</span>(model_trt.<span class="fn">state_dict</span>(), <span class="st">'model_trt.pth'</span>)
+
+<span class="cm"># YOLO built-in TensorRT export (paling mudah untuk YOLO models)</span>
+<span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+model = <span class="fn">YOLO</span>(<span class="st">"yolov8n.pt"</span>)
+model.<span class="fn">export</span>(format=<span class="st">"engine"</span>, half=<span class="kw">True</span>)  <span class="cm"># FP16 TensorRT</span>
+trt_model = <span class="fn">YOLO</span>(<span class="st">"yolov8n.engine"</span>)       <span class="cm"># langsung bisa dipakai</span></pre></div></div>
+</div><!-- /cv4ab -->
+
+<div class="divider"></div>
+
+<!-- 4A.3 -->
+<div class="sub" id="cv4ac">
+<div class="subtit"><span class="ac">4A.3</span> ONNX — Open Neural Network Exchange <span class="subid">// portabilitas lintas framework</span></div>
+<div class="prose">
+<p>ONNX adalah format model terbuka yang memungkinkan model di-train di PyTorch/TensorFlow kemudian di-deploy di berbagai runtime (ONNX Runtime, TensorRT, OpenVINO, CoreML). Solusi untuk menghindari vendor lock-in dan untuk deploy ke platform yang tidak support PyTorch natively.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Export ke ONNX</h4>
+<p>PyTorch <code>torch.onnx.export()</code> melakukan trace forward pass model dengan dummy input dan merekam semua operasi sebagai graph ONNX. Penting: export dengan <code>dynamic_axes</code> untuk batch size dan dimensi spatial yang fleksibel. Selalu verifikasi output model ONNX sama dengan PyTorch original.</p>
+</div>
+<div class="gc"><h4>ONNX Runtime inference</h4>
+<p>ONNX Runtime (ORT) adalah inference engine cross-platform yang sangat dioptimalkan. Mendukung CPU, CUDA, TensorRT, OpenVINO, CoreML sebagai "execution providers". Latency biasanya lebih rendah dari PyTorch eager mode karena graph optimization dan operator fusion. Digunakan oleh production besar (Azure, Windows, Office).</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">onnx_export_inference.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">import</span> onnx
+<span class="kw">import</span> onnxruntime <span class="kw">as</span> ort
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Export PyTorch model ke ONNX</span>
+model.<span class="fn">eval</span>()
+dummy = torch.<span class="fn">randn</span>(<span class="nm">1</span>, <span class="nm">3</span>, <span class="nm">224</span>, <span class="nm">224</span>)
+torch.onnx.<span class="fn">export</span>(
+    model, dummy, <span class="st">"model.onnx"</span>,
+    input_names=[<span class="st">'image'</span>],
+    output_names=[<span class="st">'logits'</span>],
+    dynamic_axes={<span class="st">'image'</span>: {<span class="nm">0</span>: <span class="st">'batch'</span>, <span class="nm">2</span>: <span class="st">'height'</span>, <span class="nm">3</span>: <span class="st">'width'</span>}},
+    opset_version=<span class="nm">17</span>,
+    do_constant_folding=<span class="kw">True</span>
+)
+
+<span class="cm"># Verifikasi graph valid</span>
+onnx_model = onnx.<span class="fn">load</span>(<span class="st">"model.onnx"</span>)
+onnx.<span class="fn">checker</span>.<span class="fn">check_model</span>(onnx_model)
+<span class="fn">print</span>(<span class="st">"ONNX model valid ✓"</span>)
+
+<span class="cm"># Verifikasi output sama dengan PyTorch</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>(): torch_out = model(dummy).numpy()
+ort_session = ort.<span class="fn">InferenceSession</span>(<span class="st">"model.onnx"</span>)
+ort_out = ort_session.<span class="fn">run</span>(<span class="kw">None</span>, {<span class="st">'image'</span>: dummy.numpy()})[<span class="nm">0</span>]
+np.testing.<span class="fn">assert_allclose</span>(torch_out, ort_out, rtol=<span class="nm">1e-3</span>, atol=<span class="nm">1e-5</span>)
+
+<span class="cm"># Inference dengan ONNX Runtime (CUDA provider)</span>
+sess_opts = ort.<span class="fn">SessionOptions</span>()
+sess_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+session = ort.<span class="fn">InferenceSession</span>(
+    <span class="st">"model.onnx"</span>, sess_opts,
+    providers=[<span class="st">'CUDAExecutionProvider'</span>, <span class="st">'CPUExecutionProvider'</span>]
+)
+inputs = {<span class="st">'image'</span>: preprocessed_img.numpy()}
+outputs = session.<span class="fn">run</span>(<span class="kw">None</span>, inputs)
+logits = outputs[<span class="nm">0</span>]</pre></div></div>
+</div><!-- /cv4ac -->
+
+<div class="divider"></div>
+
+<!-- 4A.4 -->
+<div class="sub" id="cv4ad">
+<div class="subtit"><span class="ac">4A.4</span> Edge Deployment — Jetson &amp; Raspberry Pi <span class="subid">// vision di luar cloud</span></div>
+<div class="prose">
+<p>Edge deployment berarti menjalankan model CV langsung di perangkat — bukan di cloud. Keuntungan: latency rendah (tidak perlu network round-trip), privasi data (tidak keluar ke server), operasi offline, dan biaya lebih rendah untuk scale. Dua platform paling populer: NVIDIA Jetson (untuk akurasi tinggi) dan Raspberry Pi (untuk biaya rendah).</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>NVIDIA Jetson Orin</h4>
+<p>GPU embedded dengan dukungan CUDA, TensorRT, dan DeepStream penuh. Jetson Nano ~$100 untuk project kecil, Jetson Orin Nano–NX untuk production serius. Workflow: train di workstation → export TensorRT engine → copy ke Jetson → inference dengan ONNX Runtime atau TensorRT direct. Power consumption 5–15W vs GPU server 200–400W.</p>
+</div>
+<div class="gc"><h4>Raspberry Pi + Hailo</h4>
+<p>RPi 5 dengan <strong>Hailo-8 M.2 AI Kit</strong> memberikan 26 TOPS untuk ~$70. Model perlu diconvert ke format Hailo (HEF) menggunakan Dataflow Compiler. Alternatif: gunakan RPi dengan model sangat kecil (MobileNet, EfficientNet-lite) dan quantization INT8. Kecepatan terbatas tapi cukup untuk deteksi objek sederhana pada 5–15 FPS.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">jetson_inference.py</span></div>
+<div class="cbb"><pre><span class="cm"># Jalankan di Jetson dengan TensorRT engine</span>
+<span class="kw">import</span> tensorrt <span class="kw">as</span> trt
+<span class="kw">import</span> pycuda.driver <span class="kw">as</span> cuda
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">class</span> <span class="fn">TRTInference</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, engine_path):
+        logger = trt.<span class="fn">Logger</span>(trt.Logger.WARNING)
+        <span class="kw">with</span> <span class="fn">open</span>(engine_path, <span class="st">'rb'</span>) <span class="kw">as</span> f:
+            self.engine = trt.<span class="fn">Runtime</span>(logger).<span class="fn">deserialize_cuda_engine</span>(f.<span class="fn">read</span>())
+        self.context = self.engine.<span class="fn">create_execution_context</span>()
+        self.stream = cuda.Stream()
+        self.inputs, self.outputs, self.bindings = [], [], []
+        <span class="kw">for</span> binding <span class="kw">in</span> self.engine:
+            size = trt.<span class="fn">volume</span>(self.engine.<span class="fn">get_tensor_shape</span>(binding))
+            host_mem   = cuda.pagelocked_empty(size, np.float32)
+            device_mem = cuda.<span class="fn">mem_alloc</span>(host_mem.nbytes)
+            self.bindings.<span class="fn">append</span>(<span class="fn">int</span>(device_mem))
+            <span class="kw">if</span> self.engine.<span class="fn">get_tensor_mode</span>(binding) == trt.TensorIOMode.INPUT:
+                self.inputs.<span class="fn">append</span>({'host': host_mem, 'device': device_mem})
+            <span class="kw">else</span>:
+                self.outputs.<span class="fn">append</span>({'host': host_mem, 'device': device_mem})
+
+    <span class="kw">def</span> <span class="fn">infer</span>(self, image_np):
+        np.<span class="fn">copyto</span>(self.inputs[<span class="nm">0</span>][<span class="st">'host'</span>], image_np.ravel())
+        cuda.<span class="fn">memcpy_htod_async</span>(self.inputs[<span class="nm">0</span>][<span class="st">'device'</span>], self.inputs[<span class="nm">0</span>][<span class="st">'host'</span>], self.stream)
+        self.context.<span class="fn">execute_async_v2</span>(self.bindings, self.stream.<span class="fn">handle</span>)
+        cuda.<span class="fn">memcpy_dtoh_async</span>(self.outputs[<span class="nm">0</span>][<span class="st">'host'</span>], self.outputs[<span class="nm">0</span>][<span class="st">'device'</span>], self.stream)
+        self.stream.<span class="fn">synchronize</span>()
+        <span class="kw">return</span> self.outputs[<span class="nm">0</span>][<span class="st">'host'</span>]</pre></div></div>
+</div><!-- /cv4ad -->
+
+<div class="divider"></div>
+
+<!-- 4A.5 -->
+<div class="sub" id="cv4ae">
+<div class="subtit"><span class="ac">4A.5</span> Real-time Vision Pipeline <span class="subid">// kamera → inference → aksi dalam milidetik</span></div>
+<div class="prose">
+<p>Pipeline real-time bukan hanya soal model yang cepat — ini adalah sistem end-to-end: capture kamera, preprocessing, batching, inference, post-processing, dan output ke downstream system. Bottleneck sering bukan di model, tapi di I/O, preprocessing, atau data transfer CPU↔GPU.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Pipeline profiling</h4>
+<p>Ukur setiap stage secara terpisah sebelum optimasi. Preprocessing sering bottleneck yang diabaikan: decoding JPEG, resize, normalize, to-tensor. Solusi: pindahkan ke GPU dengan torchvision transforms (CUDA), atau gunakan DALI (NVIDIA Data Loading Library) untuk full GPU preprocessing pipeline.</p>
+</div>
+<div class="gc"><h4>Asynchronous capture dan inference</h4>
+<p>Jangan block inference thread untuk menunggu frame baru. Pakai producer-consumer pattern: dedicated thread untuk capture frames ke queue, inference thread pull dari queue. Dengan GPU stream asynchrony, transfer H2D, inference, dan D2H bisa overlap. Target: CPU tidak pernah idle menunggu GPU.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">realtime_pipeline.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> cv2
+<span class="kw">import</span> threading
+<span class="kw">import</span> queue
+<span class="kw">from</span> ultralytics <span class="kw">import</span> YOLO
+
+<span class="kw">class</span> <span class="fn">RTVisionPipeline</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, source, model_path, max_queue=<span class="nm">4</span>):
+        self.cap   = cv2.<span class="fn">VideoCapture</span>(source)
+        self.model = <span class="fn">YOLO</span>(model_path)
+        self.frame_q  = queue.<span class="fn">Queue</span>(maxsize=max_queue)
+        self.result_q = queue.<span class="fn">Queue</span>(maxsize=max_queue)
+        self.running  = <span class="kw">True</span>
+
+    <span class="kw">def</span> <span class="fn">capture_thread</span>(self):
+        <span class="kw">while</span> self.running:
+            ret, frame = self.cap.<span class="fn">read</span>()
+            <span class="kw">if not</span> ret: <span class="kw">break</span>
+            <span class="kw">if not</span> self.frame_q.<span class="fn">full</span>():
+                self.frame_q.<span class="fn">put_nowait</span>(frame)  <span class="cm"># drop frame if queue full (real-time)</span>
+
+    <span class="kw">def</span> <span class="fn">inference_thread</span>(self):
+        <span class="kw">while</span> self.running:
+            <span class="kw">try</span>:
+                frame = self.frame_q.<span class="fn">get</span>(timeout=<span class="nm">0.1</span>)
+                results = self.model.<span class="fn">predict</span>(frame, verbose=<span class="kw">False</span>)
+                <span class="kw">if not</span> self.result_q.<span class="fn">full</span>():
+                    self.result_q.<span class="fn">put_nowait</span>(results[<span class="nm">0</span>])
+            <span class="kw">except</span> queue.Empty: <span class="kw">continue</span>
+
+    <span class="kw">def</span> <span class="fn">run</span>(self):
+        t_cap = threading.<span class="fn">Thread</span>(target=self.<span class="fn">capture_thread</span>, daemon=<span class="kw">True</span>)
+        t_inf = threading.<span class="fn">Thread</span>(target=self.<span class="fn">inference_thread</span>, daemon=<span class="kw">True</span>)
+        t_cap.<span class="fn">start</span>(); t_inf.<span class="fn">start</span>()
+        <span class="kw">while</span> self.running:
+            <span class="kw">try</span>:
+                r = self.result_q.<span class="fn">get</span>(timeout=<span class="nm">0.1</span>)
+                vis = r.<span class="fn">plot</span>()
+                cv2.<span class="fn">imshow</span>(<span class="st">'Vision'</span>, vis)
+                <span class="kw">if</span> cv2.<span class="fn">waitKey</span>(<span class="nm">1</span>) == <span class="nm">27</span>: self.running = <span class="kw">False</span>
+            <span class="kw">except</span> queue.Empty: <span class="kw">continue</span>
+        self.cap.<span class="fn">release</span>(); cv2.<span class="fn">destroyAllWindows</span>()</pre></div></div>
+</div><!-- /cv4ae -->
+
+</section><!-- /cvfase4a -->

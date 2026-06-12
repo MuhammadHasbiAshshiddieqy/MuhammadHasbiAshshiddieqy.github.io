@@ -49,11 +49,13 @@ var AIF_FASE_CONTAINERS = {
 var CV_FASE_FILES = {
   'cvi0':'topics/computer-vision/fase0.html', 'cvi1':'topics/computer-vision/fase1.html',
   'cvi2':'topics/computer-vision/fase2.html', 'cvi3':'topics/computer-vision/fase3.html',
-  'cvi4':'topics/computer-vision/fase4.html', 'cvi5':'topics/computer-vision/fase5.html'
+  'cvi4a':'topics/computer-vision/fase4a.html', 'cvi4b':'topics/computer-vision/fase4b.html',
+  'cvi5':'topics/computer-vision/fase5.html'
 };
 var CV_FASE_CONTAINERS = {
   'cvi0':'cvfase0-container','cvi1':'cvfase1-container','cvi2':'cvfase2-container',
-  'cvi3':'cvfase3-container','cvi4':'cvfase4-container','cvi5':'cvfase5-container'
+  'cvi3':'cvfase3-container','cvi4a':'cvfase4a-container','cvi4b':'cvfase4b-container',
+  'cvi5':'cvfase5-container'
 };
 
 // ── Lazy-load (Language Model) ────────────────────────────────────────────────
@@ -89,12 +91,14 @@ function loadFase(faseId) {
       });
       container.innerHTML = cleaned;
       injectNavBars();
-      scripts.forEach(function(code) {
-        var s = document.createElement('script');
-        s.textContent = code;
-        document.body.appendChild(s);
-        document.body.removeChild(s);
-      });
+      setTimeout(function() {
+        scripts.forEach(function(code) {
+          var s = document.createElement('script');
+          s.textContent = code;
+          document.body.appendChild(s);
+          document.body.removeChild(s);
+        });
+      }, 0);
     })
     .catch(function(err) {
       console.error('Gagal load fase:', file, err);
@@ -324,12 +328,14 @@ function renderSidebar(curriculum) {
         ['cv3d','3.4 Instance Segmentation'],
         ['cv3e','3.5 Keypoint & Pose Estimation']
       ]),
-      sbPhase('cvi4','Fase 4 — Spesialisasi','cvfi4',[
+      sbPhase('cvi4a','Fase 4A — Vision Systems','cvfi4a',[
         ['cv4aa','4A.1 Model Optimization'],
         ['cv4ab','4A.2 Quantization & TensorRT'],
         ['cv4ac','4A.3 ONNX Deployment'],
         ['cv4ad','4A.4 Edge Deployment'],
-        ['cv4ae','4A.5 Real-time Pipeline'],
+        ['cv4ae','4A.5 Real-time Pipeline']
+      ]),
+      sbPhase('cvi4b','Fase 4B — Generative CV','cvfi4b',[
         ['cv4ba','4B.1 CLIP & VLM'],
         ['cv4bb','4B.2 Diffusion Models'],
         ['cv4bc','4B.3 Stable Diffusion'],
@@ -587,18 +593,18 @@ var CV_PHASE_MAP = {
   'cv1a':'cvi1','cv1b':'cvi1','cv1c':'cvi1','cv1d':'cvi1','cv1e':'cvi1',
   'cv2a':'cvi2','cv2b':'cvi2','cv2c':'cvi2','cv2d':'cvi2','cv2e':'cvi2','cv2f':'cvi2',
   'cv3a':'cvi3','cv3b':'cvi3','cv3c':'cvi3','cv3d':'cvi3','cv3e':'cvi3',
-  'cv4aa':'cvi4','cv4ab':'cvi4','cv4ac':'cvi4','cv4ad':'cvi4','cv4ae':'cvi4',
-  'cv4ba':'cvi4','cv4bb':'cvi4','cv4bc':'cvi4','cv4bd':'cvi4','cv4be':'cvi4',
+  'cv4aa':'cvi4a','cv4ab':'cvi4a','cv4ac':'cvi4a','cv4ad':'cvi4a','cv4ae':'cvi4a',
+  'cv4ba':'cvi4b','cv4bb':'cvi4b','cv4bc':'cvi4b','cv4bd':'cvi4b','cv4be':'cvi4b',
   'cv5a':'cvi5','cv5b':'cvi5','cv5c':'cvi5','cv5d':'cvi5','cv5e':'cvi5'
 };
-var CV_PHASE_NUMS = {'cvi0':'0','cvi1':'1','cvi2':'2','cvi3':'3','cvi4':'4','cvi5':'5'};
+var CV_PHASE_NUMS = {'cvi0':'0','cvi1':'1','cvi2':'2','cvi3':'3','cvi4a':'4A','cvi4b':'4B','cvi5':'5'};
 // PHASE_LAST: last global index before a phase boundary → page to go to
-// idx 0=cv0a(1 topik), 1-5=cv1(5), 6-11=cv2(6), 12-16=cv3(5), 17-26=cv4(10), 27-31=cv5(5)
-var CV_PHASE_LAST  = {0:'cvfi1', 5:'cvfi2', 11:'cvfi3', 16:'cvfi4', 26:'cvfi5'};
-var CV_PHASE_FIRST = {0:'cvhome', 1:'cvfi1', 6:'cvfi2', 12:'cvfi3', 17:'cvfi4', 27:'cvfi5'};
-var CV_PAGE_LABELS = {'cvhome':'Beranda CV','cvfi0':'Fase 0 — Pengenalan CV','cvfi1':'Fase 1 — Image Processing','cvfi2':'Fase 2 — Deep Learning CV','cvfi3':'Fase 3 — Detection & Segmentation','cvfi4':'Fase 4 — Spesialisasi','cvfi5':'Fase 5 — Production'};
-var CV_PHASE_INTRO_MAP = {'cvi0':'cvfi0','cvi1':'cvfi1','cvi2':'cvfi2','cvi3':'cvfi3','cvi4':'cvfi4','cvi5':'cvfi5'};
-var CV_PAGES = ['cvhome','cvfi0','cvfi1','cvfi2','cvfi3','cvfi4','cvfi5'];
+// idx 0=cv0a(1), 1-5=cv1(5), 6-11=cv2(6), 12-16=cv3(5), 17-21=cv4a(5), 22-26=cv4b(5), 27-31=cv5(5)
+var CV_PHASE_LAST  = {0:'cvfi1', 5:'cvfi2', 11:'cvfi3', 16:'cvfi4a', 21:'cvfi4b', 26:'cvfi5'};
+var CV_PHASE_FIRST = {0:'cvhome', 1:'cvfi1', 6:'cvfi2', 12:'cvfi3', 17:'cvfi4a', 22:'cvfi4b', 27:'cvfi5'};
+var CV_PAGE_LABELS = {'cvhome':'Beranda CV','cvfi0':'Fase 0 — Pengenalan CV','cvfi1':'Fase 1 — Image Processing','cvfi2':'Fase 2 — Deep Learning CV','cvfi3':'Fase 3 — Detection & Segmentation','cvfi4a':'Fase 4A — Vision Systems','cvfi4b':'Fase 4B — Generative CV','cvfi5':'Fase 5 — Production'};
+var CV_PHASE_INTRO_MAP = {'cvi0':'cvfi0','cvi1':'cvfi1','cvi2':'cvfi2','cvi3':'cvfi3','cvi4a':'cvfi4a','cvi4b':'cvfi4b','cvi5':'cvfi5'};
+var CV_PAGES = ['cvhome','cvfi0','cvfi1','cvfi2','cvfi3','cvfi4a','cvfi4b','cvfi5'];
 
 var currentIdx = 0;
 

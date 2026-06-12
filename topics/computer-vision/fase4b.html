@@ -1,0 +1,305 @@
+<section class="cs p3" id="cvfase4b">
+<div class="fase-intro" id="cvfi4b">
+<div class="sh">
+  <div class="sbadge">04</div>
+  <div>
+    <div class="stitle">Fase 4B — Generative CV</div>
+    <div class="sdesc"><strong>4B Generative CV</strong>: CLIP &amp; Vision-Language Models, Diffusion Models, Stable Diffusion fine-tuning, Image Editing, dan Video Generation. Jalur untuk generative AI berbasis vision.</div>
+    <div class="smeta"><span class="mc">Minggu 11–12</span><span class="mc">PyTorch + Diffusers + CLIP</span><span class="mc">Prerequisite: Fase 4A</span></div>
+  </div>
+</div>
+<div class="snav">
+  <a class="snavi" href="#cv4ba">4B: CLIP &amp; VLM</a>
+  <a class="snavi" href="#cv4bb">4B: Diffusion Fundamentals</a>
+  <a class="snavi" href="#cv4bc">4B: SD Fine-tuning</a>
+  <a class="snavi" href="#cv4bd">4B: Image Editing</a>
+  <a class="snavi" href="#cv4be">4B: Video Generation</a>
+</div>
+  <div class="topic-nav">
+    <div class="topic-nav-info">
+      <div class="topic-nav-counter">5 topik · Minggu 11–12</div>
+      <div class="topic-nav-title">Mulai dari: 4B.1 CLIP &amp; VLM</div>
+    </div>
+    <div class="topic-nav-btns">
+      <button class="tnbtn" onclick="goToPage('cvfi4a')">← Fase 4A</button>
+      <button class="tnbtn primary" onclick="goTo(22)">Mulai 4B →</button>
+    </div>
+  </div>
+</div><!-- /cvfi4b -->
+
+<!-- 4B Label -->
+<div class="cc" style="margin:32px 0 2px;border-radius:0;border-left:4px solid #a855f7;padding:16px 24px;">
+  <strong style="color:#a855f7;font-size:13px;letter-spacing:.08em;text-transform:uppercase;">Jalur 4B — Generative CV</strong>
+  <p style="margin:6px 0 0;font-size:13px;color:var(--dim);">CLIP, diffusion models, Stable Diffusion fine-tuning, image editing, dan video generation.</p>
+</div>
+
+<!-- 4B.1 -->
+<div class="sub" id="cv4ba">
+<div class="subtit"><span class="ac">4B.1</span> CLIP &amp; Vision-Language Models <span class="subid">// teks dan gambar dalam satu ruang</span></div>
+<div class="prose">
+<p>CLIP (Contrastive Language-Image Pre-Training, OpenAI 2021) melatih image encoder dan text encoder secara bersamaan menggunakan contrastive learning — gambar dan caption yang cocok didekatkan, yang tidak dijauhkan. Hasilnya: embedding space yang bisa dibandingkan lintas modalitas. Ini adalah fondasi dari hampir semua VLM modern.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Zero-shot classification</h4>
+<p>Tanpa training, CLIP bisa classify gambar ke kelas APA PUN: encode gambar dan deskripsi kelas ("a photo of a cat", "a photo of a dog"), hitung cosine similarity, pilih kelas tertinggi. Fleksibel luar biasa — tidak butuh annotated data. Akurasi tidak sebaik fine-tuned model tapi cukup untuk prototype cepat.</p>
+</div>
+<div class="gc"><h4>VLM lebih modern</h4>
+<p><strong>SigLIP</strong> (Google): CLIP dengan sigmoid loss, lebih efisien training<br><strong>OpenCLIP</strong>: open-source reimplementasi dengan banyak varian<br><strong>BLIP-2</strong>: tambahkan language generation — bisa menjawab pertanyaan tentang gambar<br><strong>LLaVA</strong>: connect CLIP encoder ke LLM untuk visual instruction following<br><strong>PaliGemma</strong>: VLM compact dari Google, cocok untuk fine-tuning</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">clip_vlm.py</span></div>
+<div class="cbb"><pre><span class="kw">import</span> torch
+<span class="kw">from</span> transformers <span class="kw">import</span> CLIPModel, CLIPProcessor
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+
+model = CLIPModel.<span class="fn">from_pretrained</span>(<span class="st">"openai/clip-vit-base-patch32"</span>)
+processor = CLIPProcessor.<span class="fn">from_pretrained</span>(<span class="st">"openai/clip-vit-base-patch32"</span>)
+
+<span class="cm"># Zero-shot classification</span>
+image = Image.<span class="fn">open</span>(<span class="st">"foto.jpg"</span>)
+labels = [<span class="st">"a photo of a cat"</span>, <span class="st">"a photo of a dog"</span>, <span class="st">"a photo of a car"</span>]
+inputs = processor(text=labels, images=image, return_tensors=<span class="st">"pt"</span>, padding=<span class="kw">True</span>)
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    outputs = model(**inputs)
+probs = outputs.logits_per_image.<span class="fn">softmax</span>(dim=<span class="nm">1</span>)[<span class="nm">0</span>]
+<span class="kw">for</span> label, prob <span class="kw">in</span> <span class="fn">zip</span>(labels, probs):
+    <span class="fn">print</span>(<span class="st">f"{label}: {prob.item():.3f}"</span>)
+
+<span class="cm"># Image embedding untuk similarity search</span>
+<span class="kw">def</span> <span class="fn">get_img_embedding</span>(image_path):
+    img = Image.<span class="fn">open</span>(image_path).<span class="fn">convert</span>(<span class="st">"RGB"</span>)
+    inputs = processor(images=img, return_tensors=<span class="st">"pt"</span>)
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        emb = model.<span class="fn">get_image_features</span>(**inputs)
+    <span class="kw">return</span> nn.functional.<span class="fn">normalize</span>(emb, dim=<span class="nm">-1</span>)
+
+<span class="cm"># Cari gambar paling mirip dengan text query</span>
+text_inputs = processor(text=[<span class="st">"sunset at the beach"</span>], return_tensors=<span class="st">"pt"</span>)
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    text_emb = model.<span class="fn">get_text_features</span>(**text_inputs)
+text_emb = nn.functional.<span class="fn">normalize</span>(text_emb, dim=<span class="nm">-1</span>)
+similarities = (image_embeddings @ text_emb.T).<span class="fn">squeeze</span>()   <span class="cm"># cosine sim</span></pre></div></div>
+</div><!-- /cv4ba -->
+
+<div class="divider"></div>
+
+<!-- 4B.2 -->
+<div class="sub" id="cv4bb">
+<div class="subtit"><span class="ac">4B.2</span> Diffusion Model Fundamentals <span class="subid">// belajar dari noise</span></div>
+<div class="prose">
+<p>Diffusion models adalah keluarga generative model yang mendominasi image generation sejak 2022. Ide utama: tambahkan noise Gaussian bertahap ke gambar (forward process) hingga jadi pure noise, kemudian train neural network untuk membalikkan proses ini (reverse process). Di inference time: mulai dari pure noise, ulangi denoising step, dapatkan gambar.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Komponen utama</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>U-Net denoiser</strong>: memprediksi noise yang harus dihilangkan. Menggunakan time embedding untuk tahu "seberapa banyak noise" saat ini</li>
+<li><strong>Noise scheduler</strong>: mengontrol jadwal penambahan/pengurangan noise (DDPM, DDIM, DPM-Solver). DDIM jauh lebih cepat dari DDPM</li>
+<li><strong>VAE</strong>: latent diffusion bekerja di compressed latent space, bukan pixel space — 4× lebih efisien</li>
+<li><strong>Text encoder</strong>: CLIP atau T5 mengkonvert text prompt ke kondisi untuk guiding denoising</li>
+</ul>
+</div>
+<div class="gc"><h4>Sampling dan guidance</h4>
+<p><strong>Classifier-free guidance (CFG)</strong>: teknik yang membuat model "lebih mendengar" prompt. CFG scale tinggi (7–12) = gambar lebih sesuai prompt tapi kurang diverse. Terlalu tinggi = artifacts.<br><br><strong>Step count</strong>: 20–50 step biasanya cukup dengan DDIM/DPM-Solver. DDPM original butuh 1000 step. Trade-off: lebih banyak step = lebih detail, tapi lebih lambat.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">diffusion_inference.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> diffusers <span class="kw">import</span> StableDiffusionPipeline, DPMSolverMultistepScheduler
+<span class="kw">import</span> torch
+
+<span class="cm"># Load Stable Diffusion dengan fast scheduler</span>
+pipe = StableDiffusionPipeline.<span class="fn">from_pretrained</span>(
+    <span class="st">"runwayml/stable-diffusion-v1-5"</span>,
+    torch_dtype=torch.float16
+).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+pipe.scheduler = DPMSolverMultistepScheduler.<span class="fn">from_config</span>(pipe.scheduler.config)
+pipe.enable_attention_slicing()   <span class="cm"># hemat VRAM</span>
+
+<span class="cm"># Text-to-image generation</span>
+result = pipe(
+    prompt=<span class="st">"a serene mountain lake at golden hour, photorealistic, 4k"</span>,
+    negative_prompt=<span class="st">"blurry, low quality, cartoon, painting"</span>,
+    num_inference_steps=<span class="nm">25</span>,
+    guidance_scale=<span class="nm">7.5</span>,
+    width=<span class="nm">512</span>, height=<span class="nm">512</span>,
+    generator=torch.<span class="fn">Generator</span>(device=<span class="st">"cuda"</span>).<span class="fn">manual_seed</span>(<span class="nm">42</span>)
+)
+result.images[<span class="nm">0</span>].<span class="fn">save</span>(<span class="st">"output.png"</span>)
+
+<span class="cm"># Multimodal: SDXL turbo — 1-4 step generation</span>
+<span class="kw">from</span> diffusers <span class="kw">import</span> AutoPipelineForText2Image
+pipe_turbo = AutoPipelineForText2Image.<span class="fn">from_pretrained</span>(
+    <span class="st">"stabilityai/sdxl-turbo"</span>, torch_dtype=torch.float16
+).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+img = pipe_turbo(
+    prompt=<span class="st">"a cat wearing sunglasses"</span>,
+    num_inference_steps=<span class="nm">4</span>,
+    guidance_scale=<span class="nm">0.0</span>
+).images[<span class="nm">0</span>]</pre></div></div>
+</div><!-- /cv4bb -->
+
+<div class="divider"></div>
+
+<!-- 4B.3 -->
+<div class="sub" id="cv4bc">
+<div class="subtit"><span class="ac">4B.3</span> Stable Diffusion Fine-tuning <span class="subid">// dreambooth, lora, dan textual inversion</span></div>
+<div class="prose">
+<p>Fine-tuning memungkinkan model SD belajar gaya visual, subjek spesifik, atau domain baru dari sedikit gambar (5–30 cukup). Tiga teknik utama: DreamBooth (strong concept binding), LoRA (parameter-efficient), dan Textual Inversion (embedding-only).</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>LoRA (Low-Rank Adaptation)</h4>
+<p>Tambahkan low-rank weight matrix ke layer attention U-Net, hanya train weight tambahan ini (~0.5–1% parameter asli). Hasil: file LoRA kecil (~50–200MB) yang bisa digunakan bersama model base apa pun. Bisa combine beberapa LoRA sekaligus. Paling populer karena efisien dan fleksibel.</p>
+</div>
+<div class="gc"><h4>DreamBooth</h4>
+<p>Fine-tune seluruh model SD (~2GB) pada 5–30 foto subjek + rare token identifier ("sks dog"). Butuh VRAM lebih besar dan training lebih lama. Hasil: konsistensi subjek yang sangat kuat — model "ingat" wajah/objek spesifik. Gunakan "prior preservation loss" untuk mencegah language drift pada kelas umum.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">lora_finetuning.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> diffusers <span class="kw">import</span> StableDiffusionPipeline
+<span class="kw">from</span> peft <span class="kw">import</span> LoraConfig, get_peft_model
+<span class="kw">import</span> torch
+
+<span class="cm"># Setup LoRA untuk U-Net attention layers</span>
+lora_config = <span class="fn">LoraConfig</span>(
+    r=<span class="nm">4</span>,                         <span class="cm"># rank — lebih kecil = lebih efisien, lebih besar = lebih ekspresif</span>
+    lora_alpha=<span class="nm">16</span>,
+    target_modules=[<span class="st">"to_k"</span>, <span class="st">"to_q"</span>, <span class="st">"to_v"</span>, <span class="st">"to_out.0"</span>],  <span class="cm"># attention projections</span>
+    lora_dropout=<span class="nm">0.05</span>
+)
+
+pipe = StableDiffusionPipeline.<span class="fn">from_pretrained</span>(<span class="st">"runwayml/stable-diffusion-v1-5"</span>)
+unet_with_lora = <span class="fn">get_peft_model</span>(pipe.unet, lora_config)
+unet_with_lora.<span class="fn">print_trainable_parameters</span>()
+<span class="cm"># trainable params: ~800K || all params: 860M || trainable%: 0.09%</span>
+
+<span class="cm"># Training loop</span>
+optimizer = torch.optim.<span class="fn">AdamW</span>(unet_with_lora.<span class="fn">parameters</span>(), lr=<span class="nm">1e-4</span>)
+<span class="kw">for</span> step, batch <span class="kw">in</span> <span class="fn">enumerate</span>(train_loader):
+    latents  = pipe.vae.<span class="fn">encode</span>(batch[<span class="st">"pixel_values"</span>]).latent_dist.<span class="fn">sample</span>() * <span class="nm">0.18215</span>
+    noise    = torch.<span class="fn">randn_like</span>(latents)
+    timesteps = torch.<span class="fn">randint</span>(<span class="nm">0</span>, <span class="nm">1000</span>, (latents.<span class="fn">shape</span>[<span class="nm">0</span>],))
+    noisy_l  = pipe.scheduler.<span class="fn">add_noise</span>(latents, noise, timesteps)
+    enc_out  = pipe.text_encoder(batch[<span class="st">"input_ids"</span>])[<span class="nm">0</span>]
+    noise_pred = unet_with_lora(noisy_l, timesteps, encoder_hidden_states=enc_out).sample
+    loss = nn.functional.<span class="fn">mse_loss</span>(noise_pred, noise)
+    loss.<span class="fn">backward</span>(); optimizer.<span class="fn">step</span>(); optimizer.<span class="fn">zero_grad</span>()
+
+<span class="cm"># Save LoRA weights saja (~few MB)</span>
+unet_with_lora.<span class="fn">save_pretrained</span>(<span class="st">"lora_weights"</span>)</pre></div></div>
+</div><!-- /cv4bc -->
+
+<div class="divider"></div>
+
+<!-- 4B.4 -->
+<div class="sub" id="cv4bd">
+<div class="subtit"><span class="ac">4B.4</span> Image Editing &amp; Inpainting <span class="subid">// mengubah bagian gambar yang ada</span></div>
+<div class="prose">
+<p>Selain generate dari scratch, diffusion models bisa mengedit gambar yang ada. Inpainting: hapus objek atau isi area yang masked dengan konten baru. Img2img: ubah gaya atau konten gambar dengan mempertahankan struktur. InstructPix2Pix: edit gambar menggunakan instruksi bahasa alami.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Inpainting pipeline</h4>
+<p>Berikan gambar asli + mask (putih = area yang diedit, hitam = yang dipertahankan). Diffusion process hanya berjalan di area masked. Penting: inpainting model khusus (fine-tuned untuk task ini) jauh lebih baik dari model general purpose. SDXL Inpainting atau SD2 Inpainting adalah pilihan terbaik.</p>
+</div>
+<div class="gc"><h4>ControlNet</h4>
+<p>ControlNet menambahkan spatial conditioning ke diffusion — kontrol posisi, struktur, dan konten gambar. Input conditioning bisa: pose keypoints, depth map, canny edge, segmentation mask, atau sketsa. Satu model ControlNet bisa di-stack dengan ControlNet lain untuk multiple conditioning. Sangat powerful untuk generating consistent characters atau scenes.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">image_editing.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> diffusers <span class="kw">import</span> StableDiffusionInpaintPipeline, ControlNetModel, StableDiffusionControlNetPipeline
+<span class="kw">import</span> torch
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+
+<span class="cm"># Inpainting</span>
+pipe = StableDiffusionInpaintPipeline.<span class="fn">from_pretrained</span>(
+    <span class="st">"runwayml/stable-diffusion-inpainting"</span>, torch_dtype=torch.float16
+).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+original = Image.<span class="fn">open</span>(<span class="st">"photo.jpg"</span>).<span class="fn">resize</span>((<span class="nm">512</span>,<span class="nm">512</span>))
+mask = Image.<span class="fn">open</span>(<span class="st">"mask.png"</span>).<span class="fn">resize</span>((<span class="nm">512</span>,<span class="nm">512</span>))  <span class="cm"># putih = area yang diedit</span>
+result = pipe(
+    prompt=<span class="st">"a beautiful garden with flowers"</span>,
+    image=original,
+    mask_image=mask,
+    num_inference_steps=<span class="nm">25</span>
+).images[<span class="nm">0</span>]
+
+<span class="cm"># ControlNet (canny edge conditioning)</span>
+<span class="kw">import</span> cv2, numpy <span class="kw">as</span> np
+controlnet = ControlNetModel.<span class="fn">from_pretrained</span>(
+    <span class="st">"lllyasviel/sd-controlnet-canny"</span>, torch_dtype=torch.float16
+)
+pipe_cn = StableDiffusionControlNetPipeline.<span class="fn">from_pretrained</span>(
+    <span class="st">"runwayml/stable-diffusion-v1-5"</span>, controlnet=controlnet, torch_dtype=torch.float16
+).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+
+img_np = np.<span class="fn">array</span>(original)
+edges = cv2.<span class="fn">Canny</span>(img_np, <span class="nm">100</span>, <span class="nm">200</span>)
+edges_rgb = Image.<span class="fn">fromarray</span>(np.<span class="fn">stack</span>([edges]*<span class="nm">3</span>, axis=<span class="nm">-1</span>))
+controlled = pipe_cn(
+    prompt=<span class="st">"a cyberpunk city at night, neon lights"</span>,
+    image=edges_rgb,
+    controlnet_conditioning_scale=<span class="nm">0.8</span>
+).images[<span class="nm">0</span>]</pre></div></div>
+</div><!-- /cv4bd -->
+
+<div class="divider"></div>
+
+<!-- 4B.5 -->
+<div class="sub" id="cv4be">
+<div class="subtit"><span class="ac">4B.5</span> Video Generation <span class="subid">// diffusion di dimensi temporal</span></div>
+<div class="prose">
+<p>Video generation adalah frontier terbaru generative CV. Model seperti Sora (OpenAI), CogVideoX, AnimateDiff, dan Wan2.1 memperluas diffusion ke dimensi waktu. Challenge utama: temporal consistency (objek tidak berubah antar frame), motion quality, dan computational cost yang jauh lebih tinggi dari image generation.</p>
+</div>
+<div class="grid2">
+<div class="gc"><h4>Pendekatan video generation</h4>
+<ul style="margin:0;padding-left:16px;font-size:13px;">
+<li><strong>AnimateDiff</strong>: tambahkan temporal attention ke SD weights, generate video 16 frame</li>
+<li><strong>SVD (Stable Video Diffusion)</strong>: image-to-video dari satu frame seed</li>
+<li><strong>CogVideoX</strong>: open-source, text-to-video 720p, 49 frames</li>
+<li><strong>Wan2.1</strong> (2025): state-of-the-art open-source, bisa T2V dan I2V</li>
+<li><strong>Sora</strong>: closed, OpenAI, world model dengan physical consistency</li>
+</ul>
+</div>
+<div class="gc"><h4>Practical constraints</h4>
+<p>Video generation sangat VRAM-hungry. AnimateDiff 16 frame di 512px butuh ~12GB. CogVideoX 720p ~24GB. Teknik untuk mengurangi: tiled VAE decoding, CPU offloading, FP8 quantization. Di production: gunakan inference API (Replicate, Modal) daripada self-host kecuali ada A100/H100. Untuk preview/prototype: pakai platform seperti Kling, Hailuo, atau RunwayML API.</p>
+</div>
+</div>
+<div class="cb">
+<div class="cbh"><div class="cbd"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div><span class="cl">Python</span><span class="cf">video_generation.py</span></div>
+<div class="cbb"><pre><span class="kw">from</span> diffusers <span class="kw">import</span> AnimateDiffPipeline, DDIMScheduler, MotionAdapter
+<span class="kw">from</span> diffusers.utils <span class="kw">import</span> export_to_gif
+<span class="kw">import</span> torch
+
+<span class="cm"># AnimateDiff — image-conditioned video generation</span>
+adapter = MotionAdapter.<span class="fn">from_pretrained</span>(<span class="st">"guoyww/animatediff-motion-adapter-v1-5-2"</span>)
+pipe = AnimateDiffPipeline.<span class="fn">from_pretrained</span>(
+    <span class="st">"emilianJR/epiCRealism"</span>,
+    motion_adapter=adapter,
+    torch_dtype=torch.float16
+).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+pipe.scheduler = DDIMScheduler.<span class="fn">from_config</span>(
+    pipe.scheduler.config, beta_schedule=<span class="st">"linear"</span>, clip_sample=<span class="kw">False</span>, timestep_spacing=<span class="st">"linspace"</span>
+)
+pipe.<span class="fn">enable_vae_slicing</span>()
+
+output = pipe(
+    prompt=<span class="st">"a panda eating bamboo in a forest, golden hour lighting, cinematic"</span>,
+    negative_prompt=<span class="st">"low quality, blurry, artifacts"</span>,
+    num_frames=<span class="nm">16</span>,
+    num_inference_steps=<span class="nm">25</span>,
+    guidance_scale=<span class="nm">7.5</span>
+)
+<span class="fn">export_to_gif</span>(output.frames[<span class="nm">0</span>], <span class="st">"video.gif"</span>)
+
+<span class="cm"># CogVideoX — text-to-video 720p (butuh lebih banyak VRAM)</span>
+<span class="kw">from</span> diffusers <span class="kw">import</span> CogVideoXPipeline
+pipe_cog = CogVideoXPipeline.<span class="fn">from_pretrained</span>(
+    <span class="st">"THUDM/CogVideoX-2b"</span>, torch_dtype=torch.bfloat16
+).<span class="fn">to</span>(<span class="st">"cuda"</span>)
+pipe_cog.<span class="fn">enable_sequential_cpu_offload</span>()  <span class="cm"># offload ke CPU saat tidak dipakai</span>
+pipe_cog.<span class="fn">enable_tiling</span>()</pre></div></div>
+</div><!-- /cv4be -->
+
+</section><!-- /cvfase4 -->
