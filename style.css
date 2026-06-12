@@ -45,6 +45,7 @@ header{position:fixed;top:0;left:0;right:0;height:var(--hh);background:rgba(13,1
 .p3 .sbadge{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
 .p4 .sbadge{background:var(--coral-dim);color:var(--coral);border:1px solid rgba(248,113,113,.2);}
 .p5 .sbadge{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2);}
+.p6 .sbadge{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
 .stitle{font-family:'Instrument Serif',serif;font-size:clamp(22px,3vw,30px);font-weight:400;color:var(--text);line-height:1.2;}
 .sdesc{font-size:14px;color:var(--text2);margin-top:6px;line-height:1.6;}
 .smeta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
