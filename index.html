@@ -54,7 +54,7 @@
 .topic-card.wip:hover{transform:none;box-shadow:none;}
 .wip-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);padding:2px 8px;border-radius:100px;margin-left:8px;}
 .landing-footer{padding:32px 60px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:auto;}
-@media(max-width:768px){.landing-hero{padding:56px 24px 40px;}.topics-grid{padding:32px 20px 48px;grid-template-columns:1fr;}.landing-footer{padding:24px 20px;}.branch-grid{grid-template-columns:1fr!important;}.branch-sep{display:none!important;}.branch-col{border-left:none!important;padding-left:0!important;}.landing-section-label{padding-left:20px!important;padding-right:20px!important;}.topics-grid{padding-left:20px!important;padding-right:20px!important;}}
+@media(max-width:768px){.landing-hero{padding:56px 24px 40px;}.topics-grid{padding:32px 20px 48px;grid-template-columns:1fr;}.landing-footer{padding:24px 20px;}.branch-grid{grid-template-columns:1fr!important;}.branch-sep{display:none!important;}.branch-col{border-left:none!important;padding-left:0!important;}.landing-section-label{padding-left:20px!important;padding-right:20px!important;}.topics-grid{padding-left:20px!important;padding-right:20px!important;}.branch-container{padding-left:20px!important;padding-right:20px!important;}.branch-label-row{flex-direction:column!important;gap:10px!important;}.branch-label-spacer{display:none!important;}.branch-connector{display:none!important;}}
 
 .sidebar-back{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;transition:color .15s;border-bottom:1px solid var(--border);margin-bottom:4px;}
 .sidebar-back:hover{color:var(--text);}
@@ -167,10 +167,10 @@
   </div>
 
   <!-- ══ CABANG ══ -->
-  <div style="max-width:1200px;margin:0 auto;width:100%;padding:0 60px;">
+  <div class="branch-container" style="max-width:1200px;margin:0 auto;width:100%;padding:0 60px;">
 
     <!-- connector: garis Y dari Fundamentals ke dua jalur -->
-    <div style="display:flex;align-items:flex-start;height:48px;position:relative;">
+    <div class="branch-connector" style="display:flex;align-items:flex-start;height:48px;position:relative;">
       <!-- garis tengah turun dari card -->
       <div style="position:absolute;left:50%;top:0;width:1px;height:24px;background:var(--border2);transform:translateX(-50%);"></div>
       <!-- garis horizontal -->
@@ -186,7 +186,7 @@
     </div>
 
     <!-- label dua jalur -->
-    <div style="display:flex;align-items:flex-start;gap:0;margin-bottom:0;">
+    <div class="branch-label-row" style="display:flex;align-items:flex-start;gap:0;margin-bottom:0;">
       <!-- kiri: jalur teks -->
       <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;">
         <div style="display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid rgba(45,212,191,.2);border-radius:100px;background:rgba(45,212,191,.04);">
@@ -195,7 +195,7 @@
         </div>
       </div>
       <!-- tengah: spacer -->
-      <div style="width:48px;flex-shrink:0;"></div>
+      <div class="branch-label-spacer" style="width:48px;flex-shrink:0;"></div>
       <!-- kanan: jalur visual -->
       <div style="flex:1;display:flex;flex-direction:column;align-items:flex-start;">
         <div style="display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid rgba(56,189,248,.2);border-radius:100px;background:rgba(56,189,248,.04);">
@@ -268,7 +268,7 @@
     </div>
 
     <!-- connector: dua garis bergabung ke Agentic -->
-    <div style="display:flex;align-items:flex-start;height:52px;position:relative;margin-top:4px;">
+    <div class="branch-connector" style="display:flex;align-items:flex-start;height:52px;position:relative;margin-top:4px;">
       <!-- garis turun kiri -->
       <div style="position:absolute;left:25%;top:0;width:1px;height:28px;background:rgba(45,212,191,.25);transform:translateX(-50%);"></div>
       <!-- garis turun kanan -->
