@@ -77,7 +77,7 @@
 <div class="viz-block">
   <div class="viz-title">Visualisasi — Pipeline Computer Vision: dari Piksel ke Pemahaman</div>
   <div class="viz-body" style="padding:16px;">
-    <canvas id="cvPipeCanvas" style="width:100%;max-width:600px;height:180px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <canvas id="cvPipeCanvas" style="width:100%;max-width:640px;height:200px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
     <div style="display:flex;justify-content:center;margin-top:8px;">
       <button class="tnbtn primary" id="cvPipeBtn" style="font-size:11px;padding:4px 16px;">▶ Jalankan Pipeline</button>
     </div>
@@ -99,7 +99,7 @@ function fitC(canvas,defW,defH){
   return {ctx:ctx,W:w,H:h};
 }
 function draw(){
-  var sz=fitC(c,600,180);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  var sz=fitC(c,640,200);var ctx=sz.ctx,W=sz.W,H=sz.H;
   ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
   var n=steps.length,boxW=(W-40)/n,boxH=60,topY=H/2-30;
   for(var i=0;i<n;i++){

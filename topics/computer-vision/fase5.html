@@ -80,6 +80,116 @@
         <span class="kw">if</span> detections:
             <span class="kw">await</span> results_queue.<span class="fn">put</span>({<span class="st">'cam'</span>: cam_id, <span class="st">'detections'</span>: detections})
         <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nm">0</span>)  <span class="cm"># yield to other coroutines</span></pre></div></div>
+
+<div class="viz-block">
+  <div class="viz-title">Visualisasi — CV Production System Design</div>
+  <div class="viz-body" style="padding:16px;">
+    <canvas id="cvSysCanvas" style="width:100%;max-width:700px;height:300px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
+    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;">Pipeline: Input → Inference → Output → Monitoring loop</div>
+  </div>
+</div>
+<script>
+(function(){
+var c=document.getElementById('cvSysCanvas');
+if(!c) return;
+
+function setCanvas(canvas){
+  var dpr=window.devicePixelRatio||1;
+  var W=Math.min(700,Math.max(320,canvas.parentElement?canvas.parentElement.clientWidth:560));
+  var H=300;
+  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  return {ctx:ctx,W:W,H:H};
+}
+
+function box(ctx,x,y,w,h,label,sub,color){
+  var grad=ctx.createLinearGradient(x,y,x,y+h);
+  grad.addColorStop(0,color+'33');grad.addColorStop(1,color+'11');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,y,w,h,5);ctx.fill();
+  ctx.strokeStyle=color+'bb';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#e2e8f0';ctx.textAlign='center';
+  ctx.font='bold 9px IBM Plex Mono,monospace';
+  ctx.fillText(label,x+w/2,y+h/2-(sub?3:0)+3);
+  if(sub){ctx.fillStyle='#64748b';ctx.font='8px DM Sans,sans-serif';ctx.fillText(sub,x+w/2,y+h/2+10);}
+}
+
+function arrow(ctx,x1,y1,x2,y2,color){
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  var a=Math.atan2(y2-y1,x2-x1);
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-7*Math.cos(a-Math.PI/7),y2-7*Math.sin(a-Math.PI/7));
+  ctx.lineTo(x2-7*Math.cos(a+Math.PI/7),y2-7*Math.sin(a+Math.PI/7));
+  ctx.closePath();ctx.fill();
+}
+
+function draw(){
+  var sz=setCanvas(c);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
+
+  var LPAD=56,RPAD=44;
+  var ROWS=3,COLS=3;
+  var ROW_GAP=20,COL_GAP=14;
+  var BH=46;
+  var totalH=ROWS*BH+(ROWS-1)*ROW_GAP;
+  var startY=Math.floor((H-totalH)/2);
+  var availW=W-LPAD-RPAD;
+  var BW=Math.floor((availW-(COLS-1)*COL_GAP)/COLS);
+
+  var rows=[
+    {label:'INPUT',  color:'#38bdf8',items:[{l:'Kamera',s:'RTSP/USB'},{l:'Sampler',s:'1-30 fps'},{l:'Preprocess',s:'Resize/Norm'}]},
+    {label:'INFER',  color:'#a78bfa',items:[{l:'Triton',s:'ONNX/TRT'},{l:'YOLO/CNN',s:'batch=8'},{l:'Postprocess',s:'NMS/Decode'}]},
+    {label:'OUTPUT', color:'#f59e0b',items:[{l:'Event Bus',s:'Kafka'},{l:'DB Writer',s:'Timescale'},{l:'Dashboard',s:'Grafana'}]},
+  ];
+
+  rows.forEach(function(row,ri){
+    var ry=startY+ri*(BH+ROW_GAP);
+    var cy=ry+BH/2;
+
+    ctx.fillStyle=row.color+'99';ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='right';
+    ctx.fillText(row.label,LPAD-8,cy+3);
+
+    ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(LPAD,cy);ctx.lineTo(W-RPAD,cy);ctx.stroke();
+
+    row.items.forEach(function(item,ci){
+      var bx=LPAD+ci*(BW+COL_GAP);
+      box(ctx,bx,ry,BW,BH,item.l,item.s,row.color);
+      if(ci<COLS-1){
+        var ax1=bx+BW+1,ax2=bx+BW+COL_GAP-1,ay=cy;
+        arrow(ctx,ax1,ay,ax2,ay,row.color+'88');
+      }
+    });
+
+    if(ri<ROWS-1){
+      var lastBx=LPAD+(COLS-1)*(BW+COL_GAP);
+      var vx=lastBx+BW/2;
+      var vy1=ry+BH+2,vy2=startY+(ri+1)*(BH+ROW_GAP)-2;
+      arrow(ctx,vx,vy1,vx,vy2,'rgba(255,255,255,.18)');
+    }
+  });
+
+  var mx=W-RPAD+16;
+  var loopY1=startY+BH/2;
+  var loopY2=startY+(ROWS-1)*(BH+ROW_GAP)+BH/2;
+  var lastBxRight=LPAD+(COLS-1)*(BW+COL_GAP)+BW;
+
+  ctx.strokeStyle='rgba(74,222,128,.35)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(lastBxRight+2,loopY2);ctx.lineTo(mx,loopY2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(mx,loopY2);ctx.lineTo(mx,loopY1);ctx.stroke();
+  arrow(ctx,mx,loopY1,lastBxRight+2,loopY1,'rgba(74,222,128,.45)');
+  ctx.fillStyle='#4ade80';ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('monitor',mx+3,loopY1+(loopY2-loopY1)/2-5);
+  ctx.fillText('& alert',mx+3,loopY1+(loopY2-loopY1)/2+5);
+}
+
+draw();
+window.addEventListener('resize',draw);
+})();
+</script>
 </div><!-- /cv5a -->
 
 <div class="divider"></div>
@@ -354,128 +464,5 @@ IMAGE_BRIGHTNESS  = <span class="fn">Gauge</span>(<span class="st">'cv_image_mea
 </div>
 
 </div><!-- /cv5e -->
-
-
-<div class="viz-block">
-  <div class="viz-title">Visualisasi — CV Production System Design</div>
-  <div class="viz-body" style="padding:16px;">
-    <canvas id="cvSysCanvas" style="width:100%;height:260px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
-    <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:6px;font-family:'IBM Plex Mono',monospace;">Pipeline: Input → Inference → Output → Monitoring loop</div>
-  </div>
-</div>
-<script>
-(function(){
-var c=document.getElementById('cvSysCanvas');
-if(!c) return;
-
-function setCanvas(canvas){
-  var dpr=window.devicePixelRatio||1;
-  var W=Math.max(280,canvas.parentElement?canvas.parentElement.clientWidth:560);
-  var H=260;
-  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
-  canvas.style.width=W+'px';canvas.style.height=H+'px';
-  var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
-  return {ctx:ctx,W:W,H:H};
-}
-
-function box(ctx,x,y,w,h,label,sub,color){
-  var grad=ctx.createLinearGradient(x,y,x,y+h);
-  grad.addColorStop(0,color+'33');grad.addColorStop(1,color+'11');
-  ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,y,w,h,5);ctx.fill();
-  ctx.strokeStyle=color+'bb';ctx.lineWidth=1.5;ctx.stroke();
-  ctx.fillStyle='#e2e8f0';ctx.textAlign='center';
-  ctx.font='bold 9px IBM Plex Mono,monospace';
-  ctx.fillText(label,x+w/2,y+h/2-(sub?3:0)+3);
-  if(sub){ctx.fillStyle='#64748b';ctx.font='8px DM Sans,sans-serif';ctx.fillText(sub,x+w/2,y+h/2+10);}
-}
-
-function arrow(ctx,x1,y1,x2,y2,color){
-  ctx.strokeStyle=color;ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-  var a=Math.atan2(y2-y1,x2-x1);
-  ctx.fillStyle=color;
-  ctx.beginPath();
-  ctx.moveTo(x2,y2);
-  ctx.lineTo(x2-7*Math.cos(a-Math.PI/7),y2-7*Math.sin(a-Math.PI/7));
-  ctx.lineTo(x2-7*Math.cos(a+Math.PI/7),y2-7*Math.sin(a+Math.PI/7));
-  ctx.closePath();ctx.fill();
-}
-
-function draw(){
-  var sz=setCanvas(c);var ctx=sz.ctx,W=sz.W,H=sz.H;
-  ctx.fillStyle='#0a0a0d';ctx.fillRect(0,0,W,H);
-
-  // Layout: label col (56px) | 3 boxes + 2 gaps | monitor col (40px)
-  var LPAD=56,RPAD=44,VPAD=16;
-  var ROWS=3,COLS=3;
-  var ROW_GAP=20,COL_GAP=14;
-  var BH=46;
-  var totalH=ROWS*BH+(ROWS-1)*ROW_GAP;
-  var startY=Math.floor((H-totalH)/2);
-  var availW=W-LPAD-RPAD;
-  var BW=Math.floor((availW-(COLS-1)*COL_GAP)/COLS);
-
-  var rows=[
-    {label:'INPUT',  color:'#38bdf8',items:[{l:'Kamera',s:'RTSP/USB'},{l:'Sampler',s:'1-30 fps'},{l:'Preprocess',s:'Resize/Norm'}]},
-    {label:'INFER',  color:'#a78bfa',items:[{l:'Triton',s:'ONNX/TRT'},{l:'YOLO/CNN',s:'batch=8'},{l:'Postprocess',s:'NMS/Decode'}]},
-    {label:'OUTPUT', color:'#f59e0b',items:[{l:'Event Bus',s:'Kafka'},{l:'DB Writer',s:'Timescale'},{l:'Dashboard',s:'Grafana'}]},
-  ];
-
-  rows.forEach(function(row,ri){
-    var ry=startY+ri*(BH+ROW_GAP);
-    var cy=ry+BH/2;
-
-    // Row label
-    ctx.fillStyle=row.color+'99';ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='right';
-    ctx.fillText(row.label,LPAD-8,cy+3);
-
-    // Horizontal guide line (very subtle)
-    ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(LPAD,cy);ctx.lineTo(W-RPAD,cy);ctx.stroke();
-
-    // Boxes and horizontal arrows
-    row.items.forEach(function(item,ci){
-      var bx=LPAD+ci*(BW+COL_GAP);
-      box(ctx,bx,ry,BW,BH,item.l,item.s,row.color);
-      // Arrow to next box
-      if(ci<COLS-1){
-        var ax1=bx+BW+1,ax2=bx+BW+COL_GAP-1,ay=cy;
-        arrow(ctx,ax1,ay,ax2,ay,row.color+'88');
-      }
-    });
-
-    // Vertical arrow to next row (from last box center-bottom → next row center-top)
-    if(ri<ROWS-1){
-      var lastBx=LPAD+(COLS-1)*(BW+COL_GAP);
-      var vx=lastBx+BW/2;
-      var vy1=ry+BH+2,vy2=startY+(ri+1)*(BH+ROW_GAP)-2;
-      arrow(ctx,vx,vy1,vx,vy2,'rgba(255,255,255,.18)');
-    }
-  });
-
-  // Monitoring feedback loop — right side vertical line
-  var lastRow=rows[ROWS-1];
-  var mx=W-RPAD+16;
-  var loopY1=startY+BH/2;           // top of loop (INPUT row)
-  var loopY2=startY+(ROWS-1)*(BH+ROW_GAP)+BH/2;  // bottom (OUTPUT row)
-  var lastBxRight=LPAD+(COLS-1)*(BW+COL_GAP)+BW;
-
-  // Horizontal stub from last OUTPUT box to right margin
-  ctx.strokeStyle='rgba(74,222,128,.35)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(lastBxRight+2,loopY2);ctx.lineTo(mx,loopY2);ctx.stroke();
-  // Vertical up
-  ctx.beginPath();ctx.moveTo(mx,loopY2);ctx.lineTo(mx,loopY1);ctx.stroke();
-  // Arrow back into INPUT row
-  arrow(ctx,mx,loopY1,lastBxRight+2,loopY1,'rgba(74,222,128,.45)');
-  // Label
-  ctx.fillStyle='#4ade80';ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='left';
-  ctx.fillText('monitor',mx+3,loopY1+(loopY2-loopY1)/2-5);
-  ctx.fillText('& alert',mx+3,loopY1+(loopY2-loopY1)/2+5);
-}
-
-draw();
-window.addEventListener('resize',draw);
-})();
-</script>
 
 </section><!-- /cvfase5 -->

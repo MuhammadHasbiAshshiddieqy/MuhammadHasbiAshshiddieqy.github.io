@@ -91,7 +91,7 @@
 <div class="viz-block">
   <div class="viz-title">Visualisasi — Arsitektur CV: dari LeNet ke ViT</div>
   <div class="viz-body" style="padding:16px 20px;">
-    <canvas id="cvArchCanvas" style="width:100%;height:260px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
+    <canvas id="cvArchCanvas" style="width:100%;max-width:720px;height:300px;display:block;margin:0 auto;border-radius:8px;background:#0a0a0d;"></canvas>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;" id="cvArchBtns"></div>
     <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:8px;font-family:'IBM Plex Mono',monospace;line-height:1.5;" id="cvArchInfo"></div>
   </div>
@@ -147,7 +147,7 @@ var active='resnet';
 function setCanvas(canvas){
   var dpr=window.devicePixelRatio||1;
   var pw=canvas.parentElement?canvas.parentElement.clientWidth:680;
-  var W=Math.max(260,pw);var H=260;
+  var W=Math.min(720,Math.max(300,pw));var H=300;
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);

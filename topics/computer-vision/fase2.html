@@ -541,8 +541,6 @@ loss = <span class="nm">0.5</span> * bce(pred, target) + <span class="nm">0.5</s
             ious.<span class="fn">append</span>(intersection / union)
     <span class="kw">return</span> np.<span class="fn">mean</span>(ious)</pre></div></div>
 <div class="callout tip"><span class="cico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span><div class="ctxt"><strong>Latihan Fase 2</strong><ol style="margin:8px 0 0;padding-left:16px;"><li>Fine-tune EfficientNet-B0 pada dataset pilihanmu (Food-101, Flowers102 tersedia via torchvision)</li><li>Bandingkan feature extraction vs full fine-tuning — mana lebih baik dengan 1000 sampel training?</li><li>Tambahkan Albumentations augmentation pipeline dan lihat perubahan validation accuracy setelah 10 epoch</li><li>Plot confusion matrix dan identifikasi pasangan kelas yang paling sering salah diklasifikasikan</li></ol></div></div>
-</div><!-- /cv2f -->
-
 
 <div class="viz-block">
   <div class="viz-title">Visualisasi Interaktif — Confusion Matrix Multi-Class</div>
@@ -636,5 +634,6 @@ draw();
 window.addEventListener('resize',draw);
 })();
 </script>
+</div><!-- /cv2f -->
 
 </section><!-- /cvfase2 -->

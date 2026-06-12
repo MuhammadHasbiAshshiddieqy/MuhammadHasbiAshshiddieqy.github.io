@@ -128,7 +128,7 @@ median = cv2.<span class="fn">medianBlur</span>(img, ksize=<span class="nm">5</s
   <div class="viz-title">Visualisasi Interaktif — Live Kernel Convolution</div>
   <div class="viz-body" style="padding:16px;">
     <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-      <canvas id="cvKernelCanvas" style="width:100%;max-width:360px;height:280px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
+      <canvas id="cvKernelCanvas" style="width:100%;max-width:480px;height:300px;display:block;border-radius:8px;background:#0a0a0d;"></canvas>
       <div style="flex:1;min-width:180px;">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px;">Pilih Kernel:</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;" id="cvKernelBtns"></div>
@@ -200,7 +200,7 @@ function applyKernel(srcData,W,H,kernel){
 }
 function flattenKernel(m){var r=[];for(var i=0;i<3;i++)for(var j=0;j<3;j++)r.push(m[i][j]);return r;}
 function draw(){
-  var sz=fitC(c,360,280);var ctx=sz.ctx,W=sz.W,H=sz.H;
+  var sz=fitC(c,480,300);var ctx=sz.ctx,W=sz.W,H=sz.H;
   drawTestPattern(ctx,W,H);
   var imgData=ctx.getImageData(0,0,W,H);
   var filtered=applyKernel(imgData.data,W,H,kernels[activeKernel].matrix);
@@ -299,11 +299,11 @@ img_contours = cv2.<span class="fn">drawContours</span>(cv2.<span class="fn">cvt
     <div style="display:flex;gap:4px;justify-content:center;align-items:flex-start;flex-wrap:wrap;">
       <div style="text-align:center;">
         <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">Scene asli</div>
-        <canvas id="cvEdgeSrc" style="width:100%;max-width:260px;height:180px;display:block;border-radius:6px;background:#0a0a0d;"></canvas>
+        <canvas id="cvEdgeSrc" style="width:100%;max-width:320px;height:220px;display:block;border-radius:6px;background:#0a0a0d;"></canvas>
       </div>
       <div style="text-align:center;">
         <div style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">Hasil edge detection</div>
-        <canvas id="cvEdgeDst" style="width:100%;max-width:260px;height:180px;display:block;border-radius:6px;background:#0a0a0d;"></canvas>
+        <canvas id="cvEdgeDst" style="width:100%;max-width:320px;height:220px;display:block;border-radius:6px;background:#0a0a0d;"></canvas>
       </div>
     </div>
     <div style="display:flex;gap:24px;justify-content:center;margin-top:14px;flex-wrap:wrap;align-items:center;">
@@ -328,7 +328,7 @@ var cSrc=document.getElementById('cvEdgeSrc');
 var cDst=document.getElementById('cvEdgeDst');
 if(!cSrc||!cDst) return;
 
-var W=260,H=180;
+var W=320,H=220;
 // Grayscale scene buffer — dibuat sekali, tidak tergantung canvas DPR
 var scene=new Uint8ClampedArray(W*H);
 
