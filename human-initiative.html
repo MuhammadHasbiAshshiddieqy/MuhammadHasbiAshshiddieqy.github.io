@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human Initiative × Principal Tech Sage — Pelatihan Agentic AI</title>
+<meta name="description" content="Studi kasus pelatihan Agentic AI yang diselenggarakan Principal Tech Sage untuk tim Human Initiative — sesi daring dan workshop tatap muka.">
+<meta property="og:title" content="Human Initiative × Principal Tech Sage — Pelatihan Agentic AI">
+<meta property="og:description" content="Studi kasus pelatihan Agentic AI yang diselenggarakan Principal Tech Sage untuk tim Human Initiative — sesi daring dan workshop tatap muka.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://muhammadhasbiashshiddieqy.github.io/human-initiative-4.jpg">
+<link rel="canonical" href="https://muhammadhasbiashshiddieqy.github.io/human-initiative">
+<link rel="icon" type="image/png" href="principal_tech_sage.png">
+<link rel="apple-touch-icon" href="principal_tech_sage.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.lang-toggle{display:none;}
+body{min-height:100vh;display:flex;flex-direction:column;}
+.cs-wrap{max-width:860px;margin:0 auto;padding:80px 40px 0;width:100%;flex:1;}
+.cs-back{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;margin-bottom:56px;transition:color .15s;}
+.cs-back:hover{color:var(--text);}
+.cs-hero{text-align:center;margin-bottom:56px;}
+.cs-tag{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#38bdf8;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);padding:4px 14px;border-radius:100px;margin-bottom:24px;}
+.cs-logo{height:34px;width:auto;margin-bottom:24px;}
+.cs-h1{font-family:'Instrument Serif',serif;font-size:clamp(28px,4vw,42px);font-weight:400;color:var(--text);line-height:1.25;margin-bottom:14px;}
+.cs-h1 em{font-style:italic;color:#38bdf8;}
+.cs-desc{font-size:14px;color:var(--text2);max-width:520px;margin:0 auto;line-height:1.75;}
+.cs-meta-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:24px;}
+.cs-pill{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);padding:5px 12px;border-radius:100px;}
+.cs-section{margin-bottom:56px;}
+.cs-section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#38bdf8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.cs-section-label::before{content:'';width:6px;height:6px;border-radius:50%;background:#38bdf8;flex-shrink:0;}
+.cs-section p{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:14px;}
+.cs-section p:last-child{margin-bottom:0;}
+.cs-section ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;}
+.cs-section li{font-size:14px;color:var(--text2);line-height:1.7;padding-left:20px;position:relative;}
+.cs-section li::before{content:'→';position:absolute;left:0;color:#38bdf8;font-size:12px;}
+.cs-gallery{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cs-gallery figure{margin:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg2);}
+.cs-gallery img{width:100%;height:220px;object-fit:cover;display:block;}
+.cs-gallery figcaption{padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text3);line-height:1.5;border-top:1px solid var(--border);}
+@media(max-width:600px){
+  .cs-wrap{padding:48px 20px 0;}
+  .cs-back{margin-bottom:36px;}
+  .cs-gallery{grid-template-columns:1fr;}
+  .cs-gallery img{height:200px;}
+}
+</style>
+</head>
+<body>
+
+<div class="lang-toggle" id="lang-toggle">
+  <button onclick="toggleLang()" data-lang-id style="color:var(--text2);" title="Bahasa Indonesia">ID</button>
+  <span class="sep">|</span>
+  <button onclick="toggleLang()" data-lang-en style="color:var(--text3);" title="English">EN</button>
+</div>
+
+<div class="cs-wrap">
+
+  <a href="/" class="cs-back">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <span>← Principal Tech Sage</span>
+  </a>
+
+  <div class="cs-hero">
+    <div class="cs-tag">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Case Study — Klien &amp; Mitra
+    </div>
+    <img src="HumanInitiative.png" alt="Human Initiative" class="cs-logo">
+    <h1 class="cs-h1">Membekali tim <em>Human Initiative</em><br>dengan Agentic AI</h1>
+    <p class="cs-desc">Principal Tech Sage menyelenggarakan pelatihan Agentic AI untuk tim Human Initiative — dari konsep dasar agentic loop hingga praktik langsung membangun sistem agent, disampaikan dalam dua format: kelas daring dan workshop tatap muka.</p>
+    <div class="cs-meta-row">
+      <span class="cs-pill">Training Agentic AI</span>
+      <span class="cs-pill">Online + Onsite</span>
+      <span class="cs-pill">Hands-on Workshop</span>
+      <span class="cs-pill">Agustus 2026</span>
+    </div>
+  </div>
+
+  <div class="cs-section">
+    <div class="cs-section-label">Tentang Human Initiative</div>
+    <p>Human Initiative adalah organisasi kemanusiaan yang bergerak di bidang filantropi dan pemberdayaan, dengan misi "Goodness for Dignity — menggerakkan kebaikan untuk memartabatkan kemanusiaan." Jangkauan program mereka membentang dari nasional hingga lintas negara, didukung oleh tim yang terus mengasah kapasitas di berbagai bidang, termasuk teknologi.</p>
+    <p>Untuk memperkuat pemahaman tim internal terhadap perkembangan AI, khususnya sistem agentic yang kini banyak diadopsi di berbagai industri, Human Initiative menggandeng Principal Tech Sage sebagai mitra pelatihan.</p>
+  </div>
+
+  <div class="cs-section">
+    <div class="cs-section-label">Program Pelatihan</div>
+    <ul>
+      <li><strong style="color:var(--text);">Kelas daring</strong> — pengenalan konsep agentic AI: agentic loop, tool calling, dan bagaimana LLM mengambil tindakan berulang untuk menyelesaikan tugas, disampaikan langsung oleh tim Principal Tech Sage.</li>
+      <li><strong style="color:var(--text);">Workshop tatap muka</strong> — sesi hands-on di kantor Human Initiative, membahas flow konkret request-response antara model dan tool secara lebih mendalam serta praktik langsung membangun alur kerja agent.</li>
+      <li><strong style="color:var(--text);">Instruktur</strong> — Faiz Ghifari Haznitrama, Usamah Jundi, dan Muhammad Hasbi Ashshiddieqy dari Principal Tech Sage.</li>
+    </ul>
+  </div>
+
+  <div class="cs-section">
+    <div class="cs-section-label">Dokumentasi</div>
+    <div class="cs-gallery">
+      <figure>
+        <img src="human-initiative-1.jpg" alt="Sesi daring Training Agentic AI 2026 bersama tim Human Initiative — pemaparan materi oleh Faiz dan Hasbi" loading="lazy">
+        <figcaption>Kelas daring — pemaparan materi agentic AI</figcaption>
+      </figure>
+      <figure>
+        <img src="human-initiative-2.jpg" alt="Sesi daring Training Agentic AI 2026 — pemaparan materi oleh Usamah Jundi" loading="lazy">
+        <figcaption>Kelas daring — sesi lanjutan bersama peserta HI</figcaption>
+      </figure>
+      <figure>
+        <img src="human-initiative-3.jpg" alt="Workshop tatap muka membahas flow konkret model dan tool call bersama tim Human Initiative" loading="lazy">
+        <figcaption>Workshop onsite — praktik flow agent & tool call</figcaption>
+      </figure>
+      <figure>
+        <img src="human-initiative-4.jpg" alt="Tim Principal Tech Sage dan Human Initiative di kantor Human Initiative" loading="lazy">
+        <figcaption>Onsite — bersama tim Human Initiative</figcaption>
+      </figure>
+    </div>
+  </div>
+
+</div>
+
+<div style="padding:56px 40px;border-top:1px solid var(--border);text-align:center;position:relative;overflow:hidden;margin-top:8px;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(56,189,248,.06) 0%,transparent 65%);pointer-events:none;"></div>
+  <div style="position:relative;z-index:1;max-width:520px;margin:0 auto;">
+    <h2 style="font-family:'Instrument Serif',serif;font-size:clamp(22px,3vw,30px);font-weight:400;color:var(--text);line-height:1.2;margin-bottom:14px;">Ingin membawa <em style="font-style:italic;color:#38bdf8;">AI literacy</em> ke organisasimu juga?</h2>
+    <p style="font-size:14px;color:var(--text3);line-height:1.75;margin-bottom:28px;">Kami membantu tim dan organisasimu memahami AI secara mendalam — dari seminar singkat hingga workshop hands-on seperti yang kami jalankan bersama Human Initiative.</p>
+    <a href="mailto:hsbdeveloper97@gmail.com?subject=Permintaan%20Kerjasama%20—%20Principal%20Tech%20Sage" style="display:inline-flex;align-items:center;gap:10px;padding:13px 28px;background:var(--accent);color:#fff;border-radius:10px;text-decoration:none;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;transition:all .2s;" onmouseover="this.style.background='#6d5ce7'" onmouseout="this.style.background='var(--accent)'">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+      Hubungi Kami
+    </a>
+  </div>
+</div>
+
+<footer style="padding:24px 40px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">© 2026 Principal Tech Sage</div>
+  <a href="/" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);text-decoration:none;transition:color .15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Principal Tech Sage</a>
+</footer>
+
+</body>
+</html>
