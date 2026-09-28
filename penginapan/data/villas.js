@@ -76,13 +76,16 @@ var SITE_DATA = {
   },
 
   // Fasilitas umum yang ada di SEMUA vila (ditampilkan di section "Fasilitas")
+  // Pilihan "icon": musholla, dapur, parkir, pemandangan, wifi, air-hangat,
+  //   kamar, kamar-mandi, tamu, taman, teras, kulkas, tv, bbq, kolam
+  // (emoji juga masih bisa dipakai kalau ikonnya tidak ada di daftar ini)
   commonFacilities: [
-    { icon: "🕌", label: "Musholla / Area Sholat" },
-    { icon: "🍳", label: "Dapur & Peralatan Masak" },
-    { icon: "🚗", label: "Parkir Mobil Luas" },
-    { icon: "🌄", label: "Pemandangan Pegunungan" },
-    { icon: "📶", label: "Wi-Fi" },
-    { icon: "🔥", label: "Air Hangat" },
+    { icon: "musholla", label: "Musholla / Area Sholat" },
+    { icon: "dapur", label: "Dapur & Peralatan Masak" },
+    { icon: "parkir", label: "Parkir Mobil Luas" },
+    { icon: "pemandangan", label: "Pemandangan Pegunungan" },
+    { icon: "wifi", label: "Wi-Fi" },
+    { icon: "air-hangat", label: "Air Hangat" },
   ],
 
   villas: [

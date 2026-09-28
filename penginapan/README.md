@@ -16,8 +16,10 @@ pondok-assunah-web/
 ├── index.html          ← struktur halaman (jarang perlu diedit)
 ├── css/style.css        ← tampilan/warna (jarang perlu diedit)
 ├── js/app.js            ← logika render & tombol WA (jarang perlu diedit)
+├── js/icons.js          ← kumpulan ikon SVG (pengganti emoji)
 ├── data/villas.js        ← ISI WEB — edit file ini untuk ubah konten
 └── images/
+    ├── hero-landscape.svg ← ilustrasi pegunungan di bagian atas halaman
     ├── melati/           ← foto vila "melati" (1.jpg, 2.jpg, ...)
     ├── kenanga/
     └── anggrek/
@@ -66,6 +68,16 @@ pada vila tersebut (di dalam array `villas`).
 6. Simpan — vila baru otomatis muncul di halaman, tanpa perlu sentuh HTML.
 
 Vila bisa ditambah sebanyak yang kamu mau, tidak ada batasan jumlah.
+
+---
+
+### Ikon fasilitas
+
+Field `icon` pada `commonFacilities` di `data/villas.js` memakai nama ikon,
+misalnya `"musholla"`, `"dapur"`, `"parkir"`, `"pemandangan"`, `"wifi"`,
+`"air-hangat"`, `"kamar"`, `"kamar-mandi"`, `"tamu"`, `"taman"`, `"teras"`,
+`"kulkas"`, `"tv"`, `"bbq"`, `"kolam"`. Emoji tetap bisa dipakai kalau ikon
+yang diinginkan belum ada di daftar tersebut.
 
 ---
 
