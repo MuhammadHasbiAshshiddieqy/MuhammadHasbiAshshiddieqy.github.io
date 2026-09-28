@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pondok Assunah — Vila Keluarga Syariah, Ciater</title>
+<meta name="description" content="Pondok Assunah — vila keluarga syariah dekat Sariater, Ciater. Sewa vila nyaman untuk keluarga, booking mudah lewat WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark">🌿</span>
+      <span class="brand-name">Pondok Assunah</span>
+    </a>
+    <nav class="main-nav" id="mainNav">
+      <a href="#vila">Vila Kami</a>
+      <a href="#fasilitas">Fasilitas</a>
+      <a href="#lokasi">Lokasi</a>
+      <a href="#kontak">Kontak</a>
+    </nav>
+    <a href="#" id="headerWaBtn" class="btn btn-primary btn-wa header-cta">
+      <span class="ico-wa">💬</span> Booking WhatsApp
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Buka menu" aria-expanded="false" aria-controls="mainNav">☰</button>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-decor" aria-hidden="true">
+    <svg viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,220 L0,140 L180,60 L340,150 L520,40 L720,160 L900,70 L1080,170 L1260,80 L1440,150 L1440,220 Z" fill="#4B6B4E" opacity="0.18"/>
+      <path d="M0,220 L0,180 L220,110 L460,190 L680,100 L900,195 L1140,120 L1440,190 L1440,220 Z" fill="#3A5A40" opacity="0.28"/>
+    </svg>
+  </div>
+  <div class="container hero-inner">
+    <p class="eyebrow" id="heroLocation">Ciater, Subang — dekat Sariater</p>
+    <h1 id="heroTitle">Pondok Assunah</h1>
+    <p class="hero-tagline" id="heroTagline">Vila Keluarga Syariah di Kaki Gunung, dekat Sariater, Ciater</p>
+    <div class="hero-actions">
+      <a href="#vila" class="btn btn-outline">Lihat Vila Kami</a>
+      <a href="#" id="heroWaBtn" class="btn btn-primary btn-wa">
+        <span class="ico-wa">💬</span> Booking via WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="about container">
+  <div class="divider-motif" aria-hidden="true"></div>
+  <p class="about-text" id="aboutText">Memuat…</p>
+</section>
+
+<!-- ============ VILLA LIST ============ -->
+<section class="section" id="vila">
+  <div class="container">
+    <h2 class="section-title">Pilihan Vila Kami</h2>
+    <p class="section-sub">Setiap vila dilengkapi area sholat pribadi dan suasana keluarga yang nyaman.</p>
+    <div class="villa-grid" id="villaGrid">
+      <!-- diisi otomatis oleh js/app.js dari data/villas.js -->
+    </div>
+  </div>
+</section>
+
+<!-- ============ FASILITAS UMUM ============ -->
+<section class="section section-alt" id="fasilitas">
+  <div class="container">
+    <h2 class="section-title">Fasilitas di Setiap Vila</h2>
+    <div class="facility-grid" id="facilityGrid"></div>
+  </div>
+</section>
+
+<!-- ============ LOKASI ============ -->
+<section class="section" id="lokasi">
+  <div class="container">
+    <h2 class="section-title">Lokasi</h2>
+    <p class="section-sub" id="locationText">Ciater, Subang</p>
+    <div class="map-wrap">
+      <iframe id="mapFrame" src="" width="100%" height="380" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Lokasi Pondok Assunah"></iframe>
+    </div>
+    <div class="map-actions">
+      <a href="#" id="mapLinkBtn" class="btn btn-outline" target="_blank" rel="noopener">📍 Buka di Google Maps</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ KONTAK / FOOTER ============ -->
+<footer class="site-footer" id="kontak">
+  <div class="container footer-inner">
+    <div>
+      <div class="brand footer-brand">
+        <span class="brand-mark">🌿</span>
+        <span class="brand-name">Pondok Assunah</span>
+      </div>
+      <p class="footer-tagline">Vila keluarga syariah dekat Sariater, Ciater.</p>
+    </div>
+    <div class="footer-cta">
+      <a href="#" id="footerWaBtn" class="btn btn-primary btn-wa">
+        <span class="ico-wa">💬</span> Chat WhatsApp Sekarang
+      </a>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>&copy; <span id="year"></span> Pondok Assunah, Ciater.</p>
+  </div>
+</footer>
+
+<!-- ============ TOMBOL WA MENGAMBANG (mobile) ============ -->
+<a href="#" id="floatWaBtn" class="wa-float" aria-label="Booking via WhatsApp" target="_blank" rel="noopener">💬</a>
+
+<!-- ============ MODAL DETAIL VILA ============ -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" aria-label="Tutup">✕</button>
+    <div class="modal-gallery" id="modalGallery"></div>
+    <div class="modal-body">
+      <h3 id="modalTitle"></h3>
+      <p class="modal-meta" id="modalMeta"></p>
+      <p class="modal-price" id="modalPrice"></p>
+      <ul class="modal-facilities" id="modalFacilities"></ul>
+      <a href="#" id="modalWaBtn" class="btn btn-primary btn-wa">
+        <span class="ico-wa">💬</span> Booking Vila Ini via WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="data/villas.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
